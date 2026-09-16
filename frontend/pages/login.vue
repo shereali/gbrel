@@ -13,7 +13,7 @@
               </svg>
             </div>
             <div>
-              <span style="font-family: var(--font-display); font-size: 1.2rem; font-weight: 800; color: #FFF; display:block;">GANGCHIL HOMES</span>
+              <span style="font-family: var(--font-display); font-size: 1.2rem; font-weight: 800; color: #FFF; display:block;">GBREL</span>
               <span style="font-size: 0.7rem; color: var(--color-gold); font-weight: 700; letter-spacing: 0.12em;">DEMO CREDENTIALS HUB</span>
             </div>
           </div>
@@ -45,7 +45,7 @@
                 <span class="badge badge-urgent" style="font-size:0.75rem;">ADMIN ACCESS</span>
               </div>
               <div class="credentials-code">
-                <span>Email: <code>admin@gangchilhomes.com</code></span>
+                <span>Email: <code>admin@gbrel.com</code></span>
                 <span>Pass: <code>admin123</code></span>
               </div>
             </div>
@@ -72,7 +72,7 @@
                 <span class="badge badge-featured" style="font-size:0.75rem;">AGENT PORTAL</span>
               </div>
               <div class="credentials-code">
-                <span>Email: <code>agent@gangchilhomes.com</code></span>
+                <span>Email: <code>agent@gbrel.com</code></span>
                 <span>Pass: <code>agent123</code></span>
               </div>
             </div>
@@ -99,7 +99,7 @@
                 <span class="badge badge-rajuk" style="font-size:0.75rem;">BUYER VIEW</span>
               </div>
               <div class="credentials-code">
-                <span>Email: <code>buyer@gangchilhomes.com</code></span>
+                <span>Email: <code>buyer@gbrel.com</code></span>
                 <span>Pass: <code>buyer123</code></span>
               </div>
             </div>
@@ -123,7 +123,7 @@
               v-model="email" 
               type="email" 
               required 
-              placeholder="e.g. admin@gangchilhomes.com" 
+              placeholder="e.g. admin@gbrel.com" 
               class="form-input" 
               style="background: #1E293B; color: #FFF; border-color: rgba(255,255,255,0.15);" 
             />
@@ -173,20 +173,20 @@ const router = useRouter()
 const { login } = useAuth()
 
 const selectedRole = ref<'admin' | 'agent' | 'buyer'>('admin')
-const email = ref('admin@gangchilhomes.com')
+const email = ref('admin@gbrel.com')
 const password = ref('admin123')
 const showResetHint = ref(false)
 
 const selectDemo = (role: 'admin' | 'agent' | 'buyer') => {
   selectedRole.value = role
   if (role === 'admin') {
-    email.value = 'admin@gangchilhomes.com'
+    email.value = 'admin@gbrel.com'
     password.value = 'admin123'
   } else if (role === 'agent') {
-    email.value = 'agent@gangchilhomes.com'
+    email.value = 'agent@gbrel.com'
     password.value = 'agent123'
   } else {
-    email.value = 'buyer@gangchilhomes.com'
+    email.value = 'buyer@gbrel.com'
     password.value = 'buyer123'
   }
 }

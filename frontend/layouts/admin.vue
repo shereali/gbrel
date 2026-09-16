@@ -20,7 +20,7 @@
           </button>
 
           <!-- Brand Logo -->
-          <NuxtLink to="/admin" class="admin-brand" title="Gangchil Homes Admin">
+          <NuxtLink to="/admin" class="admin-brand" title="GBREL Admin">
             <div class="admin-brand-icon">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -28,7 +28,7 @@
               </svg>
             </div>
             <div class="admin-brand-text">
-              <span class="admin-brand-name">GANGCHIL<span style="color:#D4AF37;">.</span>ADMIN</span>
+              <span class="admin-brand-name">GBREL<span style="color:#D4AF37;">.</span>ADMIN</span>
               <span class="admin-brand-sub">ENTERPRISE CONTROL</span>
             </div>
           </NuxtLink>
@@ -223,7 +223,7 @@
                   <polyline points="9 22 9 12 15 12 15 22"/>
                 </svg>
               </div>
-              <span class="admin-brand-name" style="font-size:1.15rem;">GANGCHIL<span style="color:#D4AF37;">.</span>ADMIN</span>
+              <span class="admin-brand-name" style="font-size:1.15rem;">GBREL<span style="color:#D4AF37;">.</span>ADMIN</span>
             </div>
             <button class="drawer-close-btn" @click="mobileNavOpen = false" aria-label="Close Navigation">✕</button>
           </div>

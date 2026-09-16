@@ -10,7 +10,7 @@
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
               </svg>
             </div>
-            <span class="brand-title" style="font-size: 1.3rem;">GANGCHIL<span style="color: #D4AF37;">.</span>HOMES</span>
+            <span class="brand-title" style="font-size: 1.3rem;">GBREL<span style="color: #D4AF37;">.</span>COM</span>
           </div>
           <p style="color: #CBD5E1; font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px;">
             Bangladesh's premier client-hunter real estate marketplace. Connecting discerning buyers and expatriates with verified luxury residences, high-yield plots, and commercial resort assets.
@@ -52,7 +52,7 @@
         <div>
           <h4 class="footer-col-title">Corporate Headquarters</h4>
           <p style="color: #CBD5E1; font-size: 0.88rem; margin-bottom: 12px;">
-            <strong>Dhaka HQ:</strong> Level 14, Gangchil Tower, Kemal Ataturk Avenue, Gulshan-2, Dhaka-1212.
+            <strong>Dhaka HQ:</strong> Level 14, GBREL Tower, Kemal Ataturk Avenue, Gulshan-2, Dhaka-1212.
           </p>
           <p style="color: #CBD5E1; font-size: 0.88rem; margin-bottom: 16px;">
             <strong>Chittagong Office:</strong> Agrabad Commercial Area, Chittagong.
@@ -60,7 +60,7 @@
           <div style="background: rgba(255, 255, 255, 0.05); padding: 14px; border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.1);">
             <div style="font-size: 0.78rem; color: #CBD5E1; text-transform: uppercase; letter-spacing: 0.05em;">24/7 Client Advisory Hotline</div>
             <div style="font-family: var(--font-ui); font-size: 1.2rem; font-weight: 800; color: #10B981; margin-top: 4px; font-variant-numeric: tabular-nums;">
-              +880 1819-987654 / 09612-GANGCHIL
+              +880 1819-987654 / 09612-GBREL
             </div>
           </div>
         </div>
@@ -69,7 +69,7 @@
       <!-- Bottom bar -->
       <div class="footer-bottom-bar">
         <div>
-          © {{ new Date().getFullYear() }} Gangchil Homes Ltd. All rights reserved. Real Estate Regulatory Authority (RAJUK/CDA) Compliant.
+          © {{ new Date().getFullYear() }} GBREL (Gram Bangla Real Estate Ltd.). All rights reserved. Real Estate Regulatory Authority (RAJUK/CDA) Compliant.
         </div>
         <div class="flex items-center gap-4">
           <NuxtLink to="#" class="footer-link">Privacy Policy</NuxtLink>

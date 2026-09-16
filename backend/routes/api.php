@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Hash;
 
 /*
 |--------------------------------------------------------------------------
-| Gangchil Homes REST API Routes (MySQL Database & Laravel Sanctum)
+| GBREL REST API Routes (MySQL Database & Laravel Sanctum)
 |--------------------------------------------------------------------------
 */
 
@@ -126,7 +126,7 @@ Route::post('/schedule-viewing', function (Request $request) {
     $viewing = Viewing::create([
         'name' => $request->input('name'),
         'phone' => $request->input('phone'),
-        'email' => $request->input('email', 'buyer@gangchilhomes.com'),
+        'email' => $request->input('email', 'buyer@gbrel.com'),
         'contact_method' => $request->input('contact_method', 'WhatsApp'),
         'property_id' => $request->input('property_id', 1),
         'property_title' => $request->input('property_title', 'Luxury Property Inspection'),
@@ -234,8 +234,8 @@ Route::get('/auth/me', function (Request $request) {
         'success' => true,
         'user' => [
             'id' => 1,
-            'name' => 'Chief Admin (Gangchil HQ)',
-            'email' => env('ADMIN_EMAIL', 'admin@gangchilhomes.com'),
+            'name' => 'Chief Admin (GBREL HQ)',
+            'email' => env('ADMIN_EMAIL', 'admin@gbrel.com'),
             'role' => 'admin'
         ]
     ]);

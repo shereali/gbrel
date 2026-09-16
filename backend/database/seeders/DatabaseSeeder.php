@@ -14,28 +14,28 @@ use Illuminate\Support\Facades\Hash;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database with complete Gangchil Homes dataset.
+     * Seed the application's database with complete GBREL dataset.
      */
     public function run(): void
     {
         // 1. Seed Users (RBAC)
-        $adminEmail = env('ADMIN_EMAIL', 'admin@gangchilhomes.com');
+        $adminEmail = env('ADMIN_EMAIL', 'admin@gbrel.com');
         $adminPassword = env('ADMIN_PASSWORD', 'admin123');
 
         User::updateOrCreate(
             ['email' => $adminEmail],
             [
-                'name' => 'Chief Admin (Gangchil HQ)',
+                'name' => 'Chief Admin (GBREL HQ)',
                 'password' => Hash::make($adminPassword),
                 'email_verified_at' => now(),
             ]
         );
 
-        if ($adminEmail !== 'admin@gangchilhomes.com') {
+        if ($adminEmail !== 'admin@gbrel.com') {
             User::updateOrCreate(
-                ['email' => 'admin@gangchilhomes.com'],
+                ['email' => 'admin@gbrel.com'],
                 [
-                    'name' => 'Chief Admin (Gangchil HQ)',
+                    'name' => 'Chief Admin (GBREL HQ)',
                     'password' => Hash::make($adminPassword),
                     'email_verified_at' => now(),
                 ]
@@ -43,7 +43,7 @@ class DatabaseSeeder extends Seeder
         }
 
         User::updateOrCreate(
-            ['email' => 'agent@gangchilhomes.com'],
+            ['email' => 'agent@gbrel.com'],
             [
                 'name' => 'Tanvir Ahmed (Senior Advisor)',
                 'password' => Hash::make('agent123'),
@@ -52,7 +52,7 @@ class DatabaseSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'buyer@gangchilhomes.com'],
+            ['email' => 'buyer@gbrel.com'],
             [
                 'name' => 'Shere Ali (VIP Buyer)',
                 'password' => Hash::make('buyer123'),
@@ -62,11 +62,11 @@ class DatabaseSeeder extends Seeder
 
         // 2. Seed Agents
         $agent1 = Agent::updateOrCreate(
-            ['email' => 'tanvir.ahmed@gangchilhomes.com'],
+            ['email' => 'tanvir.ahmed@gbrel.com'],
             [
                 'name' => 'Tanvir Ahmed',
                 'title' => 'Director of Residential Acquisitions',
-                'agency' => 'Gangchil Premier Advisory',
+                'agency' => 'GBREL Premier Advisory',
                 'state' => 'Dhaka North',
                 'city' => 'Dhaka',
                 'photo' => 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=600&auto=format&fit=crop',
@@ -82,11 +82,11 @@ class DatabaseSeeder extends Seeder
         );
 
         $agent2 = Agent::updateOrCreate(
-            ['email' => 'nusrat.jahan@gangchilhomes.com'],
+            ['email' => 'nusrat.jahan@gbrel.com'],
             [
                 'name' => 'Nusrat Jahan',
                 'title' => 'Senior Coastal & Hospitality Specialist',
-                'agency' => 'Gangchil Coastal & Commercial',
+                'agency' => 'GBREL Coastal & Commercial',
                 'state' => 'Chittagong',
                 'city' => 'Chittagong & Cox\'s Bazar',
                 'photo' => 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=600&auto=format&fit=crop',
@@ -230,7 +230,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Shere Ali',
                 'phone' => '+880 1711-234567',
-                'email' => 'buyer@gangchilhomes.com',
+                'email' => 'buyer@gbrel.com',
                 'contact_method' => 'WhatsApp',
                 'property_id' => 1,
                 'property_title' => 'Lakeview Penthouse at Gulshan-2 Diplomatic Zone',

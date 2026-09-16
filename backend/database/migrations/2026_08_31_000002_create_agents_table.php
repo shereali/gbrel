@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('title');
-            $table->string('agency')->default('Gangchil Real Estate Advisory');
+            $table->string('agency')->default('GBREL Real Estate Advisory');
             $table->string('state')->default('Dhaka North');
             $table->string('city')->default('Dhaka');
             $table->string('photo')->nullable();

@@ -1,8 +1,15 @@
 #!/bin/sh
 set -e
 
-DEPLOY_DIR="/var/www/gangchil"
-LOG_DIR="/var/log/gangchil"
+DEPLOY_DIR="${DEPLOY_DIR:-/var/www/gbrel}"
+if [ ! -d "$DEPLOY_DIR" ] && [ -d "/var/www/gangchil" ]; then
+    DEPLOY_DIR="/var/www/gangchil"
+fi
+
+LOG_DIR="${LOG_DIR:-/var/log/gbrel}"
+if [ "$DEPLOY_DIR" = "/var/www/gangchil" ] && [ ! -d "/var/log/gbrel" ]; then
+    LOG_DIR="/var/log/gangchil"
+fi
 LOG_FILE="$LOG_DIR/deploy.log"
 SENTINEL="$LOG_DIR/deploy.done"
 STATUS_FILE="$LOG_DIR/deploy.status"

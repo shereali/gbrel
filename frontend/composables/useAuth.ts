@@ -14,7 +14,7 @@ export interface UserProfile {
 const defaultBuyerUser: UserProfile = {
   id: 3,
   name: 'Shere Ali (VIP Buyer)',
-  email: 'buyer@gangchilhomes.com',
+  email: 'buyer@gbrel.com',
   role: 'buyer',
   phone: '+880 1711-234567',
   avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop',
@@ -35,7 +35,7 @@ const defaultBuyerUser: UserProfile = {
 const defaultAgentUser: UserProfile = {
   id: 2,
   name: 'Tanvir Ahmed (Senior Advisor)',
-  email: 'agent@gangchilhomes.com',
+  email: 'agent@gbrel.com',
   role: 'agent',
   phone: '+880 1819-987654',
   avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop',
@@ -45,8 +45,8 @@ const defaultAgentUser: UserProfile = {
 
 const defaultAdminUser: UserProfile = {
   id: 1,
-  name: 'Chief Admin (Gangchil HQ)',
-  email: 'admin@gangchilhomes.com',
+  name: 'Chief Admin (GBREL HQ)',
+  email: 'admin@gbrel.com',
   role: 'admin',
   phone: '+880 1912-334455',
   avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop',
@@ -56,13 +56,13 @@ const defaultAdminUser: UserProfile = {
 
 export const useAuth = () => {
   // Persistent Cookie Storage using Nuxt 3 useCookie (Sanctum / Token Storage)
-  const tokenCookie = useCookie<string | null>('gangchil_token', {
+  const tokenCookie = useCookie<string | null>('gbrel_token', {
     maxAge: 60 * 60 * 24 * 7, // 7 days
     sameSite: 'lax',
     path: '/'
   })
 
-  const userCookie = useCookie<UserProfile | null>('gangchil_user', {
+  const userCookie = useCookie<UserProfile | null>('gbrel_user', {
     maxAge: 60 * 60 * 24 * 7,
     sameSite: 'lax',
     path: '/',
@@ -211,7 +211,7 @@ export const useAuth = () => {
           vip_pickup: !!viewing.vipPickup,
           pickup_location: viewing.pickupLocation || 'Gulshan-2 Diplomatic Enclave',
           assigned_agent: viewing.agentName || 'Tanvir Ahmed',
-          notes: viewing.notes || 'Booked online via Gangchil platform'
+          notes: viewing.notes || 'Booked online via GBREL platform'
         })
       })
     } catch {

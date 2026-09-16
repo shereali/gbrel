@@ -113,11 +113,11 @@ const agentsData = ref<AgentItem[]>([
     id: 1,
     name: 'Tanvir Ahmed',
     title: 'Senior Luxury Real Estate Advisor',
-    agency: 'Gangchil Premier Advisory',
+    agency: 'GBREL Premier Advisory',
     state: 'Dhaka North',
     city: 'Dhaka',
     photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=600&auto=format&fit=crop',
-    email: 'tanvir.ahmed@gangchilhomes.com',
+    email: 'tanvir.ahmed@gbrel.com',
     phone: '+880 1819-987654',
     whatsapp: '+8801819987654',
     bio: 'Over 12 years of specialized experience in Diplomatic Zone residences, Gulshan-Banani luxury penthouses, and Purbachal high-value institutional plots. Certified RAJUK Real Estate Valuer.',
@@ -131,11 +131,11 @@ const agentsData = ref<AgentItem[]>([
     id: 2,
     name: 'Nusrat Jahan Chowdhury',
     title: 'Commercial & Coastal Estate Director',
-    agency: 'Gangchil Coastal & Commercial',
+    agency: 'GBREL Coastal & Commercial',
     state: 'Chittagong',
     city: 'Chittagong & Cox\'s Bazar',
     photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=600&auto=format&fit=crop',
-    email: 'nusrat.jahan@gangchilhomes.com',
+    email: 'nusrat.jahan@gbrel.com',
     phone: '+880 1711-889900',
     whatsapp: '+8801711889900',
     bio: 'Specialist in Cox’s Bazar Marine Drive beachfront resorts, hotel suite fractions, and Agrabad/Khulshi prime commercial acquisitions. Fluent in English, Bengali, and Chittagonian.',
@@ -149,11 +149,11 @@ const agentsData = ref<AgentItem[]>([
     id: 3,
     name: 'Syed Mahbubur Rahman',
     title: 'Land Bank & Estate Consultant',
-    agency: 'Gangchil Agro & Institutional Lands',
+    agency: 'GBREL Agro & Institutional Lands',
     state: 'Dhaka South',
     city: 'Dhaka & Sylhet',
     photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=600&auto=format&fit=crop',
-    email: 'mahbub.rahman@gangchilhomes.com',
+    email: 'mahbub.rahman@gbrel.com',
     phone: '+880 1912-778899',
     whatsapp: '+8801912778899',
     bio: 'Lead consultant for large acreage freehold lands, tea estates in Sylhet, and residential townships across Jalshiri and Keraniganj. Expert in mutation records and land registry vetting.',
@@ -220,7 +220,7 @@ const propertiesData = ref<PropertyItem[]>([
     ],
     agentId: 1,
     history: [
-      { id: 1, date: 'Jan 2026', event: 'Listed for Sale', price: 78000000, status: 'Active', notes: 'Exclusively listed on Gangchil Homes' },
+      { id: 1, date: 'Jan 2026', event: 'Listed for Sale', price: 78000000, status: 'Active', notes: 'Exclusively listed on GBREL' },
       { id: 2, date: 'Aug 2025', event: 'Construction & Finishing Completed', price: 75000000, status: 'Ready', notes: 'Interior marble & VRF installed' },
       { id: 3, date: 'Mar 2024', event: 'Pre-construction Valuation', price: 68000000, status: 'Off-Plan', notes: 'Early bird architectural launch' }
     ],
@@ -320,7 +320,7 @@ const propertiesData = ref<PropertyItem[]>([
     ],
     agentId: 1,
     history: [
-      { id: 1, date: 'Feb 2026', event: 'Listed on Gangchil Homes', price: 36000000, status: 'Active', notes: 'Exclusive prime corner listing' },
+      { id: 1, date: 'Feb 2026', event: 'Listed on GBREL', price: 36000000, status: 'Active', notes: 'Exclusive prime corner listing' },
       { id: 2, date: '2024', event: 'Sector 17 Infrastructure Handover', price: 31000000, status: 'Ready', notes: 'Paved road and utilities connected' }
     ],
     estimates: {
@@ -502,7 +502,7 @@ const propertiesData = ref<PropertyItem[]>([
     ],
     agentId: 1,
     history: [
-      { id: 1, date: 'Feb 2026', event: 'Listed on Gangchil Homes', price: 42500000, status: 'Active', notes: 'Prime Dhanmondi 8/A lakefront property' }
+      { id: 1, date: 'Feb 2026', event: 'Listed on GBREL', price: 42500000, status: 'Active', notes: 'Prime Dhanmondi 8/A lakefront property' }
     ],
     estimates: {
       marketEstimate: 43000000,

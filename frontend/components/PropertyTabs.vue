@@ -135,7 +135,7 @@
             </svg>
           </div>
           <div>
-            <h4 style="font-size: 1.15rem; font-weight: 800; color: #065F46;">Legal & Regulatory Due Diligence (Verified by Gangchil Legal)</h4>
+            <h4 style="font-size: 1.15rem; font-weight: 800; color: #065F46;">Legal & Regulatory Due Diligence (Verified by GBREL Legal)</h4>
             <p style="font-size: 0.85rem; color: #047857;">All original registry documents, khatians, and municipal approval numbers have been vetted by our in-house Supreme Court legal panel.</p>
           </div>
         </div>
@@ -177,7 +177,7 @@
 
       <div class="grid grid-3" style="margin-bottom: 32px;">
         <div style="background: #FFFFFF; padding: 24px; border-radius: var(--radius-lg); border: 1.5px solid var(--color-border); box-shadow: var(--shadow-sm);">
-          <div style="font-size: 0.82rem; color: #64748B; text-transform: uppercase; font-weight: 700;">Gangchil Valuation Estimate</div>
+          <div style="font-size: 0.82rem; color: #64748B; text-transform: uppercase; font-weight: 700;">GBREL Valuation Estimate</div>
           <div style="font-family: var(--font-ui); font-size: 1.7rem; font-weight: 800; color: #059669; margin: 8px 0; font-variant-numeric: tabular-nums;">
             {{ formatBDT(property.estimates.marketEstimate) }}
           </div>

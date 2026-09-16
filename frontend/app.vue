@@ -5,5 +5,5 @@
 </template>
 
 <script setup lang="ts">
-// Gangchil Homes - Universal App Shell
+// GBREL - Universal App Shell
 </script>

@@ -296,7 +296,7 @@ const resortsCount = computed(() => properties.value.filter(p => p.propertyType 
 const viewingsCount = computed(() => 4)
 
 const exportReport = () => {
-  alert('Audit Report Generated! Asset valuation summary exported for Gangchil Board of Directors.')
+  alert('Audit Report Generated! Asset valuation summary exported for GBREL Board of Directors.')
 }
 </script>
 

@@ -9,7 +9,7 @@
               <path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/>
               <path d="M9 12l2 2 4-4"/>
             </svg>
-            <span>GANGCHIL VERIFIED SELLER NETWORK</span>
+            <span>GBREL VERIFIED SELLER NETWORK</span>
           </div>
 
           <h1 class="pitch-title">
@@ -224,7 +224,7 @@ const form = reactive({
 
 const handleSignup = async () => {
   // Trigger auth login state
-  await login(form.email || 'seller@gangchilhomes.com', form.password)
+  await login(form.email || 'seller@gbrel.com', form.password)
   // Direct forward to listing submission page
   router.push('/list-property?registered=true')
 }

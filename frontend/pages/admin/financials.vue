@@ -12,7 +12,7 @@
       <div class="kpi-card">
         <div class="kpi-label">Earned Advisory Commission (2%)</div>
         <div class="kpi-value text-gold">৳ 2.49 Cr</div>
-        <div class="kpi-sub">Disbursed to Gangchil Treasury</div>
+        <div class="kpi-sub">Disbursed to GBREL Treasury</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Active Escrow Accounts</div>

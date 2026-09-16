@@ -10,7 +10,7 @@
           </svg>
         </div>
         <h1 style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: #FFFFFF; line-height: 1.2;">
-          GANGCHIL<span style="color: #D4AF37;">.</span>ADMIN
+          GBREL<span style="color: #D4AF37;">.</span>ADMIN
         </h1>
         <p style="font-size: 0.8rem; color: #CBD5E1; margin-top: 4px; letter-spacing: 0.05em; text-transform: uppercase;">
           Enterprise Control Center Authentication
@@ -24,7 +24,7 @@
           <span class="badge badge-urgent" style="font-size: 0.75rem;">HQ ROLE</span>
         </div>
         <div style="font-size: 0.78rem; color: #CBD5E1; margin-top: 4px;">
-          <code>admin@gangchilhomes.com</code> / <code>admin123</code>
+          <code>admin@gbrel.com</code> / <code>admin123</code>
         </div>
       </div>
 
@@ -36,7 +36,7 @@
             v-model="email" 
             type="email" 
             required 
-            placeholder="admin@gangchilhomes.com" 
+            placeholder="admin@gbrel.com" 
             class="form-input" 
             style="background: #1E293B; color: #FFF; border-color: rgba(255,255,255,0.15);" 
           />
@@ -89,7 +89,7 @@ definePageMeta({
 const router = useRouter()
 const { login } = useAuth()
 
-const email = ref('admin@gangchilhomes.com')
+const email = ref('admin@gbrel.com')
 const password = ref('admin123')
 
 const handleAdminLogin = async () => {
@@ -98,7 +98,7 @@ const handleAdminLogin = async () => {
 }
 
 const autoFillAndLogin = () => {
-  email.value = 'admin@gangchilhomes.com'
+  email.value = 'admin@gbrel.com'
   password.value = 'admin123'
   handleAdminLogin()
 }

@@ -13,7 +13,7 @@
           <span class="badge badge-featured" style="margin-bottom: 8px;">Direct Seller Portal</span>
           <h1 style="font-size: 2rem; font-weight: 800; color: #0A1128;">Sell or Lease Your Property</h1>
           <p style="color: #64748B; font-size: 0.95rem;">
-            List your flat, residential plot, or commercial space on Gangchil Homes. Our legal and marketing team will conduct free verification and connect you with qualified buyers.
+            List your flat, residential plot, or commercial space on GBREL. Our legal and marketing team will conduct free verification and connect you with qualified buyers.
           </p>
         </div>
 
@@ -120,7 +120,7 @@
           </div>
           <h2 style="font-size: 1.8rem; font-weight: 800; color: #0F172A; margin-bottom: 8px;">Property Listed Successfully!</h2>
           <p style="color: #64748B; font-size: 1rem; max-width: 500px; margin: 0 auto 24px;">
-            Your listing has been created and indexed into the Gangchil Homes live catalog. Our legal team will review the title records within 24 hours.
+            Your listing has been created and indexed into the GBREL live catalog. Our legal team will review the title records within 24 hours.
           </p>
           <div class="flex justify-center gap-4">
             <NuxtLink :to="`/properties/${createdId}`" class="btn btn-primary">View Your Live Listing</NuxtLink>

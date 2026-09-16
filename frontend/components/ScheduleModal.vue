@@ -17,7 +17,7 @@
           </div>
           <div>
             <h3 style="font-size: 1.35rem; font-weight: 800; color: #0A1128;">Schedule a Site Visit</h3>
-            <p style="font-size: 0.85rem; color: #64748B;">Accompanied by a dedicated Gangchil property specialist</p>
+            <p style="font-size: 0.85rem; color: #64748B;">Accompanied by a dedicated GBREL property specialist</p>
           </div>
         </div>
 

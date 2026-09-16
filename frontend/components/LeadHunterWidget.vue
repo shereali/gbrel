@@ -31,7 +31,7 @@
 
       <!-- Pulsing WhatsApp Button -->
       <a 
-        href="https://wa.me/8801819987654?text=Hello%20Gangchil%20Homes,%20I%20am%20looking%20for%20verified%20properties%20in%20Bangladesh." 
+        href="https://wa.me/8801819987654?text=Hello%20GBREL,%20I%20am%20looking%20for%20verified%20properties%20in%20Bangladesh." 
         target="_blank" 
         rel="noopener noreferrer"
         class="floating-whatsapp-btn"

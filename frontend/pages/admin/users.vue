@@ -63,10 +63,10 @@ definePageMeta({
 })
 
 const userAccounts = ref([
-  { id: 1, name: 'Chief Administrator', email: 'admin@gangchilhomes.com', role: 'admin', phone: '+880 1912-334455', region: 'Dhaka HQ', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop' },
-  { id: 2, name: 'Tanvir Ahmed', email: 'tanvir@gangchilhomes.com', role: 'agent', phone: '+880 1819-987654', region: 'Dhaka North', avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop' },
-  { id: 3, name: 'Nusrat Jahan', email: 'nusrat@gangchilhomes.com', role: 'agent', phone: '+880 1711-889900', region: 'Chittagong & Coxs Bazar', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop' },
-  { id: 4, name: 'Shere Ali', email: 'buyer@gangchilhomes.com', role: 'buyer', phone: '+880 1711-234567', region: 'Dhaka', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop' }
+  { id: 1, name: 'Chief Administrator', email: 'admin@gbrel.com', role: 'admin', phone: '+880 1912-334455', region: 'Dhaka HQ', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop' },
+  { id: 2, name: 'Tanvir Ahmed', email: 'tanvir@gbrel.com', role: 'agent', phone: '+880 1819-987654', region: 'Dhaka North', avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop' },
+  { id: 3, name: 'Nusrat Jahan', email: 'nusrat@gbrel.com', role: 'agent', phone: '+880 1711-889900', region: 'Chittagong & Coxs Bazar', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop' },
+  { id: 4, name: 'Shere Ali', email: 'buyer@gbrel.com', role: 'buyer', phone: '+880 1711-234567', region: 'Dhaka', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop' }
 ])
 
 const cycleUserRole = (id: number) => {
@@ -84,7 +84,7 @@ const openAddUserModal = () => {
     userAccounts.value.push({
       id: Date.now(),
       name,
-      email: `${name.toLowerCase().replace(/\s+/g, '')}@gangchilhomes.com`,
+      email: `${name.toLowerCase().replace(/\s+/g, '')}@gbrel.com`,
       role: 'agent',
       phone: '+880 1819-000000',
       region: 'Dhaka HQ',

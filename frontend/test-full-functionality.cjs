@@ -38,7 +38,7 @@ async function frontendRequest(path) {
 
 async function runAudit() {
   console.log('================================================================');
-  console.log('   GANGCHIL HOMES FULL-STACK END-TO-END INTEGRATION AUDIT');
+  console.log('   GBREL FULL-STACK END-TO-END INTEGRATION AUDIT');
   console.log('================================================================\n');
 
   // 1. Test Lead Generation (WhatsApp & Callback)
@@ -90,7 +90,7 @@ async function runAudit() {
   // 4. Test Sanctum Auth on MySQL
   console.log('[4/5] Testing Admin Sanctum Auth on MySQL Users Table...');
   const authRes = await apiRequest('/api/auth/login', 'POST', {
-    email: 'admin@gangchilhomes.com',
+    email: 'admin@gbrel.com',
     password: 'admin123'
   });
   console.log(`      ✓ Admin Authenticated via MySQL Sanctum! Token: ${authRes.data?.token?.substring(0, 20)}... Role: ${authRes.data?.user?.role}\n`);

@@ -217,7 +217,7 @@
             </div>
 
             <div class="flex gap-3 flex-wrap" style="margin-top: 28px;">
-              <a href="https://wa.me/8801819987654?text=Hi%20Gangchil%20Homes,%20I%20am%20an%20NRB%20investor%20interested%20in%20property%20acquisitions." target="_blank" class="btn btn-emerald btn-lg" style="background: #25D366;">
+              <a href="https://wa.me/8801819987654?text=Hi%20GBREL,%20I%20am%20an%20NRB%20investor%20interested%20in%20property%20acquisitions." target="_blank" class="btn btn-emerald btn-lg" style="background: #25D366;">
                 <span>WhatsApp Expat Advisory Desk</span>
               </a>
               <NuxtLink to="/contact" class="btn btn-outline-white btn-lg">

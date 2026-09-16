@@ -1,0 +1,24 @@
+# Caddy configuration for gbrel.com / www.gbrel.com
+# Copy or symlink to /opt/caddy/conf.d/gbrel.caddy on the VPS
+
+gbrel.com, www.gbrel.com {
+    encode gzip zstd
+
+    # Backend API routing
+    handle /api/* {
+        reverse_proxy gbrel-backend-1:8000
+    }
+
+    # Frontend application routing
+    handle {
+        reverse_proxy gbrel-frontend-1:3000
+    }
+
+    # Production security headers
+    header {
+        -Server
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+    }
+}

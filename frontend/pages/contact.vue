@@ -3,7 +3,7 @@
     <div class="container">
       <div style="text-align:center; max-width:640px; margin:0 auto 48px;">
         <span class="section-tag">Corporate Headquarters</span>
-        <h1 style="font-size: 2.4rem; font-weight: 800; color: #0A1128; margin-bottom: 12px;">Get in Touch with Gangchil Homes</h1>
+        <h1 style="font-size: 2.4rem; font-weight: 800; color: #0A1128; margin-bottom: 12px;">Get in Touch with GBREL</h1>
         <p style="color: #64748B; font-size: 1rem;">
           Whether acquiring a luxury residence in Gulshan, securing high-value plots in Purbachal, or exploring hospitality suites in Cox's Bazar, our senior advisory desk is at your service.
         </p>
@@ -52,7 +52,7 @@
               </span>
               <div>
                 <strong style="color: #0A1128; font-size: 1.1rem;">Dhaka Headquarters (Diplomatic Zone)</strong>
-                <div style="font-size: 0.85rem; color: #64748B;">Level 14, Gangchil Tower, Kemal Ataturk Avenue, Gulshan-2, Dhaka-1212</div>
+                <div style="font-size: 0.85rem; color: #64748B;">Level 14, GBREL Tower, Kemal Ataturk Avenue, Gulshan-2, Dhaka-1212</div>
               </div>
             </div>
             <div style="font-size: 0.9rem; color: #059669; font-weight: 700; margin-top: 8px;">

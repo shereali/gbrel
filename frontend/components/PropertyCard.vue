@@ -153,7 +153,7 @@
 
         <!-- Direct WhatsApp Lead Hunter Button -->
         <a 
-          :href="`https://wa.me/8801819987654?text=Hello%20Gangchil%20Homes,%20I%20am%20interested%20in%20listing:%20${encodeURIComponent(property.title)}%20(ID:%20${property.id})`" 
+          :href="`https://wa.me/8801819987654?text=Hello%20GBREL,%20I%20am%20interested%20in%20listing:%20${encodeURIComponent(property.title)}%20(ID:%20${property.id})`" 
           target="_blank" 
           rel="noopener noreferrer"
           class="btn-card-whatsapp"
