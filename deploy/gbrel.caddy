@@ -1,7 +1,7 @@
 # Caddy configuration for gbrel.com / www.gbrel.com
 # Copy or symlink to /opt/caddy/conf.d/gbrel.caddy on the VPS
 
-gbrel.com, www.gbrel.com {
+gbrel.com, www.gbrel.com, gangchil.softcredible.com {
     encode gzip zstd
 
     # Backend API routing
@@ -17,6 +17,7 @@ gbrel.com, www.gbrel.com {
     # Production security headers
     header {
         -Server
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Content-Type-Options nosniff
         X-Frame-Options DENY
         Referrer-Policy strict-origin-when-cross-origin
