@@ -81,6 +81,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
+import { useToast } from '~/composables/useToast'
 
 definePageMeta({
   layout: false
@@ -88,13 +89,23 @@ definePageMeta({
 
 const router = useRouter()
 const { login } = useAuth()
+const toast = useToast()
 
 const email = ref('admin@gbrel.com')
 const password = ref('admin123')
+const loading = ref(false)
 
 const handleAdminLogin = async () => {
-  await login(email.value, password.value)
-  router.push('/admin')
+  loading.value = true
+  try {
+    await login(email.value, password.value)
+    toast.success('Admin Authenticated', 'Welcome to GBREL Enterprise Control Center.')
+    router.push('/admin')
+  } catch (err: any) {
+    toast.error('Authentication Failed', err.message || 'Invalid administrator credentials.')
+  } finally {
+    loading.value = false
+  }
 }
 
 const autoFillAndLogin = () => {

@@ -275,15 +275,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useProperties } from '~/composables/useProperties'
 import { formatBDT } from '~/composables/useCurrency'
+import { useToast } from '~/composables/useToast'
 
 definePageMeta({
   layout: 'admin'
 })
 
-const { properties } = useProperties()
+const { properties, fetchProperties } = useProperties()
+const toast = useToast()
+
+onMounted(() => {
+  fetchProperties()
+})
 
 const totalPortfolioCrores = computed(() => {
   const totalBDT = properties.value.reduce((acc, p) => acc + p.price, 0)
@@ -296,7 +302,41 @@ const resortsCount = computed(() => properties.value.filter(p => p.propertyType 
 const viewingsCount = computed(() => 4)
 
 const exportReport = () => {
-  alert('Audit Report Generated! Asset valuation summary exported for GBREL Board of Directors.')
+  try {
+    const headers = ['ID', 'Title', 'Category', 'Division', 'Area', 'Price (BDT)', 'Status', 'RAJUK Approved']
+    const rows = properties.value.map(p => [
+      p.id,
+      `"${p.title.replace(/"/g, '""')}"`,
+      p.propertyType,
+      p.state,
+      `"${p.areaName}"`,
+      p.price,
+      p.status,
+      p.isRajukApproved ? 'Yes' : 'No'
+    ])
+    
+    const csvContent = [
+      `GBREL Executive Asset Valuation & Audit Report - Generated on ${new Date().toISOString()}`,
+      `Total Assets: ${properties.value.length}, Valuation: BDT ${totalPortfolioCrores.value} Crore`,
+      '',
+      headers.join(','),
+      ...rows.map(r => r.join(','))
+    ].join('\r\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.setAttribute('href', url)
+    link.setAttribute('download', `GBREL_Portfolio_Audit_${new Date().toISOString().slice(0, 10)}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+
+    toast.success('Executive Audit Report Downloaded', `Successfully exported ${properties.value.length} assets to CSV.`)
+  } catch (err: any) {
+    toast.error('Export Failed', err.message || 'Unable to generate report.')
+  }
 }
 </script>
 

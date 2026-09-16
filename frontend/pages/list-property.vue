@@ -136,8 +136,10 @@
 import { reactive, ref } from 'vue'
 import { useProperties } from '~/composables/useProperties'
 import { formatBDT } from '~/composables/useCurrency'
+import { useToast } from '~/composables/useToast'
 
 const { addProperty } = useProperties()
+const toast = useToast()
 const submitted = ref(false)
 const createdId = ref<number | null>(null)
 
@@ -167,5 +169,6 @@ const handleSubmit = async () => {
   const newId = await addProperty(form)
   createdId.value = newId
   submitted.value = true
+  toast.success('Property Listed', `Your mandate "${form.title}" is now recorded for verification.`)
 }
 </script>

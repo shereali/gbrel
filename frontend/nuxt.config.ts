@@ -26,7 +26,8 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/main.css',
     '~/assets/css/components.css',
-    '~/assets/css/animations.css'
+    '~/assets/css/animations.css',
+    '~/assets/css/admin.css'
   ],
   runtimeConfig: {
     public: {

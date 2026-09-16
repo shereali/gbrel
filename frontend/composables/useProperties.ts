@@ -848,6 +848,67 @@ export const useProperties = () => {
     }
   }
 
+  const fetchProperties = async () => {
+    try {
+      const res = await fetch(useApiUrl('/properties'))
+      if (res.ok) {
+        const json = await res.json()
+        if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
+          for (const apiItem of json.data) {
+            const existing = propertiesData.value.find(p => p.id === apiItem.id)
+            if (!existing) {
+              propertiesData.value.push({
+                id: apiItem.id,
+                title: apiItem.title,
+                slug: apiItem.slug || 'property-' + apiItem.id,
+                tagline: apiItem.tagline || '',
+                description: apiItem.description || '',
+                address: apiItem.address || '',
+                city: apiItem.city || 'Dhaka',
+                state: apiItem.state || 'Dhaka North',
+                areaName: apiItem.area_name || '',
+                price: Number(apiItem.price) || 0,
+                priceUnit: apiItem.price_unit,
+                listingType: apiItem.listing_type || 'Sale',
+                propertyType: apiItem.property_type || 'Flat',
+                status: apiItem.status || 'Active',
+                bedrooms: apiItem.bedrooms || 0,
+                bathrooms: apiItem.bathrooms || 0,
+                balconies: apiItem.balconies || 0,
+                squareFootage: apiItem.square_footage || 0,
+                landSize: apiItem.land_size || 0,
+                landUnit: apiItem.land_unit || 'Katha',
+                parking: apiItem.parking || 0,
+                floorNumber: apiItem.floor_number,
+                totalFloors: apiItem.total_floors,
+                facing: apiItem.facing || 'South',
+                completionStatus: apiItem.completion_status || 'Ready',
+                yearBuilt: apiItem.year_built || 2024,
+                isFeatured: !!apiItem.is_featured,
+                isRajukApproved: !!apiItem.is_rajuk_approved,
+                isVerified: !!apiItem.is_verified,
+                hasOpenHouse: !!apiItem.has_open_house,
+                lat: apiItem.latitude || 23.7925,
+                lng: apiItem.longitude || 90.4167,
+                images: Array.isArray(apiItem.images) && apiItem.images.length ? apiItem.images : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'],
+                amenities: Array.isArray(apiItem.amenities) ? apiItem.amenities : ['24/7 Generator', 'Security CCTV', 'Lift'],
+                documentsVerified: Array.isArray(apiItem.documents_verified) ? apiItem.documents_verified : ['Clear Title Deed', 'Mutation Cleared'],
+                agentId: apiItem.agent_id || 1,
+                history: [],
+                estimates: { marketEstimate: Number(apiItem.price) || 0, lowEstimate: (Number(apiItem.price) || 0) * 0.95, highEstimate: (Number(apiItem.price) || 0) * 1.05, annualGrowthPct: 10, monthlyRentEstimate: (Number(apiItem.price) || 0) * 0.004, annualRoiPct: 6, pricePerSqftArea: 8000 },
+                comparables: [],
+                schools: [],
+                community: { neighborhood: apiItem.area_name || '', metroDistanceKm: 2, nearestMetroStation: 'MRT Station', hospitalDistanceKm: 2, nearestHospital: 'Evercare Hospital', airportDistanceKm: 12, safetyRating: 'High', amenitiesOverview: 'Nearby amenities', transitOverview: 'Highway access' }
+              })
+            }
+          }
+        }
+      }
+    } catch {
+      // Offline fallback
+    }
+  }
+
   return {
     properties,
     agents,
@@ -855,6 +916,7 @@ export const useProperties = () => {
     getPropertyById,
     getAgentById,
     getPropertiesByAgent,
+    fetchProperties,
     addProperty,
     updateProperty,
     deleteProperty
