@@ -17,42 +17,35 @@ use Illuminate\Support\Facades\Hash;
 |--------------------------------------------------------------------------
 */
 
-// Helper: Normalize incoming Property data (supports both camelCase and snake_case)
-function normalizePropertyData(array $input, bool $isCreate = true): array
+// Helper: Dynamically Normalize incoming Property data (supports any camelCase or snake_case, schema-aware)
+function normalizePropertyData(array $input, bool $isCreate = true, ?int $existingId = null): array
 {
-    $map = [
-        'areaName' => 'area_name',
-        'propertyType' => 'property_type',
-        'listingType' => 'listing_type',
-        'priceUnit' => 'price_unit',
-        'squareFootage' => 'square_footage',
-        'landSize' => 'land_size',
-        'landUnit' => 'land_unit',
-        'floorNumber' => 'floor_number',
-        'totalFloors' => 'total_floors',
-        'completionStatus' => 'completion_status',
-        'yearBuilt' => 'year_built',
-        'isFeatured' => 'is_featured',
-        'isRajukApproved' => 'is_rajuk_approved',
-        'isVerified' => 'is_verified',
-        'hasOpenHouse' => 'has_open_house',
-        'openHouseDate' => 'open_house_date',
-        'agentId' => 'agent_id',
-        'documentsVerified' => 'documents_verified',
+    // 1. Dynamic Key Case Mapping (automatically maps any camelCase to snake_case)
+    $data = [];
+    $customAliases = [
+        'lat' => 'latitude',
+        'lng' => 'longitude',
+        'image_url' => 'feature_image',
+        'cover_image' => 'feature_image',
+        'photos' => 'gallery',
+        'gallery_photos' => 'gallery',
     ];
 
-    $data = [];
-    foreach ($input as $key => $value) {
-        $realKey = $map[$key] ?? $key;
-        $data[$realKey] = $value;
+    foreach ($input as $rawKey => $value) {
+        $snakeKey = \Illuminate\Support\Str::snake($rawKey);
+        $finalKey = $customAliases[$snakeKey] ?? $snakeKey;
+        $data[$finalKey] = $value;
     }
 
-    // Handle feature image & gallery options
-    $featureImage = $input['featureImage'] ?? $input['feature_image'] ?? $input['imageUrl'] ?? null;
-    $gallery = $input['gallery'] ?? $input['galleryImages'] ?? $input['gallery_images'] ?? [];
+    // 2. Dynamic Image Pipeline (Feature image & Gallery aggregation)
+    $featureImage = $data['feature_image'] ?? $input['featureImage'] ?? $input['imageUrl'] ?? null;
+    $gallery = $data['gallery'] ?? $input['gallery'] ?? $input['galleryImages'] ?? [];
 
-    if (!is_array($gallery)) {
-        $gallery = !empty($gallery) ? [$gallery] : [];
+    if (is_string($gallery)) {
+        $decoded = json_decode($gallery, true);
+        $gallery = is_array($decoded) ? $decoded : array_filter(array_map('trim', explode(',', $gallery)));
+    } elseif (!is_array($gallery)) {
+        $gallery = [];
     }
 
     $allImages = [];
@@ -71,12 +64,13 @@ function normalizePropertyData(array $input, bool $isCreate = true): array
         }
     }
 
-    // Fallback if 'images' array was supplied directly
-    if (empty($allImages) && isset($input['images'])) {
-        if (is_array($input['images'])) {
-            $allImages = array_values(array_filter(array_map('trim', $input['images'])));
-        } elseif (is_string($input['images'])) {
-            $allImages = [trim($input['images'])];
+    // Fallback if raw images array was passed directly
+    if (empty($allImages) && isset($data['images'])) {
+        if (is_array($data['images'])) {
+            $allImages = array_values(array_filter(array_map('trim', $data['images'])));
+        } elseif (is_string($data['images'])) {
+            $decoded = json_decode($data['images'], true);
+            $allImages = is_array($decoded) ? $decoded : [trim($data['images'])];
         }
     }
 
@@ -84,49 +78,66 @@ function normalizePropertyData(array $input, bool $isCreate = true): array
         $data['images'] = $allImages;
     }
 
-    if ($isCreate) {
-        if (!isset($data['images']) || empty($data['images']) || !is_array($data['images'])) {
-            $data['images'] = ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'];
-        }
-        if (empty($data['title'])) {
+    // 3. Dynamic Unique Slug Generation
+    if ($isCreate || (!empty($data['title']) && empty($data['slug']))) {
+        if (empty($data['title']) && $isCreate) {
             $data['title'] = 'Exclusive Mandate #' . rand(100, 999);
         }
-        if (empty($data['slug'])) {
-            $data['slug'] = \Illuminate\Support\Str::slug($data['title']) . '-' . rand(100, 999);
+
+        if (empty($data['slug']) && !empty($data['title'])) {
+            $baseSlug = \Illuminate\Support\Str::slug($data['title']);
+            $slug = $baseSlug;
+            $counter = 1;
+            while (Property::where('slug', $slug)->when($existingId, fn($q) => $q->where('id', '!=', $existingId))->exists()) {
+                $slug = $baseSlug . '-' . (++$counter);
+            }
+            $data['slug'] = $slug;
+        }
+    }
+
+    // Defaults for mandatory non-null database fields on create
+    if ($isCreate) {
+        if (!isset($data['images']) || empty($data['images'])) {
+            $data['images'] = ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'];
         }
         if (empty($data['address'])) {
-            $data['address'] = 'Road 1, ' . ($data['area_name'] ?? 'Dhaka');
+            $data['address'] = 'Prime Enclave, ' . ($data['area_name'] ?? $data['city'] ?? 'Dhaka');
+        }
+        if (empty($data['area_name'])) {
+            $data['area_name'] = $data['city'] ?? 'Dhaka';
         }
         if (empty($data['city'])) {
             $data['city'] = 'Dhaka';
         }
-        if (empty($data['state'])) {
-            $data['state'] = 'Dhaka North';
-        }
-        if (empty($data['area_name'])) {
-            $data['area_name'] = 'Dhaka';
-        }
-        if (empty($data['property_type'])) {
-            $data['property_type'] = 'Flat';
-        }
-        if (empty($data['status'])) {
-            $data['status'] = 'Active';
+        if (!isset($data['price'])) {
+            $data['price'] = 0;
         }
     }
 
-    if (isset($data['price'])) {
-        $data['price'] = (float)$data['price'];
+    // 4. Dynamic Type Casting Enforced by Model Casts
+    $casts = (new Property())->getCasts();
+    foreach ($data as $col => $val) {
+        if (!isset($casts[$col]) || $val === null) continue;
+        $castType = $casts[$col];
+
+        if ($castType === 'boolean') {
+            $data[$col] = filter_var($val, FILTER_VALIDATE_BOOLEAN);
+        } elseif ($castType === 'integer') {
+            $data[$col] = ($val === '') ? null : (int)$val;
+        } elseif ($castType === 'float' || $castType === 'decimal') {
+            $data[$col] = ($val === '') ? null : (float)$val;
+        } elseif ($castType === 'array' || $castType === 'json') {
+            if (is_string($val)) {
+                $decoded = json_decode($val, true);
+                $data[$col] = is_array($decoded) ? $decoded : array_filter(array_map('trim', explode(',', $val)));
+            }
+        }
     }
 
-    // Filter allowed columns in MySQL properties table
-    $allowed = [
-        'title', 'slug', 'tagline', 'description', 'address', 'city', 'state', 'area_name',
-        'price', 'price_unit', 'listing_type', 'property_type', 'status', 'bedrooms', 'bathrooms',
-        'balconies', 'square_footage', 'land_size', 'land_unit', 'parking', 'floor_number',
-        'total_floors', 'facing', 'completion_status', 'year_built', 'is_featured',
-        'is_rajuk_approved', 'is_verified', 'has_open_house', 'latitude', 'longitude',
-        'agent_id', 'images', 'amenities', 'documents_verified'
-    ];
+    // 5. Dynamic Schema Column Whitelist
+    $columns = Property::getTableColumns();
+    $readOnly = ['id', 'created_at', 'updated_at', 'feature_image', 'gallery'];
+    $allowed = array_diff($columns, $readOnly);
 
     return array_intersect_key($data, array_flip($allowed));
 }
@@ -134,31 +145,89 @@ function normalizePropertyData(array $input, bool $isCreate = true): array
 // 1. Properties API Endpoints (Realtime MySQL Operations)
 Route::get('/properties', function (Request $request) {
     $query = Property::query();
+    $columns = Property::getTableColumns();
 
-    if ($request->has('q') && !empty($request->q)) {
-        $term = '%' . $request->q . '%';
-        $query->where(function ($q) use ($term) {
-            $q->where('title', 'like', $term)
-              ->orWhere('area_name', 'like', $term)
-              ->orWhere('address', 'like', $term)
-              ->orWhere('description', 'like', $term);
+    // 1. Dynamic Keyword Search (q, search, keyword) across all text columns
+    $searchQuery = $request->input('q') ?? $request->input('search') ?? $request->input('keyword');
+    if (!empty($searchQuery)) {
+        $term = '%' . trim($searchQuery) . '%';
+        $textColumns = ['title', 'slug', 'tagline', 'description', 'address', 'area_name', 'city', 'state'];
+        $validSearchCols = array_intersect($textColumns, $columns);
+        $query->where(function ($q) use ($term, $validSearchCols) {
+            foreach ($validSearchCols as $index => $col) {
+                if ($index === 0) {
+                    $q->where($col, 'like', $term);
+                } else {
+                    $q->orWhere($col, 'like', $term);
+                }
+            }
         });
     }
 
-    if ($request->has('state') && !empty($request->state)) {
-        $query->where('state', $request->state);
-    }
-    if ($request->has('type') && !empty($request->type)) {
-        $query->where('property_type', $request->type);
-    }
-    if ($request->has('max_price') && !empty($request->max_price)) {
-        $query->where('price', '<=', (float)$request->max_price);
-    }
-    if ($request->has('status') && !empty($request->status)) {
-        $query->where('status', $request->status);
+    // 2. Dynamic Attribute Matching (supports both camelCase and snake_case parameters)
+    foreach ($request->all() as $rawKey => $val) {
+        if ($val === null || $val === '' || in_array($rawKey, ['q', 'search', 'keyword', 'sort', 'sort_by', 'page', 'per_page', 'limit'])) {
+            continue;
+        }
+
+        $key = \Illuminate\Support\Str::snake($rawKey);
+
+        // Special aliases
+        if ($key === 'type') $key = 'property_type';
+        if ($key === 'area') $key = 'area_name';
+
+        // Range filters
+        if ($key === 'min_price' || $key === 'price_min') {
+            $query->where('price', '>=', (float)$val);
+            continue;
+        }
+        if ($key === 'max_price' || $key === 'price_max') {
+            $query->where('price', '<=', (float)$val);
+            continue;
+        }
+        if ($key === 'min_bedrooms') {
+            $query->where('bedrooms', '>=', (int)$val);
+            continue;
+        }
+        if ($key === 'min_sqft' || $key === 'min_square_footage') {
+            $query->where('square_footage', '>=', (int)$val);
+            continue;
+        }
+
+        // Direct column matching against database schema
+        if (in_array($key, $columns) && !in_array($key, ['id', 'created_at', 'updated_at', 'images', 'amenities', 'documents_verified'])) {
+            if (str_starts_with($key, 'is_') || str_starts_with($key, 'has_')) {
+                $query->where($key, filter_var($val, FILTER_VALIDATE_BOOLEAN));
+            } else {
+                $query->where($key, $val);
+            }
+        }
     }
 
-    $properties = $query->orderBy('is_featured', 'desc')->orderBy('created_at', 'desc')->get();
+    // 3. Dynamic Sorting
+    $sort = $request->input('sort', $request->input('sort_by', 'default'));
+    switch ($sort) {
+        case 'price_asc':
+            $query->orderBy('price', 'asc');
+            break;
+        case 'price_desc':
+            $query->orderBy('price', 'desc');
+            break;
+        case 'newest':
+            $query->orderBy('created_at', 'desc');
+            break;
+        case 'oldest':
+            $query->orderBy('created_at', 'asc');
+            break;
+        case 'sqft_desc':
+            $query->orderBy('square_footage', 'desc');
+            break;
+        default:
+            $query->orderBy('is_featured', 'desc')->orderBy('created_at', 'desc');
+            break;
+    }
+
+    $properties = $query->get();
 
     return response()->json([
         'success' => true,
@@ -197,7 +266,7 @@ Route::put('/properties/{id}', function (Request $request, $id) {
     $property = Property::findOrFail($id);
     $raw = json_decode($request->getContent(), true);
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
-    $cleanData = normalizePropertyData($input, false);
+    $cleanData = normalizePropertyData($input, false, (int)$id);
     $property->update($cleanData);
 
     return response()->json([

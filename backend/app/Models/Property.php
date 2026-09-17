@@ -16,6 +16,15 @@ class Property extends Model
         'land_size' => 'float',
         'latitude' => 'float',
         'longitude' => 'float',
+        'bedrooms' => 'integer',
+        'bathrooms' => 'integer',
+        'balconies' => 'integer',
+        'square_footage' => 'integer',
+        'parking' => 'integer',
+        'floor_number' => 'integer',
+        'total_floors' => 'integer',
+        'year_built' => 'integer',
+        'agent_id' => 'integer',
         'is_featured' => 'boolean',
         'is_rajuk_approved' => 'boolean',
         'is_verified' => 'boolean',
@@ -26,6 +35,26 @@ class Property extends Model
     ];
 
     protected $appends = ['feature_image', 'gallery'];
+
+    public static function getTableColumns(): array
+    {
+        static $columns = null;
+        if ($columns === null) {
+            try {
+                $columns = \Illuminate\Support\Facades\Schema::getColumnListing((new static)->getTable());
+            } catch (\Throwable $e) {
+                $columns = [
+                    'id', 'title', 'slug', 'tagline', 'description', 'address', 'city', 'state', 'area_name',
+                    'price', 'price_unit', 'listing_type', 'property_type', 'status', 'bedrooms', 'bathrooms',
+                    'balconies', 'square_footage', 'land_size', 'land_unit', 'parking', 'floor_number',
+                    'total_floors', 'facing', 'completion_status', 'year_built', 'is_featured',
+                    'is_rajuk_approved', 'is_verified', 'has_open_house', 'latitude', 'longitude',
+                    'agent_id', 'images', 'amenities', 'documents_verified', 'created_at', 'updated_at'
+                ];
+            }
+        }
+        return $columns;
+    }
 
     public function getFeatureImageAttribute(): ?string
     {
