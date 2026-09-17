@@ -33,22 +33,22 @@
           </thead>
           <tbody>
             <tr v-for="v in viewingsList" :key="v.id">
-              <td style="font-weight:800; color:#D4AF37;">#{{ v.id }}</td>
+              <td style="font-weight:800; color:var(--color-gold);">#{{ v.id }}</td>
               <td>
-                <strong style="color:#FFF;">{{ v.name }}</strong>
-                <div style="font-size:0.78rem; color:#94A3B8;">{{ v.phone }} • {{ v.contact }}</div>
+                <strong class="text-contrast">{{ v.name }}</strong>
+                <div style="font-size:0.78rem;" class="text-subtle">{{ v.phone }} • {{ v.contact }}</div>
               </td>
-              <td style="color:#E2E8F0; font-weight:600; max-width:240px;">{{ v.propertyTitle }}</td>
+              <td style="font-weight:600; max-width:240px;">{{ v.propertyTitle }}</td>
               <td>
-                <div style="color:#FFF; font-weight:700;">{{ v.date }}</div>
-                <div style="font-size:0.78rem; color:#94A3B8;">{{ v.timeSlot }}</div>
+                <div style="font-weight:700;">{{ v.date }}</div>
+                <div style="font-size:0.78rem;" class="text-subtle">{{ v.timeSlot }}</div>
               </td>
               <td>
                 <span v-if="v.pickup" class="badge-admin active" style="font-size:0.72rem;">VIP Chauffeur</span>
-                <span v-else style="color:#64748B; font-size:0.8rem;">Direct Arrival</span>
+                <span v-else style="font-size:0.8rem;" class="text-subtle">Direct Arrival</span>
               </td>
               <td>
-                <span style="color:#34D399; font-weight:600; font-size:0.88rem;">{{ v.assignedAgent }}</span>
+                <span style="color:#10B981; font-weight:600; font-size:0.88rem;">{{ v.assignedAgent }}</span>
               </td>
               <td>
                 <select :value="v.status" @change="handleStatusChange(v.id, $event)" class="status-inline-select">
@@ -63,14 +63,14 @@
                   <a 
                     :href="`https://wa.me/${v.phone.replace(/[^0-9]/g, '')}`" 
                     target="_blank" 
-                    class="action-btn" 
+                    class="btn btn-sm btn-outline-white" 
                     style="color:#25D366; border-color:rgba(37,211,102,0.3);"
-                    title="Launch WhatsApp Dispatch"
+                    title="Direct WhatsApp"
                   >
-                    💬
+                    WA
                   </a>
-                  <button class="action-btn delete" @click="cancelViewing(v.id)" title="Cancel Booking">
-                    ✕
+                  <button class="btn btn-sm btn-outline-white" @click="handleCancel(v.id)" title="Cancel inspection">
+                    Cancel
                   </button>
                 </div>
               </td>
@@ -81,10 +81,10 @@
     </div>
 
     <!-- ======================================================================
-         MODAL: SCHEDULE VIP INSPECTION TOUR
+         MODAL: SCHEDULE INSPECTION
          ====================================================================== -->
     <div v-if="showModal" class="admin-modal-overlay" @click.self="showModal = false">
-      <div class="admin-modal-card wide animate-fade-in-up">
+      <div class="admin-modal-card animate-fade-in-up">
         <div class="admin-modal-header">
           <div>
             <h3 class="admin-modal-title">Schedule VIP Site Inspection</h3>
@@ -97,18 +97,18 @@
           <div class="admin-modal-body">
             <div class="grid grid-2" style="gap:14px; margin-bottom:14px;">
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Visitor Full Name *</label>
-                <input v-model="form.name" type="text" required placeholder="e.g. Barrister Rafiqul Islam" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Visitor Full Name *</label>
+                <input v-model="form.name" type="text" required placeholder="e.g. Barrister Rafiqul Islam" class="form-input" />
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Phone / WhatsApp *</label>
-                <input v-model="form.phone" type="tel" required placeholder="+880 1711-..." class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Phone / WhatsApp *</label>
+                <input v-model="form.phone" type="tel" required placeholder="+880 1711-..." class="form-input" />
               </div>
             </div>
 
             <div class="form-group" style="margin-bottom:14px;">
-              <label class="form-label" style="color:#CBD5E1;">Target Property Mandate *</label>
-              <select v-model="form.propertyTitle" required class="form-select" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);">
+              <label class="form-label">Target Property Mandate *</label>
+              <select v-model="form.propertyTitle" required class="form-select">
                 <option v-for="p in properties" :key="p.id" :value="p.title">
                   {{ p.title }} ({{ p.areaName }})
                 </option>
@@ -117,12 +117,12 @@
 
             <div class="grid grid-3" style="gap:12px; margin-bottom:14px;">
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Date *</label>
-                <input v-model="form.date" type="date" required class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Date *</label>
+                <input v-model="form.date" type="date" required class="form-input" />
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Time Slot *</label>
-                <select v-model="form.timeSlot" class="form-select" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);">
+                <label class="form-label">Time Slot *</label>
+                <select v-model="form.timeSlot" class="form-select">
                   <option value="10:00 AM - 11:30 AM">10:00 AM - 11:30 AM</option>
                   <option value="11:30 AM - 01:00 PM">11:30 AM - 01:00 PM</option>
                   <option value="02:30 PM - 04:00 PM">02:30 PM - 04:00 PM</option>
@@ -130,8 +130,8 @@
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Assigned Broker</label>
-                <select v-model="form.assignedAgent" class="form-select" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);">
+                <label class="form-label">Assigned Broker</label>
+                <select v-model="form.assignedAgent" class="form-select">
                   <option value="Tanvir Ahmed">Tanvir Ahmed (Gulshan / Purbachal)</option>
                   <option value="Nusrat Jahan">Nusrat Jahan (Coastal / Commercial)</option>
                   <option value="Syed Mahbubur Rahman">Syed Mahbubur Rahman (Land Bank)</option>
@@ -139,8 +139,8 @@
               </div>
             </div>
 
-            <div style="background:rgba(255,255,255,0.02); padding:12px 16px; border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
-              <label class="flex items-center gap-2" style="cursor:pointer; color:#FFF; font-size:0.88rem;">
+            <div style="padding:12px 16px; border-radius:8px; border:1px solid var(--admin-border-subtle);">
+              <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.88rem;">
                 <input v-model="form.pickup" type="checkbox" style="width:16px; height:16px; accent-color:#D4AF37;" />
                 <span>Dispatch Complimentary Chauffeur Pickup (Dhaka North / South Hub)</span>
               </label>

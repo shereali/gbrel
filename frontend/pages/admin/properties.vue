@@ -28,11 +28,11 @@
             type="text" 
             placeholder="Search by title, address, area..." 
             class="form-input" 
-            style="max-width: 280px; background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.12);" 
+            style="max-width: 280px;" 
           />
 
           <!-- Category Filter -->
-          <select v-model="inventoryTypeFilter" class="form-select" style="width: auto; background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.12);">
+          <select v-model="inventoryTypeFilter" class="form-select" style="width: auto;">
             <option value="">All Categories</option>
             <option value="Flat">Flats & Apartments</option>
             <option value="Plot">Residential Plots (Katha)</option>
@@ -43,7 +43,7 @@
           </select>
 
           <!-- Division Filter -->
-          <select v-model="inventoryDivisionFilter" class="form-select" style="width: auto; background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.12);">
+          <select v-model="inventoryDivisionFilter" class="form-select" style="width: auto;">
             <option value="">All Divisions</option>
             <option value="Dhaka North">Dhaka North</option>
             <option value="Dhaka South">Dhaka South</option>
@@ -52,7 +52,7 @@
           </select>
 
           <!-- Status Filter -->
-          <select v-model="inventoryStatusFilter" class="form-select" style="width: auto; background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.12);">
+          <select v-model="inventoryStatusFilter" class="form-select" style="width: auto;">
             <option value="">All Statuses</option>
             <option value="Active">Active</option>
             <option value="Under Offer">Under Offer</option>
@@ -188,12 +188,12 @@
             <!-- Row 1: Title & Category -->
             <div class="grid grid-2" style="gap:14px; margin-bottom:14px;">
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Property Title *</label>
-                <input v-model="propForm.title" type="text" required placeholder="e.g. 10 Katha Corner Plot at Purbachal Sector 17" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Property Title *</label>
+                <input v-model="propForm.title" type="text" required placeholder="e.g. 10 Katha Corner Plot at Purbachal Sector 17" class="form-input" />
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Category *</label>
-                <select v-model="propForm.propertyType" class="form-select" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);">
+                <label class="form-label">Category *</label>
+                <select v-model="propForm.propertyType" class="form-select">
                   <option value="Flat">Flat / Luxury Apartment</option>
                   <option value="Plot">Residential Plot (Katha)</option>
                   <option value="Land">Freehold Land (Bigha)</option>
@@ -207,8 +207,8 @@
             <!-- Row 2: Location & Price -->
             <div class="grid grid-3" style="gap:14px; margin-bottom:14px;">
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Division / Region *</label>
-                <select v-model="propForm.state" class="form-select" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);">
+                <label class="form-label">Division / Region *</label>
+                <select v-model="propForm.state" class="form-select">
                   <option value="Dhaka North">Dhaka North</option>
                   <option value="Dhaka South">Dhaka South</option>
                   <option value="Chittagong">Chittagong & Cox's Bazar</option>
@@ -216,12 +216,12 @@
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Area Name / Hub *</label>
-                <input v-model="propForm.areaName" type="text" required placeholder="e.g. Gulshan-2, Purbachal" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Area Name / Hub *</label>
+                <input v-model="propForm.areaName" type="text" required placeholder="e.g. Gulshan-2, Purbachal" class="form-input" />
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Asking Price (BDT Taka) *</label>
-                <input v-model.number="propForm.price" type="number" required placeholder="35000000" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Asking Price (BDT Taka) *</label>
+                <input v-model.number="propForm.price" type="number" required placeholder="35000000" class="form-input" />
                 <div v-if="propForm.price" style="font-size:0.75rem; color:#10B981; margin-top:3px; font-weight:700;">
                   Formatted: {{ formatBDT(propForm.price) }}
                 </div>
@@ -231,16 +231,16 @@
             <!-- Row 3: Dimensions & Specs -->
             <div class="grid grid-4" style="gap:12px; margin-bottom:14px;">
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Sq. Footage</label>
-                <input v-model.number="propForm.squareFootage" type="number" placeholder="2400" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Sq. Footage</label>
+                <input v-model.number="propForm.squareFootage" type="number" placeholder="2400" class="form-input" />
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Land Size</label>
-                <input v-model.number="propForm.landSize" type="number" step="0.5" placeholder="5" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Land Size</label>
+                <input v-model.number="propForm.landSize" type="number" step="0.5" placeholder="5" class="form-input" />
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Land Unit</label>
-                <select v-model="propForm.landUnit" class="form-select" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);">
+                <label class="form-label">Land Unit</label>
+                <select v-model="propForm.landUnit" class="form-select">
                   <option value="Katha">Katha</option>
                   <option value="Bigha">Bigha</option>
                   <option value="Shotok">Shotok / Decimal</option>
@@ -248,10 +248,10 @@
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Beds / Baths</label>
+                <label class="form-label">Beds / Baths</label>
                 <div class="flex gap-2">
-                  <input v-model.number="propForm.bedrooms" type="number" placeholder="Beds" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
-                  <input v-model.number="propForm.bathrooms" type="number" placeholder="Baths" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                  <input v-model.number="propForm.bedrooms" type="number" placeholder="Beds" class="form-input" />
+                  <input v-model.number="propForm.bathrooms" type="number" placeholder="Baths" class="form-input" />
                 </div>
               </div>
             </div>
@@ -259,22 +259,22 @@
             <!-- Row 4: Primary Image & Address -->
             <div class="grid grid-2" style="gap:14px; margin-bottom:14px;">
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Street Address</label>
-                <input v-model="propForm.address" type="text" placeholder="Road, Block, Sector" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Street Address</label>
+                <input v-model="propForm.address" type="text" placeholder="Road, Block, Sector" class="form-input" />
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Primary Showcase Image URL</label>
-                <input v-model="propForm.imageUrl" type="url" placeholder="https://images.unsplash.com/..." class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Primary Showcase Image URL</label>
+                <input v-model="propForm.imageUrl" type="url" placeholder="https://images.unsplash.com/..." class="form-input" />
               </div>
             </div>
 
             <!-- Row 5: Flags -->
-            <div class="flex items-center gap-6" style="background:rgba(255,255,255,0.02); padding:12px 16px; border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
-              <label class="flex items-center gap-2" style="cursor:pointer; color:#FFF; font-size:0.88rem;">
+            <div class="flex items-center gap-6" style="padding:12px 16px; border-radius:8px; border:1px solid var(--admin-border-subtle);">
+              <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.88rem;">
                 <input v-model="propForm.isRajukApproved" type="checkbox" style="width:16px; height:16px; accent-color:#10B981;" />
                 <span>RAJUK / CDA Approved Plan Verified</span>
               </label>
-              <label class="flex items-center gap-2" style="cursor:pointer; color:#FFF; font-size:0.88rem;">
+              <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.88rem;">
                 <input v-model="propForm.isFeatured" type="checkbox" style="width:16px; height:16px; accent-color:#D4AF37;" />
                 <span>Feature on Live Homepage Showcase</span>
               </label>

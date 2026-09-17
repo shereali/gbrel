@@ -42,11 +42,11 @@
         <div class="flex justify-between items-start flex-wrap gap-4" style="margin-bottom:12px;">
           <div>
             <div class="flex items-center gap-2 flex-wrap">
-              <strong style="color:#FFF; font-size:1.18rem;">{{ lead.name }}</strong>
+              <strong style="font-size:1.18rem;">{{ lead.name }}</strong>
               <span class="badge badge-featured" style="font-size:0.75rem;">{{ lead.type }}</span>
               <span class="badge badge-status" style="font-size:0.75rem;">Captured {{ lead.date }}</span>
             </div>
-            <div style="font-size:0.88rem; color:#CBD5E1; margin-top:4px;">
+            <div style="font-size:0.88rem; margin-top:4px;" class="text-subtle">
               Target Property: <strong style="color:#10B981;">{{ lead.property }}</strong>
             </div>
           </div>
@@ -69,7 +69,7 @@
           </div>
         </div>
 
-        <div style="background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.05); padding:14px 18px; border-radius:var(--radius-md); font-size:0.88rem; color:#CBD5E1; line-height:1.5;">
+        <div style="background:var(--admin-bg-surface-alt); border:1px solid var(--admin-border-subtle); padding:14px 18px; border-radius:var(--radius-md); font-size:0.88rem; line-height:1.5;">
           "{{ lead.message }}"
         </div>
       </div>
@@ -88,23 +88,23 @@
           <div class="admin-modal-body">
             <div class="grid grid-2" style="gap:14px; margin-bottom:14px;">
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Prospect Name *</label>
-                <input v-model="leadForm.name" type="text" required placeholder="e.g. Dr. Salman Khan" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Prospect Name *</label>
+                <input v-model="leadForm.name" type="text" required placeholder="e.g. Dr. Salman Khan" class="form-input" />
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Phone / WhatsApp *</label>
-                <input v-model="leadForm.phone" type="tel" required placeholder="+880 1819-..." class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Phone / WhatsApp *</label>
+                <input v-model="leadForm.phone" type="tel" required placeholder="+880 1819-..." class="form-input" />
               </div>
             </div>
 
             <div class="grid grid-2" style="gap:14px; margin-bottom:14px;">
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Target Asset / Property</label>
-                <input v-model="leadForm.property" type="text" placeholder="e.g. Gulshan Penthouse / Purbachal Plot" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Target Asset / Property</label>
+                <input v-model="leadForm.property" type="text" placeholder="e.g. Gulshan Penthouse / Purbachal Plot" class="form-input" />
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Buyer Category</label>
-                <select v-model="leadForm.type" class="form-select" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);">
+                <label class="form-label">Buyer Category</label>
+                <select v-model="leadForm.type" class="form-select">
                   <option value="NRB Investor">NRB Investor (Expatriate)</option>
                   <option value="Direct Buyer">Direct Buyer (End-User)</option>
                   <option value="Hospitality ROI">Hospitality ROI Investor</option>
@@ -114,8 +114,8 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" style="color:#CBD5E1;">Inquiry Message & Due Diligence Notes</label>
-              <textarea v-model="leadForm.message" rows="3" placeholder="Buyer requirements, budget constraints, timeline..." class="form-textarea" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);"></textarea>
+              <label class="form-label">Inquiry Message & Due Diligence Notes</label>
+              <textarea v-model="leadForm.message" rows="3" placeholder="Buyer requirements, budget constraints, timeline..." class="form-textarea"></textarea>
             </div>
           </div>
 

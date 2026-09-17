@@ -26,18 +26,18 @@
         </div>
 
         <div class="form-group" style="margin-bottom:16px;">
-          <label class="form-label" style="color:#CBD5E1;">DBH Finance Benchmark Rate (%)</label>
-          <input v-model="settings.dbhRate" type="text" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+          <label class="form-label">DBH Finance Benchmark Rate (%)</label>
+          <input v-model="settings.dbhRate" type="text" class="form-input" />
         </div>
 
         <div class="form-group" style="margin-bottom:16px;">
-          <label class="form-label" style="color:#CBD5E1;">IDLC Finance Benchmark Rate (%)</label>
-          <input v-model="settings.idlcRate" type="text" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+          <label class="form-label">IDLC Finance Benchmark Rate (%)</label>
+          <input v-model="settings.idlcRate" type="text" class="form-input" />
         </div>
 
         <div class="form-group">
-          <label class="form-label" style="color:#CBD5E1;">BRAC Bank Escrow Benchmark (%)</label>
-          <input v-model="settings.bracRate" type="text" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+          <label class="form-label">BRAC Bank Escrow Benchmark (%)</label>
+          <input v-model="settings.bracRate" type="text" class="form-input" />
         </div>
       </div>
 
@@ -51,18 +51,18 @@
         </div>
 
         <div class="form-group" style="margin-bottom:16px;">
-          <label class="form-label" style="color:#CBD5E1;">Primary WhatsApp Dispatch Number</label>
-          <input v-model="settings.whatsappNumber" type="text" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+          <label class="form-label">Primary WhatsApp Dispatch Number</label>
+          <input v-model="settings.whatsappNumber" type="text" class="form-input" />
         </div>
 
         <div class="form-group" style="margin-bottom:16px;">
-          <label class="form-label" style="color:#CBD5E1;">VIP Chauffeur Pickup Base</label>
-          <input v-model="settings.chauffeurBase" type="text" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+          <label class="form-label">VIP Chauffeur Pickup Base</label>
+          <input v-model="settings.chauffeurBase" type="text" class="form-input" />
         </div>
 
         <div class="form-group">
-          <label class="form-label" style="color:#CBD5E1;">Escrow Platform Advisory Commission (%)</label>
-          <input v-model="settings.commissionRate" type="text" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+          <label class="form-label">Escrow Platform Advisory Commission (%)</label>
+          <input v-model="settings.commissionRate" type="text" class="form-input" />
         </div>
       </div>
     </div>

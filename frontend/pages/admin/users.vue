@@ -35,8 +35,8 @@
                 <div class="flex items-center gap-3">
                   <img :src="user.avatar" :alt="user.name" class="table-thumb" style="border-radius:50%;" />
                   <div>
-                    <strong style="color:#FFF; display:block; font-size:0.92rem;">{{ user.name }}</strong>
-                    <div style="font-size:0.78rem; color:#94A3B8;">{{ user.email }}</div>
+                    <strong style="display:block; font-size:0.92rem;">{{ user.name }}</strong>
+                    <div style="font-size:0.78rem;" class="text-subtle">{{ user.email }}</div>
                   </div>
                 </div>
               </td>
@@ -45,8 +45,8 @@
                   {{ user.role.toUpperCase() }}
                 </span>
               </td>
-              <td style="color:#CBD5E1;">{{ user.phone }}</td>
-              <td style="color:#CBD5E1;">{{ user.region }}</td>
+              <td>{{ user.phone }}</td>
+              <td>{{ user.region }}</td>
               <td>
                 <button 
                   class="badge-admin" 
@@ -88,27 +88,27 @@
           <div class="admin-modal-body">
             <div class="grid grid-2" style="gap:14px; margin-bottom:14px;">
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Full Name *</label>
-                <input v-model="form.name" type="text" required placeholder="e.g. Barrister Shafiul Alam" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Full Name *</label>
+                <input v-model="form.name" type="text" required placeholder="e.g. Barrister Shafiul Alam" class="form-input" />
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Email Address *</label>
-                <input v-model="form.email" type="email" required placeholder="name@gbrel.com" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Email Address *</label>
+                <input v-model="form.email" type="email" required placeholder="name@gbrel.com" class="form-input" />
               </div>
             </div>
 
             <div class="grid grid-2" style="gap:14px; margin-bottom:14px;">
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Assigned Role *</label>
-                <select v-model="form.role" class="form-select" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);">
+                <label class="form-label">Assigned Role *</label>
+                <select v-model="form.role" class="form-select">
                   <option value="admin">Administrator (Full Access)</option>
                   <option value="agent">Licensed Real Estate Agent</option>
                   <option value="buyer">VIP Client / Buyer</option>
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Region / Division</label>
-                <select v-model="form.region" class="form-select" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);">
+                <label class="form-label">Region / Division</label>
+                <select v-model="form.region" class="form-select">
                   <option value="Dhaka HQ">Dhaka HQ (Central)</option>
                   <option value="Dhaka North">Dhaka North (Gulshan/Purbachal)</option>
                   <option value="Dhaka South">Dhaka South (Dhanmondi)</option>
@@ -119,8 +119,8 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" style="color:#CBD5E1;">Phone Number *</label>
-              <input v-model="form.phone" type="tel" required placeholder="+880 1711-..." class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+              <label class="form-label">Phone Number *</label>
+              <input v-model="form.phone" type="tel" required placeholder="+880 1711-..." class="form-input" />
             </div>
           </div>
 

@@ -22,16 +22,16 @@
           <img :src="agent.photo" :alt="agent.name" style="width:62px; height:62px; border-radius:50%; object-fit:cover; border:2px solid var(--color-gold);" />
           <div>
             <span class="badge-admin active" style="font-size:0.7rem; margin-bottom:4px;">{{ agent.state }}</span>
-            <h3 style="font-size:1.15rem; font-weight:800; color:#FFF; line-height:1.2;">{{ agent.name }}</h3>
-            <div style="font-size:0.8rem; color:#D4AF37;">{{ agent.title }}</div>
+            <h3 style="font-size:1.15rem; font-weight:800; line-height:1.2;">{{ agent.name }}</h3>
+            <div style="font-size:0.8rem; color:var(--color-gold);">{{ agent.title }}</div>
           </div>
         </div>
 
-        <p style="font-size:0.85rem; color:#CBD5E1; line-height:1.5; margin-bottom:16px; flex:1;">
+        <p style="font-size:0.85rem; line-height:1.5; margin-bottom:16px; flex:1;" class="text-subtle">
           {{ agent.bio }}
         </p>
 
-        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:12px 14px; border-radius:8px; margin-bottom:16px; font-size:0.82rem; display:flex; justify-content:space-between; color:#CBD5E1;">
+        <div style="background:var(--admin-bg-surface-alt); border:1px solid var(--admin-border-subtle); padding:12px 14px; border-radius:8px; margin-bottom:16px; font-size:0.82rem; display:flex; justify-content:space-between;">
           <div>Exp: <strong>{{ agent.experienceYears }}+ Yrs</strong></div>
           <div>Rating: <strong style="color:#F59E0B;">★ {{ agent.rating }}</strong></div>
           <div>Mandates: <strong style="color:#10B981;">{{ agent.activeListingsCount }}</strong></div>
@@ -59,18 +59,18 @@
         <form @submit.prevent="saveAgent">
           <div class="admin-modal-body">
             <div class="form-group" style="margin-bottom:12px;">
-              <label class="form-label" style="color:#CBD5E1;">Full Name *</label>
-              <input v-model="agentForm.name" type="text" required class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+              <label class="form-label">Full Name *</label>
+              <input v-model="agentForm.name" type="text" required class="form-input" />
             </div>
 
             <div class="grid grid-2" style="gap:12px; margin-bottom:12px;">
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Title / Position *</label>
-                <input v-model="agentForm.title" type="text" required class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Title / Position *</label>
+                <input v-model="agentForm.title" type="text" required class="form-input" />
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Division Assignment</label>
-                <select v-model="agentForm.state" class="form-select" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);">
+                <label class="form-label">Division Assignment</label>
+                <select v-model="agentForm.state" class="form-select">
                   <option value="Dhaka North">Dhaka North</option>
                   <option value="Dhaka South">Dhaka South</option>
                   <option value="Chittagong">Chittagong & Cox's Bazar</option>
@@ -81,23 +81,23 @@
 
             <div class="grid grid-2" style="gap:12px; margin-bottom:12px;">
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">Phone Number *</label>
-                <input v-model="agentForm.phone" type="tel" required class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">Phone Number *</label>
+                <input v-model="agentForm.phone" type="tel" required class="form-input" />
               </div>
               <div class="form-group">
-                <label class="form-label" style="color:#CBD5E1;">WhatsApp Number *</label>
-                <input v-model="agentForm.whatsapp" type="tel" required class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+                <label class="form-label">WhatsApp Number *</label>
+                <input v-model="agentForm.whatsapp" type="tel" required class="form-input" />
               </div>
             </div>
 
             <div class="form-group" style="margin-bottom:12px;">
-              <label class="form-label" style="color:#CBD5E1;">Avatar Photo URL</label>
-              <input v-model="agentForm.photo" type="url" class="form-input" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);" />
+              <label class="form-label">Avatar Photo URL</label>
+              <input v-model="agentForm.photo" type="url" class="form-input" />
             </div>
 
             <div class="form-group">
-              <label class="form-label" style="color:#CBD5E1;">Specialties & Bio Summary</label>
-              <textarea v-model="agentForm.bio" rows="3" class="form-textarea" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);"></textarea>
+              <label class="form-label">Specialties & Bio Summary</label>
+              <textarea v-model="agentForm.bio" rows="3" class="form-textarea"></textarea>
             </div>
           </div>
 

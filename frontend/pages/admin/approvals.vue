@@ -82,15 +82,15 @@
           <button class="admin-modal-close" @click="previewDoc = null">✕</button>
         </div>
         <div class="admin-modal-body">
-          <div style="background:#1E293B; border-radius:8px; padding:16px; margin-bottom:16px;">
-            <div style="font-size:0.8rem; color:#94A3B8; text-transform:uppercase; font-weight:700;">Document Title</div>
-            <div style="font-size:1.1rem; color:#FFF; font-weight:700; margin-top:2px;">{{ previewDoc.docName }}</div>
-            <div style="font-size:0.85rem; color:#D4AF37; margin-top:4px;">Mandate: {{ previewDoc.item.title }}</div>
+          <div style="background:var(--admin-bg-surface-alt); border:1px solid var(--admin-border-subtle); border-radius:8px; padding:16px; margin-bottom:16px;">
+            <div style="font-size:0.8rem; text-transform:uppercase; font-weight:700;" class="text-subtle">Document Title</div>
+            <div style="font-size:1.1rem; font-weight:700; margin-top:2px;">{{ previewDoc.docName }}</div>
+            <div style="font-size:0.85rem; color:var(--color-gold); margin-top:4px;">Mandate: {{ previewDoc.item.title }}</div>
           </div>
-          <div style="border:1px dashed rgba(255,255,255,0.15); border-radius:8px; padding:32px 20px; text-align:center;">
+          <div style="border:1px dashed var(--admin-border-subtle); border-radius:8px; padding:32px 20px; text-align:center;">
             <div style="font-size:2.5rem; margin-bottom:10px;">📜</div>
-            <div style="font-weight:700; color:#FFF;">Digital Certification Pass Verified</div>
-            <p style="color:#94A3B8; font-size:0.85rem; max-width:400px; margin:8px auto 0;">
+            <div style="font-weight:700;">Digital Certification Pass Verified</div>
+            <p class="text-subtle" style="font-size:0.85rem; max-width:400px; margin:8px auto 0;">
               Certified by the Land Records & Survey Directorate (Govt. of Bangladesh) with QR verification hash #GBREL-{{ Date.now().toString().slice(-6) }}.
             </p>
           </div>
@@ -107,17 +107,17 @@
          ====================================================================== -->
     <div v-if="rejectItem" class="admin-modal-overlay" @click.self="rejectItem = null">
       <div class="admin-modal-card animate-fade-in-up">
-        <div class="admin-modal-header" style="background:#1E1622; border-bottom:1px solid rgba(239,68,68,0.2);">
+        <div class="admin-modal-header" style="border-bottom:1px solid rgba(239,68,68,0.2);">
           <h3 class="admin-modal-title" style="color:#F87171;">Request Clarification / Reject</h3>
           <button class="admin-modal-close" @click="rejectItem = null">✕</button>
         </div>
         <div class="admin-modal-body">
-          <p style="color:#E2E8F0; font-size:0.92rem; margin-bottom:14px;">
+          <p style="font-size:0.92rem; margin-bottom:14px;">
             Specify the legal clarification needed from seller <strong>{{ rejectItem.seller }}</strong> for <em>"{{ rejectItem.title }}"</em>:
           </p>
           <div class="form-group" style="margin-bottom:14px;">
-            <label class="form-label" style="color:#CBD5E1;">Clarification Reason</label>
-            <select v-model="rejectReason" class="form-select" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);">
+            <label class="form-label">Clarification Reason</label>
+            <select v-model="rejectReason" class="form-select">
               <option value="Mutation record not updated for current financial year">Mutation record not updated for current financial year</option>
               <option value="CS / RS / BS Khatian ownership lineage mismatch">CS / RS / BS Khatian ownership lineage mismatch</option>
               <option value="RAJUK approved plan floor clearance document missing">RAJUK approved plan floor clearance document missing</option>
@@ -126,7 +126,7 @@
             </select>
           </div>
           <div v-if="rejectReason === 'Custom inquiry'" class="form-group">
-            <textarea v-model="customReason" placeholder="Type custom clarification notes..." rows="3" class="form-textarea" style="background:#1E293B; color:#FFF; border-color:rgba(255,255,255,0.15);"></textarea>
+            <textarea v-model="customReason" placeholder="Type custom clarification notes..." rows="3" class="form-textarea"></textarea>
           </div>
         </div>
         <div class="admin-modal-footer">
@@ -241,17 +241,17 @@ const approveListing = async (id: number) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--admin-bg-surface-alt);
+  border: 1px solid var(--admin-border-subtle);
   border-radius: var(--radius-sm);
   padding: 8px 12px;
   font-size: 0.82rem;
-  color: #CBD5E1;
+  color: var(--admin-text-secondary);
   transition: all var(--transition-fast);
 }
 
 .doc-attachment-pill:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--admin-border-subtle);
   border-color: var(--color-gold);
 }
 </style>

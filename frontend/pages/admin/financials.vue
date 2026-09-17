@@ -111,24 +111,24 @@
           <button class="admin-modal-close" @click="selectedDeal = null">✕</button>
         </div>
         <div class="admin-modal-body">
-          <div style="background:#1E293B; border-radius:8px; padding:16px; margin-bottom:20px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div style="background:var(--admin-bg-surface-alt); border:1px solid var(--admin-border-subtle); border-radius:8px; padding:16px; margin-bottom:20px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
             <div>
-              <div style="font-size:0.75rem; color:#94A3B8; text-transform:uppercase;">Asset Valuation</div>
+              <div style="font-size:0.75rem; text-transform:uppercase;" class="text-subtle">Asset Valuation</div>
               <div style="font-size:1.25rem; font-weight:800; color:#10B981; margin-top:2px;">{{ formatBDT(selectedDeal.value) }}</div>
             </div>
             <div>
-              <div style="font-size:0.75rem; color:#94A3B8; text-transform:uppercase;">Escrow Trustee</div>
-              <div style="font-size:1.05rem; font-weight:700; color:#FFF; margin-top:2px;">{{ selectedDeal.bank }}</div>
+              <div style="font-size:0.75rem; text-transform:uppercase;" class="text-subtle">Escrow Trustee</div>
+              <div style="font-size:1.05rem; font-weight:700; margin-top:2px;">{{ selectedDeal.bank }}</div>
             </div>
           </div>
 
-          <strong style="font-size:0.9rem; color:#FFF; display:block; margin-bottom:12px;">Transaction Milestones:</strong>
+          <strong style="font-size:0.9rem; display:block; margin-bottom:12px;">Transaction Milestones:</strong>
           <div style="display:flex; flex-direction:column; gap:10px;">
             <div class="milestone-row completed">
               <span class="check">✔</span>
               <div style="flex:1;">
-                <div style="font-weight:700; color:#FFF;">Legal Title & Mutation Vetting</div>
-                <div style="font-size:0.8rem; color:#94A3B8;">Supreme Court panel confirmed 0 encumbrances</div>
+                <div style="font-weight:700;">Legal Title & Mutation Vetting</div>
+                <div style="font-size:0.8rem;" class="text-subtle">Supreme Court panel confirmed 0 encumbrances</div>
               </div>
               <span class="badge-admin active" style="font-size:0.7rem;">PASSED</span>
             </div>
@@ -136,8 +136,8 @@
             <div class="milestone-row completed">
               <span class="check">✔</span>
               <div style="flex:1;">
-                <div style="font-weight:700; color:#FFF;">10% Bayna Initial Deposit</div>
-                <div style="font-size:0.8rem; color:#94A3B8;">Deposited into dedicated client escrow account</div>
+                <div style="font-weight:700;">10% Bayna Initial Deposit</div>
+                <div style="font-size:0.8rem;" class="text-subtle">Deposited into dedicated client escrow account</div>
               </div>
               <span class="badge-admin active" style="font-size:0.7rem;">PASSED</span>
             </div>
@@ -145,8 +145,8 @@
             <div class="milestone-row" :class="selectedDeal.status === 'Settled' ? 'completed' : 'pending'">
               <span class="check">{{ selectedDeal.status === 'Settled' ? '✔' : '⏳' }}</span>
               <div style="flex:1;">
-                <div style="font-weight:700; color:#FFF;">Sub-Registry Deed Execution</div>
-                <div style="font-size:0.8rem; color:#94A3B8;">Final deed pass and 90% payout disbursement</div>
+                <div style="font-weight:700;">Sub-Registry Deed Execution</div>
+                <div style="font-size:0.8rem;" class="text-subtle">Final deed pass and 90% payout disbursement</div>
               </div>
               <span class="badge-admin" :class="selectedDeal.status === 'Settled' ? 'active' : 'pending'" style="font-size:0.7rem;">
                 {{ selectedDeal.status === 'Settled' ? 'COMPLETE' : 'SCHEDULED' }}
@@ -225,8 +225,8 @@ const downloadFinancialSummary = () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--admin-bg-surface-alt);
+  border: 1px solid var(--admin-border-subtle);
   border-radius: 8px;
   padding: 12px 14px;
 }
@@ -242,8 +242,8 @@ const downloadFinancialSummary = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
-  color: #CBD5E1;
+  background: var(--admin-border-subtle);
+  color: var(--admin-text-secondary);
   font-size: 0.85rem;
 }
 

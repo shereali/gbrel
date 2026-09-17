@@ -341,144 +341,12 @@ const exportReport = () => {
 </script>
 
 <style scoped>
-/* 1. Header Row */
-.admin-header-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.page-title {
-  font-size: clamp(1.35rem, 3.2vw, 1.85rem);
-  font-weight: 800;
-  color: #FFFFFF;
-  line-height: 1.2;
-}
-
-.page-subtitle {
-  color: #CBD5E1;
-  font-size: 0.9rem;
-  margin-top: 4px;
-  max-width: 680px;
-  line-height: 1.5;
-}
-
-.admin-header-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-/* 2. KPI Metrics Grid */
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
-  margin-bottom: 24px;
-}
-
-.kpi-card {
-  background: #0F172A;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: var(--radius-xl);
-  padding: 20px;
-  box-shadow: var(--shadow-sm);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  transition: transform var(--transition-fast), border-color var(--transition-fast);
-}
-
-.kpi-card:hover {
-  border-color: rgba(212, 175, 55, 0.3);
-  transform: translateY(-2px);
-}
-
-.kpi-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.kpi-label {
-  font-size: 0.74rem;
-  color: #94A3B8;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-
-.kpi-icon-pill {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.kpi-icon-pill.emerald {
-  background: rgba(16, 185, 129, 0.12);
-  color: #10B981;
-}
-
-.kpi-icon-pill.gold {
-  background: rgba(212, 175, 55, 0.12);
-  color: #D4AF37;
-}
-
-.kpi-icon-pill.blue {
-  background: rgba(96, 165, 250, 0.12);
-  color: #60A5FA;
-}
-
-.kpi-icon-pill.rose {
-  background: rgba(244, 63, 94, 0.12);
-  color: #F43F5E;
-}
-
-.kpi-value {
-  font-family: var(--font-ui);
-  font-size: clamp(1.4rem, 2.5vw, 1.85rem);
-  font-weight: 800;
-  margin: 6px 0;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-
-.text-blue { color: #60A5FA; }
-.text-rose { color: #F43F5E; }
-.text-pink { color: #EC4899; }
-
-.kpi-sub {
-  font-size: 0.78rem;
-  color: #64748B;
-  line-height: 1.3;
-}
-
-/* 3. Split Grid (Regional Allocation & Urgent Queue) */
+/* Split Grid (Regional Allocation & Urgent Queue) */
 .split-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   margin-bottom: 24px;
-}
-
-.panel-card {
-  background: #0F172A;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: var(--radius-xl);
-  padding: 22px;
-}
-
-.panel-header {
-  margin-bottom: 16px;
 }
 
 .panel-header-padded {
@@ -488,19 +356,7 @@ const exportReport = () => {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.panel-title {
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #FFFFFF;
-}
-
-.panel-sub {
-  font-size: 0.82rem;
-  color: #CBD5E1;
-  margin-top: 2px;
+  border-bottom: 1px solid var(--admin-border-subtle);
 }
 
 .regional-bars-list {
@@ -521,13 +377,13 @@ const exportReport = () => {
 }
 
 .region-name {
-  color: #E2E8F0;
+  color: var(--admin-text-secondary);
 }
 
 .progress-track {
   width: 100%;
   height: 8px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--admin-border-subtle);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -545,7 +401,7 @@ const exportReport = () => {
 }
 
 .action-queue-item {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--admin-bg-surface-alt);
   border-left: 3px solid #D4AF37;
   border-radius: var(--radius-md);
   padding: 14px 16px;
@@ -570,7 +426,7 @@ const exportReport = () => {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--admin-border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -585,15 +441,16 @@ const exportReport = () => {
 }
 
 .action-title {
-  color: #FFFFFF;
+  color: var(--admin-text-primary);
   font-size: 0.9rem;
   display: block;
   line-height: 1.3;
+  font-weight: 700;
 }
 
 .action-meta {
   font-size: 0.76rem;
-  color: #CBD5E1;
+  color: var(--admin-text-muted);
   margin-top: 2px;
   line-height: 1.3;
 }
@@ -602,43 +459,9 @@ const exportReport = () => {
   flex-shrink: 0;
 }
 
-/* 4. Table & Mobile Mandates Card View */
+/* Mobile Mandates View */
 .desktop-table-view {
   display: block;
-}
-
-.table-responsive {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.admin-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 700px;
-}
-
-.admin-table th {
-  padding: 12px 18px;
-  text-align: left;
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  font-size: 0.75rem;
-  color: #CBD5E1;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-}
-
-.admin-table td {
-  padding: 14px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  font-size: 0.86rem;
-  vertical-align: middle;
-}
-
-.admin-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
 }
 
 .mobile-mandates-list {
@@ -648,8 +471,8 @@ const exportReport = () => {
 }
 
 .mobile-mandate-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--admin-bg-surface-alt);
+  border: 1px solid var(--admin-border-subtle);
   border-radius: var(--radius-lg);
   padding: 14px;
 }
@@ -657,7 +480,7 @@ const exportReport = () => {
 .mobile-mandate-title {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--admin-text-primary);
   line-height: 1.3;
   margin-bottom: 4px;
 }
@@ -667,7 +490,7 @@ const exportReport = () => {
   align-items: center;
   gap: 5px;
   font-size: 0.78rem;
-  color: #CBD5E1;
+  color: var(--admin-text-muted);
 }
 
 .mobile-mandate-footer {
@@ -676,13 +499,13 @@ const exportReport = () => {
   align-items: flex-end;
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--admin-border-subtle);
 }
 
 .val-label {
   display: block;
   font-size: 0.68rem;
-  color: #94A3B8;
+  color: var(--admin-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -693,12 +516,7 @@ const exportReport = () => {
   color: #10B981;
 }
 
-/* 5. Responsive Breakpoints */
 @media (max-width: 1024px) {
-  .kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-  }
   .split-grid {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -716,17 +534,6 @@ const exportReport = () => {
 }
 
 @media (max-width: 640px) {
-  .admin-header-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .admin-header-actions {
-    width: 100%;
-  }
-  .admin-header-actions .btn {
-    flex: 1;
-    justify-content: center;
-  }
   .action-queue-item {
     flex-direction: column;
     align-items: stretch;
@@ -735,13 +542,6 @@ const exportReport = () => {
     width: 100%;
     justify-content: center;
     min-height: 40px;
-  }
-}
-
-@media (max-width: 480px) {
-  .kpi-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
   }
 }
 </style>

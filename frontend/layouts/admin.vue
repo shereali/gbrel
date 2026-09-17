@@ -394,7 +394,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
 import { useToast } from '~/composables/useToast'
@@ -409,6 +409,15 @@ const drawerRoot = ref<HTMLElement | null>(null)
 
 const adminTheme = ref<'dark' | 'light'>('dark')
 const sidebarCollapsed = ref(false)
+
+useHead({
+  htmlAttrs: {
+    class: computed(() => adminTheme.value === 'light' ? 'admin-theme-light' : 'admin-theme-dark')
+  },
+  bodyAttrs: {
+    class: computed(() => adminTheme.value === 'light' ? 'admin-theme-light' : 'admin-theme-dark')
+  }
+})
 
 onMounted(() => {
   try {
@@ -457,19 +466,19 @@ const handleLogout = async () => {
 }
 </script>
 
-<style scoped>
+<style>
 .admin-shell {
-  background-color: #0B1120;
+  background-color: var(--admin-bg-base);
   min-height: 100vh;
   font-family: var(--font-sans);
-  color: #E2E8F0;
+  color: var(--admin-text-primary);
   overflow-x: hidden;
 }
 
 /* 1. Admin Topbar */
 .admin-topbar {
-  background: #0F172A;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--admin-bg-surface);
+  border-bottom: 1px solid var(--admin-border-subtle);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -671,8 +680,8 @@ const handleLogout = async () => {
 /* 2. Mobile Quick-Nav Chip Bar */
 .mobile-quick-nav-bar {
   display: none;
-  background: #0D1527;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--admin-bg-surface);
+  border-bottom: 1px solid var(--admin-border-subtle);
   padding: 8px 16px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -725,8 +734,8 @@ const handleLogout = async () => {
 }
 
 .admin-sidebar {
-  background: #0F172A;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--admin-bg-surface);
+  border: 1px solid var(--admin-border-subtle);
   border-radius: var(--radius-xl);
   padding: 20px;
   height: fit-content;
@@ -818,8 +827,9 @@ const handleLogout = async () => {
   width: 290px;
   max-width: 85vw;
   height: 100%;
-  background: #0A1128;
-  border-right: 1px solid rgba(212, 175, 55, 0.25);
+  background: var(--admin-bg-surface);
+  border-right: 1px solid var(--admin-border-subtle);
+  color: var(--admin-text-primary);
   display: flex;
   flex-direction: column;
   padding: 20px;
