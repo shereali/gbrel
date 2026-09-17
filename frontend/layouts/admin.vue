@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-shell">
+  <div :class="['admin-shell', { 'admin-theme-light': adminTheme === 'light' }]">
     <!-- Admin Top Header -->
     <header class="admin-topbar">
       <div class="admin-topbar-inner">
@@ -43,6 +43,17 @@
 
         <!-- Right: Action Buttons & User Profile -->
         <div class="admin-topbar-right">
+          <!-- Dark / Light Theme Toggle -->
+          <button 
+            class="btn btn-sm btn-outline-white nav-action-btn" 
+            @click="toggleTheme" 
+            :title="adminTheme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'"
+            aria-label="Toggle Dark or Light Theme"
+          >
+            <span v-if="adminTheme === 'light'">🌙 <span class="action-label-full">Dark</span></span>
+            <span v-else>☀️ <span class="action-label-full">Light</span></span>
+          </button>
+
           <!-- View Live Website -->
           <NuxtLink to="/" class="btn btn-sm btn-outline-white nav-action-btn" title="Return to Public Website">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="action-icon">
@@ -103,12 +114,29 @@
 
     <!-- Admin Workspace Grid -->
     <div class="admin-workspace-container">
-      <div class="admin-workspace-grid">
+      <div :class="['admin-workspace-grid', { 'sidebar-collapsed': sidebarCollapsed }]">
         <!-- 1. Dedicated Admin Desktop Sidebar (Hidden <= 1024px) -->
-        <aside class="admin-sidebar desktop-only-sidebar">
-          <div class="sidebar-section-title">Navigation Hub</div>
+        <aside :class="['admin-sidebar', 'desktop-only-sidebar', { 'collapsed': sidebarCollapsed }]">
+          <div class="sidebar-header-row">
+            <span v-if="!sidebarCollapsed" class="sidebar-section-title" style="margin-bottom:0;">Navigation Hub</span>
+            <button 
+              class="sidebar-collapse-toggle-btn"
+              @click="toggleSidebar"
+              :title="sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'"
+              :aria-label="sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'"
+            >
+              <svg v-if="!sidebarCollapsed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="11 17 6 12 11 7"/>
+                <polyline points="18 17 13 12 18 7"/>
+              </svg>
+              <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="13 17 18 12 13 7"/>
+                <polyline points="6 17 11 12 6 7"/>
+              </svg>
+            </button>
+          </div>
           <nav class="sidebar-nav">
-            <NuxtLink to="/admin" class="sidebar-link" exact-active-class="active">
+            <NuxtLink to="/admin" class="sidebar-link" exact-active-class="active" title="Overview & Analytics">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <rect x="3" y="3" width="7" height="9" rx="1"/>
                 <rect x="14" y="3" width="7" height="5" rx="1"/>
@@ -118,7 +146,7 @@
               <span>Overview & Analytics</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/properties" class="sidebar-link" active-class="active">
+            <NuxtLink to="/admin/properties" class="sidebar-link" active-class="active" title="Property Inventory">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>
               </svg>
@@ -126,7 +154,7 @@
               <span class="badge badge-status badge-pill-sm">CRUD</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/approvals" class="sidebar-link" active-class="active">
+            <NuxtLink to="/admin/approvals" class="sidebar-link" active-class="active" title="RAJUK / Legal Queue">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M9 12l2 2 4-4"/>
                 <path d="M12 3l7 4v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V7l7-4z"/>
@@ -135,7 +163,7 @@
               <span class="badge badge-urgent badge-pill-sm">2 Pending</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/viewings" class="sidebar-link" active-class="active">
+            <NuxtLink to="/admin/viewings" class="sidebar-link" active-class="active" title="VIP Viewings Log">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="18" rx="2"/>
                 <line x1="16" y1="2" x2="16" y2="6"/>
@@ -146,7 +174,7 @@
               <span class="badge badge-rajuk badge-pill-sm">4 Tours</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/agents" class="sidebar-link" active-class="active">
+            <NuxtLink to="/admin/agents" class="sidebar-link" active-class="active" title="Advisors & Brokers">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <circle cx="12" cy="8" r="4"/>
                 <path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
@@ -154,7 +182,7 @@
               <span>Advisors & Brokers</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/users" class="sidebar-link" active-class="active">
+            <NuxtLink to="/admin/users" class="sidebar-link" active-class="active" title="Users & RBAC Control">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                 <circle cx="9" cy="7" r="4"/>
@@ -163,7 +191,7 @@
               <span>Users & RBAC Control</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/leads" class="sidebar-link" active-class="active">
+            <NuxtLink to="/admin/leads" class="sidebar-link" active-class="active" title="Leads CRM & WhatsApp">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
                 <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
@@ -172,7 +200,7 @@
               <span class="badge badge-featured badge-pill-sm">4 Leads</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/financials" class="sidebar-link" active-class="active">
+            <NuxtLink to="/admin/financials" class="sidebar-link" active-class="active" title="Financials & Escrow">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <line x1="12" y1="1" x2="12" y2="23"/>
                 <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
@@ -180,10 +208,10 @@
               <span>Financials & Escrow</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/settings" class="sidebar-link" active-class="active">
+            <NuxtLink to="/admin/settings" class="sidebar-link" active-class="active" title="System & Bank Config">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
               </svg>
               <span>System & Bank Config</span>
             </NuxtLink>
@@ -323,6 +351,10 @@
 
           <!-- Drawer Footer Action Buttons -->
           <div class="drawer-footer">
+            <button class="btn btn-sm btn-outline-white" style="width:100%; margin-bottom:8px;" @click="toggleTheme">
+              <span v-if="adminTheme === 'light'">🌙 Switch to Dark Mode</span>
+              <span v-else>☀️ Switch to Light Mode</span>
+            </button>
             <NuxtLink to="/admin/properties?action=new" class="btn btn-gold btn-sm" style="width:100%; margin-bottom:8px;" @click="mobileNavOpen = false">
               <span>+ Add Property Mandate</span>
             </NuxtLink>
@@ -362,7 +394,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
 import { useToast } from '~/composables/useToast'
@@ -374,6 +406,42 @@ const { toasts, remove: removeToast } = useToast()
 
 const mobileNavOpen = ref(false)
 const drawerRoot = ref<HTMLElement | null>(null)
+
+const adminTheme = ref<'dark' | 'light'>('dark')
+const sidebarCollapsed = ref(false)
+
+onMounted(() => {
+  try {
+    const savedTheme = localStorage.getItem('gbrel_admin_theme')
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      adminTheme.value = savedTheme
+    }
+    const savedCollapse = localStorage.getItem('gbrel_admin_sidebar_collapsed')
+    if (savedCollapse !== null) {
+      sidebarCollapsed.value = savedCollapse === 'true'
+    }
+  } catch {
+    //
+  }
+})
+
+const toggleTheme = () => {
+  adminTheme.value = adminTheme.value === 'light' ? 'dark' : 'light'
+  try {
+    localStorage.setItem('gbrel_admin_theme', adminTheme.value)
+  } catch {
+    //
+  }
+}
+
+const toggleSidebar = () => {
+  sidebarCollapsed.value = !sidebarCollapsed.value
+  try {
+    localStorage.setItem('gbrel_admin_sidebar_collapsed', String(sidebarCollapsed.value))
+  } catch {
+    //
+  }
+}
 
 useOverlayBehavior(mobileNavOpen, () => { mobileNavOpen.value = false }, drawerRoot)
 
@@ -412,11 +480,13 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 12px 24px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 12px 32px;
   gap: 16px;
   min-height: 68px;
+  box-sizing: border-box;
 }
 
 .admin-topbar-left {
@@ -637,11 +707,13 @@ const handleLogout = async () => {
   color: #FFFFFF;
 }
 
-/* 3. Admin Workspace Grid */
+/* 3. Admin Workspace Grid (Full Width) */
 .admin-workspace-container {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 24px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 20px 32px 48px;
+  box-sizing: border-box;
 }
 
 .admin-workspace-grid {
@@ -649,6 +721,7 @@ const handleLogout = async () => {
   grid-template-columns: 260px 1fr;
   gap: 24px;
   align-items: start;
+  transition: grid-template-columns 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .admin-sidebar {
