@@ -47,11 +47,41 @@ function normalizePropertyData(array $input, bool $isCreate = true): array
         $data[$realKey] = $value;
     }
 
-    // Handle single imageUrl or images array
-    if (isset($input['imageUrl']) && !empty($input['imageUrl'])) {
-        $data['images'] = [$input['imageUrl']];
-    } elseif (isset($data['images']) && is_string($data['images'])) {
-        $data['images'] = [$data['images']];
+    // Handle feature image & gallery options
+    $featureImage = $input['featureImage'] ?? $input['feature_image'] ?? $input['imageUrl'] ?? null;
+    $gallery = $input['gallery'] ?? $input['galleryImages'] ?? $input['gallery_images'] ?? [];
+
+    if (!is_array($gallery)) {
+        $gallery = !empty($gallery) ? [$gallery] : [];
+    }
+
+    $allImages = [];
+    if (!empty($featureImage) && is_string($featureImage)) {
+        $allImages[] = trim($featureImage);
+    }
+
+    if (!empty($gallery)) {
+        foreach ($gallery as $img) {
+            if (!empty($img) && is_string($img)) {
+                $trimmed = trim($img);
+                if (!in_array($trimmed, $allImages)) {
+                    $allImages[] = $trimmed;
+                }
+            }
+        }
+    }
+
+    // Fallback if 'images' array was supplied directly
+    if (empty($allImages) && isset($input['images'])) {
+        if (is_array($input['images'])) {
+            $allImages = array_values(array_filter(array_map('trim', $input['images'])));
+        } elseif (is_string($input['images'])) {
+            $allImages = [trim($input['images'])];
+        }
+    }
+
+    if (!empty($allImages)) {
+        $data['images'] = $allImages;
     }
 
     if ($isCreate) {
@@ -384,3 +414,74 @@ Route::post('/auth/logout', function () {
         'message' => 'Sanctum token revoked successfully'
     ]);
 });
+
+// Image Upload Endpoint for Feature Image and Gallery Photos
+Route::post('/upload', function (Request $request) {
+    // Single image file upload
+    if ($request->hasFile('image')) {
+        $file = $request->file('image');
+        $ext = $file->getClientOriginalExtension() ?: 'jpg';
+        $filename = 'prop_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+        $path = $file->storeAs('properties', $filename, 'public');
+        $url = '/storage/' . $path;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Feature image uploaded successfully',
+            'url' => $url,
+            'urls' => [$url]
+        ]);
+    }
+
+    // Multiple image files upload for gallery
+    if ($request->hasFile('images')) {
+        $urls = [];
+        foreach ($request->file('images') as $file) {
+            $ext = $file->getClientOriginalExtension() ?: 'jpg';
+            $filename = 'prop_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+            $path = $file->storeAs('properties', $filename, 'public');
+            $urls[] = '/storage/' . $path;
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => count($urls) . ' gallery images uploaded successfully',
+            'urls' => $urls,
+            'url' => $urls[0] ?? null
+        ]);
+    }
+
+    // Support Base64 image upload
+    if ($request->has('base64') && !empty($request->base64)) {
+        $raw = $request->base64;
+        if (preg_match('/^data:image\/(\w+);base64,/', $raw, $type)) {
+            $raw = substr($raw, strpos($raw, ',') + 1);
+            $type = strtolower($type[1]);
+            $decoded = base64_decode($raw);
+            $filename = 'prop_' . time() . '_' . rand(1000, 9999) . '.' . $type;
+            \Illuminate\Support\Facades\Storage::disk('public')->put('properties/' . $filename, $decoded);
+            $url = '/storage/properties/' . $filename;
+            return response()->json([
+                'success' => true,
+                'message' => 'Image decoded and stored',
+                'url' => $url,
+                'urls' => [$url]
+            ]);
+        }
+    }
+
+    return response()->json([
+        'success' => false,
+        'message' => 'No image file or data payload provided'
+    ], 400);
+});
+
+// Direct Storage Access Route
+Route::get('/storage/{path}', function ($path) {
+    $fullPath = storage_path('app/public/' . $path);
+    if (!file_exists($fullPath)) {
+        return response()->json(['error' => 'File not found'], 404);
+    }
+    $mime = mime_content_type($fullPath) ?: 'image/jpeg';
+    return response()->file($fullPath, ['Content-Type' => $mime]);
+})->where('path', '.*');

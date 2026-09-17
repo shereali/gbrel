@@ -22,6 +22,8 @@ fi
 
 php artisan migrate --force || exit 1
 php artisan db:seed --force || true
+php artisan storage:link || true
+mkdir -p storage/app/public/properties && chmod -R 775 storage/app/public 2>/dev/null || true
 
 php artisan config:clear >/dev/null 2>&1 || true
 php artisan route:clear >/dev/null 2>&1 || true

@@ -171,12 +171,21 @@
             <tr v-for="prop in filteredProperties" :key="prop.id">
               <td>
                 <div class="flex items-center gap-3">
-                  <img 
-                    :src="prop.images[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=200&auto=format&fit=crop'" 
-                    class="table-thumb" 
-                    alt="thumb" 
-                    loading="lazy"
-                  />
+                  <div style="position:relative; flex-shrink:0;">
+                    <img 
+                      :src="prop.featureImage || prop.images[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=200&auto=format&fit=crop'" 
+                      class="table-thumb" 
+                      alt="thumb" 
+                      loading="lazy"
+                    />
+                    <span 
+                      v-if="prop.images && prop.images.length > 1" 
+                      style="position:absolute; bottom:2px; right:2px; background:rgba(10,17,40,0.85); color:#F1F5F9; font-size:0.68rem; font-weight:700; padding:1px 4px; border-radius:3px; border:1px solid rgba(255,255,255,0.2);"
+                      title="Gallery photos attached"
+                    >
+                      📷 {{ prop.images.length }}
+                    </span>
+                  </div>
                   <div>
                     <strong style="color:var(--admin-text-primary); display:block; max-width:280px; line-height:1.3; font-size:0.92rem;">
                       {{ prop.title }}
@@ -269,22 +278,22 @@
     </div>
 
     <!-- ======================================================================
-         MODAL 1: ADD / EDIT PROPERTY MANDATE
+         MODAL 1: ADD / EDIT PROPERTY MANDATE (WITH FEATURE IMAGE & GALLERY)
          ====================================================================== -->
     <div v-if="showPropModal" ref="propModalRoot" class="admin-modal-overlay" @click.self="closePropModal">
-      <div class="admin-modal-card wide animate-fade-in-up">
+      <div class="admin-modal-card wide animate-fade-in-up" style="max-width:780px;">
         <div class="admin-modal-header">
           <div>
             <h3 class="admin-modal-title">
               {{ editingPropId ? 'Edit Property Mandate (MySQL #' + editingPropId + ')' : 'Create New Property Mandate' }}
             </h3>
-            <p class="panel-sub">Configure asset specifications, pricing, legal documentation, and imagery for MySQL database</p>
+            <p class="panel-sub">Configure asset specifications, pricing, legal clearance, feature cover, and media gallery</p>
           </div>
           <button class="admin-modal-close" @click="closePropModal" aria-label="Close modal">✕</button>
         </div>
 
         <form @submit.prevent="handleSaveProperty" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
-          <div class="admin-modal-body" style="max-height:72vh; overflow-y:auto; padding:20px;">
+          <div class="admin-modal-body" style="max-height:74vh; overflow-y:auto; padding:20px;">
             <!-- Row 1: Title & Category -->
             <div class="grid grid-2" style="gap:14px; margin-bottom:14px;">
               <div class="form-group">
@@ -356,31 +365,234 @@
               </div>
             </div>
 
-            <!-- Row 4: Street Address & Image URL -->
-            <div class="grid grid-2" style="gap:14px; margin-bottom:14px;">
+            <!-- Row 4: Street Address -->
+            <div class="grid grid-1" style="gap:14px; margin-bottom:14px;">
               <div class="form-group">
-                <label class="form-label">Street Address</label>
-                <input v-model="propForm.address" type="text" placeholder="Road, Block, Sector" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Primary Showcase Image URL</label>
-                <input v-model="propForm.imageUrl" type="url" placeholder="https://images.unsplash.com/..." class="form-input" />
+                <label class="form-label">Street Address & Landmark</label>
+                <input v-model="propForm.address" type="text" placeholder="Road, Block, Sector, Landmark" class="form-input" />
               </div>
             </div>
 
             <!-- Row 5: Tagline & Description -->
-            <div class="grid grid-1" style="gap:14px; margin-bottom:14px;">
+            <div class="grid grid-1" style="gap:14px; margin-bottom:16px;">
               <div class="form-group">
                 <label class="form-label">Tagline / Key Selling Point</label>
                 <input v-model="propForm.tagline" type="text" placeholder="e.g. Panoramic Lakefront Skyline View with Private Terrace" class="form-input" />
               </div>
               <div class="form-group">
                 <label class="form-label">Comprehensive Description</label>
-                <textarea v-model="propForm.description" rows="3" placeholder="Provide full details regarding the property layout, accessibility, and legal documentation..." class="form-input" style="resize:vertical;"></textarea>
+                <textarea v-model="propForm.description" rows="2" placeholder="Provide full details regarding the property layout, accessibility, and legal documentation..." class="form-input" style="resize:vertical;"></textarea>
               </div>
             </div>
 
-            <!-- Row 6: Flags -->
+            <!-- ========================================================== -->
+            <!-- MEDIA & VISUAL ASSETS: FEATURE IMAGE & GALLERY MANAGER -->
+            <!-- ========================================================== -->
+            <div class="media-manager-card">
+              <div class="flex items-center justify-between flex-wrap gap-2" style="margin-bottom:12px;">
+                <div>
+                  <h4 style="font-size:0.95rem; font-weight:800; color:var(--admin-text-primary); display:flex; align-items:center; gap:8px;">
+                    <span>📸 Media Assets & Visual Showcase</span>
+                    <span class="badge" style="background:rgba(212,175,55,0.15); color:var(--color-gold); font-size:0.75rem;">
+                      Total: {{ (propForm.featureImage ? 1 : 0) + propForm.gallery.length }} Photos
+                    </span>
+                  </h4>
+                  <p style="font-size:0.78rem; color:var(--admin-text-muted); margin-top:2px;">
+                    Set your Primary Cover / Featured Image and upload or link multiple HD Gallery Photos for client showcase.
+                  </p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-outline-white" 
+                    style="font-size:0.75rem; padding:4px 8px;"
+                    @click="applySampleGalleryPack"
+                    title="Insert 3 sample luxury architectural photos"
+                  >
+                    + Sample Gallery Pack
+                  </button>
+                </div>
+              </div>
+
+              <!-- PART A: PRIMARY FEATURED COVER IMAGE -->
+              <div style="background:var(--admin-bg-surface); padding:14px; border-radius:var(--radius-md); border:1px solid var(--admin-border-subtle); margin-bottom:14px;">
+                <label class="form-label" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <span style="font-weight:700; color:#10B981; display:flex; align-items:center; gap:6px;">
+                    <span>★ Primary Featured Cover Image</span>
+                    <span style="font-size:0.75rem; color:var(--admin-text-muted); font-weight:normal;">(Appears on Homepage, Listing Cards & Detail Header)</span>
+                  </span>
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-outline-white" 
+                    style="font-size:0.72rem; padding:3px 8px;"
+                    @click="applySampleCover"
+                  >
+                    ✨ Random Cover Preset
+                  </button>
+                </label>
+
+                <div class="grid grid-2" style="gap:14px; align-items:center;">
+                  <!-- Live Preview Box -->
+                  <div class="feature-img-preview-box">
+                    <img 
+                      :src="propForm.featureImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'" 
+                      alt="Featured Cover Preview" 
+                    />
+                    <div class="feature-img-badge">
+                      <span>★ Featured Cover Photo</span>
+                    </div>
+                  </div>
+
+                  <!-- URL Input & Upload Controls -->
+                  <div class="flex flex-col gap-3">
+                    <div>
+                      <label style="font-size:0.8rem; color:var(--admin-text-muted); display:block; margin-bottom:4px;">Feature Image URL</label>
+                      <input 
+                        v-model="propForm.featureImage" 
+                        type="url" 
+                        placeholder="https://images.unsplash.com/..." 
+                        class="form-input" 
+                        style="width:100%; font-size:0.85rem;" 
+                      />
+                    </div>
+
+                    <!-- Hidden File Input for Feature Image -->
+                    <input 
+                      ref="featureFileInput" 
+                      type="file" 
+                      accept="image/*" 
+                      style="display:none;" 
+                      @change="onFeatureFileSelected" 
+                    />
+
+                    <div class="flex items-center gap-2">
+                      <button 
+                        type="button" 
+                        class="btn btn-sm btn-emerald flex-1" 
+                        :disabled="isUploadingFeature" 
+                        @click="triggerFeatureUpload"
+                        style="font-size:0.82rem; justify-content:center;"
+                      >
+                        <span v-if="isUploadingFeature" class="animate-spin" style="display:inline-block; margin-right:4px;">◌</span>
+                        <span>{{ isUploadingFeature ? 'Uploading Cover...' : '📁 Upload Cover File' }}</span>
+                      </button>
+
+                      <button 
+                        v-if="propForm.featureImage"
+                        type="button" 
+                        class="btn btn-sm btn-outline-white" 
+                        @click="propForm.featureImage = ''" 
+                        title="Clear cover image"
+                        style="font-size:0.8rem; padding:6px 10px;"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    <p style="font-size:0.75rem; color:var(--admin-text-muted);">
+                      Supports direct web image URLs or local files (.jpg, .png, .webp).
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PART B: PROPERTY GALLERY IMAGES -->
+              <div style="background:var(--admin-bg-surface); padding:14px; border-radius:var(--radius-md); border:1px solid var(--admin-border-subtle);">
+                <div class="flex items-center justify-between flex-wrap gap-2" style="margin-bottom:10px;">
+                  <label class="form-label" style="font-weight:700; color:var(--color-gold); margin-bottom:0; display:flex; align-items:center; gap:6px;">
+                    <span>🖼 Photo Gallery ({{ propForm.gallery.length }} Additional Shots)</span>
+                    <span style="font-size:0.75rem; color:var(--admin-text-muted); font-weight:normal;">(Interior, Bedroom, Kitchen, Master Plan, Aerial)</span>
+                  </label>
+
+                  <!-- Hidden Multi-File Input for Gallery -->
+                  <input 
+                    ref="galleryFileInput" 
+                    type="file" 
+                    multiple 
+                    accept="image/*" 
+                    style="display:none;" 
+                    @change="onGalleryFilesSelected" 
+                  />
+
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-outline-white" 
+                    :disabled="isUploadingGallery"
+                    @click="triggerGalleryUpload"
+                    style="font-size:0.78rem; padding:4px 10px; display:inline-flex; align-items:center; gap:6px;"
+                  >
+                    <span v-if="isUploadingGallery" class="animate-spin">◌</span>
+                    <span>{{ isUploadingGallery ? 'Uploading Photos...' : '📁 Upload Gallery Photos (Multi)' }}</span>
+                  </button>
+                </div>
+
+                <!-- Add Image by URL Bar -->
+                <div class="flex items-center gap-2" style="margin-bottom:12px;">
+                  <input 
+                    v-model="newGalleryUrl" 
+                    type="url" 
+                    placeholder="Paste gallery image URL (e.g. https://...)" 
+                    class="form-input" 
+                    style="flex:1; font-size:0.85rem;" 
+                    @keydown.enter.prevent="addGalleryUrl"
+                  />
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-emerald" 
+                    @click="addGalleryUrl"
+                    style="font-size:0.82rem; white-space:nowrap;"
+                  >
+                    + Add to Gallery
+                  </button>
+                </div>
+
+                <!-- Gallery Thumbnails Grid -->
+                <div v-if="propForm.gallery.length > 0" class="gallery-grid">
+                  <div 
+                    v-for="(imgUrl, idx) in propForm.gallery" 
+                    :key="idx" 
+                    class="gallery-item-card"
+                  >
+                    <img :src="imgUrl" :alt="'Gallery photo ' + (idx + 1)" loading="lazy" />
+                    <div class="gallery-item-overlay">
+                      <div class="flex justify-between items-center">
+                        <span style="font-size:0.68rem; color:#FFF; font-weight:700; background:rgba(0,0,0,0.6); padding:2px 5px; border-radius:3px;">
+                          #{{ idx + 1 }}
+                        </span>
+                        <button 
+                          type="button" 
+                          class="gallery-btn-action danger" 
+                          @click="removeGalleryItem(idx)" 
+                          title="Remove from gallery"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <div class="flex justify-center" style="margin-top:auto;">
+                        <button 
+                          type="button" 
+                          class="gallery-btn-action star" 
+                          @click="makeCover(idx)" 
+                          title="Set this image as primary featured cover"
+                          style="width:100%; text-align:center; font-weight:700;"
+                        >
+                          ★ Make Cover
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Empty Gallery State -->
+                <div v-else style="padding:20px; text-align:center; background:var(--admin-bg-surface-secondary); border-radius:var(--radius-sm); border:1px dashed var(--admin-border-subtle);">
+                  <p style="font-size:0.82rem; color:var(--admin-text-muted); margin:0;">
+                    No additional gallery photos added yet. Use the upload button or URL bar above to enrich this mandate.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 7: Flags -->
             <div class="flex items-center gap-6 flex-wrap" style="padding:12px 16px; border-radius:8px; border:1px solid var(--admin-border-subtle);">
               <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.88rem;">
                 <input v-model="propForm.isRajukApproved" type="checkbox" style="width:16px; height:16px; accent-color:#10B981;" />
@@ -456,7 +668,9 @@ const {
   toggleFeatureProperty, 
   toggleRajukProperty, 
   updatePropertyStatus, 
-  deleteProperty 
+  deleteProperty,
+  uploadImage,
+  uploadMultipleImages
 } = useProperties()
 
 const toast = useToast()
@@ -473,14 +687,38 @@ const deleteModalTarget = ref<PropertyItem | null>(null)
 
 const isSaving = ref(false)
 const isDeleting = ref(false)
+const isUploadingFeature = ref(false)
+const isUploadingGallery = ref(false)
+const newGalleryUrl = ref('')
+
+const featureFileInput = ref<HTMLInputElement | null>(null)
+const galleryFileInput = ref<HTMLInputElement | null>(null)
+
 const togglingRajukId = ref<number | null>(null)
 const togglingFeatureId = ref<number | null>(null)
 const updatingStatusId = ref<number | null>(null)
+
+const SAMPLE_COVERS = [
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1600&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1600&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1600&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=1600&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1600&auto=format&fit=crop'
+]
+
+const SAMPLE_GALLERY_PACK = [
+  'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?q=80&w=1200&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=1200&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=1200&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=1200&auto=format&fit=crop'
+]
 
 const closePropModal = () => {
   if (isSaving.value) return
   showPropModal.value = false
   editingPropId.value = null
+  newGalleryUrl.value = ''
 }
 
 useOverlayBehavior(showPropModal, closePropModal, propModalRoot)
@@ -509,7 +747,8 @@ const propForm = reactive({
   facing: 'South' as const,
   isRajukApproved: true,
   isFeatured: false,
-  imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop',
+  featureImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop',
+  gallery: [] as string[],
   agentId: 1
 })
 
@@ -567,7 +806,12 @@ const openAddPropertyModal = () => {
   propForm.landSize = 0
   propForm.isRajukApproved = true
   propForm.isFeatured = false
-  propForm.imageUrl = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'
+  propForm.featureImage = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'
+  propForm.gallery = [
+    'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?q=80&w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200&auto=format&fit=crop'
+  ]
+  newGalleryUrl.value = ''
   showPropModal.value = true
 }
 
@@ -588,13 +832,105 @@ const openEditPropertyModal = (p: PropertyItem) => {
   propForm.landUnit = p.landUnit || 'Katha'
   propForm.isRajukApproved = p.isRajukApproved
   propForm.isFeatured = p.isFeatured
-  propForm.imageUrl = p.images?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'
+
+  // Map Feature Image and Gallery
+  propForm.featureImage = p.featureImage || p.images?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'
+  propForm.gallery = p.gallery && p.gallery.length > 0 
+    ? [...p.gallery] 
+    : (p.images && p.images.length > 1 ? p.images.slice(1) : [])
+  newGalleryUrl.value = ''
   showPropModal.value = true
+}
+
+// Media Action Helpers
+const triggerFeatureUpload = () => {
+  featureFileInput.value?.click()
+}
+
+const triggerGalleryUpload = () => {
+  galleryFileInput.value?.click()
+}
+
+const onFeatureFileSelected = async (e: Event) => {
+  const target = e.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+  const file = target.files[0]
+  isUploadingFeature.value = true
+  try {
+    const uploadedUrl = await uploadImage(file)
+    propForm.featureImage = uploadedUrl
+    toast.success('Cover Uploaded', 'Feature cover photo uploaded successfully.')
+  } catch (err: any) {
+    toast.error('Upload Failed', err.message || 'Could not upload cover image.')
+  } finally {
+    isUploadingFeature.value = false
+    target.value = ''
+  }
+}
+
+const onGalleryFilesSelected = async (e: Event) => {
+  const target = e.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+  isUploadingGallery.value = true
+  try {
+    const uploadedUrls = await uploadMultipleImages(target.files)
+    propForm.gallery.push(...uploadedUrls)
+    toast.success('Gallery Updated', `${uploadedUrls.length} photo(s) added to gallery.`)
+  } catch (err: any) {
+    toast.error('Upload Failed', err.message || 'Could not upload gallery images.')
+  } finally {
+    isUploadingGallery.value = false
+    target.value = ''
+  }
+}
+
+const addGalleryUrl = () => {
+  const val = newGalleryUrl.value.trim()
+  if (!val) return
+  if (!propForm.gallery.includes(val)) {
+    propForm.gallery.push(val)
+    toast.info('Gallery Photo Added', 'New image appended to gallery.')
+  }
+  newGalleryUrl.value = ''
+}
+
+const removeGalleryItem = (index: number) => {
+  propForm.gallery.splice(index, 1)
+}
+
+const makeCover = (index: number) => {
+  const selectedGalleryImg = propForm.gallery[index]
+  const currentCover = propForm.featureImage
+  propForm.featureImage = selectedGalleryImg
+  if (currentCover && currentCover !== selectedGalleryImg) {
+    propForm.gallery[index] = currentCover
+  } else {
+    propForm.gallery.splice(index, 1)
+  }
+  toast.success('Cover Changed', 'Selected photo is now the primary featured cover.')
+}
+
+const applySampleCover = () => {
+  const random = SAMPLE_COVERS[Math.floor(Math.random() * SAMPLE_COVERS.length)]
+  propForm.featureImage = random
+}
+
+const applySampleGalleryPack = () => {
+  for (const sample of SAMPLE_GALLERY_PACK) {
+    if (!propForm.gallery.includes(sample) && sample !== propForm.featureImage) {
+      propForm.gallery.push(sample)
+    }
+  }
+  toast.info('Sample Pack Loaded', 'Attached luxury architectural gallery photos.')
 }
 
 const handleSaveProperty = async () => {
   isSaving.value = true
   try {
+    const featureCover = propForm.featureImage.trim()
+    const validGallery = propForm.gallery.map(g => g.trim()).filter(Boolean)
+    const allImages = [featureCover, ...validGallery].filter(Boolean)
+
     if (editingPropId.value) {
       await updateProperty(editingPropId.value, {
         title: propForm.title,
@@ -612,15 +948,19 @@ const handleSaveProperty = async () => {
         landUnit: propForm.landUnit,
         isRajukApproved: propForm.isRajukApproved,
         isFeatured: propForm.isFeatured,
-        images: [propForm.imageUrl]
+        featureImage: featureCover,
+        gallery: validGallery,
+        images: allImages
       })
-      toast.success('MySQL Updated', `Successfully updated "${propForm.title}" (#${editingPropId.value}).`)
+      toast.success('MySQL Updated', `Successfully updated "${propForm.title}" with ${allImages.length} photo(s).`)
     } else {
       const created = await addProperty({
         ...propForm,
-        images: [propForm.imageUrl]
+        featureImage: featureCover,
+        gallery: validGallery,
+        images: allImages
       })
-      toast.success('MySQL Created', `New mandate #${created?.id || ''} "${propForm.title}" saved in database!`)
+      toast.success('MySQL Created', `New mandate #${created?.id || ''} saved with ${allImages.length} photo(s)!`)
     }
     showPropModal.value = false
     editingPropId.value = null

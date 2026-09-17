@@ -37,6 +37,8 @@ export interface PropertyItem {
   lat: number
   lng: number
   images: string[]
+  featureImage?: string
+  gallery?: string[]
   amenities: string[]
   documentsVerified: string[]
   agentId: number
@@ -761,7 +763,11 @@ const mapDbItemToPropertyItem = (apiItem: any): PropertyItem => {
     lng: Number(apiItem.longitude) || Number(apiItem.lng) || 90.4167,
     images: Array.isArray(apiItem.images) && apiItem.images.length > 0 
       ? apiItem.images 
-      : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'],
+      : (apiItem.feature_image ? [apiItem.feature_image] : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop']),
+    featureImage: apiItem.feature_image || apiItem.featureImage || (Array.isArray(apiItem.images) && apiItem.images.length > 0 ? apiItem.images[0] : 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'),
+    gallery: Array.isArray(apiItem.gallery) && apiItem.gallery.length > 0
+      ? apiItem.gallery 
+      : (Array.isArray(apiItem.images) && apiItem.images.length > 1 ? apiItem.images.slice(1) : []),
     amenities: Array.isArray(apiItem.amenities) && apiItem.amenities.length > 0 
       ? apiItem.amenities 
       : ['24/7 Generator', 'Security CCTV', 'Elevator Access'],
@@ -1015,6 +1021,44 @@ export const useProperties = () => {
     }
   }
 
+  const uploadImage = async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append('image', file)
+    const res = await fetch(useApiUrl('/upload'), {
+      method: 'POST',
+      body: formData
+    })
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => null)
+      throw new Error(errJson?.message || `Upload failed with status ${res.status}`)
+    }
+    const json = await res.json()
+    if (json && json.success && json.url) {
+      return json.url
+    }
+    throw new Error(json?.message || 'Failed to upload image')
+  }
+
+  const uploadMultipleImages = async (files: File[] | FileList): Promise<string[]> => {
+    const formData = new FormData()
+    for (let i = 0; i < files.length; i++) {
+      formData.append('images[]', files[i])
+    }
+    const res = await fetch(useApiUrl('/upload'), {
+      method: 'POST',
+      body: formData
+    })
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => null)
+      throw new Error(errJson?.message || `Upload failed with status ${res.status}`)
+    }
+    const json = await res.json()
+    if (json && json.success && Array.isArray(json.urls)) {
+      return json.urls
+    }
+    throw new Error(json?.message || 'Failed to upload gallery images')
+  }
+
   return {
     properties,
     agents,
@@ -1030,6 +1074,8 @@ export const useProperties = () => {
     toggleFeatureProperty,
     toggleRajukProperty,
     updatePropertyStatus,
-    deleteProperty
+    deleteProperty,
+    uploadImage,
+    uploadMultipleImages
   }
 }

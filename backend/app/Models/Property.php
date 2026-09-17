@@ -25,6 +25,20 @@ class Property extends Model
         'documents_verified' => 'array'
     ];
 
+    protected $appends = ['feature_image', 'gallery'];
+
+    public function getFeatureImageAttribute(): ?string
+    {
+        return !empty($this->images) && is_array($this->images) ? $this->images[0] : null;
+    }
+
+    public function getGalleryAttribute(): array
+    {
+        return !empty($this->images) && is_array($this->images) && count($this->images) > 1 
+            ? array_values(array_slice($this->images, 1)) 
+            : [];
+    }
+
     public function agent()
     {
         return $this->belongsTo(Agent::class);
