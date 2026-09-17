@@ -24,7 +24,7 @@
         <input 
           v-model="locationQuery"
           type="text" 
-          placeholder="Location (e.g. Gulshan, Purbachal, Cox's Bazar...)" 
+          :placeholder="searchPlaceholder" 
           @keyup.enter="handleSearch"
         />
       </div>
@@ -106,13 +106,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
 const tabs = [
-  { id: 'sale', label: 'Buy Properties' },
+  { id: 'sale', label: 'Sale Properties' },
+  { id: 'buy', label: 'Buy Properties' },
   { id: 'lease', label: 'Rent / Commercial Lease' },
   { id: 'plots', label: 'Lands & Plots (Katha/Bigha)' },
   { id: 'resorts', label: 'Hotels & Resorts' }
@@ -123,6 +124,15 @@ const locationQuery = ref('')
 const selectedType = ref('')
 const selectedState = ref('')
 const selectedPriceMax = ref('')
+
+const searchPlaceholder = computed(() => {
+  if (activeTab.value === 'sale') return 'Search properties for sale (e.g. Gulshan, Banani, Purbachal...)'
+  if (activeTab.value === 'buy') return 'Search properties to buy (e.g. Dhanmondi, Bashundhara...)'
+  if (activeTab.value === 'lease') return 'Search rentals & commercial leases (e.g. Motijheel...)'
+  if (activeTab.value === 'plots') return 'Search plots & lands (e.g. Purbachal Sector 17...)'
+  if (activeTab.value === 'resorts') return 'Search resorts & hotel suites (e.g. Cox\'s Bazar...)'
+  return 'Location (e.g. Gulshan, Purbachal, Cox\'s Bazar...)'
+})
 
 const selectTab = (tabId: string) => {
   activeTab.value = tabId
@@ -141,6 +151,7 @@ const handleSearch = () => {
   if (selectedType.value) query.type = selectedType.value
   if (selectedState.value) query.state = selectedState.value
   if (selectedPriceMax.value) query.maxPrice = selectedPriceMax.value
+  if (activeTab.value === 'sale' || activeTab.value === 'buy') query.listingType = 'Sale'
   if (activeTab.value === 'lease') query.listingType = 'Lease'
 
   router.push({ path: '/properties', query })

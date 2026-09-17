@@ -9,6 +9,11 @@ gbrel.com, www.gbrel.com, gangchil.softcredible.com {
         reverse_proxy gbrel-backend-1:8000
     }
 
+    # Uploaded media storage routing
+    handle /storage/* {
+        reverse_proxy gbrel-backend-1:8000
+    }
+
     # Frontend application routing
     handle {
         reverse_proxy gbrel-frontend-1:3000
