@@ -58,7 +58,10 @@ function normalizePropertyData(array $input, bool $isCreate = true): array
         if (!isset($data['images']) || empty($data['images']) || !is_array($data['images'])) {
             $data['images'] = ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'];
         }
-        if (isset($data['title']) && empty($data['slug'])) {
+        if (empty($data['title'])) {
+            $data['title'] = 'Exclusive Mandate #' . rand(100, 999);
+        }
+        if (empty($data['slug'])) {
             $data['slug'] = \Illuminate\Support\Str::slug($data['title']) . '-' . rand(100, 999);
         }
         if (empty($data['address'])) {
@@ -148,7 +151,9 @@ Route::get('/properties/{id}', function ($id) {
 });
 
 Route::post('/properties', function (Request $request) {
-    $cleanData = normalizePropertyData($request->all(), true);
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+    $cleanData = normalizePropertyData($input, true);
     $property = Property::create($cleanData);
 
     return response()->json([
@@ -160,7 +165,9 @@ Route::post('/properties', function (Request $request) {
 
 Route::put('/properties/{id}', function (Request $request, $id) {
     $property = Property::findOrFail($id);
-    $cleanData = normalizePropertyData($request->all(), false);
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+    $cleanData = normalizePropertyData($input, false);
     $property->update($cleanData);
 
     return response()->json([
@@ -198,7 +205,9 @@ Route::patch('/properties/{id}/toggle-rajuk', function ($id) {
 
 Route::patch('/properties/{id}/status', function (Request $request, $id) {
     $property = Property::findOrFail($id);
-    $property->status = $request->input('status', 'Active');
+    $raw = json_decode($request->getContent(), true);
+    $status = is_array($raw) && isset($raw['status']) ? $raw['status'] : $request->input('status', 'Active');
+    $property->status = $status;
     $property->save();
 
     return response()->json([
