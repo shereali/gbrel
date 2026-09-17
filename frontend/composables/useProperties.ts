@@ -715,9 +715,95 @@ const propertiesData = ref<PropertyItem[]>([
   }
 ])
 
+const isPropertiesLoading = ref(false)
+const lastPropertiesSyncedAt = ref<Date | null>(null)
+
+const mapDbItemToPropertyItem = (apiItem: any): PropertyItem => {
+  const price = Number(apiItem.price) || 0
+  const areaName = apiItem.area_name || apiItem.areaName || 'Dhaka Hub'
+  const sqft = Number(apiItem.square_footage) || Number(apiItem.squareFootage) || 0
+  const landSize = Number(apiItem.land_size) || Number(apiItem.landSize) || 0
+
+  return {
+    id: Number(apiItem.id),
+    title: apiItem.title || 'Untitled Mandate',
+    slug: apiItem.slug || 'property-' + apiItem.id,
+    tagline: apiItem.tagline || 'Verified Legal Ownership & Direct Handover',
+    description: apiItem.description || `Exclusive real estate mandate in ${areaName}. Verified by GBREL legal due diligence panel.`,
+    address: apiItem.address || `Road 1, ${areaName}`,
+    city: apiItem.city || 'Dhaka',
+    state: apiItem.state || 'Dhaka North',
+    areaName: areaName,
+    price: price,
+    priceUnit: apiItem.price_unit || undefined,
+    pricePrefix: apiItem.price_prefix || undefined,
+    listingType: (apiItem.listing_type || apiItem.listingType || 'Sale') as any,
+    propertyType: (apiItem.property_type || apiItem.propertyType || 'Flat') as any,
+    status: (apiItem.status || 'Active') as any,
+    bedrooms: Number(apiItem.bedrooms) || 0,
+    bathrooms: Number(apiItem.bathrooms) || 0,
+    balconies: Number(apiItem.balconies) || 0,
+    squareFootage: sqft,
+    landSize: landSize,
+    landUnit: (apiItem.land_unit || apiItem.landUnit || 'Katha') as any,
+    parking: Number(apiItem.parking) || 0,
+    floorNumber: apiItem.floor_number ? Number(apiItem.floor_number) : undefined,
+    totalFloors: apiItem.total_floors ? Number(apiItem.total_floors) : undefined,
+    facing: (apiItem.facing || 'South') as any,
+    completionStatus: (apiItem.completion_status || apiItem.completionStatus || 'Ready') as any,
+    yearBuilt: apiItem.year_built ? Number(apiItem.year_built) : 2024,
+    isFeatured: Boolean(apiItem.is_featured ?? apiItem.isFeatured),
+    isRajukApproved: Boolean(apiItem.is_rajuk_approved ?? apiItem.isRajukApproved),
+    isVerified: Boolean(apiItem.is_verified ?? apiItem.isVerified ?? true),
+    hasOpenHouse: Boolean(apiItem.has_open_house ?? apiItem.hasOpenHouse),
+    openHouseDate: apiItem.open_house_date || undefined,
+    lat: Number(apiItem.latitude) || Number(apiItem.lat) || 23.7925,
+    lng: Number(apiItem.longitude) || Number(apiItem.lng) || 90.4167,
+    images: Array.isArray(apiItem.images) && apiItem.images.length > 0 
+      ? apiItem.images 
+      : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'],
+    amenities: Array.isArray(apiItem.amenities) && apiItem.amenities.length > 0 
+      ? apiItem.amenities 
+      : ['24/7 Generator', 'Security CCTV', 'Elevator Access'],
+    documentsVerified: Array.isArray(apiItem.documents_verified) && apiItem.documents_verified.length > 0 
+      ? apiItem.documents_verified 
+      : ['Clear Freehold Title Deed', 'Mutation Cleared', 'RAJUK Allotment'],
+    agentId: Number(apiItem.agent_id) || Number(apiItem.agentId) || 1,
+    history: Array.isArray(apiItem.history) && apiItem.history.length > 0 ? apiItem.history : [
+      { id: 1, date: 'Recent', event: 'Listed on GBREL Portal', price: price, status: 'Active', notes: 'Database Synced' }
+    ],
+    estimates: apiItem.estimates || {
+      marketEstimate: price,
+      lowEstimate: price * 0.95,
+      highEstimate: price * 1.05,
+      annualGrowthPct: 10.5,
+      monthlyRentEstimate: price * 0.004,
+      annualRoiPct: 6.2,
+      pricePerSqftArea: sqft > 0 ? Math.round(price / sqft) : 8500
+    },
+    comparables: apiItem.comparables || [],
+    schools: apiItem.schools || [
+      { name: 'International School Dhaka (ISD)', type: 'English Medium', rating: 4.9, distanceKm: 2.5, travelMins: 10, grades: 'Playgroup to IB' }
+    ],
+    community: apiItem.community || {
+      neighborhood: areaName,
+      metroDistanceKm: 2.0,
+      nearestMetroStation: 'MRT Line-6 Station',
+      hospitalDistanceKm: 2.2,
+      nearestHospital: 'Evercare / United Hospital Dhaka',
+      airportDistanceKm: 11.5,
+      safetyRating: 'High Diplomatic Enclave Protection',
+      amenitiesOverview: 'Top-tier schools, embassies, luxury shopping arcades, and international dining.',
+      transitOverview: 'Direct flyover and VIP express boulevard connection.'
+    }
+  }
+}
+
 export const useProperties = () => {
   const properties = computed(() => propertiesData.value)
   const agents = computed(() => agentsData.value)
+  const isLoading = computed(() => isPropertiesLoading.value)
+  const lastSynced = computed(() => lastPropertiesSyncedAt.value)
 
   const featuredProperties = computed(() => 
     propertiesData.value.filter(p => p.isFeatured)
@@ -738,174 +824,194 @@ export const useProperties = () => {
     return propertiesData.value.filter(p => p.agentId === numId)
   }
 
-  const addProperty = async (newProp: any) => {
-    const id = Date.now()
-    const item: PropertyItem = {
-      id,
-      ...newProp,
-      slug: (newProp.title || 'property').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      status: newProp.status || 'Active',
-      isFeatured: newProp.isFeatured || false,
-      isRajukApproved: newProp.isRajukApproved !== undefined ? newProp.isRajukApproved : true,
-      isVerified: true,
-      hasOpenHouse: false,
-      images: newProp.images?.length ? newProp.images : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'],
-      amenities: newProp.amenities || ['24/7 Generator', 'Lift', 'Security CCTV'],
-      documentsVerified: ['RAJUK Approved Plan', 'Mutation Cleared', 'Clear Title Deed'],
-      lat: newProp.lat || 23.7925,
-      lng: newProp.lng || 90.4167,
-      history: [{ id: 1, date: 'Just now', event: 'Listed for Sale', price: newProp.price, status: 'Active', notes: 'Created by User' }],
-      estimates: {
-        marketEstimate: newProp.price,
-        lowEstimate: newProp.price * 0.95,
-        highEstimate: newProp.price * 1.05,
-        annualGrowthPct: 10.5,
-        monthlyRentEstimate: newProp.price * 0.004,
-        annualRoiPct: 6.0,
-        pricePerSqftArea: 8000
-      },
-      comparables: [],
-      schools: [
-        { name: 'City Model International School', type: 'English Medium', rating: 4.8, distanceKm: 1.2, travelMins: 5, grades: 'Playgroup to A Levels' }
-      ],
-      community: {
-        neighborhood: newProp.areaName || 'Prime Hub',
-        metroDistanceKm: 2.5,
-        nearestMetroStation: 'MRT Line-6 Feeder Station',
-        hospitalDistanceKm: 2.0,
-        nearestHospital: 'Apollo / Evercare Dhaka',
-        airportDistanceKm: 10.0,
-        safetyRating: 'High Security Enclave',
-        amenitiesOverview: 'Top schools, banks, and shopping avenues nearby.',
-        transitOverview: 'Excellent highway and city avenue connectivity.'
-      }
-    }
-    
-    propertiesData.value.unshift(item)
-
-    // Sync with Laravel MySQL API
+  const fetchProperties = async (options: { force?: boolean; q?: string; state?: string; type?: string; status?: string } | boolean = {}) => {
+    isPropertiesLoading.value = true
+    const opts = typeof options === 'boolean' ? { force: options } : options
     try {
-      await fetch(useApiUrl('/properties'), {
+      const params = new URLSearchParams()
+      if (opts.q) params.set('q', opts.q)
+      if (opts.state) params.set('state', opts.state)
+      if (opts.type) params.set('type', opts.type)
+      if (opts.status) params.set('status', opts.status)
+      const queryStr = params.toString() ? `?${params.toString()}` : ''
+
+      const res = await fetch(useApiUrl(`/properties${queryStr}`))
+      if (res.ok) {
+        const json = await res.json()
+        if (json && json.success && Array.isArray(json.data)) {
+          if (json.data.length > 0 || opts.force || opts.q || opts.state || opts.type || opts.status) {
+            propertiesData.value = json.data.map(mapDbItemToPropertyItem)
+          }
+          lastPropertiesSyncedAt.value = new Date()
+        }
+      }
+    } catch (err) {
+      console.warn('Realtime MySQL fetch notice (using cached state):', err)
+    } finally {
+      isPropertiesLoading.value = false
+    }
+  }
+
+  const addProperty = async (newProp: any) => {
+    isPropertiesLoading.value = true
+    try {
+      const res = await fetch(useApiUrl('/properties'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: item.title,
-          slug: item.slug,
-          address: item.address,
-          city: item.city,
-          state: item.state,
-          area_name: item.areaName,
-          price: item.price,
-          property_type: item.propertyType,
-          status: item.status,
-          bedrooms: item.bedrooms,
-          bathrooms: item.bathrooms,
-          square_footage: item.squareFootage,
-          land_size: item.landSize,
-          land_unit: item.landUnit,
-          is_featured: item.isFeatured,
-          is_rajuk_approved: item.isRajukApproved,
-          images: item.images,
-          amenities: item.amenities
-        })
+        body: JSON.stringify(newProp)
       })
-    } catch {
-      //
-    }
 
-    return id
+      if (!res.ok) {
+        const errorJson = await res.json().catch(() => null)
+        throw new Error(errorJson?.message || `MySQL Server returned status ${res.status}`)
+      }
+
+      const json = await res.json()
+      if (json && json.success && json.data) {
+        const createdItem = mapDbItemToPropertyItem(json.data)
+        propertiesData.value.unshift(createdItem)
+        lastPropertiesSyncedAt.value = new Date()
+        return createdItem
+      } else {
+        throw new Error(json?.message || 'Failed to save property in database')
+      }
+    } finally {
+      isPropertiesLoading.value = false
+    }
   }
 
   const updateProperty = async (id: number, data: Partial<PropertyItem>) => {
-    const p = propertiesData.value.find(prop => prop.id === id)
-    if (p) {
-      Object.assign(p, data)
+    // Optimistic local update with backup
+    const existing = propertiesData.value.find(prop => prop.id === id)
+    const backup = existing ? { ...existing } : null
+    if (existing) {
+      Object.assign(existing, data)
     }
 
     try {
-      await fetch(useApiUrl(`/properties/${id}`), {
+      const res = await fetch(useApiUrl(`/properties/${id}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       })
-    } catch {
-      //
+
+      if (!res.ok) {
+        const errorJson = await res.json().catch(() => null)
+        throw new Error(errorJson?.message || `MySQL update failed with status ${res.status}`)
+      }
+
+      const json = await res.json()
+      if (json && json.success && json.data && existing) {
+        const updated = mapDbItemToPropertyItem(json.data)
+        Object.assign(existing, updated)
+        lastPropertiesSyncedAt.value = new Date()
+        return updated
+      }
+    } catch (err) {
+      // Rollback on error
+      if (existing && backup) {
+        Object.assign(existing, backup)
+      }
+      throw err
+    }
+  }
+
+  const toggleFeatureProperty = async (id: number) => {
+    const existing = propertiesData.value.find(p => p.id === id)
+    const original = existing ? existing.isFeatured : false
+    if (existing) {
+      existing.isFeatured = !original
+    }
+
+    try {
+      const res = await fetch(useApiUrl(`/properties/${id}/toggle-feature`), {
+        method: 'PATCH'
+      })
+      if (!res.ok) throw new Error('Toggle feature request failed')
+      const json = await res.json()
+      if (json && json.success && existing) {
+        existing.isFeatured = Boolean(json.is_featured)
+        lastPropertiesSyncedAt.value = new Date()
+        return existing.isFeatured
+      }
+    } catch (err) {
+      if (existing) existing.isFeatured = original
+      throw err
+    }
+  }
+
+  const toggleRajukProperty = async (id: number) => {
+    const existing = propertiesData.value.find(p => p.id === id)
+    const original = existing ? existing.isRajukApproved : false
+    if (existing) {
+      existing.isRajukApproved = !original
+    }
+
+    try {
+      const res = await fetch(useApiUrl(`/properties/${id}/toggle-rajuk`), {
+        method: 'PATCH'
+      })
+      if (!res.ok) throw new Error('Toggle RAJUK request failed')
+      const json = await res.json()
+      if (json && json.success && existing) {
+        existing.isRajukApproved = Boolean(json.is_rajuk_approved)
+        lastPropertiesSyncedAt.value = new Date()
+        return existing.isRajukApproved
+      }
+    } catch (err) {
+      if (existing) existing.isRajukApproved = original
+      throw err
+    }
+  }
+
+  const updatePropertyStatus = async (id: number, status: string) => {
+    const existing = propertiesData.value.find(p => p.id === id)
+    const original = existing ? existing.status : 'Active'
+    if (existing) {
+      existing.status = status as any
+    }
+
+    try {
+      const res = await fetch(useApiUrl(`/properties/${id}/status`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      })
+      if (!res.ok) throw new Error('Update status request failed')
+      const json = await res.json()
+      if (json && json.success && existing) {
+        existing.status = json.status || (status as any)
+        lastPropertiesSyncedAt.value = new Date()
+        return existing.status
+      }
+    } catch (err) {
+      if (existing) existing.status = original
+      throw err
     }
   }
 
   const deleteProperty = async (id: number) => {
     const index = propertiesData.value.findIndex(p => p.id === id)
+    let removedItem: PropertyItem | null = null
     if (index > -1) {
-      propertiesData.value.splice(index, 1)
+      removedItem = propertiesData.value.splice(index, 1)[0]
     }
 
     try {
-      await fetch(useApiUrl(`/properties/${id}`), {
+      const res = await fetch(useApiUrl(`/properties/${id}`), {
         method: 'DELETE'
       })
-    } catch {
-      //
-    }
-  }
-
-  const fetchProperties = async () => {
-    try {
-      const res = await fetch(useApiUrl('/properties'))
-      if (res.ok) {
-        const json = await res.json()
-        if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
-          for (const apiItem of json.data) {
-            const existing = propertiesData.value.find(p => p.id === apiItem.id)
-            if (!existing) {
-              propertiesData.value.push({
-                id: apiItem.id,
-                title: apiItem.title,
-                slug: apiItem.slug || 'property-' + apiItem.id,
-                tagline: apiItem.tagline || '',
-                description: apiItem.description || '',
-                address: apiItem.address || '',
-                city: apiItem.city || 'Dhaka',
-                state: apiItem.state || 'Dhaka North',
-                areaName: apiItem.area_name || '',
-                price: Number(apiItem.price) || 0,
-                priceUnit: apiItem.price_unit,
-                listingType: apiItem.listing_type || 'Sale',
-                propertyType: apiItem.property_type || 'Flat',
-                status: apiItem.status || 'Active',
-                bedrooms: apiItem.bedrooms || 0,
-                bathrooms: apiItem.bathrooms || 0,
-                balconies: apiItem.balconies || 0,
-                squareFootage: apiItem.square_footage || 0,
-                landSize: apiItem.land_size || 0,
-                landUnit: apiItem.land_unit || 'Katha',
-                parking: apiItem.parking || 0,
-                floorNumber: apiItem.floor_number,
-                totalFloors: apiItem.total_floors,
-                facing: apiItem.facing || 'South',
-                completionStatus: apiItem.completion_status || 'Ready',
-                yearBuilt: apiItem.year_built || 2024,
-                isFeatured: !!apiItem.is_featured,
-                isRajukApproved: !!apiItem.is_rajuk_approved,
-                isVerified: !!apiItem.is_verified,
-                hasOpenHouse: !!apiItem.has_open_house,
-                lat: apiItem.latitude || 23.7925,
-                lng: apiItem.longitude || 90.4167,
-                images: Array.isArray(apiItem.images) && apiItem.images.length ? apiItem.images : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'],
-                amenities: Array.isArray(apiItem.amenities) ? apiItem.amenities : ['24/7 Generator', 'Security CCTV', 'Lift'],
-                documentsVerified: Array.isArray(apiItem.documents_verified) ? apiItem.documents_verified : ['Clear Title Deed', 'Mutation Cleared'],
-                agentId: apiItem.agent_id || 1,
-                history: [],
-                estimates: { marketEstimate: Number(apiItem.price) || 0, lowEstimate: (Number(apiItem.price) || 0) * 0.95, highEstimate: (Number(apiItem.price) || 0) * 1.05, annualGrowthPct: 10, monthlyRentEstimate: (Number(apiItem.price) || 0) * 0.004, annualRoiPct: 6, pricePerSqftArea: 8000 },
-                comparables: [],
-                schools: [],
-                community: { neighborhood: apiItem.area_name || '', metroDistanceKm: 2, nearestMetroStation: 'MRT Station', hospitalDistanceKm: 2, nearestHospital: 'Evercare Hospital', airportDistanceKm: 12, safetyRating: 'High', amenitiesOverview: 'Nearby amenities', transitOverview: 'Highway access' }
-              })
-            }
-          }
-        }
+      if (!res.ok) {
+        const errorJson = await res.json().catch(() => null)
+        throw new Error(errorJson?.message || `Failed to delete from MySQL (status: ${res.status})`)
       }
-    } catch {
-      // Offline fallback
+      lastPropertiesSyncedAt.value = new Date()
+    } catch (err) {
+      // Revert if database delete failed
+      if (removedItem && index > -1) {
+        propertiesData.value.splice(index, 0, removedItem)
+      }
+      throw err
     }
   }
 
@@ -913,12 +1019,17 @@ export const useProperties = () => {
     properties,
     agents,
     featuredProperties,
+    isLoading,
+    lastSynced,
     getPropertyById,
     getAgentById,
     getPropertiesByAgent,
     fetchProperties,
     addProperty,
     updateProperty,
+    toggleFeatureProperty,
+    toggleRajukProperty,
+    updatePropertyStatus,
     deleteProperty
   }
 }

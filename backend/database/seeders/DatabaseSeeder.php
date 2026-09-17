@@ -224,6 +224,129 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        Property::updateOrCreate(
+            ['id' => 4],
+            [
+                'title' => 'Luxury South-Facing Duplex in Dhanmondi Lake Road 8/A',
+                'slug' => 'south-facing-duplex-dhanmondi-8a',
+                'tagline' => 'Quiet Residential Haven with Private Terrace Garden & Solar System',
+                'description' => 'An immaculate south-facing luxury duplex situated in the most desirable and quiet enclave of Dhanmondi (Road 8/A, steps from Dhanmondi Lake). Spanning two levels (7th & 8th floor), this residence includes 4 expansive bedrooms with en-suite walk-in closets, bespoke teak wood fittings, imported modular kitchen, servant quarters, 2 dedicated basement parking bays, and 100% backup generator.',
+                'address' => 'Road 8/A, Dhanmondi R/A, Dhaka-1209',
+                'city' => 'Dhaka',
+                'state' => 'Dhaka South',
+                'area_name' => 'Dhanmondi',
+                'price' => 42500000,
+                'price_unit' => null,
+                'listing_type' => 'Sale',
+                'property_type' => 'Duplex',
+                'status' => 'Active',
+                'bedrooms' => 4,
+                'bathrooms' => 4,
+                'balconies' => 3,
+                'square_footage' => 3200,
+                'parking' => 2,
+                'floor_number' => 7,
+                'total_floors' => 9,
+                'facing' => 'South',
+                'completion_status' => 'Ready',
+                'year_built' => 2024,
+                'is_featured' => false,
+                'is_rajuk_approved' => true,
+                'is_verified' => true,
+                'has_open_house' => true,
+                'latitude' => 23.7465,
+                'longitude' => 90.3760,
+                'agent_id' => $agent1->id,
+                'images' => [
+                    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=1200&auto=format&fit=crop'
+                ],
+                'amenities' => ['Duplex Double Height Living Room', 'Lakeside Walking Distance', '24/7 Full Backup Generator', 'Custom Teak Wood Interior'],
+                'documents_verified' => ['RAJUK Approved Structural & Architectural Plan', 'Mutation & Land Tax Certificate Up-to-Date', 'Freehold Land Share Ratio Registered']
+            ]
+        );
+
+        Property::updateOrCreate(
+            ['id' => 5],
+            [
+                'title' => '5 Katha South-Facing Commercial Plot in Bashundhara Block-M',
+                'slug' => '5-katha-commercial-plot-bashundhara-block-m',
+                'tagline' => 'Direct 60ft Main Avenue Road Front, 100% Mutation & Ready for Construction',
+                'description' => 'An exceptional commercial & high-density residential plot in the rapidly booming Block-M of Bashundhara Residential Area. Located directly on a 60-foot wide central connecting road, just minutes from the Bashundhara Sports Complex and Apollo/Evercare corridor.',
+                'address' => 'Road 22, Block M, Bashundhara R/A, Dhaka-1229',
+                'city' => 'Dhaka',
+                'state' => 'Dhaka North',
+                'area_name' => 'Bashundhara R/A',
+                'price' => 24500000,
+                'price_unit' => 'Total (৳ 49 Lakh / Katha)',
+                'listing_type' => 'Sale',
+                'property_type' => 'Plot',
+                'status' => 'Active',
+                'bedrooms' => 0,
+                'bathrooms' => 0,
+                'balconies' => 0,
+                'land_size' => 5.0,
+                'land_unit' => 'Katha',
+                'parking' => 0,
+                'facing' => 'South',
+                'completion_status' => 'Ready',
+                'year_built' => 2024,
+                'is_featured' => true,
+                'is_rajuk_approved' => true,
+                'is_verified' => true,
+                'has_open_house' => false,
+                'latitude' => 23.8180,
+                'longitude' => 90.4420,
+                'agent_id' => $agent1->id,
+                'images' => [
+                    'https://images.unsplash.com/photo-1524813686514-a57563d77d61?q=80&w=1600&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1200&auto=format&fit=crop'
+                ],
+                'amenities' => ['60ft Wide Commercial Avenue', 'Complete Underground Gas & Water Network', 'Boundary Demarcated & Registered'],
+                'documents_verified' => ['Bashundhara Official Allotment & Handover Deed', 'Mutation Parch & Up-to-date Dakhila Khajna Paid', 'Freehold Clear Title Vetted by Legal Counsel']
+            ]
+        );
+
+        Property::updateOrCreate(
+            ['id' => 6],
+            [
+                'title' => 'Boutique Eco Resort with 24 Luxury Cottages in Sreemangal',
+                'slug' => 'boutique-eco-resort-sreemangal-tea-valley',
+                'tagline' => '3.5 Bigha Lush Tea Garden View with Running Profitable Hospitality Business',
+                'description' => 'An extraordinary turnkey hospitality estate situated amidst the world-famous lush rolling tea gardens of Sreemangal. Spanning 3.5 Bighas of freehold hilltop property, this resort features 24 fully furnished wooden luxury cottages, a multi-cuisine open-air restaurant, swimming pool, organic fruit orchard, and solar backup power.',
+                'address' => 'Bhanugach Road, Sreemangal, Moulvibazar, Sylhet',
+                'city' => 'Sylhet / Sreemangal',
+                'state' => 'Sylhet',
+                'area_name' => 'Sreemangal Tea Valley',
+                'price' => 185000000,
+                'price_unit' => 'Turnkey Business',
+                'listing_type' => 'Sale',
+                'property_type' => 'Hotel',
+                'status' => 'Active',
+                'bedrooms' => 24,
+                'bathrooms' => 26,
+                'balconies' => 24,
+                'land_size' => 3.5,
+                'land_unit' => 'Bigha',
+                'parking' => 15,
+                'completion_status' => 'Ready',
+                'year_built' => 2023,
+                'is_featured' => true,
+                'is_rajuk_approved' => false,
+                'is_verified' => true,
+                'has_open_house' => true,
+                'latitude' => 24.3065,
+                'longitude' => 91.7296,
+                'agent_id' => 1,
+                'images' => [
+                    'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=1600&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=1200&auto=format&fit=crop'
+                ],
+                'amenities' => ['24 Luxury Air-Conditioned Cottages', 'Panoramic Rolling Tea Estate Views', 'Freshwater Swimming Pool', 'Commercial Solar Power & Generator'],
+                'documents_verified' => ['Freehold DC Certified Land Record', 'Department of Environment Clearance', 'Trade License & Tourism Hotel Registration']
+            ]
+        );
+
         // 4. Seed Viewings
         Viewing::updateOrCreate(
             ['id' => 101],
