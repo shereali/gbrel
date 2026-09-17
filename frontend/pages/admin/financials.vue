@@ -19,19 +19,19 @@
     <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-header">
-          <span class="kpi-label">YTD Transacted Asset Volume</span>
+          <span class="kpi-label">Transacted Asset Volume</span>
           <span class="kpi-icon-pill emerald">৳</span>
         </div>
-        <div class="kpi-value text-emerald">৳ 124.50 Cr</div>
-        <div class="kpi-sub">8 Completed Land & Luxury Deals</div>
+        <div class="kpi-value text-emerald">{{ formatCrore(totalVolume) }}</div>
+        <div class="kpi-sub">{{ dealsList.length }} Registered Portfolio Deals</div>
       </div>
 
       <div class="kpi-card">
         <div class="kpi-header">
-          <span class="kpi-label">Earned Advisory Commission (2%)</span>
+          <span class="kpi-label">Advisory Commission</span>
           <span class="kpi-icon-pill gold">★</span>
         </div>
-        <div class="kpi-value text-gold">৳ 2.49 Cr</div>
+        <div class="kpi-value text-gold">{{ formatCrore(totalCommission) }}</div>
         <div class="kpi-sub">Disbursed to GBREL Treasury</div>
       </div>
 
@@ -40,7 +40,7 @@
           <span class="kpi-label">Active Escrow Accounts</span>
           <span class="kpi-icon-pill blue">🏦</span>
         </div>
-        <div class="kpi-value text-blue">৳ 45.00 Cr</div>
+        <div class="kpi-value text-blue">{{ formatCrore(totalEscrow) }}</div>
         <div class="kpi-sub">Held securely in partner tier-1 banks</div>
       </div>
     </div>
@@ -164,9 +164,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { formatBDT } from '~/composables/useCurrency'
 import { useToast } from '~/composables/useToast'
+import { useApiUrl } from '~/composables/useApi'
 
 definePageMeta({
   layout: 'admin'
@@ -175,12 +176,61 @@ definePageMeta({
 const toast = useToast()
 const selectedBank = ref('All')
 const selectedDeal = ref<any | null>(null)
+const isLoading = ref(false)
 
-const dealsList = ref([
+const dealsList = ref<any[]>([
   { id: 'TX-901', property: 'Lakeview Penthouse at Gulshan-2 Diplomatic Zone', buyer: 'Dr. Farhan Chowdhury', value: 78000000, commission: 1560000, bank: 'BRAC Bank', status: 'Settled' },
   { id: 'TX-902', property: '10 Katha Corner Plot in Purbachal Sector 17', buyer: 'Engr. Mahfuzur Rahman', value: 36000000, commission: 720000, bank: 'DBH Finance', status: 'Settled' },
   { id: 'TX-903', property: 'Luxury Beachfront Presidential Suite at Marine Drive', buyer: 'Syed Tanzeem', value: 19000000, commission: 380000, bank: 'City Bank', status: 'In Escrow' }
 ])
+
+const formatCrore = (val: number) => {
+  const cr = (val || 0) / 10000000
+  return `৳ ${cr.toFixed(2)} Cr`
+}
+
+const totalVolume = computed(() => {
+  return dealsList.value.reduce((acc, d) => acc + (Number(d.value) || 0), 0)
+})
+
+const totalCommission = computed(() => {
+  return dealsList.value.reduce((acc, d) => acc + (Number(d.commission) || ((Number(d.value) || 0) * 0.02)), 0)
+})
+
+const totalEscrow = computed(() => {
+  return dealsList.value
+    .filter(d => d.status === 'In Escrow' || d.status === 'Pending')
+    .reduce((acc, d) => acc + (Number(d.value) || 0), 0)
+})
+
+const fetchFinancials = async () => {
+  isLoading.value = true
+  try {
+    const res = await fetch(useApiUrl('/financials'))
+    if (res.ok) {
+      const json = await res.json()
+      if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+        dealsList.value = json.data.map(d => ({
+          id: d.deal_id || d.id,
+          property: d.property_title || d.property,
+          buyer: d.buyer_name || d.buyer,
+          value: Number(d.value) || 0,
+          commission: Number(d.commission) || (Number(d.value) * 0.02) || 0,
+          bank: d.bank || 'BRAC Bank',
+          status: d.status || 'Settled'
+        }))
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load financial records:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(async () => {
+  await fetchFinancials()
+})
 
 const filteredDeals = computed(() => {
   if (selectedBank.value === 'All') return dealsList.value

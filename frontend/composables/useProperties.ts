@@ -719,6 +719,31 @@ const propertiesData = ref<PropertyItem[]>([
 
 const isPropertiesLoading = ref(false)
 const lastPropertiesSyncedAt = ref<Date | null>(null)
+const isAgentsLoading = ref(false)
+const lastAgentsSyncedAt = ref<Date | null>(null)
+
+const mapDbItemToAgentItem = (item: any): AgentItem => {
+  return {
+    id: Number(item.id),
+    name: item.name || '',
+    title: item.title || 'Senior Real Estate Advisor',
+    agency: item.agency || 'GBREL Premier Advisory',
+    state: item.state || 'Dhaka North',
+    city: item.city || 'Dhaka',
+    photo: item.photo || item.avatar || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=600&auto=format&fit=crop',
+    email: item.email || `${(item.name || 'agent').toLowerCase().replace(/[^a-z0-9]/g, '')}@gbrel.com`,
+    phone: item.phone || '+880 1819-000000',
+    whatsapp: item.whatsapp || item.phone || '+880 1819-000000',
+    bio: item.bio || 'Experienced real estate advisor with GBREL.',
+    experienceYears: Number(item.experience_years ?? item.experienceYears ?? 8),
+    rating: Number(item.rating ?? 4.9),
+    reviewCount: Number(item.review_count ?? item.reviewCount ?? 25),
+    activeListingsCount: Number(item.active_listings_count ?? item.activeListingsCount ?? 0),
+    specialties: Array.isArray(item.specialties) 
+      ? item.specialties 
+      : (typeof item.specialties === 'string' ? JSON.parse(item.specialties || '[]') : ['Luxury Estates'])
+  }
+}
 
 const mapDbItemToPropertyItem = (apiItem: any): PropertyItem => {
   const price = Number(apiItem.price) || 0
@@ -1059,22 +1084,134 @@ export const useProperties = () => {
     throw new Error(json?.message || 'Failed to upload gallery images')
   }
 
+  const isAgentsLoadingRef = computed(() => isAgentsLoading.value)
+
+  const fetchAgents = async (force = false) => {
+    isAgentsLoading.value = true
+    try {
+      const res = await fetch(useApiUrl('/agents'))
+      if (res.ok) {
+        const json = await res.json()
+        if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+          agentsData.value = json.data.map(mapDbItemToAgentItem)
+          lastAgentsSyncedAt.value = new Date()
+        }
+      }
+    } catch (err) {
+      console.warn('Realtime MySQL agents fetch notice (using cache):', err)
+    } finally {
+      isAgentsLoading.value = false
+    }
+    return agentsData.value
+  }
+
+  const addAgent = async (formData: Partial<AgentItem>) => {
+    const payload = {
+      name: formData.name,
+      title: formData.title,
+      agency: formData.agency || 'GBREL Premier Advisory',
+      state: formData.state || 'Dhaka North',
+      city: formData.city || 'Dhaka',
+      photo: formData.photo,
+      email: formData.email || `${(formData.name || 'advisor').toLowerCase().replace(/[^a-z0-9]/g, '')}@gbrel.com`,
+      phone: formData.phone,
+      whatsapp: formData.whatsapp,
+      bio: formData.bio,
+      experience_years: formData.experienceYears || 8,
+      rating: formData.rating || 4.9,
+      review_count: formData.reviewCount || 10,
+      active_listings_count: formData.activeListingsCount || 0,
+      specialties: formData.specialties || ['Luxury Real Estate']
+    }
+
+    const res = await fetch(useApiUrl('/agents'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => null)
+      throw new Error(err?.message || `Failed to create advisor (status: ${res.status})`)
+    }
+    const json = await res.json()
+    if (json && json.success && json.data) {
+      const newAgent = mapDbItemToAgentItem(json.data)
+      agentsData.value.push(newAgent)
+      return newAgent
+    }
+    throw new Error('Invalid response from agents API')
+  }
+
+  const updateAgent = async (id: number, formData: Partial<AgentItem>) => {
+    const payload: any = { ...formData }
+    if (formData.experienceYears !== undefined) payload.experience_years = formData.experienceYears
+    if (formData.reviewCount !== undefined) payload.review_count = formData.reviewCount
+    if (formData.activeListingsCount !== undefined) payload.active_listings_count = formData.activeListingsCount
+
+    const res = await fetch(useApiUrl(`/agents/${id}`), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => null)
+      throw new Error(err?.message || `Failed to update advisor (status: ${res.status})`)
+    }
+    const json = await res.json()
+    if (json && json.success && json.data) {
+      const updated = mapDbItemToAgentItem(json.data)
+      const index = agentsData.value.findIndex(a => a.id === id)
+      if (index > -1) {
+        agentsData.value[index] = updated
+      }
+      return updated
+    }
+    throw new Error('Invalid response from update agent API')
+  }
+
+  const deleteAgent = async (id: number) => {
+    const index = agentsData.value.findIndex(a => a.id === id)
+    let removed: AgentItem | null = null
+    if (index > -1) {
+      removed = agentsData.value.splice(index, 1)[0]
+    }
+    try {
+      const res = await fetch(useApiUrl(`/agents/${id}`), {
+        method: 'DELETE'
+      })
+      if (!res.ok) {
+        throw new Error(`Failed to delete advisor: status ${res.status}`)
+      }
+      return true
+    } catch (err) {
+      if (removed && index > -1) {
+        agentsData.value.splice(index, 0, removed)
+      }
+      throw err
+    }
+  }
+
   return {
     properties,
     agents,
     featuredProperties,
     isLoading,
+    isAgentsLoading: isAgentsLoadingRef,
     lastSynced,
     getPropertyById,
     getAgentById,
     getPropertiesByAgent,
     fetchProperties,
+    fetchAgents,
     addProperty,
     updateProperty,
     toggleFeatureProperty,
     toggleRajukProperty,
     updatePropertyStatus,
     deleteProperty,
+    addAgent,
+    updateAgent,
+    deleteAgent,
     uploadImage,
     uploadMultipleImages
   }

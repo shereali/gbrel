@@ -130,8 +130,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from '~/composables/useToast'
+import { useApiUrl } from '~/composables/useApi'
 
 definePageMeta({
   layout: 'admin'
@@ -140,17 +141,41 @@ definePageMeta({
 const toast = useToast()
 const selectedType = ref('All')
 const showAddLeadModal = ref(false)
+const isLoading = ref(false)
+const isSubmitting = ref(false)
 
-const leadsList = ref([
-  { id: 1, name: 'Dr. Farhan Chowdhury', phone: '+44 7911 123456', property: 'Lakeview Penthouse at Gulshan-2', type: 'NRB Investor', stage: 'Qualified', message: 'Interested in title verification deeds and bank escrow transfer options for expatriates.', date: 'Today 09:15 AM' },
-  { id: 2, name: 'Engr. Mahfuzur Rahman', phone: '+880 1711-998877', property: '10 Katha Plot in Purbachal Sector 17', type: 'Direct Buyer', stage: 'Contacted', message: 'Want to inspect boundary demarcation pillars this Friday afternoon with architect.', date: 'Yesterday' },
-  { id: 3, name: 'Syed Tanzeem', phone: '+971 50 1234567', property: 'Marine Drive Cox\'s Bazar Sea Suite', type: 'Hospitality ROI', stage: 'New', message: 'Interested in buying 2 fractional suite units with 14% annual guaranteed yield.', date: '2 days ago' },
-  { id: 4, name: 'Advocate Munirul Islam', phone: '+880 1819-556677', property: 'South-Facing Duplex in Dhanmondi 8/A', type: 'Direct Buyer', stage: 'Converted', message: 'Signed Bayna agreement. Sub-registry clearance scheduled for next week.', date: '3 days ago' }
-])
+const leadsList = ref<any[]>([])
+
+const fetchLeads = async () => {
+  isLoading.value = true
+  try {
+    const res = await fetch(useApiUrl('/leads'))
+    if (res.ok) {
+      const json = await res.json()
+      if (json && json.success && Array.isArray(json.data)) {
+        leadsList.value = json.data.map(l => ({
+          ...l,
+          property: l.property_title || l.property || 'Direct Mandate',
+          type: l.buyer_type || l.type || 'Direct Buyer',
+          stage: l.stage || 'New',
+          date: l.created_at ? new Date(l.created_at).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : (l.date || 'Recent')
+        }))
+      }
+    }
+  } catch (err) {
+    console.error('Failed to fetch leads:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(async () => {
+  await fetchLeads()
+})
 
 const filteredLeads = computed(() => {
   if (selectedType.value === 'All') return leadsList.value
-  return leadsList.value.filter(l => l.type.includes(selectedType.value))
+  return leadsList.value.filter(l => (l.type || '').includes(selectedType.value))
 })
 
 const leadForm = reactive({
@@ -161,30 +186,56 @@ const leadForm = reactive({
   message: ''
 })
 
-const saveNewLead = () => {
-  leadsList.value.unshift({
-    id: Date.now(),
-    name: leadForm.name,
-    phone: leadForm.phone,
-    property: leadForm.property,
-    type: leadForm.type,
-    stage: 'New',
-    message: leadForm.message || 'Direct telephone inquiry recorded at GBREL HQ.',
-    date: 'Just now'
-  })
-  toast.success('Lead Registered', `Inquiry from ${leadForm.name} saved to CRM inbox.`)
-  showAddLeadModal.value = false
-  leadForm.name = ''
-  leadForm.phone = ''
-  leadForm.message = ''
+const saveNewLead = async () => {
+  isSubmitting.value = true
+  try {
+    const res = await fetch(useApiUrl('/leads'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: leadForm.name,
+        phone: leadForm.phone,
+        property_title: leadForm.property,
+        buyer_type: leadForm.type,
+        message: leadForm.message || 'Direct telephone inquiry recorded at GBREL HQ.',
+        source: 'Admin CRM Manual'
+      })
+    })
+
+    if (!res.ok) throw new Error('Failed to create lead in database')
+
+    toast.success('Lead Registered', `Inquiry from ${leadForm.name} saved to CRM inbox.`)
+    showAddLeadModal.value = false
+    leadForm.name = ''
+    leadForm.phone = ''
+    leadForm.message = ''
+    await fetchLeads()
+  } catch (err: any) {
+    toast.error('Save Failed', err?.message || 'Could not save buyer inquiry.')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
-const updateStage = (id: number, event: Event) => {
+const updateStage = async (id: number, event: Event) => {
   const target = event.target as HTMLSelectElement
+  const newStage = target.value
   const lead = leadsList.value.find(l => l.id === id)
-  if (lead) {
-    lead.stage = target.value
-    toast.info('Pipeline Updated', `${lead.name} moved to stage "${lead.stage}".`)
+  const prevStage = lead ? lead.stage : 'New'
+
+  if (lead) lead.stage = newStage
+
+  try {
+    const res = await fetch(useApiUrl(`/leads/${id}/stage`), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stage: newStage })
+    })
+    if (!res.ok) throw new Error('Failed to update stage on server')
+    toast.info('Pipeline Updated', `${lead?.name || 'Lead'} moved to stage "${newStage}".`)
+  } catch (err: any) {
+    if (lead) lead.stage = prevStage
+    toast.error('Update Failed', err?.message || 'Could not update lead stage.')
   }
 }
 </script>

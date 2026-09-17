@@ -9,6 +9,7 @@ use App\Models\Viewing;
 use App\Models\Lead;
 use App\Models\FinancialTransaction;
 use App\Models\SavedProperty;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Hash;
 
 /*
@@ -327,15 +328,16 @@ Route::delete('/properties/{id}', function ($id) {
     ]);
 });
 
-// 2. Agents API Endpoints (CRUD)
+// 2. Agents API Endpoints (Full CRUD)
 Route::get('/agents', function (Request $request) {
     $query = Agent::query();
-    if ($request->has('state')) {
+    if ($request->has('state') && !empty($request->state)) {
         $query->where('state', $request->state);
     }
     return response()->json([
         'success' => true,
-        'data' => $query->get()
+        'count' => $query->count(),
+        'data' => $query->orderBy('created_at', 'desc')->get()
     ]);
 });
 
@@ -350,7 +352,77 @@ Route::get('/agent/{agent_id}', function ($agent_id) {
     ]);
 });
 
-// 3. VIP Viewing Appointments API
+Route::post('/agents', function (Request $request) {
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+
+    $agent = Agent::create([
+        'name' => $input['name'] ?? 'Senior Advisor',
+        'title' => $input['title'] ?? 'Real Estate Advisor',
+        'agency' => $input['agency'] ?? 'GBREL Premier Advisory',
+        'state' => $input['state'] ?? 'Dhaka North',
+        'city' => $input['city'] ?? 'Dhaka',
+        'photo' => $input['photo'] ?? 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=600&auto=format&fit=crop',
+        'email' => $input['email'] ?? (strtolower(preg_replace('/[^a-z0-9]/', '', $input['name'] ?? 'advisor')) . rand(10, 99) . '@gbrel.com'),
+        'phone' => $input['phone'] ?? '+880 1819-000000',
+        'whatsapp' => $input['whatsapp'] ?? ($input['phone'] ?? '+880 1819-000000'),
+        'bio' => $input['bio'] ?? '',
+        'experience_years' => (int)($input['experience_years'] ?? $input['experienceYears'] ?? 5),
+        'rating' => (float)($input['rating'] ?? 4.9),
+        'review_count' => (int)($input['review_count'] ?? $input['reviewCount'] ?? 10),
+        'active_listings_count' => (int)($input['active_listings_count'] ?? $input['activeListingsCount'] ?? 5),
+        'specialties' => is_array($input['specialties'] ?? null) ? $input['specialties'] : ['Luxury Penthouses', 'Commercial Land']
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Advisor successfully added to MySQL database',
+        'data' => $agent
+    ], 201);
+});
+
+Route::put('/agents/{id}', function (Request $request, $id) {
+    $agent = Agent::findOrFail($id);
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+
+    $data = [];
+    if (isset($input['name'])) $data['name'] = $input['name'];
+    if (isset($input['title'])) $data['title'] = $input['title'];
+    if (isset($input['state'])) $data['state'] = $input['state'];
+    if (isset($input['city'])) $data['city'] = $input['city'];
+    if (isset($input['photo'])) $data['photo'] = $input['photo'];
+    if (isset($input['email'])) $data['email'] = $input['email'];
+    if (isset($input['phone'])) $data['phone'] = $input['phone'];
+    if (isset($input['whatsapp'])) $data['whatsapp'] = $input['whatsapp'];
+    if (isset($input['bio'])) $data['bio'] = $input['bio'];
+    if (isset($input['experience_years']) || isset($input['experienceYears'])) {
+        $data['experience_years'] = (int)($input['experience_years'] ?? $input['experienceYears']);
+    }
+    if (isset($input['rating'])) $data['rating'] = (float)$input['rating'];
+    if (isset($input['specialties']) && is_array($input['specialties'])) {
+        $data['specialties'] = $input['specialties'];
+    }
+
+    $agent->update($data);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Advisor successfully updated in MySQL database',
+        'data' => $agent
+    ]);
+});
+
+Route::delete('/agents/{id}', function ($id) {
+    $agent = Agent::findOrFail($id);
+    $agent->delete();
+    return response()->json([
+        'success' => true,
+        'message' => 'Advisor deleted from MySQL database'
+    ]);
+});
+
+// 3. VIP Viewing Appointments API (Full CRUD)
 Route::get('/viewings', function () {
     return response()->json([
         'success' => true,
@@ -359,46 +431,79 @@ Route::get('/viewings', function () {
 });
 
 Route::post('/schedule-viewing', function (Request $request) {
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+
     $viewing = Viewing::create([
-        'name' => $request->input('name'),
-        'phone' => $request->input('phone'),
-        'email' => $request->input('email', 'buyer@gbrel.com'),
-        'contact_method' => $request->input('contact_method', 'WhatsApp'),
-        'property_id' => $request->input('property_id', 1),
-        'property_title' => $request->input('property_title', 'Luxury Property Inspection'),
-        'scheduled_date' => $request->input('scheduled_date', date('Y-m-d')),
-        'scheduled_time' => $request->input('scheduled_time', '03:00 PM - 04:00 PM'),
-        'vip_pickup' => (bool)$request->input('vip_pickup', false),
-        'pickup_location' => $request->input('pickup_location', 'Gulshan-2 Diplomatic Zone'),
-        'assigned_agent' => $request->input('assigned_agent', 'Tanvir Ahmed'),
-        'status' => 'Confirmed',
-        'notes' => $request->input('notes')
+        'name' => $input['name'] ?? 'VIP Buyer',
+        'phone' => $input['phone'] ?? '+880 1711-000000',
+        'email' => $input['email'] ?? 'buyer@gbrel.com',
+        'contact_method' => $input['contact_method'] ?? $input['contactMethod'] ?? 'WhatsApp',
+        'property_id' => $input['property_id'] ?? $input['propertyId'] ?? null,
+        'property_title' => $input['property_title'] ?? $input['propertyTitle'] ?? 'Luxury Property Inspection',
+        'scheduled_date' => $input['scheduled_date'] ?? $input['date'] ?? date('Y-m-d'),
+        'scheduled_time' => $input['scheduled_time'] ?? $input['timeSlot'] ?? '03:00 PM - 04:00 PM',
+        'vip_pickup' => filter_var($input['vip_pickup'] ?? $input['pickupRequested'] ?? $input['pickup'] ?? false, FILTER_VALIDATE_BOOLEAN),
+        'pickup_location' => $input['pickup_location'] ?? 'Dhaka City Hub',
+        'assigned_agent' => $input['assigned_agent'] ?? $input['assignedAgent'] ?? 'Tanvir Ahmed',
+        'status' => $input['status'] ?? 'Confirmed',
+        'notes' => $input['notes'] ?? null
     ]);
 
     return response()->json([
         'success' => true,
         'message' => 'VIP Site Viewing booked and stored in MySQL database',
         'data' => $viewing
+    ], 201);
+});
+
+Route::patch('/viewings/{id}/status', function (Request $request, $id) {
+    $viewing = Viewing::findOrFail($id);
+    $raw = json_decode($request->getContent(), true);
+    $status = is_array($raw) && isset($raw['status']) ? $raw['status'] : $request->input('status', 'Confirmed');
+    $viewing->status = $status;
+    $viewing->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Viewing status updated in MySQL database',
+        'data' => $viewing
     ]);
 });
 
-// 4. Leads & Financials API
-Route::get('/leads', function () {
+Route::delete('/viewings/{id}', function ($id) {
+    $viewing = Viewing::findOrFail($id);
+    $viewing->delete();
     return response()->json([
         'success' => true,
-        'data' => Lead::orderBy('created_at', 'desc')->get()
+        'message' => 'Viewing inspection deleted from MySQL database'
+    ]);
+});
+
+// 4. Leads API (Full CRUD)
+Route::get('/leads', function (Request $request) {
+    $query = Lead::query();
+    if ($request->has('stage') && !empty($request->stage)) {
+        $query->where('status', $request->stage);
+    }
+    return response()->json([
+        'success' => true,
+        'data' => $query->orderBy('created_at', 'desc')->get()
     ]);
 });
 
 Route::post('/leads', function (Request $request) {
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+
     $lead = Lead::create([
-        'name' => $request->input('name', 'Interested Buyer'),
-        'phone' => $request->input('phone'),
-        'email' => $request->input('email'),
-        'property_title' => $request->input('property_title', 'General Inquiry'),
-        'lead_type' => $request->input('lead_type', 'Website Callback'),
-        'message' => $request->input('message', 'Client requested 15-minute callback via portal.'),
-        'status' => 'New'
+        'name' => $input['name'] ?? 'Interested Buyer',
+        'phone' => $input['phone'] ?? '+880 1819-000000',
+        'email' => $input['email'] ?? null,
+        'property_title' => $input['property_title'] ?? $input['property'] ?? 'General Inquiry',
+        'lead_type' => $input['lead_type'] ?? $input['type'] ?? 'Direct Inquiry',
+        'message' => $input['message'] ?? 'Inquiry submitted via portal.',
+        'status' => $input['status'] ?? $input['stage'] ?? 'New'
     ]);
 
     return response()->json([
@@ -408,10 +513,272 @@ Route::post('/leads', function (Request $request) {
     ], 201);
 });
 
+Route::patch('/leads/{id}/stage', function (Request $request, $id) {
+    $lead = Lead::findOrFail($id);
+    $raw = json_decode($request->getContent(), true);
+    $stage = is_array($raw) && isset($raw['stage']) ? $raw['stage'] : $request->input('stage', $request->input('status', 'New'));
+    $lead->status = $stage;
+    $lead->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Lead stage updated in MySQL database',
+        'data' => $lead
+    ]);
+});
+
+Route::delete('/leads/{id}', function ($id) {
+    $lead = Lead::findOrFail($id);
+    $lead->delete();
+    return response()->json([
+        'success' => true,
+        'message' => 'Lead inquiry deleted from MySQL database'
+    ]);
+});
+
+// 5. Financial Transactions & Escrow API (Full CRUD)
 Route::get('/financials', function () {
     return response()->json([
         'success' => true,
         'data' => FinancialTransaction::orderBy('created_at', 'desc')->get()
+    ]);
+});
+
+Route::post('/financials', function (Request $request) {
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+
+    $dealCode = $input['deal_code'] ?? $input['dealCode'] ?? ('TX-' . rand(900, 999));
+    $value = (float)($input['transacted_value'] ?? $input['value'] ?? 0);
+    $commission = (float)($input['commission_amount'] ?? $input['commission'] ?? ($value * 0.02));
+
+    $deal = FinancialTransaction::create([
+        'deal_code' => $dealCode,
+        'property_title' => $input['property_title'] ?? $input['property'] ?? 'Mandate Asset',
+        'buyer_name' => $input['buyer_name'] ?? $input['buyer'] ?? 'Verified Buyer',
+        'transacted_value' => $value,
+        'commission_amount' => $commission,
+        'escrow_bank' => $input['escrow_bank'] ?? $input['bank'] ?? 'BRAC Bank Escrow',
+        'status' => $input['status'] ?? 'In Escrow'
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Escrow transaction logged to MySQL database',
+        'data' => $deal
+    ], 201);
+});
+
+Route::patch('/financials/{id}/status', function (Request $request, $id) {
+    $deal = FinancialTransaction::findOrFail($id);
+    $raw = json_decode($request->getContent(), true);
+    $status = is_array($raw) && isset($raw['status']) ? $raw['status'] : $request->input('status', 'Settled');
+    $deal->status = $status;
+    $deal->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Escrow status updated in MySQL database',
+        'data' => $deal
+    ]);
+});
+
+Route::delete('/financials/{id}', function ($id) {
+    $deal = FinancialTransaction::findOrFail($id);
+    $deal->delete();
+    return response()->json([
+        'success' => true,
+        'message' => 'Financial transaction deleted from MySQL database'
+    ]);
+});
+
+// 6. Users Accounts & RBAC API (Full CRUD)
+Route::get('/users', function () {
+    $users = User::orderBy('created_at', 'desc')->get()->map(function ($u) {
+        return [
+            'id' => $u->id,
+            'name' => $u->name,
+            'email' => $u->email,
+            'role' => $u->role ?? (str_contains($u->email, 'admin') ? 'admin' : (str_contains($u->email, 'agent') ? 'agent' : 'buyer')),
+            'phone' => $u->phone ?? '+880 1711-000000',
+            'region' => $u->region ?? 'Dhaka HQ',
+            'status' => $u->status ?? 'Active',
+            'avatar' => $u->avatar ?? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+            'created_at' => $u->created_at
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'count' => $users->count(),
+        'data' => $users
+    ]);
+});
+
+Route::post('/users', function (Request $request) {
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+
+    $email = strtolower(trim($input['email'] ?? ''));
+    if (!$email) {
+        return response()->json(['success' => false, 'message' => 'Email is required'], 422);
+    }
+
+    $existing = User::where('email', $email)->first();
+    if ($existing) {
+        return response()->json(['success' => false, 'message' => 'An account with this email already exists'], 422);
+    }
+
+    $role = $input['role'] ?? 'agent';
+    $defaultAvatar = $role === 'admin'
+        ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop'
+        : ($role === 'agent'
+            ? 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop'
+            : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop');
+
+    $user = User::create([
+        'name' => $input['name'] ?? 'Team Member',
+        'email' => $email,
+        'password' => Hash::make($input['password'] ?? 'gbrel2026!'),
+        'role' => $role,
+        'phone' => $input['phone'] ?? '+880 1819-000000',
+        'region' => $input['region'] ?? 'Dhaka HQ',
+        'status' => $input['status'] ?? 'Active',
+        'avatar' => $input['avatar'] ?? $defaultAvatar
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'User account created in MySQL database',
+        'data' => $user
+    ], 201);
+});
+
+Route::put('/users/{id}', function (Request $request, $id) {
+    $user = User::findOrFail($id);
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+
+    if (isset($input['name'])) $user->name = $input['name'];
+    if (isset($input['role'])) $user->role = $input['role'];
+    if (isset($input['phone'])) $user->phone = $input['phone'];
+    if (isset($input['region'])) $user->region = $input['region'];
+    if (isset($input['status'])) $user->status = $input['status'];
+    if (isset($input['avatar'])) $user->avatar = $input['avatar'];
+    if (isset($input['password']) && !empty($input['password'])) {
+        $user->password = Hash::make($input['password']);
+    }
+    $user->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'User account updated in MySQL database',
+        'data' => $user
+    ]);
+});
+
+Route::delete('/users/{id}', function ($id) {
+    if ((int)$id === 1) {
+        return response()->json(['success' => false, 'message' => 'Cannot delete primary root administrator'], 403);
+    }
+    $user = User::findOrFail($id);
+    $user->delete();
+    return response()->json([
+        'success' => true,
+        'message' => 'User account deleted from MySQL database'
+    ]);
+});
+
+// 7. Platform Settings API (MySQL Persistence)
+Route::get('/settings', function () {
+    $defaultSettings = [
+        'dbh_rate' => Setting::getVal('dbh_rate', '9.25%'),
+        'idlc_rate' => Setting::getVal('idlc_rate', '9.50%'),
+        'brac_rate' => Setting::getVal('brac_rate', '9.40%'),
+        'whatsapp_number' => Setting::getVal('whatsapp_number', '+880 1819-987654'),
+        'chauffeur_base' => Setting::getVal('chauffeur_base', 'Gulshan-2 Diplomatic Enclave, Dhaka'),
+        'commission_rate' => Setting::getVal('commission_rate', '2.0%'),
+        'site_title' => Setting::getVal('site_title', 'GBREL | Luxury Real Estate & Land in Bangladesh')
+    ];
+
+    return response()->json([
+        'success' => true,
+        'data' => $defaultSettings
+    ]);
+});
+
+Route::post('/settings', function (Request $request) {
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+
+    $keys = [
+        'dbh_rate' => $input['dbh_rate'] ?? $input['dbhRate'] ?? null,
+        'idlc_rate' => $input['idlc_rate'] ?? $input['idlcRate'] ?? null,
+        'brac_rate' => $input['brac_rate'] ?? $input['bracRate'] ?? null,
+        'whatsapp_number' => $input['whatsapp_number'] ?? $input['whatsappNumber'] ?? null,
+        'chauffeur_base' => $input['chauffeur_base'] ?? $input['chauffeurBase'] ?? null,
+        'commission_rate' => $input['commission_rate'] ?? $input['commissionRate'] ?? null,
+        'site_title' => $input['site_title'] ?? $input['siteTitle'] ?? null,
+    ];
+
+    foreach ($keys as $k => $v) {
+        if ($v !== null) {
+            Setting::setVal($k, $v);
+        }
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Platform settings saved to MySQL database',
+        'data' => [
+            'dbh_rate' => Setting::getVal('dbh_rate', '9.25%'),
+            'idlc_rate' => Setting::getVal('idlc_rate', '9.50%'),
+            'brac_rate' => Setting::getVal('brac_rate', '9.40%'),
+            'whatsapp_number' => Setting::getVal('whatsapp_number', '+880 1819-987654'),
+            'chauffeur_base' => Setting::getVal('chauffeur_base', 'Gulshan-2 Diplomatic Enclave, Dhaka'),
+            'commission_rate' => Setting::getVal('commission_rate', '2.0%')
+        ]
+    ]);
+});
+
+// 8. Executive KPI Analytics API (Realtime Aggregations)
+Route::get('/admin/stats', function () {
+    $properties = Property::all();
+    $totalValuation = $properties->sum('price');
+    $flats = $properties->filter(fn($p) => in_array($p->property_type, ['Flat', 'Penthouse', 'Duplex']))->count();
+    $plots = $properties->filter(fn($p) => in_array($p->property_type, ['Plot', 'Land']))->count();
+    $resorts = $properties->filter(fn($p) => $p->property_type === 'Hotel')->count();
+
+    // Regional allocation
+    $regions = [];
+    $grouped = $properties->groupBy('state');
+    foreach ($grouped as $state => $items) {
+        $sum = $items->sum('price');
+        $pct = $totalValuation > 0 ? round(($sum / $totalValuation) * 100, 1) : 0;
+        $regions[] = [
+            'region' => $state,
+            'count' => $items->count(),
+            'valuation' => $sum,
+            'percentage' => $pct
+        ];
+    }
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'total_portfolio_valuation' => $totalValuation,
+            'total_portfolio_crores' => round($totalValuation / 10000000, 1),
+            'properties_count' => $properties->count(),
+            'flats_count' => $flats,
+            'plots_count' => $plots,
+            'resorts_count' => $resorts,
+            'viewings_count' => Viewing::count(),
+            'leads_count' => Lead::count(),
+            'pending_approvals_count' => Property::where('is_rajuk_approved', false)->count(),
+            'regional_allocation' => $regions,
+            'recent_viewings' => Viewing::orderBy('created_at', 'desc')->take(3)->get(),
+            'unapproved_properties' => Property::where('is_rajuk_approved', false)->take(3)->get()
+        ]
     ]);
 });
 

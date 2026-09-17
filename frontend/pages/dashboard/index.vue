@@ -126,8 +126,8 @@
             <div class="grid grid-3" style="margin-bottom: 32px;">
               <div style="background:#FFF; padding:20px; border-radius:var(--radius-lg); border:1px solid var(--color-border);">
                 <div style="font-size:0.8rem; color:#64748B; text-transform:uppercase; font-weight:700;">Portfolio Volume</div>
-                <div style="font-family:var(--font-ui); font-size:1.7rem; font-weight:800; color:#059669; margin:4px 0; font-variant-numeric:tabular-nums;">৳ 385.4 Cr</div>
-                <div style="font-size:0.8rem; color:#059669;">+14% Growth this quarter</div>
+                <div style="font-family:var(--font-ui); font-size:1.7rem; font-weight:800; color:#059669; margin:4px 0; font-variant-numeric:tabular-nums;">৳ {{ totalPortfolioCrores }} Cr</div>
+                <div style="font-size:0.8rem; color:#059669;">{{ properties.length }} Active Mandates</div>
               </div>
 
               <div style="background:#FFF; padding:20px; border-radius:var(--radius-lg); border:1px solid var(--color-border);">
@@ -245,13 +245,19 @@
           <div v-if="activeTab === 'leads'" class="animate-fade-in">
             <h2 style="font-size: 1.5rem; font-weight: 800; color: #0A1128; margin-bottom: 20px;">Client Leads & Inquiries Inbox</h2>
             <div style="background:#FFF; border:1px solid var(--color-border); border-radius:var(--radius-lg); padding:24px;">
-              <div class="flex items-center justify-between" style="padding:12px 0; border-bottom:1px solid #F1F5F9;">
-                <div>
-                  <strong style="color:#0F172A;">Dr. Farhan Chowdhury (NRB - London, UK)</strong>
-                  <div style="font-size:0.85rem; color:#64748B;">Inquiry on: <strong>Lakeview Penthouse at Gulshan-2</strong></div>
-                  <div style="font-size:0.85rem; color:#059669; margin-top:2px;">Phone: +44 7911 123456 • WhatsApp verified</div>
+              <div v-if="realLeads.length > 0">
+                <div v-for="lead in realLeads" :key="lead.id" class="flex items-center justify-between flex-wrap gap-2" style="padding:14px 0; border-bottom:1px solid #F1F5F9;">
+                  <div>
+                    <strong style="color:#0F172A;">{{ lead.name }}</strong>
+                    <span class="badge badge-featured" style="font-size:0.7rem; margin-left:8px;">{{ lead.buyer_type || 'Buyer' }}</span>
+                    <div style="font-size:0.85rem; color:#64748B;">Inquiry on: <strong>{{ lead.property_title || 'Mandate' }}</strong></div>
+                    <div style="font-size:0.85rem; color:#059669; margin-top:2px;">Phone: {{ lead.phone }} • Status: {{ lead.stage || 'New' }}</div>
+                  </div>
+                  <a :href="`https://wa.me/${(lead.phone || '').replace(/[^0-9]/g, '')}`" target="_blank" class="btn btn-sm btn-emerald" style="background:#25D366;">WhatsApp Client</a>
                 </div>
-                <a href="https://wa.me/447911123456" target="_blank" class="btn btn-sm btn-emerald" style="background:#25D366;">WhatsApp Client</a>
+              </div>
+              <div v-else style="color:#64748B; font-size:0.9rem;">
+                No active buyer inquiries recorded yet.
               </div>
             </div>
           </div>
@@ -267,18 +273,43 @@ import { useRoute } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
 import { useProperties } from '~/composables/useProperties'
 import { formatBDT } from '~/composables/useCurrency'
+import { useApiUrl } from '~/composables/useApi'
 import PropertyCard from '~/components/PropertyCard.vue'
 
 const route = useRoute()
 const { user, switchRole } = useAuth()
-const { properties, getPropertyById } = useProperties()
+const { properties, getPropertyById, fetchProperties } = useProperties()
 
 const activeTab = ref('overview')
+const realLeads = ref<any[]>([])
 
-onMounted(() => {
+const fetchRealLeads = async () => {
+  try {
+    const res = await fetch(useApiUrl('/leads'))
+    if (res.ok) {
+      const json = await res.json()
+      if (json && json.success && Array.isArray(json.data)) {
+        realLeads.value = json.data
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load leads for dashboard:', err)
+  }
+}
+
+onMounted(async () => {
   if (route.query.tab) {
     activeTab.value = String(route.query.tab)
   }
+  await Promise.all([
+    fetchProperties(),
+    fetchRealLeads()
+  ])
+})
+
+const totalPortfolioCrores = computed(() => {
+  const totalBDT = properties.value.reduce((acc, p) => acc + (p.price || 0), 0)
+  return (totalBDT / 10000000).toFixed(1)
 })
 
 const savedPropertiesList = computed(() => {

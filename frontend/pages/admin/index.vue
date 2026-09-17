@@ -85,7 +85,7 @@
             </svg>
           </span>
         </div>
-        <div class="kpi-value text-rose">4 Leads</div>
+        <div class="kpi-value text-rose">{{ leadsCount }} Leads</div>
         <div class="kpi-sub">
           Avg 14.5 min response SLA
         </div>
@@ -104,43 +104,13 @@
         </div>
 
         <div class="regional-bars-list">
-          <div class="regional-bar-item">
+          <div v-for="r in regionalStats" :key="r.key" class="regional-bar-item">
             <div class="region-row-header">
-              <span class="region-name"><strong>Dhaka North</strong> (Gulshan, Banani, Purbachal)</span>
-              <span class="region-val text-emerald"><strong>৳ 220.5 Cr (57%)</strong></span>
+              <span class="region-name"><strong>{{ r.name }}</strong> {{ r.sub }}</span>
+              <span class="region-val" :class="r.textClass"><strong>৳ {{ r.valCrores }} Cr ({{ r.pct }}%)</strong></span>
             </div>
             <div class="progress-track">
-              <div class="progress-fill" style="width: 57%; background: #10B981;"></div>
-            </div>
-          </div>
-
-          <div class="regional-bar-item">
-            <div class="region-row-header">
-              <span class="region-name"><strong>Dhaka South</strong> (Dhanmondi, Jalshiri, Keraniganj)</span>
-              <span class="region-val text-blue"><strong>৳ 68.0 Cr (18%)</strong></span>
-            </div>
-            <div class="progress-track">
-              <div class="progress-fill" style="width: 18%; background: #3B82F6;"></div>
-            </div>
-          </div>
-
-          <div class="regional-bar-item">
-            <div class="region-row-header">
-              <span class="region-name"><strong>Chittagong & Cox's Bazar</strong> (Marine Drive)</span>
-              <span class="region-val text-gold"><strong>৳ 54.0 Cr (14%)</strong></span>
-            </div>
-            <div class="progress-track">
-              <div class="progress-fill" style="width: 14%; background: #D4AF37;"></div>
-            </div>
-          </div>
-
-          <div class="regional-bar-item">
-            <div class="region-row-header">
-              <span class="region-name"><strong>Sylhet Division</strong> (Sreemangal Tea Estates)</span>
-              <span class="region-val text-pink"><strong>৳ 42.9 Cr (11%)</strong></span>
-            </div>
-            <div class="progress-track">
-              <div class="progress-fill" style="width: 11%; background: #EC4899;"></div>
+              <div class="progress-fill" :style="{ width: r.pct + '%', background: r.color }"></div>
             </div>
           </div>
         </div>
@@ -275,10 +245,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useProperties } from '~/composables/useProperties'
 import { formatBDT } from '~/composables/useCurrency'
 import { useToast } from '~/composables/useToast'
+import { useApiUrl } from '~/composables/useApi'
 
 definePageMeta({
   layout: 'admin'
@@ -287,8 +258,27 @@ definePageMeta({
 const { properties, fetchProperties } = useProperties()
 const toast = useToast()
 
-onMounted(() => {
-  fetchProperties()
+const leadsCount = ref(4)
+const viewingsCount = ref(4)
+
+const fetchStats = async () => {
+  try {
+    const res = await fetch(useApiUrl('/admin/stats'))
+    if (res.ok) {
+      const data = await res.json()
+      if (data && data.success) {
+        if (typeof data.leads_count === 'number') leadsCount.value = data.leads_count
+        if (typeof data.viewings_count === 'number') viewingsCount.value = data.viewings_count
+      }
+    }
+  } catch (err) {
+    console.error('Failed to fetch admin stats:', err)
+  }
+}
+
+onMounted(async () => {
+  await fetchProperties()
+  await fetchStats()
 })
 
 const totalPortfolioCrores = computed(() => {
@@ -299,7 +289,29 @@ const totalPortfolioCrores = computed(() => {
 const flatsCount = computed(() => properties.value.filter(p => p.propertyType === 'Flat' || p.propertyType === 'Penthouse' || p.propertyType === 'Duplex').length)
 const plotsCount = computed(() => properties.value.filter(p => p.propertyType === 'Plot' || p.propertyType === 'Land').length)
 const resortsCount = computed(() => properties.value.filter(p => p.propertyType === 'Hotel').length)
-const viewingsCount = computed(() => 4)
+
+const regionalStats = computed(() => {
+  const total = properties.value.reduce((acc, p) => acc + (Number(p.price) || 0), 0) || 1
+  const regions = [
+    { key: 'Dhaka North', name: 'Dhaka North', sub: '(Gulshan, Banani, Purbachal)', color: '#10B981', textClass: 'text-emerald' },
+    { key: 'Dhaka South', name: 'Dhaka South', sub: '(Dhanmondi, Jalshiri, Keraniganj)', color: '#3B82F6', textClass: 'text-blue' },
+    { key: 'Chittagong', name: "Chittagong & Cox's Bazar", sub: '(Marine Drive)', color: '#D4AF37', textClass: 'text-gold' },
+    { key: 'Sylhet', name: 'Sylhet Division', sub: '(Sreemangal Tea Estates)', color: '#EC4899', textClass: 'text-pink' }
+  ]
+
+  return regions.map(r => {
+    const val = properties.value
+      .filter(p => (p.state || '').toLowerCase().includes(r.key.toLowerCase()))
+      .reduce((acc, p) => acc + (Number(p.price) || 0), 0)
+    const pct = Math.round((val / total) * 100)
+    const cr = (val / 10000000).toFixed(1)
+    return {
+      ...r,
+      valCrores: cr,
+      pct: pct || 0
+    }
+  })
+})
 
 const exportReport = () => {
   try {

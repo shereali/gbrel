@@ -158,8 +158,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useToast } from '~/composables/useToast'
+import { useApiUrl } from '~/composables/useApi'
 
 definePageMeta({
   layout: 'admin'
@@ -167,13 +168,9 @@ definePageMeta({
 
 const toast = useToast()
 
-const userAccounts = ref([
-  { id: 1, name: 'Chief Administrator', email: 'admin@gbrel.com', role: 'admin', phone: '+880 1912-334455', region: 'Dhaka HQ', status: 'Active', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop' },
-  { id: 2, name: 'Tanvir Ahmed', email: 'tanvir@gbrel.com', role: 'agent', phone: '+880 1819-987654', region: 'Dhaka North', status: 'Active', avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop' },
-  { id: 3, name: 'Nusrat Jahan', email: 'nusrat@gbrel.com', role: 'agent', phone: '+880 1711-889900', region: 'Chittagong', status: 'Active', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop' },
-  { id: 4, name: 'Shere Ali', email: 'buyer@gbrel.com', role: 'buyer', phone: '+880 1711-234567', region: 'Dhaka', status: 'Active', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop' }
-])
-
+const userAccounts = ref<any[]>([])
+const isLoading = ref(false)
+const isSubmitting = ref(false)
 const showCreateModal = ref(false)
 const deleteUserTarget = ref<any | null>(null)
 
@@ -185,6 +182,36 @@ const form = reactive({
   phone: ''
 })
 
+const fetchUsers = async () => {
+  isLoading.value = true
+  try {
+    const res = await fetch(useApiUrl('/users'))
+    if (res.ok) {
+      const json = await res.json()
+      if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+        userAccounts.value = json.data.map(u => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role || 'buyer',
+          phone: u.phone || '+880 1711-000000',
+          region: u.region || 'Dhaka HQ',
+          status: u.status || 'Active',
+          avatar: u.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop'
+        }))
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load users:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(async () => {
+  await fetchUsers()
+})
+
 const openCreateUserModal = () => {
   form.name = ''
   form.email = ''
@@ -194,46 +221,95 @@ const openCreateUserModal = () => {
   showCreateModal.value = true
 }
 
-const saveNewUser = () => {
-  userAccounts.value.push({
-    id: Date.now(),
-    name: form.name,
-    email: form.email,
-    role: form.role,
-    phone: form.phone,
-    region: form.region,
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop'
-  })
-  toast.success('Account Created', `User ${form.name} registered with ${form.role.toUpperCase()} role.`)
-  showCreateModal.value = false
+const saveNewUser = async () => {
+  isSubmitting.value = true
+  try {
+    const res = await fetch(useApiUrl('/users'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: form.name,
+        email: form.email,
+        role: form.role,
+        phone: form.phone,
+        region: form.region,
+        status: 'Active',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop'
+      })
+    })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => null)
+      throw new Error(err?.message || `Failed to create user: status ${res.status}`)
+    }
+
+    toast.success('Account Created', `User ${form.name} registered in database.`)
+    showCreateModal.value = false
+    await fetchUsers()
+  } catch (err: any) {
+    toast.error('Creation Failed', err?.message || 'Could not create user.')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
-const cycleRole = (user: any) => {
-  if (user.role === 'buyer') user.role = 'agent'
-  else if (user.role === 'agent') user.role = 'admin'
-  else user.role = 'buyer'
-  toast.info('Role Updated', `${user.name} switched to ${user.role.toUpperCase()}.`)
+const cycleRole = async (user: any) => {
+  const currentRole = user.role
+  const nextRole = currentRole === 'buyer' ? 'agent' : currentRole === 'agent' ? 'admin' : 'buyer'
+  user.role = nextRole
+
+  try {
+    const res = await fetch(useApiUrl(`/users/${user.id}`), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: nextRole })
+    })
+    if (!res.ok) throw new Error('Failed to update role on server')
+    toast.info('Role Updated', `${user.name} switched to ${nextRole.toUpperCase()}.`)
+  } catch (err: any) {
+    user.role = currentRole
+    toast.error('Update Failed', err?.message || 'Could not update role.')
+  }
 }
 
-const toggleUserStatus = (user: any) => {
-  user.status = user.status === 'Active' ? 'Suspended' : 'Active'
-  toast.warning('Account Status Changed', `${user.name} is now ${user.status}.`)
+const toggleUserStatus = async (user: any) => {
+  const prev = user.status
+  const next = prev === 'Active' ? 'Suspended' : 'Active'
+  user.status = next
+
+  try {
+    const res = await fetch(useApiUrl(`/users/${user.id}`), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: next })
+    })
+    if (!res.ok) throw new Error('Failed to update status on server')
+    toast.warning('Account Status Changed', `${user.name} is now ${next}.`)
+  } catch (err: any) {
+    user.status = prev
+    toast.error('Update Failed', err?.message || 'Could not update status.')
+  }
 }
 
 const promptDeleteUser = (user: any) => {
   deleteUserTarget.value = user
 }
 
-const executeDeleteUser = () => {
-  if (deleteUserTarget.value) {
-    const name = deleteUserTarget.value.name
-    const idx = userAccounts.value.findIndex(u => u.id === deleteUserTarget.value.id)
-    if (idx > -1) {
-      userAccounts.value.splice(idx, 1)
-    }
-    toast.info('User Deleted', `Account for ${name} removed.`)
+const executeDeleteUser = async () => {
+  if (!deleteUserTarget.value) return
+  const id = deleteUserTarget.value.id
+  const name = deleteUserTarget.value.name
+
+  try {
+    const res = await fetch(useApiUrl(`/users/${id}`), {
+      method: 'DELETE'
+    })
+    if (!res.ok) throw new Error('Failed to delete user on server')
+    userAccounts.value = userAccounts.value.filter(u => u.id !== id)
+    toast.info('User Deleted', `Account for ${name} removed from database.`)
     deleteUserTarget.value = null
+  } catch (err: any) {
+    toast.error('Delete Failed', err?.message || 'Could not delete user account.')
   }
 }
 </script>

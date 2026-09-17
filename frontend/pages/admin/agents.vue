@@ -102,8 +102,11 @@
           </div>
 
           <div class="admin-modal-footer">
-            <button type="button" class="btn btn-sm btn-outline-white" @click="closeAgentModal">Cancel</button>
-            <button type="submit" class="btn btn-sm btn-emerald">Save Advisor Record</button>
+            <button type="button" class="btn btn-sm btn-outline-white" :disabled="isSubmitting" @click="closeAgentModal">Cancel</button>
+            <button type="submit" class="btn btn-sm btn-emerald" :disabled="isSubmitting">
+              <span v-if="isSubmitting">Saving to Database...</span>
+              <span v-else>Save Advisor Record</span>
+            </button>
           </div>
         </form>
       </div>
@@ -127,9 +130,10 @@
           </p>
         </div>
         <div class="admin-modal-footer">
-          <button class="btn btn-sm btn-outline-white" @click="deleteAgentTarget = null">Cancel</button>
-          <button class="btn btn-sm" style="background:#EF4444; color:#FFF;" @click="executeDeleteAgent">
-            Remove Advisor
+          <button class="btn btn-sm btn-outline-white" :disabled="isDeleting" @click="deleteAgentTarget = null">Cancel</button>
+          <button class="btn btn-sm" style="background:#EF4444; color:#FFF;" :disabled="isDeleting" @click="executeDeleteAgent">
+            <span v-if="isDeleting">Removing...</span>
+            <span v-else>Remove Advisor</span>
           </button>
         </div>
       </div>
@@ -138,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { useProperties, type AgentItem } from '~/composables/useProperties'
 import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
 import { useToast } from '~/composables/useToast'
@@ -147,15 +151,21 @@ definePageMeta({
   layout: 'admin'
 })
 
-const { agents } = useProperties()
+const { agents, isAgentsLoading, fetchAgents, addAgent, updateAgent, deleteAgent } = useProperties()
 const toast = useToast()
 
-const agentsList = ref<AgentItem[]>([...agents.value])
+const agentsList = computed(() => agents.value)
 
 const showAgentModal = ref(false)
 const editingAgentId = ref<number | null>(null)
 const agentModalRoot = ref<HTMLElement | null>(null)
 const deleteAgentTarget = ref<AgentItem | null>(null)
+const isSubmitting = ref(false)
+const isDeleting = ref(false)
+
+onMounted(async () => {
+  await fetchAgents(true)
+})
 
 const closeAgentModal = () => {
   showAgentModal.value = false
@@ -198,57 +208,40 @@ const openEditAgentModal = (agent: AgentItem) => {
   showAgentModal.value = true
 }
 
-const saveAgent = () => {
-  if (editingAgentId.value) {
-    const existing = agentsList.value.find(a => a.id === editingAgentId.value)
-    if (existing) {
-      existing.name = agentForm.name
-      existing.title = agentForm.title
-      existing.state = agentForm.state
-      existing.phone = agentForm.phone
-      existing.whatsapp = agentForm.whatsapp
-      existing.bio = agentForm.bio
-      existing.photo = agentForm.photo
-      toast.success('Advisor Updated', `Profile for "${existing.name}" updated.`)
+const saveAgent = async () => {
+  isSubmitting.value = true
+  try {
+    if (editingAgentId.value) {
+      await updateAgent(editingAgentId.value, { ...agentForm })
+      toast.success('Advisor Updated', `Profile for "${agentForm.name}" updated successfully.`)
+    } else {
+      await addAgent({ ...agentForm })
+      toast.success('Advisor Added', `Licensed advisor "${agentForm.name}" registered in database.`)
     }
-  } else {
-    const newId = Date.now()
-    agentsList.value.push({
-      id: newId,
-      name: agentForm.name,
-      title: agentForm.title,
-      agency: 'GBREL Premier Advisory',
-      state: agentForm.state,
-      city: 'Dhaka',
-      photo: agentForm.photo,
-      email: `${agentForm.name.toLowerCase().replace(/[^a-z0-9]/g, '')}@gbrel.com`,
-      phone: agentForm.phone,
-      whatsapp: agentForm.whatsapp,
-      bio: agentForm.bio,
-      experienceYears: 8,
-      rating: 4.9,
-      reviewCount: 35,
-      activeListingsCount: 6,
-      specialties: ['Luxury Penthouses', 'Commercial Land']
-    })
-    toast.success('Advisor Added', `Licensed advisor "${agentForm.name}" registered.`)
+    closeAgentModal()
+  } catch (err: any) {
+    toast.error('Save Failed', err?.message || 'Failed to save advisor record.')
+  } finally {
+    isSubmitting.value = false
   }
-  closeAgentModal()
 }
 
 const promptDeleteAgent = (agent: AgentItem) => {
   deleteAgentTarget.value = agent
 }
 
-const executeDeleteAgent = () => {
-  if (deleteAgentTarget.value) {
-    const name = deleteAgentTarget.value.name
-    const index = agentsList.value.findIndex(a => a.id === deleteAgentTarget.value!.id)
-    if (index > -1) {
-      agentsList.value.splice(index, 1)
-    }
-    toast.info('Advisor Removed', `Profile for ${name} removed.`)
+const executeDeleteAgent = async () => {
+  if (!deleteAgentTarget.value) return
+  isDeleting.value = true
+  const name = deleteAgentTarget.value.name
+  try {
+    await deleteAgent(deleteAgentTarget.value.id)
+    toast.info('Advisor Removed', `Profile for ${name} removed from database.`)
     deleteAgentTarget.value = null
+  } catch (err: any) {
+    toast.error('Delete Failed', err?.message || 'Could not delete advisor.')
+  } finally {
+    isDeleting.value = false
   }
 }
 </script>

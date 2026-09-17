@@ -93,10 +93,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useProperties } from '~/composables/useProperties'
 
-const { agents } = useProperties()
+const { agents, fetchAgents } = useProperties()
+
+onMounted(async () => {
+  await fetchAgents()
+})
 
 const regions = ['', 'Dhaka North', 'Dhaka South', 'Chittagong', 'Sylhet']
 const selectedRegion = ref('')

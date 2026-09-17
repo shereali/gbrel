@@ -38,17 +38,17 @@
                 <strong class="text-contrast">{{ v.name }}</strong>
                 <div style="font-size:0.78rem;" class="text-subtle">{{ v.phone }} • {{ v.contact }}</div>
               </td>
-              <td style="font-weight:600; max-width:240px;">{{ v.propertyTitle }}</td>
+              <td style="font-weight:600; max-width:240px;">{{ v.property_title || v.propertyTitle || 'Exclusive Mandate' }}</td>
               <td>
-                <div style="font-weight:700;">{{ v.date }}</div>
-                <div style="font-size:0.78rem;" class="text-subtle">{{ v.timeSlot }}</div>
+                <div style="font-weight:700;">{{ v.preferred_date || v.date || 'TBD' }}</div>
+                <div style="font-size:0.78rem;" class="text-subtle">{{ v.preferred_time || v.timeSlot || 'Slot TBD' }}</div>
               </td>
               <td>
-                <span v-if="v.pickup" class="badge-admin active" style="font-size:0.72rem;">VIP Chauffeur</span>
+                <span v-if="v.pickup_requested || v.pickup" class="badge-admin active" style="font-size:0.72rem;">VIP Chauffeur</span>
                 <span v-else style="font-size:0.8rem;" class="text-subtle">Direct Arrival</span>
               </td>
               <td>
-                <span style="color:#10B981; font-weight:600; font-size:0.88rem;">{{ v.assignedAgent }}</span>
+                <span style="color:#10B981; font-weight:600; font-size:0.88rem;">{{ v.assigned_agent || v.assignedAgent || 'Tanvir Ahmed' }}</span>
               </td>
               <td>
                 <select :value="v.status" @change="handleStatusChange(v.id, $event)" class="status-inline-select">
@@ -158,9 +158,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useProperties } from '~/composables/useProperties'
 import { useToast } from '~/composables/useToast'
+import { useApiUrl } from '~/composables/useApi'
 
 definePageMeta({
   layout: 'admin'
@@ -169,13 +170,9 @@ definePageMeta({
 const { properties } = useProperties()
 const toast = useToast()
 
-const viewingsList = ref([
-  { id: 101, name: 'Shere Ali', phone: '+880 1711-234567', contact: 'WhatsApp', propertyTitle: 'Lakeview Penthouse at Gulshan-2 Diplomatic Zone', date: '2026-09-05', timeSlot: '03:00 PM - 04:00 PM', pickup: true, assignedAgent: 'Tanvir Ahmed', status: 'Confirmed' },
-  { id: 102, name: 'Dr. Kabir Hossain (NRB Canada)', phone: '+1 416-555-0199', contact: 'Phone', propertyTitle: '10 Katha Corner Plot in Purbachal Sector 17', date: '2026-09-08', timeSlot: '11:30 AM - 01:00 PM', pickup: true, assignedAgent: 'Tanvir Ahmed', status: 'Confirmed' },
-  { id: 103, name: 'Mrs. Tahmina Begum', phone: '+880 1819-332211', contact: 'WhatsApp', propertyTitle: 'South-Facing Duplex in Dhanmondi 8/A', date: '2026-09-10', timeSlot: '04:00 PM - 05:30 PM', pickup: false, assignedAgent: 'Tanvir Ahmed', status: 'In-Progress' },
-  { id: 104, name: 'Syed Tanzeem (UAE)', phone: '+971 50 1234567', contact: 'WhatsApp', propertyTitle: 'Marine Drive Cox\'s Bazar Sea Suite', date: '2026-09-12', timeSlot: '02:30 PM - 04:00 PM', pickup: true, assignedAgent: 'Nusrat Jahan', status: 'Confirmed' }
-])
-
+const viewingsList = ref<any[]>([])
+const isLoading = ref(false)
+const isSubmitting = ref(false)
 const showModal = ref(false)
 
 const form = reactive({
@@ -188,6 +185,27 @@ const form = reactive({
   pickup: true
 })
 
+const fetchViewings = async () => {
+  isLoading.value = true
+  try {
+    const res = await fetch(useApiUrl('/viewings'))
+    if (res.ok) {
+      const json = await res.json()
+      if (json && json.success && Array.isArray(json.data)) {
+        viewingsList.value = json.data
+      }
+    }
+  } catch (err) {
+    console.error('Failed to fetch viewings:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(async () => {
+  await fetchViewings()
+})
+
 const openScheduleModal = () => {
   form.name = ''
   form.phone = ''
@@ -197,38 +215,83 @@ const openScheduleModal = () => {
   showModal.value = true
 }
 
-const saveNewViewing = () => {
-  const newId = 100 + viewingsList.value.length + 1
-  viewingsList.value.unshift({
-    id: newId,
-    name: form.name,
-    phone: form.phone,
-    contact: 'WhatsApp',
-    propertyTitle: form.propertyTitle,
-    date: form.date,
-    timeSlot: form.timeSlot,
-    pickup: form.pickup,
-    assignedAgent: form.assignedAgent,
-    status: 'Confirmed'
-  })
-  toast.success('Inspection Scheduled', `VIP tour booked for ${form.name} with ${form.assignedAgent}.`)
-  showModal.value = false
-}
+const saveNewViewing = async () => {
+  isSubmitting.value = true
+  try {
+    const res = await fetch(useApiUrl('/schedule-viewing'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: form.name,
+        phone: form.phone,
+        propertyTitle: form.propertyTitle,
+        preferredDate: form.date,
+        preferredTime: form.timeSlot,
+        assignedAgent: form.assignedAgent,
+        pickupRequested: form.pickup
+      })
+    })
 
-const handleStatusChange = (id: number, event: Event) => {
-  const target = event.target as HTMLSelectElement
-  const v = viewingsList.value.find(item => item.id === id)
-  if (v) {
-    v.status = target.value
-    toast.info('Status Updated', `Tour #${id} marked as "${v.status}".`)
+    if (!res.ok) {
+      throw new Error(`Booking failed: ${res.statusText}`)
+    }
+
+    const json = await res.json()
+    if (json && json.data) {
+      viewingsList.value.unshift(json.data)
+    } else {
+      await fetchViewings()
+    }
+
+    toast.success('Inspection Scheduled', `VIP tour booked for ${form.name} with ${form.assignedAgent}.`)
+    showModal.value = false
+  } catch (err: any) {
+    toast.error('Schedule Failed', err?.message || 'Could not schedule VIP tour.')
+  } finally {
+    isSubmitting.value = false
   }
 }
 
-const cancelViewing = (id: number) => {
+const handleStatusChange = async (id: number, event: Event) => {
+  const target = event.target as HTMLSelectElement
+  const newStatus = target.value
   const v = viewingsList.value.find(item => item.id === id)
-  if (v) {
-    v.status = 'Cancelled'
+  const previousStatus = v ? v.status : 'Confirmed'
+
+  if (v) v.status = newStatus
+
+  try {
+    const res = await fetch(useApiUrl(`/viewings/${id}/status`), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    })
+    if (!res.ok) throw new Error('Failed to update status on server')
+    toast.info('Status Updated', `Tour #${id} marked as "${newStatus}".`)
+  } catch (err: any) {
+    if (v) v.status = previousStatus
+    toast.error('Update Failed', err?.message || 'Could not update status.')
+  }
+}
+
+const handleCancel = async (id: number) => {
+  const v = viewingsList.value.find(item => item.id === id)
+  if (!v) return
+
+  const prev = v.status
+  v.status = 'Cancelled'
+
+  try {
+    const res = await fetch(useApiUrl(`/viewings/${id}/status`), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'Cancelled' })
+    })
+    if (!res.ok) throw new Error('Failed to cancel tour on server')
     toast.warning('Tour Cancelled', `Inspection #${id} has been cancelled.`)
+  } catch (err: any) {
+    v.status = prev
+    toast.error('Cancel Failed', err?.message || 'Could not cancel inspection.')
   }
 }
 </script>

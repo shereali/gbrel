@@ -219,7 +219,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProperties } from '~/composables/useProperties'
 import { formatBDT } from '~/composables/useCurrency'
@@ -228,9 +228,10 @@ import { useCompare } from '~/composables/useCompare'
 import PropertyTabs from '~/components/PropertyTabs.vue'
 import ScheduleModal from '~/components/ScheduleModal.vue'
 import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
+import { useApiUrl } from '~/composables/useApi'
 
 const route = useRoute()
-const { getPropertyById, getAgentById } = useProperties()
+const { getPropertyById, getAgentById, fetchProperties } = useProperties()
 const { isPropertySaved, toggleSaveProperty, user } = useAuth()
 const { isInCompare, toggleCompare } = useCompare()
 
@@ -277,8 +278,35 @@ const nextPhoto = () => {
   }
 }
 
-const submitInquiry = () => {
-  inquirySubmitted.value = true
+const isSubmittingInquiry = ref(false)
+
+onMounted(async () => {
+  await fetchProperties()
+})
+
+const submitInquiry = async () => {
+  isSubmittingInquiry.value = true
+  try {
+    await fetch(useApiUrl('/leads'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: inquiryForm.name,
+        phone: inquiryForm.phone,
+        email: inquiryForm.email,
+        property_title: property.value.title,
+        buyer_type: 'Direct Buyer',
+        message: inquiryForm.message,
+        source: 'Property Detail In-line Inquiry'
+      })
+    })
+    inquirySubmitted.value = true
+  } catch (err) {
+    console.error('Inquiry dispatch error:', err)
+    inquirySubmitted.value = true
+  } finally {
+    isSubmittingInquiry.value = false
+  }
 }
 </script>
 

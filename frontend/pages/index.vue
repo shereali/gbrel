@@ -217,7 +217,7 @@
             </div>
 
             <div class="flex gap-3 flex-wrap" style="margin-top: 28px;">
-              <a href="https://wa.me/8801819987654?text=Hi%20GBREL,%20I%20am%20an%20NRB%20investor%20interested%20in%20property%20acquisitions." target="_blank" class="btn btn-emerald btn-lg" style="background: #25D366;">
+              <a :href="`https://wa.me/${cleanWhatsapp}?text=Hi%20GBREL,%20I%20am%20an%20NRB%20investor%20interested%20in%20property%20acquisitions.`" target="_blank" class="btn btn-emerald btn-lg" style="background: #25D366;">
                 <span>WhatsApp Expat Advisory Desk</span>
               </a>
               <NuxtLink to="/contact" class="btn btn-outline-white btn-lg">
@@ -237,7 +237,7 @@
             <div class="bank-rate-item">
               <div class="flex justify-between items-center">
                 <strong>DBH Finance</strong>
-                <span class="rate-badge">9.25% p.a.</span>
+                <span class="rate-badge">{{ settings.dbhRate || '9.25%' }} p.a.</span>
               </div>
               <div class="bank-sub">Up to 85% Property Valuation • 25 Yr Tenure</div>
             </div>
@@ -245,7 +245,7 @@
             <div class="bank-rate-item">
               <div class="flex justify-between items-center">
                 <strong>IDLC Finance</strong>
-                <span class="rate-badge">9.50% p.a.</span>
+                <span class="rate-badge">{{ settings.idlcRate || '9.50%' }} p.a.</span>
               </div>
               <div class="bank-sub">Fast 5-day NRI Approval SLA • Zero Hidden Fee</div>
             </div>
@@ -253,7 +253,7 @@
             <div class="bank-rate-item">
               <div class="flex justify-between items-center">
                 <strong>BRAC Bank</strong>
-                <span class="rate-badge">9.40% p.a.</span>
+                <span class="rate-badge">{{ settings.bracRate || '9.40%' }} p.a.</span>
               </div>
               <div class="bank-sub">Special Expatriate Remittance Rebates</div>
             </div>
@@ -306,8 +306,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useProperties } from '~/composables/useProperties'
+import { useSettings } from '~/composables/useSettings'
 import HeroSearch from '~/components/HeroSearch.vue'
 import PropertyCard from '~/components/PropertyCard.vue'
 import InteractiveMap from '~/components/InteractiveMap.vue'
@@ -316,7 +317,20 @@ definePageMeta({
   layout: 'default'
 })
 
-const { properties } = useProperties()
+const { properties, fetchProperties } = useProperties()
+const { settings, fetchSettings } = useSettings()
+
+onMounted(async () => {
+  await Promise.all([
+    fetchProperties(),
+    fetchSettings()
+  ])
+})
+
+const cleanWhatsapp = computed(() => {
+  const num = settings.value.whatsapp_number || '8801819987654'
+  return num.replace(/[^0-9]/g, '')
+})
 
 const featuredProperties = computed(() => {
   const featured = properties.value.filter(p => p.isFeatured)

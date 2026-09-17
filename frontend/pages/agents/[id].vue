@@ -80,13 +80,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProperties } from '~/composables/useProperties'
 import PropertyCard from '~/components/PropertyCard.vue'
 
 const route = useRoute()
-const { getAgentById, getPropertiesByAgent } = useProperties()
+const { getAgentById, getPropertiesByAgent, fetchAgents, fetchProperties } = useProperties()
+
+onMounted(async () => {
+  await Promise.all([
+    fetchAgents(),
+    fetchProperties()
+  ])
+})
 
 const agent = computed(() => getAgentById(route.params.id as string))
 const agentListings = computed(() => getPropertiesByAgent(agent.value.id))

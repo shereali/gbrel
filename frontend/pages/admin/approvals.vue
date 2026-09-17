@@ -141,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useProperties } from '~/composables/useProperties'
 import { formatBDT } from '~/composables/useCurrency'
 import { useToast } from '~/composables/useToast'
@@ -150,42 +150,33 @@ definePageMeta({
   layout: 'admin'
 })
 
-const { addProperty } = useProperties()
+const { properties, fetchProperties, toggleRajukProperty, updatePropertyStatus } = useProperties()
 const toast = useToast()
 
-const pendingApprovalItems = ref([
-  {
-    id: 901,
-    title: '7.5 Katha Corner Plot in Purbachal Sector 20',
-    seller: 'Kazi Rashedul Islam',
-    phone: '+880 1712-445566',
-    price: 27000000,
-    location: 'Sector 20, Purbachal New Town',
-    documents: [
-      'RAJUK Allotment Letter.pdf',
-      'Mutation & Khajna Receipt.pdf',
-      'CS/RS/BS Khatian Record.pdf'
-    ]
-  },
-  {
-    id: 902,
-    title: 'Modern 3,200 Sqft Duplex Villa in Bashundhara Block-I',
-    seller: 'Engr. Asadullah Chowdhury',
-    phone: '+880 1819-334455',
-    price: 39000000,
-    location: 'Block I, Bashundhara R/A',
-    documents: [
-      'RAJUK Approved 3-Storey Villa Plan.pdf',
-      'Sub-Registry Title Deed.pdf',
-      'Fire & Civil Aviation NOC.pdf'
-    ]
-  }
-])
+onMounted(async () => {
+  await fetchProperties({ force: true })
+})
+
+const pendingApprovalItems = computed(() => {
+  const unapproved = properties.value.filter(p => !p.isRajukApproved)
+  return unapproved.map(p => ({
+    id: p.id,
+    title: p.title,
+    seller: 'Registered Landowner / Mandate Holder',
+    phone: '+880 1819-000000',
+    price: p.price,
+    location: `${p.address || ''}, ${p.areaName}`,
+    documents: p.documentsVerified && p.documentsVerified.length > 0
+      ? p.documentsVerified
+      : ['Freehold Khatian CS/RS/BS.pdf', 'RAJUK Approved Plan.pdf', 'Mutation Clearance Tax Receipt.pdf']
+  }))
+})
 
 const previewDoc = ref<{ item: any; docName: string } | null>(null)
 const rejectItem = ref<any | null>(null)
 const rejectReason = ref('Mutation record not updated for current financial year')
 const customReason = ref('')
+const isProcessing = ref(false)
 
 const openDocModal = (item: any, docName: string) => {
   previewDoc.value = { item, docName }
@@ -202,36 +193,33 @@ const openRejectModal = (item: any) => {
   customReason.value = ''
 }
 
-const confirmReject = () => {
+const confirmReject = async () => {
   if (rejectItem.value) {
-    const idx = pendingApprovalItems.value.findIndex(i => i.id === rejectItem.value.id)
-    if (idx > -1) {
-      pendingApprovalItems.value.splice(idx, 1)
+    isProcessing.value = true
+    const id = rejectItem.value.id
+    try {
+      await updatePropertyStatus(id, 'Delisted')
+      const finalReason = rejectReason.value === 'Custom inquiry' ? customReason.value : rejectReason.value
+      toast.warning('Clarification Dispatched', `Listing #${id} marked as Delisted pending: "${finalReason}".`)
+      rejectItem.value = null
+    } catch (err: any) {
+      toast.error('Update Failed', err?.message || 'Could not update listing status.')
+    } finally {
+      isProcessing.value = false
     }
-    const finalReason = rejectReason.value === 'Custom inquiry' ? customReason.value : rejectReason.value
-    toast.warning('Clarification Dispatched', `Notice sent to ${rejectItem.value.seller}: "${finalReason}".`)
-    rejectItem.value = null
   }
 }
 
 const approveListing = async (id: number) => {
-  const idx = pendingApprovalItems.value.findIndex(item => item.id === id)
-  if (idx > -1) {
-    const item = pendingApprovalItems.value[idx]
-    pendingApprovalItems.value.splice(idx, 1)
-    await addProperty({
-      title: item.title,
-      price: item.price,
-      propertyType: 'Plot',
-      state: 'Dhaka North',
-      areaName: 'Purbachal',
-      address: item.location,
-      isRajukApproved: true,
-      status: 'Active',
-      images: ['https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1600&auto=format&fit=crop'],
-      documentsVerified: item.documents
-    })
-    toast.success('Title Approved & Published', `RAJUK Verified badge issued for "${item.title}".`)
+  isProcessing.value = true
+  try {
+    await toggleRajukProperty(id)
+    await updatePropertyStatus(id, 'Active')
+    toast.success('Title Approved & Published', `RAJUK Verified badge issued in database for mandate #${id}.`)
+  } catch (err: any) {
+    toast.error('Approval Failed', err?.message || 'Could not verify property.')
+  } finally {
+    isProcessing.value = false
   }
 }
 </script>
