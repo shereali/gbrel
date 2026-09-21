@@ -99,9 +99,14 @@
       <div class="mobile-quick-nav-track">
         <NuxtLink to="/admin" class="quick-nav-chip" exact-active-class="active">Overview</NuxtLink>
         <NuxtLink to="/admin/properties" class="quick-nav-chip" active-class="active">Properties</NuxtLink>
-        <NuxtLink to="/admin/approvals" class="quick-nav-chip" active-class="active">Approvals (2)</NuxtLink>
-        <NuxtLink to="/admin/viewings" class="quick-nav-chip" active-class="active">Viewings (4)</NuxtLink>
-        <NuxtLink to="/admin/leads" class="quick-nav-chip" active-class="active">Leads (4)</NuxtLink>
+        <NuxtLink to="/admin/categories" class="quick-nav-chip" active-class="active">Categories ({{ sidebarCounts.categories }})</NuxtLink>
+        <NuxtLink to="/admin/divisions" class="quick-nav-chip" active-class="active">Divisions ({{ sidebarCounts.divisions }})</NuxtLink>
+        <NuxtLink to="/admin/transaction-types" class="quick-nav-chip" active-class="active">Deals ({{ sidebarCounts.transaction_types }})</NuxtLink>
+        <NuxtLink to="/admin/property-statuses" class="quick-nav-chip" active-class="active">Statuses ({{ sidebarCounts.property_statuses }})</NuxtLink>
+        <NuxtLink to="/admin/land-units" class="quick-nav-chip" active-class="active">Units ({{ sidebarCounts.land_units }})</NuxtLink>
+        <NuxtLink to="/admin/approvals" class="quick-nav-chip" active-class="active">Approvals ({{ sidebarCounts.pending }})</NuxtLink>
+        <NuxtLink to="/admin/viewings" class="quick-nav-chip" active-class="active">Tours ({{ sidebarCounts.tours }})</NuxtLink>
+        <NuxtLink to="/admin/leads" class="quick-nav-chip" active-class="active">Leads ({{ sidebarCounts.leads }})</NuxtLink>
         <NuxtLink to="/admin/agents" class="quick-nav-chip" active-class="active">Advisors</NuxtLink>
         <NuxtLink to="/admin/users" class="quick-nav-chip" active-class="active">Users</NuxtLink>
         <NuxtLink to="/admin/financials" class="quick-nav-chip" active-class="active">Financials</NuxtLink>
@@ -148,19 +153,23 @@
                 <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>
               </svg>
               <span>Properties</span>
-              <span class="badge badge-status badge-pill-sm">Active</span>
+              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.properties }} Listings</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/approvals" class="sidebar-link" active-class="active" title="Legal & Verification">
+            <NuxtLink to="/admin/approvals" class="sidebar-link" active-class="active" title="Legal & Verification Queue">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M9 12l2 2 4-4"/>
                 <path d="M12 3l7 4v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V7l7-4z"/>
               </svg>
-              <span>Verification Queue</span>
-              <span class="badge badge-urgent badge-pill-sm">2 Pending</span>
+              <span>Verification</span>
+              <span class="smart-badge smart-badge-pending">
+                <span class="smart-badge-ping"></span>
+                <span class="smart-badge-dot"></span>
+                <span>{{ sidebarCounts.pending }} Pending</span>
+              </span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/viewings" class="sidebar-link" active-class="active" title="Property Viewings">
+            <NuxtLink to="/admin/viewings" class="sidebar-link" active-class="active" title="Property Viewings Log">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="18" rx="2"/>
                 <line x1="16" y1="2" x2="16" y2="6"/>
@@ -168,8 +177,77 @@
                 <line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
               <span>Site Viewings</span>
-              <span class="badge badge-rajuk badge-pill-sm">4 Tours</span>
+              <span class="smart-badge smart-badge-tours">
+                <span class="smart-badge-ping"></span>
+                <span class="smart-badge-dot"></span>
+                <span>{{ sidebarCounts.tours }} Tours</span>
+              </span>
             </NuxtLink>
+
+            <NuxtLink to="/admin/leads" class="sidebar-link" active-class="active" title="Inquiries & CRM Leads">
+              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
+                <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+              </svg>
+              <span>Buyer Inquiries</span>
+              <span class="smart-badge smart-badge-leads">
+                <span class="smart-badge-ping"></span>
+                <span class="smart-badge-dot"></span>
+                <span>{{ sidebarCounts.leads }} Leads</span>
+              </span>
+            </NuxtLink>
+
+            <!-- Master Data & Attribute Configuration Section -->
+            <div class="sidebar-section-divider"></div>
+            <div v-if="!sidebarCollapsed" class="sidebar-section-title">Master Attributes</div>
+
+            <NuxtLink to="/admin/categories" class="sidebar-link" active-class="active" title="Property Categories">
+              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                <line x1="7" y1="7" x2="7.01" y2="7"/>
+              </svg>
+              <span>Categories</span>
+              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.categories }} Types</span>
+            </NuxtLink>
+
+            <NuxtLink to="/admin/divisions" class="sidebar-link" active-class="active" title="Divisions & Regions">
+              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span>Divisions / Regions</span>
+              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.divisions }} Regions</span>
+            </NuxtLink>
+
+            <NuxtLink to="/admin/transaction-types" class="sidebar-link" active-class="active" title="Transaction Types">
+              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
+              <span>Transaction Types</span>
+              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.transaction_types }} Types</span>
+            </NuxtLink>
+
+            <NuxtLink to="/admin/property-statuses" class="sidebar-link" active-class="active" title="Property Lifecycle Statuses">
+              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span>Lifecycle Statuses</span>
+              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.property_statuses }} Statuses</span>
+            </NuxtLink>
+
+            <NuxtLink to="/admin/land-units" class="sidebar-link" active-class="active" title="Land & Area Units">
+              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 3H3v18h18V3z"/>
+                <path d="M3 9h4M3 15h8M9 3v4M15 3v8"/>
+              </svg>
+              <span>Land Units</span>
+              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.land_units }} Units</span>
+            </NuxtLink>
+
+            <div class="sidebar-section-divider"></div>
+            <div v-if="!sidebarCollapsed" class="sidebar-section-title">Administration</div>
 
             <NuxtLink to="/admin/agents" class="sidebar-link" active-class="active" title="Agents & Advisors">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -179,18 +257,6 @@
               <span>Agents & Advisors</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/brochures" class="sidebar-link" active-class="active" title="Brochures">
-              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/>
-                <line x1="16" y1="17" x2="8" y2="17"/>
-                <polyline points="10 9 9 9 8 9"/>
-              </svg>
-              <span>Brochures</span>
-              <span class="badge badge-pill-sm" style="background:rgba(56,189,248,0.15); color:#38BDF8;">PDF</span>
-            </NuxtLink>
-
             <NuxtLink to="/admin/users" class="sidebar-link" active-class="active" title="User Management & Roles">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -198,15 +264,6 @@
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
               <span>Users & Roles</span>
-            </NuxtLink>
-
-            <NuxtLink to="/admin/leads" class="sidebar-link" active-class="active" title="Inquiries & Leads">
-              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
-                <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
-              </svg>
-              <span>Buyer Inquiries</span>
-              <span class="badge badge-featured badge-pill-sm">4 Leads</span>
             </NuxtLink>
 
             <NuxtLink to="/admin/financials" class="sidebar-link" active-class="active" title="Financials">
@@ -220,7 +277,7 @@
             <NuxtLink to="/admin/settings" class="sidebar-link" active-class="active" title="Settings">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83-2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
               </svg>
               <span>Settings</span>
             </NuxtLink>
@@ -289,7 +346,7 @@
                 <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>
               </svg>
               <span>Property Inventory</span>
-              <span class="badge badge-status badge-pill-sm">CRUD</span>
+              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.properties }} Listings</span>
             </NuxtLink>
 
             <NuxtLink to="/admin/approvals" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
@@ -297,8 +354,12 @@
                 <path d="M9 12l2 2 4-4"/>
                 <path d="M12 3l7 4v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V7l7-4z"/>
               </svg>
-              <span>RAJUK / Legal Queue</span>
-              <span class="badge badge-urgent badge-pill-sm">2 Pending</span>
+              <span>Verification</span>
+              <span class="smart-badge smart-badge-pending">
+                <span class="smart-badge-ping"></span>
+                <span class="smart-badge-dot"></span>
+                <span>{{ sidebarCounts.pending }} Pending</span>
+              </span>
             </NuxtLink>
 
             <NuxtLink to="/admin/viewings" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
@@ -308,9 +369,78 @@
                 <line x1="8" y1="2" x2="8" y2="6"/>
                 <line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
-              <span>VIP Viewings Log</span>
-              <span class="badge badge-rajuk badge-pill-sm">4 Tours</span>
+              <span>Site Viewings</span>
+              <span class="smart-badge smart-badge-tours">
+                <span class="smart-badge-ping"></span>
+                <span class="smart-badge-dot"></span>
+                <span>{{ sidebarCounts.tours }} Tours</span>
+              </span>
             </NuxtLink>
+
+            <NuxtLink to="/admin/leads" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+              <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
+                <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+              </svg>
+              <span>Buyer Inquiries</span>
+              <span class="smart-badge smart-badge-leads">
+                <span class="smart-badge-ping"></span>
+                <span class="smart-badge-dot"></span>
+                <span>{{ sidebarCounts.leads }} Leads</span>
+              </span>
+            </NuxtLink>
+
+            <!-- Drawer Master Data Section -->
+            <div class="sidebar-section-divider"></div>
+            <div class="sidebar-section-title" style="padding-left: 14px; margin-top: 4px;">Master Attributes</div>
+
+            <NuxtLink to="/admin/categories" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+              <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                <line x1="7" y1="7" x2="7.01" y2="7"/>
+              </svg>
+              <span>Categories</span>
+              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.categories }}</span>
+            </NuxtLink>
+
+            <NuxtLink to="/admin/divisions" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+              <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span>Divisions / Regions</span>
+              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.divisions }}</span>
+            </NuxtLink>
+
+            <NuxtLink to="/admin/transaction-types" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+              <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
+              <span>Transaction Types</span>
+              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.transaction_types }}</span>
+            </NuxtLink>
+
+            <NuxtLink to="/admin/property-statuses" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+              <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span>Lifecycle Statuses</span>
+              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.property_statuses }}</span>
+            </NuxtLink>
+
+            <NuxtLink to="/admin/land-units" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+              <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 3H3v18h18V3z"/>
+                <path d="M3 9h4M3 15h8M9 3v4M15 3v8"/>
+              </svg>
+              <span>Land Units</span>
+              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.land_units }}</span>
+            </NuxtLink>
+
+            <div class="sidebar-section-divider"></div>
+            <div class="sidebar-section-title" style="padding-left: 14px; margin-top: 4px;">Administration</div>
 
             <NuxtLink to="/admin/agents" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
               <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -320,18 +450,6 @@
               <span>Advisors & Brokers</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/brochures" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
-              <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/>
-                <line x1="16" y1="17" x2="8" y2="17"/>
-                <polyline points="10 9 9 9 8 9"/>
-              </svg>
-              <span>Brochure Vault</span>
-              <span class="badge badge-pill-sm" style="background:rgba(56,189,248,0.15); color:#38BDF8;">PDF</span>
-            </NuxtLink>
-
             <NuxtLink to="/admin/users" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
               <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -339,15 +457,6 @@
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
               <span>Users & RBAC Control</span>
-            </NuxtLink>
-
-            <NuxtLink to="/admin/leads" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
-              <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
-                <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
-              </svg>
-              <span>Leads CRM & WhatsApp</span>
-              <span class="badge badge-featured badge-pill-sm">4 Leads</span>
             </NuxtLink>
 
             <NuxtLink to="/admin/financials" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
@@ -361,7 +470,7 @@
             <NuxtLink to="/admin/settings" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
               <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
               </svg>
               <span>System & Bank Config</span>
             </NuxtLink>
@@ -428,6 +537,32 @@ const drawerRoot = ref<HTMLElement | null>(null)
 const adminTheme = ref<'dark' | 'light'>('dark')
 const sidebarCollapsed = ref(false)
 
+const sidebarCounts = ref({
+  pending: 2,
+  tours: 4,
+  leads: 4,
+  categories: 8,
+  divisions: 12,
+  transaction_types: 4,
+  property_statuses: 5,
+  land_units: 6,
+  properties: 10
+})
+
+const fetchSidebarCounts = async () => {
+  try {
+    const config = useRuntimeConfig()
+    const apiBase = config.public.apiBase || 'http://127.0.0.1:8000/api'
+    const res = await fetch(`${apiBase}/admin/sidebar-counts`)
+    const json = await res.json()
+    if (json.success && json.data) {
+      sidebarCounts.value = { ...sidebarCounts.value, ...json.data }
+    }
+  } catch {
+    //
+  }
+}
+
 useHead({
   htmlAttrs: {
     class: computed(() => adminTheme.value === 'light' ? 'admin-theme-light' : 'admin-theme-dark')
@@ -438,6 +573,7 @@ useHead({
 })
 
 onMounted(() => {
+  fetchSidebarCounts()
   try {
     const savedTheme = localStorage.getItem('gbrel_admin_theme')
     if (savedTheme === 'light' || savedTheme === 'dark') {
@@ -818,6 +954,125 @@ const handleLogout = async () => {
   font-size: 0.68rem;
   padding: 2px 7px;
   border-radius: var(--radius-full);
+}
+
+/* ==========================================
+   SMART MENU BADGE DESIGN SYSTEM
+   ========================================== */
+.smart-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(6px);
+}
+
+.smart-badge:hover {
+  transform: translateY(-1px) scale(1.04);
+}
+
+.smart-badge-dot {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.smart-badge-ping {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: smartPing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes smartPing {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.9;
+  }
+  75%, 100% {
+    transform: translate(-50%, -50%) scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* 1. Pending (Amber / Warning Radiant Pulse) */
+.smart-badge-pending {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.28));
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #FCD34D;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+}
+.smart-badge-pending .smart-badge-dot {
+  background: #F59E0B;
+  box-shadow: 0 0 6px #F59E0B;
+}
+.smart-badge-pending .smart-badge-ping {
+  background: rgba(245, 158, 11, 0.6);
+}
+
+/* 2. Tours (Sky / Cyan Electric Radar Pulse) */
+.smart-badge-tours {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(14, 165, 233, 0.26));
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #7DD3FC;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.22);
+}
+.smart-badge-tours .smart-badge-dot {
+  background: #38BDF8;
+  box-shadow: 0 0 6px #38BDF8;
+}
+.smart-badge-tours .smart-badge-ping {
+  background: rgba(56, 189, 248, 0.6);
+}
+
+/* 3. Leads (Emerald Radiant Pulse) */
+.smart-badge-leads {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(5, 150, 105, 0.28));
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #6EE7B7;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.22);
+}
+.smart-badge-leads .smart-badge-dot {
+  background: #10B981;
+  box-shadow: 0 0 6px #10B981;
+}
+.smart-badge-leads .smart-badge-ping {
+  background: rgba(16, 185, 129, 0.6);
+}
+
+/* 4. Subtle / Master Data Count Badges */
+.smart-badge-subtle {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #CBD5E1;
+}
+.smart-badge-subtle:hover {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.35);
+  color: #D4AF37;
+}
+
+.sidebar-section-divider {
+  height: 1px;
+  background: var(--admin-border-subtle);
+  margin: 14px 4px 10px;
 }
 
 .sidebar-system-card {

@@ -9,5 +9,6 @@ class PropertyStatus extends Model
 {
     use HasFactory;
 
+    protected $table = 'property_statuses';
     protected $guarded = ['id'];
 }
