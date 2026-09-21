@@ -945,6 +945,114 @@ Route::delete('/brochures/{id}', function ($id) {
     ]);
 });
 
+// 6.5. Dynamic Property Form Options API (Category, Division, Transaction Type, Status, Land Unit)
+Route::get('/property-options', function () {
+    $defaultCategories = ['Land Share', 'Flat', 'Plot', 'Land', 'Hotel', 'Duplex', 'Commercial', 'Penthouse'];
+    $defaultDivisions = ['Dhaka North', 'Dhaka South', 'Chittagong', 'Sylhet', "Cox's Bazar", 'Gazipur', 'Narayanganj', 'Rajshahi', 'Khulna', 'Barisal', 'Rangpur', 'Mymensingh'];
+    $defaultTransactionTypes = ['Sale', 'Lease', 'Joint Venture', 'Auction'];
+    $defaultStatuses = ['Draft', 'Active', 'Under Offer', 'Sold', 'Delisted'];
+    $defaultLandUnits = ['Katha', 'Bigha', 'Shotok', 'Decimal', 'Sqft', 'Acre'];
+
+    $categories = Setting::getVal('property_categories', $defaultCategories);
+    $divisions = Setting::getVal('property_divisions', $defaultDivisions);
+    $transactionTypes = Setting::getVal('property_transaction_types', $defaultTransactionTypes);
+    $statuses = Setting::getVal('property_statuses', $defaultStatuses);
+    $landUnits = Setting::getVal('property_land_units', $defaultLandUnits);
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'categories' => is_array($categories) ? $categories : $defaultCategories,
+            'divisions' => is_array($divisions) ? $divisions : $defaultDivisions,
+            'transaction_types' => is_array($transactionTypes) ? $transactionTypes : $defaultTransactionTypes,
+            'statuses' => is_array($statuses) ? $statuses : $defaultStatuses,
+            'land_units' => is_array($landUnits) ? $landUnits : $defaultLandUnits
+        ]
+    ]);
+});
+
+Route::post('/property-options', function (Request $request) {
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+
+    if (isset($input['categories']) && is_array($input['categories'])) {
+        Setting::setVal('property_categories', array_values(array_unique(array_filter($input['categories']))));
+    }
+    if (isset($input['divisions']) && is_array($input['divisions'])) {
+        Setting::setVal('property_divisions', array_values(array_unique(array_filter($input['divisions']))));
+    }
+    if (isset($input['transaction_types']) && is_array($input['transaction_types'])) {
+        Setting::setVal('property_transaction_types', array_values(array_unique(array_filter($input['transaction_types']))));
+    }
+    if (isset($input['statuses']) && is_array($input['statuses'])) {
+        Setting::setVal('property_statuses', array_values(array_unique(array_filter($input['statuses']))));
+    }
+    if (isset($input['land_units']) && is_array($input['land_units'])) {
+        Setting::setVal('property_land_units', array_values(array_unique(array_filter($input['land_units']))));
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Property configuration options updated successfully',
+        'data' => [
+            'categories' => Setting::getVal('property_categories', ['Land Share', 'Flat', 'Plot', 'Land', 'Hotel', 'Duplex', 'Commercial', 'Penthouse']),
+            'divisions' => Setting::getVal('property_divisions', ['Dhaka North', 'Dhaka South', 'Chittagong', 'Sylhet', "Cox's Bazar", 'Gazipur', 'Narayanganj', 'Rajshahi', 'Khulna', 'Barisal', 'Rangpur', 'Mymensingh']),
+            'transaction_types' => Setting::getVal('property_transaction_types', ['Sale', 'Lease', 'Joint Venture', 'Auction']),
+            'statuses' => Setting::getVal('property_statuses', ['Draft', 'Active', 'Under Offer', 'Sold', 'Delisted']),
+            'land_units' => Setting::getVal('property_land_units', ['Katha', 'Bigha', 'Shotok', 'Decimal', 'Sqft', 'Acre'])
+        ]
+    ]);
+});
+
+Route::post('/property-options/add-item', function (Request $request) {
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+
+    $key = $input['key'] ?? null; // 'categories', 'divisions', 'transaction_types', 'statuses', 'land_units'
+    $item = trim($input['item'] ?? '');
+
+    if (!$key || !$item) {
+        return response()->json(['success' => false, 'message' => 'Both key and item are required'], 400);
+    }
+
+    $settingKeyMap = [
+        'categories' => 'property_categories',
+        'divisions' => 'property_divisions',
+        'transaction_types' => 'property_transaction_types',
+        'statuses' => 'property_statuses',
+        'land_units' => 'property_land_units'
+    ];
+
+    if (!isset($settingKeyMap[$key])) {
+        return response()->json(['success' => false, 'message' => 'Invalid configuration key'], 400);
+    }
+
+    $dbKey = $settingKeyMap[$key];
+    $defaults = [
+        'property_categories' => ['Land Share', 'Flat', 'Plot', 'Land', 'Hotel', 'Duplex', 'Commercial', 'Penthouse'],
+        'property_divisions' => ['Dhaka North', 'Dhaka South', 'Chittagong', 'Sylhet', "Cox's Bazar", 'Gazipur', 'Narayanganj', 'Rajshahi', 'Khulna', 'Barisal', 'Rangpur', 'Mymensingh'],
+        'property_transaction_types' => ['Sale', 'Lease', 'Joint Venture', 'Auction'],
+        'property_statuses' => ['Draft', 'Active', 'Under Offer', 'Sold', 'Delisted'],
+        'property_land_units' => ['Katha', 'Bigha', 'Shotok', 'Decimal', 'Sqft', 'Acre']
+    ];
+
+    $list = Setting::getVal($dbKey, $defaults[$dbKey]);
+    if (!is_array($list)) {
+        $list = $defaults[$dbKey];
+    }
+
+    if (!in_array($item, $list)) {
+        $list[] = $item;
+        Setting::setVal($dbKey, array_values(array_unique(array_filter($list))));
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => "Item '{$item}' added to {$key}",
+        'data' => Setting::getVal($dbKey, $defaults[$dbKey])
+    ]);
+});
+
 // 7. Platform Settings API (MySQL Persistence)
 Route::get('/settings', function () {
     $defaultSettings = [
