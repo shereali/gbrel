@@ -116,9 +116,9 @@ const router = useRouter()
 
 const tabs = [
   { id: 'sale', label: 'Sale Properties' },
+  { id: 'buy', label: 'Buy Properties' },
   { id: 'lease', label: 'Rent / Lease' },
   { id: 'plots', label: 'Plots & Land' },
-  { id: 'commercial', label: 'Commercial' },
   { id: 'resorts', label: 'Hotels & Resorts' }
 ]
 
@@ -130,10 +130,10 @@ const selectedPriceMax = ref('')
 
 const searchPlaceholder = computed(() => {
   if (activeTab.value === 'sale') return 'Search properties for sale (e.g. Gulshan, Purbachal...)'
-  if (activeTab.value === 'lease') return 'Location or project (e.g. Banani, Motijheel...)'
-  if (activeTab.value === 'plots') return 'Location or sector (e.g. Purbachal, Jalshiri...)'
-  if (activeTab.value === 'commercial') return 'Location or zone (e.g. Tejgaon, Motijheel...)'
-  if (activeTab.value === 'resorts') return 'Location or beach (e.g. Cox\'s Bazar, Inani...)'
+  if (activeTab.value === 'buy') return 'Search properties to buy (e.g. Dhanmondi, Bashundhara...)'
+  if (activeTab.value === 'lease') return 'Search rentals & leases (e.g. Banani, Motijheel...)'
+  if (activeTab.value === 'plots') return 'Search plots & lands (e.g. Purbachal, Jalshiri...)'
+  if (activeTab.value === 'resorts') return 'Search resorts & hotel suites (e.g. Cox\'s Bazar...)'
   return 'Location, sector, or project name...'
 })
 
@@ -143,8 +143,6 @@ const selectTab = (tabId: string) => {
     selectedType.value = 'Plot'
   } else if (tabId === 'resorts') {
     selectedType.value = 'Hotel'
-  } else if (tabId === 'commercial') {
-    selectedType.value = 'Commercial'
   } else {
     selectedType.value = ''
   }
@@ -156,7 +154,7 @@ const handleSearch = () => {
   if (selectedType.value) query.type = selectedType.value
   if (selectedState.value) query.state = selectedState.value
   if (selectedPriceMax.value) query.maxPrice = selectedPriceMax.value
-  if (activeTab.value === 'sale') query.listingType = 'Sale'
+  if (activeTab.value === 'sale' || activeTab.value === 'buy') query.listingType = 'Sale'
   if (activeTab.value === 'lease') query.listingType = 'Lease'
 
   router.push({ path: '/properties', query })
@@ -368,20 +366,22 @@ const quickSearch = (term: string) => {
   }
 }
 
-@media (max-width: 640px) {
-  .search-box-wrapper {
-    padding: 12px 10px;
-  }
-  
+@media (max-width: 880px) {
   .search-tabs {
     flex-wrap: wrap;
     gap: 6px;
   }
 
   .search-tab-btn {
-    flex: 1 1 calc(50% - 6px);
-    padding: 8px 10px;
-    font-size: 0.8rem;
+    flex: 1 1 calc(33.333% - 6px);
+    padding: 8px 12px;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .search-box-wrapper {
+    padding: 12px 10px;
   }
 
   .search-inputs-grid {
@@ -400,6 +400,14 @@ const quickSearch = (term: string) => {
   .hero-quick-chips {
     justify-content: center;
     padding: 10px 4px 4px;
+  }
+}
+
+@media (max-width: 580px) {
+  .search-tab-btn {
+    flex: 1 1 calc(50% - 6px);
+    padding: 8px 10px;
+    font-size: 0.8rem;
   }
 }
 </style>
