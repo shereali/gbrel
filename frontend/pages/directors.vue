@@ -45,6 +45,9 @@
 
             <!-- MD Executive Message -->
             <div class="md-content-pane">
+              <div class="md-brand-lockup">
+                <img src="/img/logo-full.png" alt="Gram Bangla Real Estate Limited" class="corporate-brand-logo" />
+              </div>
               <div class="section-label">Executive Message</div>
               <h2 class="md-headline">Building Trust Through Verified Ownership and Long-Term Value</h2>
 
@@ -158,8 +161,11 @@
     <section class="standards-section">
       <div class="container">
         <div class="standards-card">
+          <div class="standards-logo-frame">
+            <img src="/img/logo-mark.png" alt="GBREL Logo" class="standards-logo-mark" />
+          </div>
           <div class="standards-content">
-            <h3 class="standards-title">Our Commitment to Corporate Governance</h3>
+            <h3 class="standards-title">Gram Bangla Real Estate Limited (GBREL)</h3>
             <p class="standards-desc">
               GBREL adheres strictly to Real Estate regulatory standards in Bangladesh. Every land transaction is supported by certified mutation records, non-encumbrance verification, and transparent payment schedules to protect the interests of domestic buyers and expatriates.
             </p>
@@ -197,7 +203,7 @@ const directors = [
     name: 'Md. Abu Hanif',
     designation: 'Director, Administration & Accounts',
     roleBadge: 'Director, Admin & Accounts',
-    image: encodeURI('/img/Md-Abu-Hanif -Director Admin & Accounts.png'),
+    image: encodeURI('/img/abu-hanif-circle.png'),
     email: 'accounts@gbrel.com',
     bio: 'Md. Abu Hanif oversees corporate administration, financial management, treasury operations, and statutory audit compliance at GBREL. He ensures all customer payment plans, client fund accounting, and vendor disbursements adhere to strict corporate financial controls and legal regulations.',
     responsibilities: [
@@ -212,7 +218,7 @@ const directors = [
     name: 'Engr. Siam Talukder',
     designation: 'Deputy Managing Director (DMD) & Director, Strategic Planning & Client Relations',
     roleBadge: 'Deputy Managing Director',
-    image: encodeURI('/img/Eng Siam Talukder Director Marketing & IT.png'),
+    image: encodeURI('/img/siam-talukder-linkedin-circle.png'),
     email: 'siam.talukder@gbrel.com',
     bio: 'Engr. Siam Talukder plays a central leadership role at GBREL, directing strategic planning, project conceptualization, and client advisory. He works directly with private investors, corporate partners, and Non-Resident Bangladeshis (NRBs), presenting project masterplans, architectural viability, and long-term land valuation.',
     responsibilities: [
@@ -242,7 +248,7 @@ const directors = [
     name: 'Md. Rubel Hawlader',
     designation: 'Director, Project & Transport',
     roleBadge: 'Director, Project & Transport',
-    image: encodeURI('/img/Md RubelHawlader Director Project & Transport.png'),
+    image: encodeURI('/img/rubel-hawlader-circle.png'),
     email: 'projects@gbrel.com',
     bio: 'Md. Rubel Hawlader directs on-ground civil construction, earthwork operations, heavy equipment transport, and site logistics across all GBREL sectors. He manages project execution teams to ensure on-schedule boundary demarcation, earth filling, road development, and quality engineering standards.',
     responsibilities: [
@@ -698,6 +704,36 @@ const directors = [
   align-items: center;
   justify-content: space-between;
   gap: 32px;
+}
+
+.standards-logo-frame {
+  width: 68px;
+  height: 68px;
+  background: #FFFFFF;
+  border-radius: var(--radius-md);
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.standards-logo-mark {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.md-brand-lockup {
+  margin-bottom: 14px;
+}
+
+.corporate-brand-logo {
+  height: 44px;
+  max-width: 260px;
+  object-fit: contain;
+  display: block;
 }
 
 .standards-title {

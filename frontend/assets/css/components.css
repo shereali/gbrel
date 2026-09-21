@@ -41,6 +41,17 @@
   text-decoration: none;
 }
 
+.brand-logo-mark {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  transition: transform var(--transition-fast);
+}
+
+.brand-logo:hover .brand-logo-mark {
+  transform: scale(1.05);
+}
+
 .brand-icon {
   width: 42px;
   height: 42px;

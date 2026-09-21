@@ -5,12 +5,11 @@
         <!-- Col 1: Brand & Bio -->
         <div>
           <div class="flex items-center gap-3" style="margin-bottom: 16px;">
-            <div class="brand-icon" style="width: 36px; height: 36px; font-size: 1.1rem;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-              </svg>
+            <img src="/img/logo-mark.png" alt="Gram Bangla Real Estate Limited" style="width: 44px; height: 44px; object-fit: contain;" />
+            <div class="brand-text">
+              <span class="brand-title" style="font-size: 1.3rem;">GBREL<span style="color: #D4AF37;">.</span>COM</span>
+              <span class="brand-subtitle" style="font-size: 0.72rem; color: #D4AF37; font-weight: 700; letter-spacing: 0.1em;">GRAM BANGLA REAL ESTATE</span>
             </div>
-            <span class="brand-title" style="font-size: 1.3rem;">GBREL<span style="color: #D4AF37;">.</span>COM</span>
           </div>
           <p style="color: #CBD5E1; font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px;">
             Bangladesh's premier client-hunter real estate marketplace. Connecting discerning buyers and expatriates with verified luxury residences, high-yield plots, and commercial resort assets.

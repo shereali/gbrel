@@ -2,13 +2,8 @@
   <header class="app-header" :class="{ 'is-scrolled': isScrolled }">
     <div class="container nav-container">
       <!-- 1. Brand Logo -->
-      <NuxtLink to="/" class="brand-logo" title="GBREL - Bangladesh Luxury Real Estate">
-        <div class="brand-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
-          </svg>
-        </div>
+      <NuxtLink to="/" class="brand-logo" title="Gram Bangla Real Estate Limited (GBREL)">
+        <img src="/img/logo-mark.png" alt="GBREL Logo" class="brand-logo-mark" />
         <div class="brand-text">
           <span class="brand-title">GBREL<span style="color: #D4AF37;">.</span>COM</span>
           <span class="brand-subtitle">GRAM BANGLA REAL ESTATE</span>
@@ -176,12 +171,7 @@
           <!-- Drawer Header -->
           <div class="drawer-header">
             <div class="flex items-center gap-2">
-              <div class="brand-icon" style="width:34px; height:34px; font-size:1.1rem;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                  <polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
-              </div>
+              <img src="/img/logo-mark.png" alt="GBREL Logo" style="width:34px; height:34px; object-fit:contain;" />
               <span class="brand-title" style="font-size:1.15rem;">GBREL<span style="color:#D4AF37;">.</span>COM</span>
             </div>
             <button class="drawer-close-btn" @click="mobileMenuOpen = false" aria-label="Close Menu">✕</button>
