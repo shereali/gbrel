@@ -168,8 +168,8 @@
           <span class="section-tag">Governing Council</span>
           <h2 class="section-title">Board of Directors & Functional Leadership</h2>
           <p class="section-desc">
-            Bringing together specialized expertise across institutional administration, civil engineering, 
-            heavy logistics, digital PropTech architectures, and international investor strategy.
+            Bringing together specialized executive leadership across strategic masterplanning, client advisory, 
+            cutting-edge PropTech architectures, institutional administration, and high-velocity project execution.
           </p>
         </div>
 
@@ -555,6 +555,56 @@ const managingDirector = {
 // --------------------------------------------------------------------------
 const directors = [
   {
+    id: 'eng-siam-talukder',
+    name: 'Engr. Siam Talukder',
+    designation: 'Deputy Managing Director (DMD) & Director, Strategic Planning & Client Relations',
+    departmentBadge: 'Executive Directorate / DMD',
+    experience: '12+ Years Experience',
+    image: encodeURI('/img/Eng Siam Talukder Director Marketing & IT.png'),
+    headline: 'Architecting High-Yield Property Strategies, Masterplan Vision & VIP Client Relationship Advisory',
+    shortBio: 'Key executive leader and strategic planner orchestrating GBREL’s project masterplans, VIP investor relations, and client advisory. Personally guides high-net-worth investors, NRBs, and corporate stakeholders through complex developments, explaining masterplans and structuring generational assets.',
+    academic: 'Executive Leader & Strategic Masterplanner | B.Sc. in Engineering',
+    email: 'siam.talukder@gbrel.com',
+    ext: '102',
+    keyOversight: [
+      'Masterplan Strategic Planning & Project Architectural Briefings',
+      'VIP & NRB Client Advisory, High-Value Acquisitions & Deal Structuring',
+      'High-Stake Commercial Negotiations & Landowner Joint Ventures',
+      'Cross-Border Investor Roadshows & Long-Term Corporate Growth'
+    ],
+    fullBio: 'Engr. Siam Talukder serves as Deputy Managing Director (DMD) & Director of Strategic Planning & Client Relations at GBREL. As one of the foundational leaders of the enterprise, Engr. Talukder orchestrates the strategic vision of GBREL, translating intricate real estate developments and urban engineering concepts into transparent, high-yield opportunities for clients. He directly commands client advisory operations, presenting project masterplans to domestic families and expatriates across the globe, ensuring every buyer gains complete clarity on land valuation, infrastructure growth, and legal security.',
+    achievements: [
+      'Personally advised and structured luxury land and apartment portfolios for over 1,500+ domestic and NRB clients.',
+      'Spearheaded project masterplanning for GBREL’s flagship Purbachal township zones and Cox’s Bazar hospitality developments.',
+      'Established strategic investment alliances with international trade delegations in Dubai, London, and North America.'
+    ]
+  },
+  {
+    id: 'eng-sher-ali-khan',
+    name: 'Engr. Sher Ali Khan',
+    designation: 'Co-Founder, Director & Chief Technology Officer (CTO) – PropTech & Digital Operations',
+    departmentBadge: 'Co-Founder & Chief Technology Officer',
+    experience: '12+ Years Experience',
+    image: encodeURI('/img/Eng Sher Ali khan Director Marketing & IT .png'),
+    headline: 'Pioneering Automated PropTech Platforms, GIS Spatial Intelligence & Modern Digital Real Estate Infrastructure',
+    shortBio: 'Co-Founding Director and Chief Technology Officer leading GBREL’s technological empire, digital real estate innovations, and enterprise systems. Architect of Bangladesh’s premier PropTech discovery platform, integrating GIS spatial plot mapping, automated client acquisition, and global NRI investment solutions.',
+    academic: 'Lead Software Architect & PropTech Visionary | B.Sc. in Computer Science & Engineering',
+    email: 'cto@gbrel.com',
+    ext: '103',
+    keyOversight: [
+      'Enterprise PropTech Architecture, Cloud Platforms & Scalable Systems',
+      'Interactive GIS Spatial Plot Mapping & Boundary Coordinate Verification',
+      'Automated Client Acquisition, Lead Intelligence & High-Velocity CRM',
+      'NRB Digital Investment Escrow, Automated Verification & Cyber Security'
+    ],
+    fullBio: 'Engr. Sher Ali Khan is a Co-Founding Director and the Chief Technology Officer (CTO) of GBREL. A distinguished software architect and technology leader, Engr. Khan has pioneered the fusion of advanced computer engineering with high-yield real estate operations. He engineered GBREL’s bespoke PropTech infrastructure, automating buyer-matching algorithms, interactive GIS plot exploration, and remote escrow transparency for expatriate Bangladeshis across 25+ countries. His forward-thinking technical leadership guarantees that GBREL operates with modern digital precision, institutional data integrity, and lightning-fast customer responsiveness.',
+    achievements: [
+      'Architected and launched GBREL’s full-stack digital real estate ecosystem, reducing property discovery lead-times by 75%.',
+      'Engineered the GIS interactive plot mapping suite, enabling instant visual verification of land elevation and boundary coordinates.',
+      'Built the automated digital client acquisition engine, generating thousands of verified monthly investor inquiries worldwide.'
+    ]
+  },
+  {
     id: 'md-abu-hanif',
     name: 'Md. Abu Hanif',
     designation: 'Director, Administration & Accounts',
@@ -565,7 +615,7 @@ const directors = [
     shortBio: 'Directs corporate administration, financial strategy, treasury operations, and legal escrow compliance. Ensures absolute fiscal transparency across all land acquisitions, investor payouts, and regulatory filings.',
     academic: 'Fellow Chartered Management & Corporate Governance Specialist',
     email: 'accounts@gbrel.com',
-    ext: '102',
+    ext: '104',
     keyOversight: [
       'Corporate Financial Planning & Treasury Operations',
       'Escrow Account Management & Client Fund Security',
@@ -583,14 +633,14 @@ const directors = [
     id: 'md-rubel-hawlader',
     name: 'Md. Rubel Hawlader',
     designation: 'Director, Project & Transport',
-    departmentBadge: 'Engineering & Logistics',
+    departmentBadge: 'Civil Engineering & Logistics',
     experience: '16+ Years Experience',
     image: encodeURI('/img/Md RubelHawlader Director Project & Transport.png'),
     headline: 'Precision Civil Execution, Heavy Logistics & High-Velocity Infrastructure Development',
     shortBio: 'Leads on-ground civil construction, earthwork logistics, heavy equipment fleet management, and project site engineering. Ensures fast-track delivery and top-grade structural standards across all project sectors.',
     academic: 'Civil Engineering Project Leader & Heavy Logistics Director',
     email: 'projects@gbrel.com',
-    ext: '103',
+    ext: '105',
     keyOversight: [
       'Civil Construction, Earth Filling & Boundary Demarcation',
       'Heavy Machinery Logistics & Transport Fleet Operations',
@@ -602,56 +652,6 @@ const directors = [
       'Successfully executed on-ground development and boundary demarcation across 100+ project phases.',
       'Built GBREL’s dedicated in-house transport and heavy excavation fleet, dramatically lowering development lead times.',
       'Pioneered sustainable drainage and stormwater management systems in coastal and wetland adjacent project zones.'
-    ]
-  },
-  {
-    id: 'eng-sher-ali-khan',
-    name: 'Engr. Sher Ali Khan',
-    designation: 'Director, Marketing & IT',
-    departmentBadge: 'PropTech & Marketing',
-    experience: '12+ Years Experience',
-    image: encodeURI('/img/Eng Sher Ali khan Director Marketing & IT .png'),
-    headline: 'PropTech Innovation, Interactive Digital Land Discovery & Data-Driven Growth',
-    shortBio: 'Bridges deep software engineering expertise with modern growth marketing. Spearheads GBREL’s proprietary PropTech platforms, automated lead-hunting algorithms, digital GIS maps, and worldwide NRB outreach.',
-    academic: 'B.Sc. in Computer Science & Engineering | PropTech Architect',
-    email: 'marketing.it@gbrel.com',
-    ext: '104',
-    keyOversight: [
-      'Next-Gen PropTech Software Architecture & Cloud Systems',
-      'Interactive GIS Plot Mapping & Digital Document Verification',
-      'High-Converting Client Acquisition & CRM Automations',
-      'Cybersecurity, Data Encryption & Expatriate Digital Portal'
-    ],
-    fullBio: 'Engr. Sher Ali Khan serves as Director of Marketing & IT at GBREL. Uniting advanced computer science engineering with aggressive real estate market strategies, Engr. Khan has been instrumental in transforming GBREL into Bangladesh’s most tech-forward real estate brand. He architects the platform’s high-velocity lead generation systems, smart comparison engines, interactive map search, and secure investor dashboards, enabling Non-Resident Bangladeshis (NRBs) to inspect and acquire land from anywhere in the world.',
-    achievements: [
-      'Architected GBREL’s end-to-end digital property portal, cutting customer discovery time by over 70%.',
-      'Launched the automated Client Hunter & Lead Intelligence algorithms generating thousands of monthly qualified inquiries.',
-      'Expanded GBREL’s digital presence to expatriate communities across 25+ countries worldwide.'
-    ]
-  },
-  {
-    id: 'eng-siam-talukder',
-    name: 'Engr. Siam Talukder',
-    designation: 'Director, Marketing & IT (Strategic Planning)',
-    departmentBadge: 'Brand & Strategic IT',
-    experience: '10+ Years Experience',
-    image: encodeURI('/img/Eng Siam Talukder Director Marketing & IT.png'),
-    headline: 'Modern Brand Strategy, Digital Infrastructure & Cross-Border Investor Relations',
-    shortBio: 'Drives strategic brand positioning, institutional investor partnerships, multimedia marketing campaigns, and customer journey optimization. Bridges conventional property assets with high-yield tech-enabled growth.',
-    academic: 'Engineer & Brand Strategist | Enterprise Solutions Specialist',
-    email: 'siam.talukder@gbrel.com',
-    ext: '105',
-    keyOversight: [
-      'Global Brand Identity & Luxury Market Positioning',
-      'Institutional Investor Relations & High-Net-Worth Advisory',
-      'Enterprise Technology Integration & Omnichannel Strategy',
-      'Cross-Border Digital Roadshows & Expo Management'
-    ],
-    fullBio: 'Engr. Siam Talukder serves as Director of Marketing & IT (Strategic Planning) at GBREL. With a strategic focus on brand equity, technological elevation, and international property symposiums, Engr. Talukder champions modern customer experiences. He leads major marketing campaigns, develops long-term corporate alliances, and ensures that GBREL’s brand narrative resonates with institutional investors, commercial enterprises, and next-generation homeowners.',
-    achievements: [
-      'Spearheaded international investor roadshows in Dubai, London, and New York, driving major foreign direct investment.',
-      'Created the GBREL Luxury Asset Showcase, elevating brand recognition among elite Bangladeshi corporate leaders.',
-      'Integrated omnichannel customer support systems, guaranteeing swift response times for high-value inquiries.'
     ]
   }
 ]
@@ -905,15 +905,20 @@ const submitConsultation = () => {
   overflow: hidden;
   border: 3px solid var(--color-gold);
   box-shadow: 0 16px 36px rgba(10, 17, 40, 0.14);
-  background: #0A1128;
+  background: radial-gradient(circle at 50% 35%, #182859 0%, #0A1128 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .md-photo {
   width: 100%;
-  height: 420px;
-  object-fit: cover;
-  object-position: top center;
+  height: 460px;
+  object-fit: contain;
+  object-position: center;
   display: block;
+  padding: 8px;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45));
   transition: transform var(--transition-normal);
 }
 
@@ -1157,29 +1162,34 @@ const submitConsultation = () => {
 
 .director-image-wrapper {
   position: relative;
-  height: 320px;
-  background: #0A1128;
+  height: 440px;
+  background: radial-gradient(circle at 50% 35%, #182859 0%, #0A1128 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
+  padding: 10px;
 }
 
 .director-card-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: top center;
+  object-fit: contain;
+  object-position: center;
   display: block;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45));
   transition: transform var(--transition-smooth);
 }
 
 .director-card:hover .director-card-img {
-  transform: scale(1.04);
+  transform: scale(1.03);
 }
 
 .director-tag-floating {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  background: rgba(10, 17, 40, 0.85);
+  top: 14px;
+  left: 14px;
+  background: rgba(10, 17, 40, 0.88);
   backdrop-filter: blur(8px);
   color: #F2CD6E;
   font-size: 0.72rem;
@@ -1188,12 +1198,13 @@ const submitConsultation = () => {
   padding: 4px 10px;
   border-radius: 4px;
   border: 1px solid rgba(212, 175, 55, 0.4);
+  z-index: 2;
 }
 
 .director-experience-badge {
   position: absolute;
-  bottom: 16px;
-  right: 16px;
+  bottom: 14px;
+  right: 14px;
   background: #059669;
   color: #FFFFFF;
   font-size: 0.75rem;
@@ -1201,6 +1212,7 @@ const submitConsultation = () => {
   padding: 4px 10px;
   border-radius: var(--radius-sm);
   box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
+  z-index: 2;
 }
 
 .director-card-body {
@@ -1472,12 +1484,14 @@ const submitConsultation = () => {
 }
 
 .modal-director-photo {
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: top center;
-  border: 3px solid var(--color-gold);
+  width: 110px;
+  height: 140px;
+  border-radius: var(--radius-md);
+  object-fit: contain;
+  background: radial-gradient(circle at 50% 35%, #182859 0%, #0A1128 100%);
+  border: 2px solid var(--color-gold);
+  padding: 4px;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.3));
 }
 
 .modal-director-name {
