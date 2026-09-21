@@ -107,15 +107,14 @@
                   :src="director.image" 
                   :alt="director.name + ' - ' + director.designation"
                   class="director-portrait-img"
-                  :class="{ 'contain-mode': director.imageMode === 'contain' }"
                 />
               </div>
-              <div class="card-badge">{{ director.roleBadge }}</div>
             </div>
 
             <!-- Card Content Body -->
             <div class="card-body">
               <div class="director-header-group">
+                <span class="role-pill">{{ director.roleBadge }}</span>
                 <h3 class="director-name">{{ director.name }}</h3>
                 <div class="director-designation">{{ director.designation }}</div>
               </div>
@@ -194,12 +193,26 @@ useHead({
 // --------------------------------------------------------------------------
 const directors = [
   {
+    id: 'md-abu-hanif',
+    name: 'Md. Abu Hanif',
+    designation: 'Director, Administration & Accounts',
+    roleBadge: 'Director, Admin & Accounts',
+    image: encodeURI('/img/Md-Abu-Hanif -Director Admin & Accounts.png'),
+    email: 'accounts@gbrel.com',
+    bio: 'Md. Abu Hanif oversees corporate administration, financial management, treasury operations, and statutory audit compliance at GBREL. He ensures all customer payment plans, client fund accounting, and vendor disbursements adhere to strict corporate financial controls and legal regulations.',
+    responsibilities: [
+      'Corporate financial planning, budgeting, and treasury management',
+      'Client installment accounting, escrow verification, and fund protection',
+      'Statutory audits, tax compliance, and corporate regulatory filings',
+      'General administrative operations and organizational governance'
+    ]
+  },
+  {
     id: 'eng-siam-talukder',
     name: 'Engr. Siam Talukder',
     designation: 'Deputy Managing Director (DMD) & Director, Strategic Planning & Client Relations',
     roleBadge: 'Deputy Managing Director',
     image: encodeURI('/img/Eng Siam Talukder Director Marketing & IT.png'),
-    imageMode: 'cover',
     email: 'siam.talukder@gbrel.com',
     bio: 'Engr. Siam Talukder plays a central leadership role at GBREL, directing strategic planning, project conceptualization, and client advisory. He works directly with private investors, corporate partners, and Non-Resident Bangladeshis (NRBs), presenting project masterplans, architectural viability, and long-term land valuation.',
     responsibilities: [
@@ -215,7 +228,6 @@ const directors = [
     designation: 'Co-Founder, Director & Chief Technology Officer (CTO)',
     roleBadge: 'Co-Founder & CTO',
     image: encodeURI('/img/Eng Sher Ali khan Director Marketing & IT .png'),
-    imageMode: 'contain',
     email: 'sherali@gbrel.com',
     bio: 'Engr. Sher Ali Khan is a Co-Founding Director and the Chief Technology Officer leading GBREL’s digital transformation and technology infrastructure. With extensive background in software engineering, he oversees the company’s PropTech discovery platforms, GIS spatial plot mapping, automated customer relationship systems, and digital investor services.',
     responsibilities: [
@@ -226,28 +238,11 @@ const directors = [
     ]
   },
   {
-    id: 'md-abu-hanif',
-    name: 'Md. Abu Hanif',
-    designation: 'Director, Administration & Accounts',
-    roleBadge: 'Director, Admin & Accounts',
-    image: encodeURI('/img/Md-Abu-Hanif -Director Admin & Accounts.png'),
-    imageMode: 'cover',
-    email: 'accounts@gbrel.com',
-    bio: 'Md. Abu Hanif oversees corporate administration, financial management, treasury operations, and statutory audit compliance at GBREL. He ensures all customer payment plans, client fund accounting, and vendor disbursements adhere to strict corporate financial controls and legal regulations.',
-    responsibilities: [
-      'Corporate financial planning, budgeting, and treasury management',
-      'Client installment accounting, escrow verification, and fund protection',
-      'Statutory audits, tax compliance, and corporate regulatory filings',
-      'General administrative operations and organizational governance'
-    ]
-  },
-  {
     id: 'md-rubel-hawlader',
     name: 'Md. Rubel Hawlader',
     designation: 'Director, Project & Transport',
     roleBadge: 'Director, Project & Transport',
     image: encodeURI('/img/Md RubelHawlader Director Project & Transport.png'),
-    imageMode: 'cover',
     email: 'projects@gbrel.com',
     bio: 'Md. Rubel Hawlader directs on-ground civil construction, earthwork operations, heavy equipment transport, and site logistics across all GBREL sectors. He manages project execution teams to ensure on-schedule boundary demarcation, earth filling, road development, and quality engineering standards.',
     responsibilities: [
@@ -370,19 +365,23 @@ const directors = [
 
 .md-photo-frame {
   width: 100%;
-  height: 380px;
+  height: 420px;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  background: #F1F5F9;
+  background: #FFFFFF;
   border: 1px solid var(--color-border);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
 }
 
 .md-photo {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center 15%;
+  object-fit: contain;
+  object-position: center;
   display: block;
 }
 
@@ -542,13 +541,14 @@ const directors = [
 /* Redesigned Card Image Header */
 .card-image-header {
   position: relative;
-  height: 380px;
-  background: #F8FAFC;
+  height: 420px;
+  background: #FFFFFF;
   border-bottom: 1px solid var(--color-border);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 8px;
 }
 
 .portrait-container {
@@ -557,42 +557,34 @@ const directors = [
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F8FAFC;
+  background: #FFFFFF;
 }
 
 .director-portrait-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center 12%;
+  object-fit: contain;
+  object-position: center;
   display: block;
   transition: transform var(--transition-smooth);
-}
-
-/* Contain mode specifically for graphics or circle portraits like Sher Ali Khan */
-.director-portrait-img.contain-mode {
-  object-fit: contain;
-  padding: 18px;
-  background: #FFFFFF;
 }
 
 .director-card:hover .director-portrait-img {
   transform: scale(1.02);
 }
 
-.card-badge {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  background: rgba(10, 17, 40, 0.85);
-  backdrop-filter: blur(8px);
-  color: #F8FAFC;
-  font-size: 0.75rem;
+.role-pill {
+  display: inline-block;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 5px 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #0F172A;
+  background: #F1F5F9;
+  border: 1px solid var(--color-border);
+  padding: 4px 10px;
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  margin-bottom: 8px;
 }
 
 /* Card Body */
