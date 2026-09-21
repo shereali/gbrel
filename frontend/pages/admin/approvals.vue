@@ -85,7 +85,7 @@
           <div style="background:var(--admin-bg-surface-alt); border:1px solid var(--admin-border-subtle); border-radius:8px; padding:16px; margin-bottom:16px;">
             <div style="font-size:0.8rem; text-transform:uppercase; font-weight:700;" class="text-subtle">Document Title</div>
             <div style="font-size:1.1rem; font-weight:700; margin-top:2px;">{{ previewDoc.docName }}</div>
-            <div style="font-size:0.85rem; color:var(--color-gold); margin-top:4px;">Mandate: {{ previewDoc.item.title }}</div>
+            <div style="font-size:0.85rem; color:var(--color-gold); margin-top:4px;">Property: {{ previewDoc.item.title }}</div>
           </div>
           <div style="border:1px dashed var(--admin-border-subtle); border-radius:8px; padding:32px 20px; text-align:center;">
             <div style="font-size:2.5rem; margin-bottom:10px;">📜</div>
@@ -162,7 +162,7 @@ const pendingApprovalItems = computed(() => {
   return unapproved.map(p => ({
     id: p.id,
     title: p.title,
-    seller: 'Registered Landowner / Mandate Holder',
+    seller: 'Registered Landowner',
     phone: '+880 1819-000000',
     price: p.price,
     location: `${p.address || ''}, ${p.areaName}`,
@@ -215,7 +215,7 @@ const approveListing = async (id: number) => {
   try {
     await toggleRajukProperty(id)
     await updatePropertyStatus(id, 'Active')
-    toast.success('Title Approved & Published', `RAJUK Verified badge issued in database for mandate #${id}.`)
+    toast.success('Title Approved & Published', `RAJUK Verified badge issued for property #${id}.`)
   } catch (err: any) {
     toast.error('Approval Failed', err?.message || 'Could not verify property.')
   } finally {

@@ -26,7 +26,7 @@
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          <span>+ Upload Marketing Brochure</span>
+          <span>Upload Brochure</span>
         </button>
       </div>
     </div>
@@ -44,7 +44,7 @@
         <div style="font-size: 0.75rem; color: #10B981; margin-top: 4px;">Lead generation & buyer engagement</div>
       </div>
       <div class="panel-card" style="padding: 16px 20px;">
-        <div class="text-subtle" style="font-size: 0.8rem; text-transform: uppercase; font-weight: 700;">Associated Mandates</div>
+        <div class="text-subtle" style="font-size: 0.8rem; text-transform: uppercase; font-weight: 700;">Associated Properties</div>
         <div style="font-size: 1.8rem; font-weight: 800; color: #34D399; margin-top: 4px;">{{ linkedPropertiesCount }}</div>
         <div style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 4px;">Linked with public property listings</div>
       </div>
@@ -90,7 +90,7 @@
             <tr>
               <th>Brochure Document</th>
               <th>Category</th>
-              <th>Linked Mandate</th>
+              <th>Linked Property</th>
               <th>File Size</th>
               <th>Downloads</th>
               <th>Status</th>
@@ -105,7 +105,7 @@
             </tr>
             <tr v-else-if="filteredBrochures.length === 0">
               <td colspan="7" style="text-align: center; padding: 40px; color: var(--admin-text-muted);">
-                No brochures match your filter criteria. Click "+ Upload Marketing Brochure" to add one.
+                No brochures match your filter criteria. Click "Upload Brochure" to add one.
               </td>
             </tr>
             <tr v-for="b in filteredBrochures" :key="b.id">
@@ -224,7 +224,7 @@
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label">Attach to Mandate</label>
+                <label class="form-label">Attach to Property</label>
                 <select v-model="uploadForm.property_id" class="form-select">
                   <option :value="null">-- Corporate / Standalone --</option>
                   <option v-for="p in properties" :key="p.id" :value="p.id">

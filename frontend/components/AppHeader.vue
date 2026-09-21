@@ -262,7 +262,7 @@
           <!-- Drawer Action CTAs -->
           <div class="drawer-actions-footer">
             <NuxtLink to="/list-property" class="btn btn-gold btn-lg" style="width:100%; margin-bottom:10px;" @click="mobileMenuOpen = false">
-              <span>+ Sell Your Property</span>
+              <span>Sell Your Property</span>
             </NuxtLink>
 
             <div v-if="isAuthenticated" style="display:flex; flex-direction:column; gap:8px;">

@@ -21,12 +21,12 @@
             }"
           >
             <span :style="{ width: '8px', height: '8px', borderRadius: '50%', background: isLoading ? '#EAB308' : '#10B981', display: 'inline-block' }"></span>
-            {{ isLoading ? 'Syncing with MySQL...' : '🟢 MySQL Production Live' }}
+            {{ isLoading ? 'Syncing...' : '🟢 Live & Synced' }}
           </span>
         </div>
         <p class="page-subtitle">
-          Realtime bidirectional synchronization with MySQL database • {{ properties.length }} live mandates recorded
-          <span v-if="lastSyncedFormatted" style="color:var(--admin-text-muted); margin-left:6px;">(Last Synced: {{ lastSyncedFormatted }})</span>
+          Manage real estate inventory, prices, legal verification, and brochures • {{ properties.length }} active properties
+          <span v-if="lastSyncedFormatted" style="color:var(--admin-text-muted); margin-left:6px;">(Updated: {{ lastSyncedFormatted }})</span>
         </p>
       </div>
       <div class="admin-header-actions flex items-center gap-3">
@@ -57,7 +57,7 @@
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          <span>+ Create New Mandate</span>
+          <span>Add Property</span>
         </button>
       </div>
     </div>
@@ -158,7 +158,7 @@
                     <polyline points="23 4 23 10 17 10"/>
                     <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                   </svg>
-                  <p style="color:var(--admin-text-primary); font-size:0.95rem; font-weight:600;">Fetching luxury mandates from MySQL production database...</p>
+                  <p style="color:var(--admin-text-primary); font-size:0.95rem; font-weight:600;">Loading properties...</p>
                 </div>
               </td>
             </tr>
@@ -169,9 +169,9 @@
                 <div class="flex flex-col items-center justify-center gap-2">
                   <div style="font-size:2rem;">🏛</div>
                   <p style="color:var(--admin-text-primary); font-size:1rem; font-weight:600;">No properties match your current filters</p>
-                  <p style="color:var(--admin-text-muted); font-size:0.85rem;">Try broadening your search or click below to register a new property mandate in MySQL.</p>
+                  <p style="color:var(--admin-text-muted); font-size:0.85rem;">Try broadening your search or click below to add a new property listing.</p>
                   <button class="btn btn-emerald btn-sm" style="margin-top:8px;" @click="openAddPropertyModal">
-                    + Create New Mandate
+                    Add Property
                   </button>
                 </div>
               </td>
@@ -306,9 +306,9 @@
         <div class="admin-modal-header">
           <div>
             <h3 class="admin-modal-title">
-              {{ editingPropId ? 'Edit Property Mandate (MySQL #' + editingPropId + ')' : 'Create New Property Mandate' }}
+              {{ editingPropId ? 'Edit Property (#' + editingPropId + ')' : 'Add New Property' }}
             </h3>
-            <p class="panel-sub">Configure asset specifications, pricing, legal clearance, feature cover, and media gallery</p>
+            <p class="panel-sub">Configure property details, pricing, legal clearance, and photos</p>
           </div>
           <button class="admin-modal-close" @click="closePropModal" aria-label="Close modal">✕</button>
         </div>
@@ -563,7 +563,7 @@
                     @click="addGalleryUrl"
                     style="font-size:0.82rem; white-space:nowrap;"
                   >
-                    + Add to Gallery
+                    Add to Gallery
                   </button>
                 </div>
 
@@ -746,7 +746,7 @@
             <button type="button" class="btn btn-sm btn-outline-white" :disabled="isSaving" @click="closePropModal">Cancel</button>
             <button type="submit" class="btn btn-sm btn-emerald" :disabled="isSaving" style="display:inline-flex; align-items:center; gap:6px;">
               <span v-if="isSaving" class="animate-spin">◌</span>
-              <span>{{ isSaving ? (editingPropId ? 'Updating MySQL...' : 'Creating in MySQL...') : (editingPropId ? 'Save Changes' : 'Publish Property Mandate') }}</span>
+              <span>{{ isSaving ? 'Saving...' : (editingPropId ? 'Save Changes' : 'Publish Property') }}</span>
             </button>
           </div>
         </form>
@@ -1153,12 +1153,12 @@ const handleSaveProperty = async () => {
         images: allImages,
         brochureUrl: propForm.brochureUrl.trim() || undefined
       })
-      toast.success('MySQL Created', `New mandate #${created?.id || ''} saved with ${allImages.length} photo(s)!`)
+      toast.success('Property Created', `Property #${created?.id || ''} published successfully with ${allImages.length} photo(s).`)
     }
     showPropModal.value = false
     editingPropId.value = null
   } catch (err: any) {
-    toast.error('MySQL Save Failed', err.message || 'Unable to save property mandate.')
+    toast.error('Save Failed', err.message || 'Unable to save property.')
   } finally {
     isSaving.value = false
   }
@@ -1174,10 +1174,10 @@ const executeDelete = async () => {
   const target = deleteModalTarget.value
   try {
     await deleteProperty(target.id)
-    toast.info('MySQL Deleted', `Mandate #${target.id} "${target.title}" permanently removed.`)
+    toast.info('Property Removed', `Property #${target.id} "${target.title}" was deleted.`)
     deleteModalTarget.value = null
   } catch (err: any) {
-    toast.error('Delete Failed', err.message || 'Unable to delete listing from MySQL.')
+    toast.error('Delete Failed', err.message || 'Unable to delete property.')
   } finally {
     isDeleting.value = false
   }
@@ -1187,9 +1187,9 @@ const handleToggleRajuk = async (id: number) => {
   togglingRajukId.value = id
   try {
     const newState = await toggleRajukProperty(id)
-    toast.success('RAJUK Updated', `Mandate #${id} RAJUK status set to ${newState ? 'Verified Pass' : 'Pending Audit'}.`)
+    toast.success('Verification Updated', `Property #${id} RAJUK status set to ${newState ? 'Verified Pass' : 'Pending Audit'}.`)
   } catch (err: any) {
-    toast.error('Update Failed', err.message || 'Could not update RAJUK status.')
+    toast.error('Update Failed', err.message || 'Could not update verification status.')
   } finally {
     togglingRajukId.value = null
   }
@@ -1199,7 +1199,7 @@ const handleToggleFeature = async (id: number) => {
   togglingFeatureId.value = id
   try {
     const newState = await toggleFeatureProperty(id)
-    toast.success('Feature Toggled', `Mandate #${id} homepage showcase is now ${newState ? 'Active' : 'Disabled'}.`)
+    toast.success('Feature Toggled', `Property #${id} homepage showcase is now ${newState ? 'Active' : 'Disabled'}.`)
   } catch (err: any) {
     toast.error('Update Failed', err.message || 'Could not toggle featured status.')
   } finally {
@@ -1213,7 +1213,7 @@ const handleStatusChange = async (id: number, event: Event) => {
   const newStatus = target.value
   try {
     await updatePropertyStatus(id, newStatus)
-    toast.success('Status Changed', `Mandate #${id} status changed to "${newStatus}" in MySQL.`)
+    toast.success('Status Changed', `Property #${id} status changed to "${newStatus}".`)
   } catch (err: any) {
     toast.error('Update Failed', err.message || 'Could not change status.')
   } finally {

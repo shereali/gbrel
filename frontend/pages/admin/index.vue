@@ -38,10 +38,10 @@
         </div>
       </div>
 
-      <!-- KPI 2: Active Mandates -->
+      <!-- KPI 2: Active Properties -->
       <div class="kpi-card">
         <div class="kpi-header">
-          <span class="kpi-label">Active Mandates</span>
+          <span class="kpi-label">Active Properties</span>
           <span class="kpi-icon-pill gold">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -166,11 +166,11 @@
       </div>
     </div>
 
-    <!-- 4. Recently Added Property Mandates (Dual View: Desktop Table + Mobile Cards) -->
+    <!-- 4. Recently Added Properties (Dual View: Desktop Table + Mobile Cards) -->
     <div class="panel-card" style="padding: 0; overflow: hidden;">
       <div class="panel-header-padded">
         <div>
-          <h3 class="panel-title">Recently Added Property Mandates</h3>
+          <h3 class="panel-title">Recently Added Properties</h3>
           <p class="panel-sub">Latest inventory added across residential and commercial sectors</p>
         </div>
         <NuxtLink to="/admin/properties" class="btn btn-sm btn-outline-white">Full Inventory →</NuxtLink>

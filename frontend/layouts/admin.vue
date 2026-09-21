@@ -20,24 +20,21 @@
           </button>
 
           <!-- Brand Logo -->
-          <NuxtLink to="/admin" class="admin-brand" title="GBREL Admin">
-            <div class="admin-brand-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                <polyline points="9 22 9 12 15 12 15 22"/>
-              </svg>
+          <NuxtLink to="/admin" class="admin-brand" title="GBREL Admin Portal">
+            <div class="admin-brand-icon" style="background: transparent; border: none; padding: 2px;">
+              <img src="/img/logo-mark.png" alt="GBREL" style="width: 28px; height: 28px; object-fit: contain;" />
             </div>
             <div class="admin-brand-text">
-              <span class="admin-brand-name">GBREL<span style="color:#D4AF37;">.</span>ADMIN</span>
-              <span class="admin-brand-sub">ENTERPRISE CONTROL</span>
+              <span class="admin-brand-name">GBREL <span style="color:#D4AF37;">ADMIN</span></span>
+              <span class="admin-brand-sub">PROPERTY MANAGEMENT</span>
             </div>
           </NuxtLink>
 
           <!-- Live API Indicator (Responsive) -->
-          <div class="system-status-indicator" title="Laravel 13 API Connected">
+          <div class="system-status-indicator" title="API System Connected">
             <span class="status-dot"></span>
-            <span class="status-text-full">LARAVEL 13 API SYNCED</span>
-            <span class="status-text-short">API SYNC</span>
+            <span class="status-text-full">SYSTEM ONLINE</span>
+            <span class="status-text-short">ONLINE</span>
           </div>
         </div>
 
@@ -136,53 +133,53 @@
             </button>
           </div>
           <nav class="sidebar-nav">
-            <NuxtLink to="/admin" class="sidebar-link" exact-active-class="active" title="Overview & Analytics">
+            <NuxtLink to="/admin" class="sidebar-link" exact-active-class="active" title="Overview">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <rect x="3" y="3" width="7" height="9" rx="1"/>
                 <rect x="14" y="3" width="7" height="5" rx="1"/>
                 <rect x="14" y="12" width="7" height="9" rx="1"/>
                 <rect x="3" y="16" width="7" height="5" rx="1"/>
               </svg>
-              <span>Overview & Analytics</span>
+              <span>Overview</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/properties" class="sidebar-link" active-class="active" title="Property Inventory">
+            <NuxtLink to="/admin/properties" class="sidebar-link" active-class="active" title="Properties">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>
               </svg>
-              <span>Property Inventory</span>
-              <span class="badge badge-status badge-pill-sm">CRUD</span>
+              <span>Properties</span>
+              <span class="badge badge-status badge-pill-sm">Active</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/approvals" class="sidebar-link" active-class="active" title="RAJUK / Legal Queue">
+            <NuxtLink to="/admin/approvals" class="sidebar-link" active-class="active" title="Legal & Verification">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M9 12l2 2 4-4"/>
                 <path d="M12 3l7 4v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V7l7-4z"/>
               </svg>
-              <span>RAJUK / Legal Queue</span>
+              <span>Verification Queue</span>
               <span class="badge badge-urgent badge-pill-sm">2 Pending</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/viewings" class="sidebar-link" active-class="active" title="VIP Viewings Log">
+            <NuxtLink to="/admin/viewings" class="sidebar-link" active-class="active" title="Property Viewings">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="18" rx="2"/>
                 <line x1="16" y1="2" x2="16" y2="6"/>
                 <line x1="8" y1="2" x2="8" y2="6"/>
                 <line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
-              <span>VIP Viewings Log</span>
+              <span>Site Viewings</span>
               <span class="badge badge-rajuk badge-pill-sm">4 Tours</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/agents" class="sidebar-link" active-class="active" title="Advisors & Brokers">
+            <NuxtLink to="/admin/agents" class="sidebar-link" active-class="active" title="Agents & Advisors">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <circle cx="12" cy="8" r="4"/>
                 <path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
               </svg>
-              <span>Advisors & Brokers</span>
+              <span>Agents & Advisors</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/brochures" class="sidebar-link" active-class="active" title="Brochure Vault & Collateral">
+            <NuxtLink to="/admin/brochures" class="sidebar-link" active-class="active" title="Brochures">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
@@ -190,53 +187,53 @@
                 <line x1="16" y1="17" x2="8" y2="17"/>
                 <polyline points="10 9 9 9 8 9"/>
               </svg>
-              <span>Brochure Vault</span>
+              <span>Brochures</span>
               <span class="badge badge-pill-sm" style="background:rgba(56,189,248,0.15); color:#38BDF8;">PDF</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/users" class="sidebar-link" active-class="active" title="Users & RBAC Control">
+            <NuxtLink to="/admin/users" class="sidebar-link" active-class="active" title="User Management & Roles">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                 <circle cx="9" cy="7" r="4"/>
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
-              <span>Users & RBAC Control</span>
+              <span>Users & Roles</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/leads" class="sidebar-link" active-class="active" title="Leads CRM & WhatsApp">
+            <NuxtLink to="/admin/leads" class="sidebar-link" active-class="active" title="Inquiries & Leads">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
                 <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
               </svg>
-              <span>Leads CRM & WhatsApp</span>
+              <span>Buyer Inquiries</span>
               <span class="badge badge-featured badge-pill-sm">4 Leads</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/financials" class="sidebar-link" active-class="active" title="Financials & Escrow">
+            <NuxtLink to="/admin/financials" class="sidebar-link" active-class="active" title="Financials">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <line x1="12" y1="1" x2="12" y2="23"/>
                 <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
               </svg>
-              <span>Financials & Escrow</span>
+              <span>Financials</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/settings" class="sidebar-link" active-class="active" title="System & Bank Config">
+            <NuxtLink to="/admin/settings" class="sidebar-link" active-class="active" title="Settings">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <circle cx="12" cy="12" r="3"/>
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
               </svg>
-              <span>System & Bank Config</span>
+              <span>Settings</span>
             </NuxtLink>
           </nav>
 
           <!-- System Info Box in Sidebar -->
           <div class="sidebar-system-card">
             <div class="flex justify-between items-center" style="margin-bottom:6px;">
-              <span style="font-size:0.75rem; color:#CBD5E1; font-weight:700; text-transform:uppercase;">Escrow Security</span>
-              <span style="font-size:0.75rem; color:#10B981; font-weight:800;">100% Guaranteed</span>
+              <span style="font-size:0.75rem; color:#CBD5E1; font-weight:700; text-transform:uppercase;">Admin Guide</span>
+              <span style="font-size:0.75rem; color:#10B981; font-weight:800;">Support Ready</span>
             </div>
             <div style="font-size:0.8rem; color:#94A3B8; line-height:1.4;">
-              Zero Title Disputes. All C/S, R/S, B/S Khatians certified by Supreme Court Panel.
+              All property changes, prices, and user permissions update in real-time across the platform.
             </div>
           </div>
         </aside>
@@ -257,13 +254,10 @@
           <!-- Drawer Header -->
           <div class="drawer-header">
             <div class="flex items-center gap-2">
-              <div class="admin-brand-icon" style="width:34px; height:34px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                  <polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
+              <div class="admin-brand-icon" style="width:34px; height:34px; background:transparent; border:none;">
+                <img src="/img/logo-mark.png" alt="GBREL" style="width:28px; height:28px; object-fit:contain;" />
               </div>
-              <span class="admin-brand-name" style="font-size:1.15rem;">GBREL<span style="color:#D4AF37;">.</span>ADMIN</span>
+              <span class="admin-brand-name" style="font-size:1.15rem;">GBREL <span style="color:#D4AF37;">ADMIN</span></span>
             </div>
             <button class="drawer-close-btn" @click="mobileNavOpen = false" aria-label="Close Navigation">✕</button>
           </div>
@@ -380,7 +374,7 @@
               <span v-else>☀️ Switch to Light Mode</span>
             </button>
             <NuxtLink to="/admin/properties?action=new" class="btn btn-gold btn-sm" style="width:100%; margin-bottom:8px;" @click="mobileNavOpen = false">
-              <span>+ Add Property Mandate</span>
+              <span>Add Property</span>
             </NuxtLink>
             <NuxtLink to="/" class="btn btn-outline-white btn-sm" style="width:100%; margin-bottom:12px;" @click="mobileNavOpen = false">
               <span>View Live Website ↗</span>

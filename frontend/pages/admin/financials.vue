@@ -32,7 +32,7 @@
           <span class="kpi-icon-pill gold">★</span>
         </div>
         <div class="kpi-value text-gold">{{ formatCrore(totalCommission) }}</div>
-        <div class="kpi-sub">Disbursed to GBREL Treasury</div>
+        <div class="kpi-sub">Company Account / Balance</div>
       </div>
 
       <div class="kpi-card">
@@ -66,7 +66,7 @@
             <tr>
               <th>Deal ID</th>
               <th>Property Asset</th>
-              <th>Buyer / Mandate</th>
+              <th>Buyer / Investor</th>
               <th>Transacted Value</th>
               <th>Commission (2%)</th>
               <th>Escrow Partner Bank</th>

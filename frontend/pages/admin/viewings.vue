@@ -2,8 +2,8 @@
   <div class="admin-page animate-fade-in">
     <div class="admin-header-row">
       <div>
-        <h1 class="page-title">VIP Site Viewings & Inspection Logistics</h1>
-        <p class="page-subtitle">Schedule, assign advisors, dispatch luxury vehicle pickups from Dhaka hubs, and manage viewing statuses.</p>
+        <h1 class="page-title">Property Viewings & Site Visits</h1>
+        <p class="page-subtitle">Schedule client viewings, assign advisors, and manage visit statuses.</p>
       </div>
       <div class="admin-header-actions">
         <button class="btn btn-gold" @click="openScheduleModal">
@@ -11,7 +11,7 @@
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          <span>+ Schedule VIP Inspection</span>
+          <span>Schedule Viewing</span>
         </button>
       </div>
     </div>
@@ -38,7 +38,7 @@
                 <strong class="text-contrast">{{ v.name }}</strong>
                 <div style="font-size:0.78rem;" class="text-subtle">{{ v.phone }} • {{ v.contact }}</div>
               </td>
-              <td style="font-weight:600; max-width:240px;">{{ v.property_title || v.propertyTitle || 'Exclusive Mandate' }}</td>
+              <td style="font-weight:600; max-width:240px;">{{ v.property_title || v.propertyTitle || 'Property' }}</td>
               <td>
                 <div style="font-weight:700;">{{ v.preferred_date || v.date || 'TBD' }}</div>
                 <div style="font-size:0.78rem;" class="text-subtle">{{ v.preferred_time || v.timeSlot || 'Slot TBD' }}</div>
@@ -107,7 +107,7 @@
             </div>
 
             <div class="form-group" style="margin-bottom:14px;">
-              <label class="form-label">Target Property Mandate *</label>
+              <label class="form-label">Target Property *</label>
               <select v-model="form.propertyTitle" required class="form-select">
                 <option v-for="p in properties" :key="p.id" :value="p.title">
                   {{ p.title }} ({{ p.areaName }})
@@ -149,7 +149,7 @@
 
           <div class="admin-modal-footer">
             <button type="button" class="btn btn-sm btn-outline-white" @click="showModal = false">Cancel</button>
-            <button type="submit" class="btn btn-sm btn-gold">Confirm & Dispatch Booking</button>
+            <button type="submit" class="btn btn-sm btn-gold">Confirm Booking</button>
           </div>
         </form>
       </div>

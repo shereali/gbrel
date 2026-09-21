@@ -2,8 +2,8 @@
   <div class="admin-page animate-fade-in">
     <div class="admin-header-row">
       <div>
-        <h1 class="page-title">Mandate Inquiries & Client CRM</h1>
-        <p class="page-subtitle">Direct inquiries, verified WhatsApp consult requests, and scheduled consultation dispatches.</p>
+        <h1 class="page-title">Buyer Inquiries & Leads</h1>
+        <p class="page-subtitle">Track client inquiries, WhatsApp requests, and scheduled consultations.</p>
       </div>
       <div class="admin-header-actions">
         <button class="btn btn-emerald" @click="showAddLeadModal = true">
@@ -11,7 +11,7 @@
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          <span>+ Log Direct Buyer Inquiry</span>
+          <span>Log New Inquiry</span>
         </button>
       </div>
     </div>
@@ -108,7 +108,7 @@
                   <option value="NRB Investor">NRB Investor (Expatriate)</option>
                   <option value="Direct Buyer">Direct Buyer (End-User)</option>
                   <option value="Hospitality ROI">Hospitality ROI Investor</option>
-                  <option value="Corporate Mandate">Corporate / Institutional</option>
+                  <option value="Corporate / Institutional">Corporate / Institutional</option>
                 </select>
               </div>
             </div>
@@ -155,7 +155,7 @@ const fetchLeads = async () => {
       if (json && json.success && Array.isArray(json.data)) {
         leadsList.value = json.data.map(l => ({
           ...l,
-          property: l.property_title || l.property || 'Direct Mandate',
+          property: l.property_title || l.property || 'Direct Inquiry',
           type: l.buyer_type || l.type || 'Direct Buyer',
           stage: l.stage || 'New',
           date: l.created_at ? new Date(l.created_at).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : (l.date || 'Recent')

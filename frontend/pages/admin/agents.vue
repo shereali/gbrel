@@ -2,8 +2,8 @@
   <div class="admin-page animate-fade-in">
     <div class="admin-header-row">
       <div>
-        <h1 class="page-title">Senior Advisors & Regional Broker Network</h1>
-        <p class="page-subtitle">Manage licensed regional brokers, division assignments, commission allocations, and client portfolios across Bangladesh.</p>
+        <h1 class="page-title">Advisors & Real Estate Agents</h1>
+        <p class="page-subtitle">Manage real estate advisors, regional coverage, and active property assignments.</p>
       </div>
       <div class="admin-header-actions">
         <button class="btn btn-emerald" @click="openAddAgentModal">
@@ -11,7 +11,7 @@
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          <span>+ Add Licensed Advisor</span>
+          <span>Add Advisor</span>
         </button>
       </div>
     </div>
@@ -34,7 +34,7 @@
         <div style="background:var(--admin-bg-surface-alt); border:1px solid var(--admin-border-subtle); padding:12px 14px; border-radius:8px; margin-bottom:16px; font-size:0.82rem; display:flex; justify-content:space-between;">
           <div>Exp: <strong>{{ agent.experienceYears }}+ Yrs</strong></div>
           <div>Rating: <strong style="color:#F59E0B;">★ {{ agent.rating }}</strong></div>
-          <div>Mandates: <strong style="color:#10B981;">{{ agent.activeListingsCount }}</strong></div>
+          <div>Properties: <strong style="color:#10B981;">{{ agent.activeListingsCount }}</strong></div>
         </div>
 
         <div class="flex gap-2">
@@ -126,7 +126,7 @@
             Are you sure you want to remove advisor <strong>"{{ deleteAgentTarget.name }}"</strong>?
           </p>
           <p style="color:#94A3B8; font-size:0.82rem; margin-top:8px;">
-            Their assigned mandates will be reassigned to the Dhaka HQ Broker Pool.
+            Their assigned properties will be reassigned to the Dhaka HQ team.
           </p>
         </div>
         <div class="admin-modal-footer">
