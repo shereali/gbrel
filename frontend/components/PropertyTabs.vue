@@ -145,6 +145,78 @@
           </li>
         </ul>
       </div>
+
+      <!-- Land Share Specialized Co-Ownership Blueprint (Only for Land Share Assets) -->
+      <div v-if="property.propertyType === 'Land Share'" class="animate-fade-in" style="margin-top: 32px; background: #FAF5FF; border: 1.5px solid #DDD6FE; border-radius: var(--radius-lg); padding: 24px;">
+        <div class="flex items-center gap-3" style="margin-bottom: 12px;">
+          <div style="width: 36px; height: 36px; border-radius: 8px; background: #7C3AED; color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+            🤝
+          </div>
+          <div>
+            <h4 style="font-size: 1.2rem; font-weight: 800; color: #5B21B6; margin-bottom: 2px;">
+              Land Share Co-Ownership Framework (জমি শেয়ার মডেল)
+            </h4>
+            <p style="font-size: 0.88rem; color: #6D28D9;">
+              Direct proportional freehold land deed registration + actual cost construction model.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-3" style="gap: 14px; margin-top: 16px;">
+          <div style="background: #FFFFFF; border: 1px solid #E9D5FF; border-radius: var(--radius-md); padding: 14px;">
+            <strong style="color: #6D28D9; font-size: 0.92rem; display: block; margin-bottom: 4px;">1. Sub-Registry Deed</strong>
+            <p style="font-size: 0.82rem; color: #64748B; line-height: 1.5;">Proportional land share is directly registered and mutated in your name at the government sub-registry office.</p>
+          </div>
+          <div style="background: #FFFFFF; border: 1px solid #E9D5FF; border-radius: var(--radius-md); padding: 14px;">
+            <strong style="color: #6D28D9; font-size: 0.92rem; display: block; margin-bottom: 4px;">2. At-Cost Construction</strong>
+            <p style="font-size: 0.82rem; color: #64748B; line-height: 1.5;">No 40% commercial developer mark-up. Construction materials and civil engineering are billed at verifiable procurement prices.</p>
+          </div>
+          <div style="background: #FFFFFF; border: 1px solid #E9D5FF; border-radius: var(--radius-md); padding: 14px;">
+            <strong style="color: #6D28D9; font-size: 0.92rem; display: block; margin-bottom: 4px;">3. Building Committee</strong>
+            <p style="font-size: 0.82rem; color: #64748B; line-height: 1.5;">Every share owner has voting rights in structural decisions, interior architectural choices, and escrow bank disbursals.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Official Project Documentation & Downloadable Brochure -->
+      <div style="margin-top: 32px; background: #F8FAFC; border: 1.5px solid var(--color-border); border-radius: var(--radius-lg); padding: 24px;">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+          <div class="flex items-center gap-4">
+            <div style="width: 48px; height: 48px; border-radius: 10px; background: #FEE2E2; color: #DC2626; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; flex-shrink: 0;">
+              PDF
+            </div>
+            <div>
+              <h4 style="font-size: 1.15rem; font-weight: 800; color: #0F172A; margin-bottom: 2px;">
+                Official Project Brochure & Architectural Deck
+              </h4>
+              <p style="font-size: 0.88rem; color: #64748B;">
+                {{ property.brochureUrl ? 'Complete structural plan, master site layout, and verified title documentation.' : 'Official sales prospectus, floor layouts, and legal compliance dossier.' }}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <a 
+              v-if="property.brochureUrl" 
+              :href="property.brochureUrl" 
+              target="_blank" 
+              download 
+              class="btn btn-emerald btn-md"
+              style="font-weight: 800; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span>Download PDF Brochure</span>
+            </a>
+            <span v-else class="badge" style="background: #F1F5F9; color: #64748B; font-weight: 600; padding: 6px 12px;">
+              Brochure Available via Advisor
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ======================================================================

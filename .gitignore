@@ -8,4 +8,7 @@ dist/
 vendor/
 *.log
 .DS_Store
-Thumbs.db
+thumbs.db
+scratch/
+*.sqlite
+backend/database/*.sqlite

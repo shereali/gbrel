@@ -49,7 +49,7 @@ class Property extends Model
                     'balconies', 'square_footage', 'land_size', 'land_unit', 'parking', 'floor_number',
                     'total_floors', 'facing', 'completion_status', 'year_built', 'is_featured',
                     'is_rajuk_approved', 'is_verified', 'has_open_house', 'latitude', 'longitude',
-                    'agent_id', 'images', 'amenities', 'documents_verified', 'created_at', 'updated_at'
+                    'agent_id', 'images', 'amenities', 'documents_verified', 'brochure_url', 'created_at', 'updated_at'
                 ];
             }
         }

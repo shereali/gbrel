@@ -39,6 +39,7 @@
         </svg>
         <select v-model="selectedType" aria-label="Property Type">
           <option value="">All Types</option>
+          <option value="Land Share">Land Share (Co-Ownership)</option>
           <option value="Flat">Flat / Apartment</option>
           <option value="Plot">Residential Plot (Katha)</option>
           <option value="Land">Commercial / Agro Land</option>
@@ -98,6 +99,7 @@
         </svg>
         <span>Trending Searches:</span>
       </span>
+      <button type="button" class="quick-chip" @click="quickSearch('Land Share')">Purbachal Land Shares</button>
       <button type="button" class="quick-chip" @click="quickSearch('Gulshan')">Gulshan Penthouses</button>
       <button type="button" class="quick-chip" @click="quickSearch('Purbachal')">Purbachal Sector 17 Plots</button>
       <button type="button" class="quick-chip" @click="quickSearch('Bashundhara')">Bashundhara Block M</button>

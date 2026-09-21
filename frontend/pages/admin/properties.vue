@@ -79,6 +79,7 @@
           <!-- Category Filter -->
           <select v-model="inventoryTypeFilter" class="form-select" style="width: auto;">
             <option value="">All Categories</option>
+            <option value="Land Share">Land Share (Co-Ownership)</option>
             <option value="Flat">Flats & Apartments</option>
             <option value="Plot">Residential Plots (Katha)</option>
             <option value="Land">Freehold Lands (Bigha)</option>
@@ -190,8 +191,19 @@
                     <strong style="color:var(--admin-text-primary); display:block; max-width:280px; line-height:1.3; font-size:0.92rem;">
                       {{ prop.title }}
                     </strong>
-                    <div style="font-size:0.78rem; color:var(--admin-text-muted); margin-top:2px;">
-                      MySQL ID: #{{ prop.id }} • {{ prop.areaName }}, {{ prop.city }}
+                    <div class="flex items-center gap-2 flex-wrap" style="margin-top:2px;">
+                      <span style="font-size:0.78rem; color:var(--admin-text-muted);">
+                        MySQL ID: #{{ prop.id }} • {{ prop.areaName }}, {{ prop.city }}
+                      </span>
+                      <a 
+                        v-if="prop.brochureUrl" 
+                        :href="prop.brochureUrl" 
+                        target="_blank" 
+                        style="font-size:0.7rem; font-weight:700; color:#38BDF8; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); padding:1px 6px; border-radius:3px; text-decoration:none; display:inline-flex; align-items:center; gap:3px;"
+                        title="Download attached brochure PDF"
+                      >
+                        📄 PDF Brochure
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -303,6 +315,7 @@
               <div class="form-group">
                 <label class="form-label">Category *</label>
                 <select v-model="propForm.propertyType" class="form-select">
+                  <option value="Land Share">Land Share (Co-Ownership Project)</option>
                   <option value="Flat">Flat / Luxury Apartment</option>
                   <option value="Plot">Residential Plot (Katha)</option>
                   <option value="Land">Freehold Land (Bigha)</option>
@@ -590,6 +603,57 @@
                   </p>
                 </div>
               </div>
+
+              <!-- PART C: OFFICIAL PROJECT BROCHURE (PDF / DOC) -->
+              <div style="background:var(--admin-bg-surface); padding:14px; border-radius:var(--radius-md); border:1px solid var(--admin-border-subtle); margin-top:14px;">
+                <div class="flex items-center justify-between flex-wrap gap-2" style="margin-bottom:8px;">
+                  <label class="form-label" style="font-weight:700; color:#38BDF8; margin-bottom:0; display:flex; align-items:center; gap:6px;">
+                    <span>📑 Official Project Brochure (PDF / DOC)</span>
+                    <span style="font-size:0.75rem; color:var(--admin-text-muted); font-weight:normal;">(Downloadable on Public Listing & Detail Page)</span>
+                  </label>
+
+                  <!-- Hidden File Input for Brochure -->
+                  <input 
+                    ref="brochureFileInput" 
+                    type="file" 
+                    accept=".pdf,.doc,.docx,application/pdf" 
+                    style="display:none;" 
+                    @change="onBrochureFileSelected" 
+                  />
+
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-outline-white" 
+                    :disabled="isUploadingBrochure"
+                    @click="triggerBrochureUpload"
+                    style="font-size:0.78rem; padding:4px 10px; display:inline-flex; align-items:center; gap:6px;"
+                  >
+                    <span v-if="isUploadingBrochure" class="animate-spin">◌</span>
+                    <span>{{ isUploadingBrochure ? 'Uploading PDF...' : '📁 Upload Brochure File' }}</span>
+                  </button>
+                </div>
+
+                <div v-if="propForm.brochureUrl" class="flex items-center justify-between gap-3" style="background:rgba(56, 189, 248, 0.08); border:1px solid rgba(56, 189, 248, 0.3); border-radius:var(--radius-sm); padding:10px 14px; margin-bottom:8px;">
+                  <div class="flex items-center gap-2" style="overflow:hidden;">
+                    <span style="background:#EF4444; color:#FFF; font-size:0.7rem; font-weight:800; padding:2px 6px; border-radius:3px; flex-shrink:0;">PDF</span>
+                    <a :href="propForm.brochureUrl" target="_blank" style="color:#38BDF8; font-size:0.85rem; font-weight:600; text-decoration:underline; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
+                      {{ propForm.brochureUrl.split('/').pop() || 'Attached Project Brochure' }}
+                    </a>
+                  </div>
+                  <div class="flex items-center gap-2 flex-shrink-0">
+                    <a :href="propForm.brochureUrl" target="_blank" class="btn btn-sm btn-outline-white" style="font-size:0.75rem; padding:3px 8px;">Preview</a>
+                    <button type="button" class="btn btn-sm btn-outline-white" style="font-size:0.75rem; padding:3px 8px; color:#EF4444;" @click="propForm.brochureUrl = ''">Clear</button>
+                  </div>
+                </div>
+
+                <input 
+                  v-model="propForm.brochureUrl" 
+                  type="url" 
+                  placeholder="Or paste direct brochure URL (e.g. /storage/brochures/... or https://...)" 
+                  class="form-input" 
+                  style="font-size:0.82rem; width:100%;" 
+                />
+              </div>
             </div>
 
             <!-- Row 7: Flags -->
@@ -670,7 +734,8 @@ const {
   updatePropertyStatus, 
   deleteProperty,
   uploadImage,
-  uploadMultipleImages
+  uploadMultipleImages,
+  uploadBrochure
 } = useProperties()
 
 const toast = useToast()
@@ -689,10 +754,12 @@ const isSaving = ref(false)
 const isDeleting = ref(false)
 const isUploadingFeature = ref(false)
 const isUploadingGallery = ref(false)
+const isUploadingBrochure = ref(false)
 const newGalleryUrl = ref('')
 
 const featureFileInput = ref<HTMLInputElement | null>(null)
 const galleryFileInput = ref<HTMLInputElement | null>(null)
+const brochureFileInput = ref<HTMLInputElement | null>(null)
 
 const togglingRajukId = ref<number | null>(null)
 const togglingFeatureId = ref<number | null>(null)
@@ -749,6 +816,7 @@ const propForm = reactive({
   isFeatured: false,
   featureImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop',
   gallery: [] as string[],
+  brochureUrl: '',
   agentId: 1
 })
 
@@ -811,6 +879,7 @@ const openAddPropertyModal = () => {
     'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?q=80&w=1200&auto=format&fit=crop',
     'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200&auto=format&fit=crop'
   ]
+  propForm.brochureUrl = ''
   newGalleryUrl.value = ''
   showPropModal.value = true
 }
@@ -838,6 +907,7 @@ const openEditPropertyModal = (p: PropertyItem) => {
   propForm.gallery = p.gallery && p.gallery.length > 0 
     ? [...p.gallery] 
     : (p.images && p.images.length > 1 ? p.images.slice(1) : [])
+  propForm.brochureUrl = p.brochureUrl || ''
   newGalleryUrl.value = ''
   showPropModal.value = true
 }
@@ -880,6 +950,26 @@ const onGalleryFilesSelected = async (e: Event) => {
     toast.error('Upload Failed', err.message || 'Could not upload gallery images.')
   } finally {
     isUploadingGallery.value = false
+    target.value = ''
+  }
+}
+
+const triggerBrochureUpload = () => {
+  brochureFileInput.value?.click()
+}
+
+const onBrochureFileSelected = async (e: Event) => {
+  const target = e.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+  isUploadingBrochure.value = true
+  try {
+    const uploadedUrl = await uploadBrochure(target.files[0])
+    propForm.brochureUrl = uploadedUrl
+    toast.success('Brochure Uploaded', 'Project brochure file saved successfully.')
+  } catch (err: any) {
+    toast.error('Upload Failed', err.message || 'Could not upload brochure file.')
+  } finally {
+    isUploadingBrochure.value = false
     target.value = ''
   }
 }
@@ -950,7 +1040,8 @@ const handleSaveProperty = async () => {
         isFeatured: propForm.isFeatured,
         featureImage: featureCover,
         gallery: validGallery,
-        images: allImages
+        images: allImages,
+        brochureUrl: propForm.brochureUrl.trim() || undefined
       })
       toast.success('MySQL Updated', `Successfully updated "${propForm.title}" with ${allImages.length} photo(s).`)
     } else {
@@ -958,7 +1049,8 @@ const handleSaveProperty = async () => {
         ...propForm,
         featureImage: featureCover,
         gallery: validGallery,
-        images: allImages
+        images: allImages,
+        brochureUrl: propForm.brochureUrl.trim() || undefined
       })
       toast.success('MySQL Created', `New mandate #${created?.id || ''} saved with ${allImages.length} photo(s)!`)
     }

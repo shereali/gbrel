@@ -14,7 +14,7 @@ export interface PropertyItem {
   priceUnit?: string
   pricePrefix?: string
   listingType: 'Sale' | 'Lease' | 'Delisted'
-  propertyType: 'Flat' | 'Plot' | 'Land' | 'Duplex' | 'Hotel' | 'Commercial' | 'Penthouse'
+  propertyType: 'Flat' | 'Plot' | 'Land' | 'Land Share' | 'Duplex' | 'Hotel' | 'Commercial' | 'Penthouse'
   status: 'Active' | 'Sold' | 'Delisted' | 'Under Offer'
   bedrooms: number
   bathrooms: number
@@ -41,6 +41,7 @@ export interface PropertyItem {
   gallery?: string[]
   amenities: string[]
   documentsVerified: string[]
+  brochureUrl?: string
   agentId: number
   history: Array<{
     id: number
@@ -799,6 +800,7 @@ const mapDbItemToPropertyItem = (apiItem: any): PropertyItem => {
     documentsVerified: Array.isArray(apiItem.documents_verified) && apiItem.documents_verified.length > 0 
       ? apiItem.documents_verified 
       : ['Clear Freehold Title Deed', 'Mutation Cleared', 'RAJUK Allotment'],
+    brochureUrl: apiItem.brochure_url || apiItem.brochureUrl || undefined,
     agentId: Number(apiItem.agent_id) || Number(apiItem.agentId) || 1,
     history: Array.isArray(apiItem.history) && apiItem.history.length > 0 ? apiItem.history : [
       { id: 1, date: 'Recent', event: 'Listed on GBREL Portal', price: price, status: 'Active', notes: 'Database Synced' }
@@ -1084,6 +1086,24 @@ export const useProperties = () => {
     throw new Error(json?.message || 'Failed to upload gallery images')
   }
 
+  const uploadBrochure = async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append('brochure', file)
+    const res = await fetch(useApiUrl('/upload'), {
+      method: 'POST',
+      body: formData
+    })
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => null)
+      throw new Error(errJson?.message || `Brochure upload failed with status ${res.status}`)
+    }
+    const json = await res.json()
+    if (json && json.success && json.url) {
+      return json.url
+    }
+    throw new Error(json?.message || 'Failed to upload brochure file')
+  }
+
   const isAgentsLoadingRef = computed(() => isAgentsLoading.value)
 
   const fetchAgents = async (force = false) => {
@@ -1213,6 +1233,7 @@ export const useProperties = () => {
     updateAgent,
     deleteAgent,
     uploadImage,
-    uploadMultipleImages
+    uploadMultipleImages,
+    uploadBrochure
   }
 }

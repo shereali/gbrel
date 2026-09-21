@@ -21,6 +21,12 @@
         <span v-else-if="property.state === 'Chittagong'" class="badge badge-rajuk" style="background:#0F766E;">
           CDA Approved
         </span>
+        <span v-if="property.propertyType === 'Land Share'" class="badge" style="background:#7C3AED; color:#FFF; font-weight:700;">
+          🤝 Land Share
+        </span>
+        <span v-if="property.brochureUrl" class="badge" style="background:#FEF3C7; color:#92400E; font-weight:700; border:1px solid #FCD34D;" title="Downloadable PDF brochure available">
+          📄 Brochure
+        </span>
         <span v-if="property.isFeatured" class="badge badge-featured">Exclusive</span>
         <span v-if="property.propertyType === 'Hotel'" class="badge badge-hotel">High ROI</span>
       </div>

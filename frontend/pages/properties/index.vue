@@ -62,6 +62,100 @@
             </select>
           </div>
         </div>
+
+        <!-- Category Pills Bar -->
+        <div class="flex items-center gap-2 flex-wrap" style="margin-top: 20px;">
+          <button 
+            class="badge" 
+            :style="{ 
+              cursor: 'pointer', 
+              padding: '6px 14px', 
+              borderRadius: '9999px', 
+              fontWeight: '700',
+              background: filters.propertyType === '' ? '#0F172A' : '#FFFFFF',
+              color: filters.propertyType === '' ? '#FFFFFF' : '#475569',
+              border: '1px solid var(--color-border)'
+            }"
+            @click="filters.propertyType = ''"
+          >
+            All Categories ({{ properties.length }})
+          </button>
+          <button 
+            class="badge" 
+            :style="{ 
+              cursor: 'pointer', 
+              padding: '6px 14px', 
+              borderRadius: '9999px', 
+              fontWeight: '700',
+              background: filters.propertyType === 'Land Share' ? '#7C3AED' : '#FFFFFF',
+              color: filters.propertyType === 'Land Share' ? '#FFFFFF' : '#7C3AED',
+              border: filters.propertyType === 'Land Share' ? '1px solid #7C3AED' : '1px solid #DDD6FE'
+            }"
+            @click="filters.propertyType = 'Land Share'"
+          >
+            🤝 Land Share Projects
+          </button>
+          <button 
+            class="badge" 
+            :style="{ 
+              cursor: 'pointer', 
+              padding: '6px 14px', 
+              borderRadius: '9999px', 
+              fontWeight: '700',
+              background: filters.propertyType === 'Flat' ? '#0F172A' : '#FFFFFF',
+              color: filters.propertyType === 'Flat' ? '#FFFFFF' : '#475569',
+              border: '1px solid var(--color-border)'
+            }"
+            @click="filters.propertyType = 'Flat'"
+          >
+            Flats & Apartments
+          </button>
+          <button 
+            class="badge" 
+            :style="{ 
+              cursor: 'pointer', 
+              padding: '6px 14px', 
+              borderRadius: '9999px', 
+              fontWeight: '700',
+              background: filters.propertyType === 'Plot' ? '#0F172A' : '#FFFFFF',
+              color: filters.propertyType === 'Plot' ? '#FFFFFF' : '#475569',
+              border: '1px solid var(--color-border)'
+            }"
+            @click="filters.propertyType = 'Plot'"
+          >
+            Plots & Katha Lands
+          </button>
+          <button 
+            class="badge" 
+            :style="{ 
+              cursor: 'pointer', 
+              padding: '6px 14px', 
+              borderRadius: '9999px', 
+              fontWeight: '700',
+              background: filters.propertyType === 'Hotel' ? '#0F172A' : '#FFFFFF',
+              color: filters.propertyType === 'Hotel' ? '#FFFFFF' : '#475569',
+              border: '1px solid var(--color-border)'
+            }"
+            @click="filters.propertyType = 'Hotel'"
+          >
+            Resorts & Hotel Suites
+          </button>
+          <button 
+            class="badge" 
+            :style="{ 
+              cursor: 'pointer', 
+              padding: '6px 14px', 
+              borderRadius: '9999px', 
+              fontWeight: '700',
+              background: filters.propertyType === 'Duplex' ? '#0F172A' : '#FFFFFF',
+              color: filters.propertyType === 'Duplex' ? '#FFFFFF' : '#475569',
+              border: '1px solid var(--color-border)'
+            }"
+            @click="filters.propertyType = 'Duplex'"
+          >
+            Duplexes & Penthouses
+          </button>
+        </div>
       </div>
 
       <!-- Main Layout: Sidebar Filters + Results Grid -->
@@ -107,6 +201,7 @@
             <label class="form-label">Property Category</label>
             <select v-model="filters.propertyType" class="form-select">
               <option value="">All Categories</option>
+              <option value="Land Share">Land Share (Co-Ownership)</option>
               <option value="Flat">Flat / Apartment</option>
               <option value="Plot">Residential Plot (Katha)</option>
               <option value="Hotel">Hotel / Resort Suite</option>
@@ -207,7 +302,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProperties } from '~/composables/useProperties'
 import { formatBDT } from '~/composables/useCurrency'
@@ -215,7 +310,7 @@ import PropertyCard from '~/components/PropertyCard.vue'
 import InteractiveMap from '~/components/InteractiveMap.vue'
 
 const route = useRoute()
-const { properties } = useProperties()
+const { properties, fetchProperties } = useProperties()
 
 const viewMode = ref<'grid' | 'split'>('grid')
 const sortBy = ref('newest')
@@ -233,13 +328,22 @@ const filters = reactive({
   openHouseOnly: false
 })
 
-onMounted(() => {
+const applyRouteQuery = () => {
   if (route.query.q) filters.keyword = String(route.query.q).toLowerCase()
   if (route.query.type) filters.propertyType = String(route.query.type)
   if (route.query.state) filters.state = String(route.query.state)
   if (route.query.area) filters.areaName = String(route.query.area)
   if (route.query.listingType) filters.listingType = String(route.query.listingType)
   if (route.query.maxPrice) filters.maxPrice = Number(route.query.maxPrice)
+}
+
+onMounted(async () => {
+  applyRouteQuery()
+  await fetchProperties()
+})
+
+watch(() => route.query, () => {
+  applyRouteQuery()
 })
 
 const resetFilters = () => {

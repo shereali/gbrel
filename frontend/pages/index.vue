@@ -73,7 +73,7 @@
           </p>
         </div>
 
-        <div class="grid grid-4 category-grid">
+        <div class="category-grid">
           <!-- 1. Flats & Penthouses - LEAD CARD -->
           <NuxtLink to="/properties?type=Flat" class="category-card category-card-lead">
             <div class="category-img-wrap">
@@ -83,7 +83,7 @@
             <div class="category-body">
               <h3>Flats & Luxury Penthouses</h3>
               <p>Gulshan, Banani, Dhanmondi, and Uttara with lake views & rooftop amenities.</p>
-              <div class="category-link">Browse Flats (22+) →</div>
+              <div class="category-link">Browse Flats ({{ flatsCount }}) →</div>
             </div>
           </NuxtLink>
 
@@ -96,11 +96,24 @@
             <div class="category-body">
               <h3>Residential Plots & Lands</h3>
               <p>Purbachal Smart City, Jalshiri, and Bashundhara freehold land with clear boundary demarcation.</p>
-              <div class="category-link">Browse Plots (14+) →</div>
+              <div class="category-link">Browse Plots ({{ plotsCount }}) →</div>
             </div>
           </NuxtLink>
 
-          <!-- 3. Beach Resorts & Suites -->
+          <!-- 3. Land Share Projects (NEW) -->
+          <NuxtLink to="/properties?type=Land+Share" class="category-card" style="border-color: #DDD6FE;">
+            <div class="category-img-wrap">
+              <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=600&auto=format&fit=crop" alt="Land Share Projects" />
+              <span class="category-badge" style="background:#7C3AED; color:#FFF;">Cost-Basis Co-Ownership</span>
+            </div>
+            <div class="category-body">
+              <h3 style="color: #6D28D9;">Land Share Projects (জমি শেয়ার)</h3>
+              <p>Direct proportional land deed sub-registry with transparent actual-cost construction in Purbachal & Dhaka.</p>
+              <div class="category-link" style="color: #7C3AED;">Explore Land Shares ({{ landShareCount }}) →</div>
+            </div>
+          </NuxtLink>
+
+          <!-- 4. Beach Resorts & Suites -->
           <NuxtLink to="/properties?type=Hotel" class="category-card">
             <div class="category-img-wrap">
               <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=600&auto=format&fit=crop" alt="Resorts & Suites" />
@@ -109,11 +122,11 @@
             <div class="category-body">
               <h3>Beach Resorts & Hotel Suites</h3>
               <p>Cox's Bazar Marine Drive and Inani Beach hospitality fractional suites with passive revenue.</p>
-              <div class="category-link">Browse Resorts (8+) →</div>
+              <div class="category-link">Browse Resorts ({{ hotelCount }}) →</div>
             </div>
           </NuxtLink>
 
-          <!-- 4. Commercial & Duplexes -->
+          <!-- 5. Commercial & Duplexes -->
           <NuxtLink to="/properties?type=Duplex" class="category-card">
             <div class="category-img-wrap">
               <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=600&auto=format&fit=crop" alt="Duplexes" />
@@ -122,7 +135,7 @@
             <div class="category-body">
               <h3>Exclusive Duplex Villas</h3>
               <p>Gated compounds in Baridhara, Bashundhara Block-I, and Sylhet tea-valley estates.</p>
-              <div class="category-link">Browse Duplexes (6+) →</div>
+              <div class="category-link">Browse Duplexes ({{ duplexCount }}) →</div>
             </div>
           </NuxtLink>
         </div>
@@ -336,6 +349,12 @@ const featuredProperties = computed(() => {
   const featured = properties.value.filter(p => p.isFeatured)
   return featured.length > 0 ? featured.slice(0, 6) : properties.value.slice(0, 6)
 })
+
+const flatsCount = computed(() => properties.value.filter(p => p.propertyType === 'Flat').length)
+const plotsCount = computed(() => properties.value.filter(p => p.propertyType === 'Plot' || p.propertyType === 'Land').length)
+const landShareCount = computed(() => properties.value.filter(p => p.propertyType === 'Land Share').length)
+const hotelCount = computed(() => properties.value.filter(p => p.propertyType === 'Hotel').length)
+const duplexCount = computed(() => properties.value.filter(p => p.propertyType === 'Duplex' || p.propertyType === 'Penthouse').length)
 </script>
 
 <style scoped>
@@ -456,6 +475,12 @@ const featuredProperties = computed(() => {
 /* 3. Specialized Asset Classes */
 .section-padded {
   padding: 80px 0;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 24px;
 }
 
 .category-card {

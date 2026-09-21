@@ -42,11 +42,23 @@
       <!-- Property Header Title & Price Banner -->
       <div class="flex items-start justify-between flex-wrap gap-4" style="margin-bottom: 24px;">
         <div style="max-width: 820px;">
-          <div class="flex items-center gap-2" style="margin-bottom: 8px;">
+          <div class="flex items-center gap-2 flex-wrap" style="margin-bottom: 8px;">
             <span v-if="property.isRajukApproved" class="badge badge-rajuk">RAJUK Approved Plan</span>
-            <span class="badge badge-status">{{ property.propertyType }}</span>
+            <span v-if="property.propertyType === 'Land Share'" class="badge" style="background:#EDE9FE; color:#7C3AED; font-weight:800; border:1px solid #DDD6FE;">
+              🤝 Land Share Co-Ownership
+            </span>
+            <span v-else class="badge badge-status">{{ property.propertyType }}</span>
             <span class="badge badge-featured">{{ property.listingType }}</span>
             <span v-if="property.hasOpenHouse" class="badge badge-urgent">Open House Scheduled</span>
+            <a 
+              v-if="property.brochureUrl" 
+              :href="property.brochureUrl" 
+              target="_blank" 
+              class="badge" 
+              style="background:#FEF3C7; color:#B45309; font-weight:700; border:1px solid #FCD34D; text-decoration:none;"
+            >
+              📄 PDF Brochure Attached
+            </a>
           </div>
 
           <h1 style="font-size: 2.4rem; font-weight: 800; color: #0A1128; line-height: 1.25; margin-bottom: 8px;">
@@ -135,6 +147,39 @@
         <!-- Sticky Client-Hunter Lead Card & Schedule Site Visit -->
         <aside>
           <div style="background: #FFFFFF; border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: 28px; box-shadow: var(--shadow-md); position: sticky; top: 100px;">
+            <!-- Official Brochure Download CTA -->
+            <div style="margin-bottom: 16px;">
+              <a 
+                v-if="property.brochureUrl" 
+                :href="property.brochureUrl" 
+                target="_blank" 
+                class="btn btn-gold btn-lg" 
+                style="width: 100%; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; box-shadow: 0 4px 14px rgba(212, 175, 55, 0.25);"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="12" y1="18" x2="12" y2="12"/>
+                  <polyline points="9 15 12 18 15 15"/>
+                </svg>
+                <span>Download Project Brochure (PDF)</span>
+              </a>
+              <button 
+                v-else 
+                class="btn btn-outline btn-lg" 
+                style="width: 100%; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px;"
+                @click="requestBrochure"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="12" y1="18" x2="12" y2="12"/>
+                  <polyline points="9 15 12 18 15 15"/>
+                </svg>
+                <span>Request Project Brochure</span>
+              </button>
+            </div>
+
             <!-- VIP Site Visit Button (Primary Hunter CTA) -->
             <button class="btn btn-emerald btn-lg" style="width: 100%; margin-bottom: 20px; font-weight: 800;" @click="scheduleModalOpen = true">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -229,7 +274,9 @@ import PropertyTabs from '~/components/PropertyTabs.vue'
 import ScheduleModal from '~/components/ScheduleModal.vue'
 import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
 import { useApiUrl } from '~/composables/useApi'
+import { useToast } from '~/composables/useToast'
 
+const toast = useToast()
 const route = useRoute()
 const { getPropertyById, getAgentById, fetchProperties } = useProperties()
 const { isPropertySaved, toggleSaveProperty, user } = useAuth()
@@ -307,6 +354,11 @@ const submitInquiry = async () => {
   } finally {
     isSubmittingInquiry.value = false
   }
+}
+
+const requestBrochure = () => {
+  inquiryForm.message = `Hello, please email me the official architectural brochure, floor layout, and legal deeds for "${property.value.title}".`
+  toast.info('Brochure Request', 'Please submit the inquiry form below and our advisor will dispatch the PDF deck.')
 }
 </script>
 

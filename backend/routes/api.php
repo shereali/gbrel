@@ -30,6 +30,8 @@ function normalizePropertyData(array $input, bool $isCreate = true, ?int $existi
         'cover_image' => 'feature_image',
         'photos' => 'gallery',
         'gallery_photos' => 'gallery',
+        'brochure' => 'brochure_url',
+        'brochure_file' => 'brochure_url',
     ];
 
     foreach ($input as $rawKey => $value) {
@@ -851,9 +853,9 @@ Route::post('/auth/logout', function () {
     ]);
 });
 
-// Image Upload Endpoint for Feature Image and Gallery Photos
+// Media & Brochure Upload Endpoint
 Route::post('/upload', function (Request $request) {
-    // Single image file upload
+    // 1. Single image file upload
     if ($request->hasFile('image')) {
         $file = $request->file('image');
         $ext = $file->getClientOriginalExtension() ?: 'jpg';
@@ -869,7 +871,7 @@ Route::post('/upload', function (Request $request) {
         ]);
     }
 
-    // Multiple image files upload for gallery
+    // 2. Multiple image files upload for gallery
     if ($request->hasFile('images')) {
         $urls = [];
         foreach ($request->file('images') as $file) {
@@ -887,7 +889,27 @@ Route::post('/upload', function (Request $request) {
         ]);
     }
 
-    // Support Base64 image upload
+    // 3. Brochure or Project Document Upload (PDF, DOC, DOCX)
+    if ($request->hasFile('brochure') || $request->hasFile('file') || $request->hasFile('document')) {
+        $file = $request->file('brochure') ?? $request->file('file') ?? $request->file('document');
+        $originalName = $file->getClientOriginalName();
+        $cleanName = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+        $ext = $file->getClientOriginalExtension() ?: 'pdf';
+        $filename = 'brochure_' . time() . '_' . $cleanName . '.' . $ext;
+        $path = $file->storeAs('brochures', $filename, 'public');
+        $url = '/storage/' . $path;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Project brochure uploaded successfully',
+            'url' => $url,
+            'original_name' => $originalName,
+            'filename' => $filename,
+            'size' => $file->getSize()
+        ]);
+    }
+
+    // 4. Support Base64 image upload
     if ($request->has('base64') && !empty($request->base64)) {
         $raw = $request->base64;
         if (preg_match('/^data:image\/(\w+);base64,/', $raw, $type)) {
@@ -908,7 +930,7 @@ Route::post('/upload', function (Request $request) {
 
     return response()->json([
         'success' => false,
-        'message' => 'No image file or data payload provided'
+        'message' => 'No valid file provided. Please attach image, images[], or brochure.'
     ], 400);
 });
 

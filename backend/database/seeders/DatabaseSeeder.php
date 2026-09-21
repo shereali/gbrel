@@ -343,7 +343,49 @@ class DatabaseSeeder extends Seeder
                     'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=1200&auto=format&fit=crop'
                 ],
                 'amenities' => ['24 Luxury Air-Conditioned Cottages', 'Panoramic Rolling Tea Estate Views', 'Freshwater Swimming Pool', 'Commercial Solar Power & Generator'],
-                'documents_verified' => ['Freehold DC Certified Land Record', 'Department of Environment Clearance', 'Trade License & Tourism Hotel Registration']
+                'documents_verified' => ['Freehold DC Certified Land Record', 'Department of Environment Clearance', 'Trade License & Tourism Hotel Registration'],
+                'brochure_url' => 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+            ]
+        );
+
+        Property::updateOrCreate(
+            ['id' => 7],
+            [
+                'title' => 'Purbachal Green City Executive Land Share Project',
+                'slug' => 'purbachal-green-city-executive-land-share',
+                'tagline' => 'Co-Ownership Land Share (3.5 Katha Co-Investment Unit) with Pre-Approved RAJUK Foundation',
+                'description' => 'An elite co-ownership Land Share opportunity in Purbachal Sector 21. Own a verified share of high-appreciation freehold land alongside a pre-vetted panel of professional investors. Transparent deed registration and direct handover managed by GBREL legal counsel.',
+                'address' => 'Road 401, Sector 21, Purbachal New Town, Dhaka',
+                'city' => 'Dhaka',
+                'state' => 'Dhaka North',
+                'area_name' => 'Purbachal Sector 21',
+                'price' => 4200000,
+                'price_unit' => 'Per Share (3.5 Katha Base)',
+                'listing_type' => 'Sale',
+                'property_type' => 'Land Share',
+                'status' => 'Active',
+                'bedrooms' => 0,
+                'bathrooms' => 0,
+                'balconies' => 0,
+                'land_size' => 3.5,
+                'land_unit' => 'Katha',
+                'parking' => 2,
+                'completion_status' => 'Upcoming Project',
+                'year_built' => 2025,
+                'is_featured' => true,
+                'is_rajuk_approved' => true,
+                'is_verified' => true,
+                'has_open_house' => true,
+                'latitude' => 23.8390,
+                'longitude' => 90.5290,
+                'agent_id' => $agent1->id,
+                'images' => [
+                    'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1600&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop'
+                ],
+                'amenities' => ['Co-Ownership Deed Registration', 'Demarcated Land Share Unit', 'Dedicated Project Management Panel', 'Bank Loan Support Available'],
+                'documents_verified' => ['Combined Land Share Title Deed', 'Mutation & Dakhila Cleared', 'RAJUK Allotment Letter Examined'],
+                'brochure_url' => 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
             ]
         );
 

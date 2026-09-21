@@ -32,7 +32,13 @@ export default defineNuxtConfig({
   ],
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || '/api'
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000/api'
+    }
+  },
+  nitro: {
+    routeRules: {
+      '/api/**': { proxy: 'http://127.0.0.1:8000/api/**' },
+      '/storage/**': { proxy: 'http://127.0.0.1:8000/storage/**' }
     }
   }
 })
