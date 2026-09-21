@@ -15,8 +15,7 @@
 import AdminMasterDataCrud from '~/components/admin/MasterDataCrud.vue'
 
 definePageMeta({
-  layout: 'admin',
-  middleware: ['auth']
+  layout: 'admin'
 })
 
 useHead({

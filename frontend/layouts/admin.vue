@@ -972,6 +972,7 @@ const handleLogout = async () => {
   line-height: 1;
   letter-spacing: 0.02em;
   white-space: nowrap;
+  pointer-events: none;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(6px);

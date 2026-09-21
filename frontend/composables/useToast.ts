@@ -48,9 +48,14 @@ export const useToast = () => {
     }
   }
 
+  const add = (options: { title: string, message?: string, type?: 'success' | 'error' | 'warning' | 'info', duration?: number }) => {
+    return show(options.title, options.message || '', options.type || 'info', options.duration || 4000)
+  }
+
   return {
     toasts,
     show,
+    add,
     success,
     error,
     warning,
