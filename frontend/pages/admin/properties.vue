@@ -676,6 +676,70 @@
                 <span>Feature on Live Homepage Showcase</span>
               </label>
             </div>
+
+            <!-- Row 8: Client Privacy & Display Controls (NDA & Hide Options) -->
+            <div style="background:var(--admin-bg-surface); padding:16px; border-radius:var(--radius-md); border:1px solid rgba(212, 175, 55, 0.25); margin-top:14px;">
+              <div class="flex items-center justify-between mb-3">
+                <label class="form-label" style="font-weight:700; color:var(--color-gold); margin-bottom:0; display:flex; align-items:center; gap:6px;">
+                  <span>👁️ Privacy & Display Controls (Confidential / NDA Mandates)</span>
+                </label>
+                <span style="font-size:0.75rem; color:var(--admin-text-muted);">Toggle public visibility of sensitive fields</span>
+              </div>
+
+              <div class="grid grid-2" style="gap:12px; margin-bottom:12px;">
+                <!-- Hide Price Toggle -->
+                <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:6px; border:1px solid var(--admin-border-subtle);">
+                  <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; font-weight:600; color:#FFF;">
+                    <input v-model="propForm.hidePrice" type="checkbox" style="width:16px; height:16px; accent-color:#EF4444;" />
+                    <span>🔐 Hide Asking Price (Price on Application)</span>
+                  </label>
+                  <div v-if="propForm.hidePrice" style="margin-top:8px;">
+                    <input 
+                      v-model="propForm.priceDisplayText" 
+                      type="text" 
+                      placeholder="Display text (e.g. Price on Application / POA)" 
+                      class="form-input" 
+                      style="font-size:0.8rem; padding:4px 8px;"
+                    />
+                  </div>
+                </div>
+
+                <!-- Hide Agent Photo Toggle -->
+                <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:6px; border:1px solid var(--admin-border-subtle);">
+                  <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; font-weight:600; color:#FFF;">
+                    <input v-model="propForm.hideAgentPhoto" type="checkbox" style="width:16px; height:16px; accent-color:#D4AF37;" />
+                    <span>🛡️ Hide Advisor Photo (Show GBREL Crest)</span>
+                  </label>
+                  <p style="font-size:0.72rem; color:var(--admin-text-muted); margin:4px 0 0 24px;">
+                    Displays institutional gold verification emblem instead of personal photo.
+                  </p>
+                </div>
+              </div>
+
+              <div class="grid grid-2" style="gap:12px;">
+                <!-- Hide Exact Address Toggle -->
+                <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:6px; border:1px solid var(--admin-border-subtle);">
+                  <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; font-weight:600; color:#FFF;">
+                    <input v-model="propForm.hideExactAddress" type="checkbox" style="width:16px; height:16px; accent-color:#38BDF8;" />
+                    <span>📍 Hide Exact Street / Plot Address</span>
+                  </label>
+                  <p style="font-size:0.72rem; color:var(--admin-text-muted); margin:4px 0 0 24px;">
+                    Displays Area and Division only (e.g. "Gulshan-2, Dhaka North").
+                  </p>
+                </div>
+
+                <!-- Hide Floor Plan / Layout Toggle -->
+                <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:6px; border:1px solid var(--admin-border-subtle);">
+                  <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; font-weight:600; color:#FFF;">
+                    <input v-model="propForm.hideFloorPlan" type="checkbox" style="width:16px; height:16px; accent-color:#A855F7;" />
+                    <span>📐 Gate Floor Plans (NDA Required)</span>
+                  </label>
+                  <p style="font-size:0.72rem; color:var(--admin-text-muted); margin:4px 0 0 24px;">
+                    Architectural blueprint is restricted for vetted buyers upon request.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="admin-modal-footer">
@@ -826,6 +890,13 @@ const propForm = reactive({
   featureImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop',
   gallery: [] as string[],
   brochureUrl: '',
+  hidePrice: false,
+  priceDisplayText: 'Price on Application',
+  hideAgentPhoto: false,
+  hideAgentContact: false,
+  hideExactAddress: false,
+  hideFloorPlan: false,
+  hideMortgageCalculator: false,
   agentId: 1
 })
 
@@ -889,6 +960,13 @@ const openAddPropertyModal = () => {
     'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200&auto=format&fit=crop'
   ]
   propForm.brochureUrl = ''
+  propForm.hidePrice = false
+  propForm.priceDisplayText = 'Price on Application'
+  propForm.hideAgentPhoto = false
+  propForm.hideAgentContact = false
+  propForm.hideExactAddress = false
+  propForm.hideFloorPlan = false
+  propForm.hideMortgageCalculator = false
   newGalleryUrl.value = ''
   showPropModal.value = true
 }
@@ -917,6 +995,13 @@ const openEditPropertyModal = (p: PropertyItem) => {
     ? [...p.gallery] 
     : (p.images && p.images.length > 1 ? p.images.slice(1) : [])
   propForm.brochureUrl = p.brochureUrl || ''
+  propForm.hidePrice = Boolean(p.hidePrice)
+  propForm.priceDisplayText = p.priceDisplayText || 'Price on Application'
+  propForm.hideAgentPhoto = Boolean(p.hideAgentPhoto)
+  propForm.hideAgentContact = Boolean(p.hideAgentContact)
+  propForm.hideExactAddress = Boolean(p.hideExactAddress)
+  propForm.hideFloorPlan = Boolean(p.hideFloorPlan)
+  propForm.hideMortgageCalculator = Boolean(p.hideMortgageCalculator)
   newGalleryUrl.value = ''
   showPropModal.value = true
 }
@@ -1050,7 +1135,14 @@ const handleSaveProperty = async () => {
         featureImage: featureCover,
         gallery: validGallery,
         images: allImages,
-        brochureUrl: propForm.brochureUrl.trim() || undefined
+        brochureUrl: propForm.brochureUrl.trim() || undefined,
+        hidePrice: propForm.hidePrice,
+        priceDisplayText: propForm.priceDisplayText,
+        hideAgentPhoto: propForm.hideAgentPhoto,
+        hideAgentContact: propForm.hideAgentContact,
+        hideExactAddress: propForm.hideExactAddress,
+        hideFloorPlan: propForm.hideFloorPlan,
+        hideMortgageCalculator: propForm.hideMortgageCalculator
       })
       toast.success('MySQL Updated', `Successfully updated "${propForm.title}" with ${allImages.length} photo(s).`)
     } else {

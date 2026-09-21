@@ -29,6 +29,12 @@ class Property extends Model
         'is_rajuk_approved' => 'boolean',
         'is_verified' => 'boolean',
         'has_open_house' => 'boolean',
+        'hide_price' => 'boolean',
+        'hide_agent_photo' => 'boolean',
+        'hide_agent_contact' => 'boolean',
+        'hide_exact_address' => 'boolean',
+        'hide_floor_plan' => 'boolean',
+        'hide_mortgage_calculator' => 'boolean',
         'images' => 'array',
         'amenities' => 'array',
         'documents_verified' => 'array'
@@ -45,11 +51,12 @@ class Property extends Model
             } catch (\Throwable $e) {
                 $columns = [
                     'id', 'title', 'slug', 'tagline', 'description', 'address', 'city', 'state', 'area_name',
-                    'price', 'price_unit', 'listing_type', 'property_type', 'status', 'bedrooms', 'bathrooms',
+                    'price', 'price_unit', 'hide_price', 'price_display_text', 'listing_type', 'property_type', 'status', 'bedrooms', 'bathrooms',
                     'balconies', 'square_footage', 'land_size', 'land_unit', 'parking', 'floor_number',
                     'total_floors', 'facing', 'completion_status', 'year_built', 'is_featured',
                     'is_rajuk_approved', 'is_verified', 'has_open_house', 'latitude', 'longitude',
-                    'agent_id', 'images', 'amenities', 'documents_verified', 'brochure_url', 'created_at', 'updated_at'
+                    'agent_id', 'hide_agent_photo', 'hide_agent_contact', 'hide_exact_address', 'hide_floor_plan', 'hide_mortgage_calculator',
+                    'images', 'amenities', 'documents_verified', 'brochure_url', 'created_at', 'updated_at'
                 ];
             }
         }

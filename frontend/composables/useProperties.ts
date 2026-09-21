@@ -42,6 +42,14 @@ export interface PropertyItem {
   amenities: string[]
   documentsVerified: string[]
   brochureUrl?: string
+  hidePrice?: boolean
+  priceDisplayText?: string
+  hideAgentPhoto?: boolean
+  hideAgentContact?: boolean
+  hideExactAddress?: boolean
+  hideFloorPlan?: boolean
+  hideMortgageCalculator?: boolean
+  brochuresVault?: any[]
   agentId: number
   history: Array<{
     id: number
@@ -801,6 +809,14 @@ const mapDbItemToPropertyItem = (apiItem: any): PropertyItem => {
       ? apiItem.documents_verified 
       : ['Clear Freehold Title Deed', 'Mutation Cleared', 'RAJUK Allotment'],
     brochureUrl: apiItem.brochure_url || apiItem.brochureUrl || undefined,
+    hidePrice: Boolean(apiItem.hide_price ?? apiItem.hidePrice),
+    priceDisplayText: apiItem.price_display_text || apiItem.priceDisplayText || 'Price on Application',
+    hideAgentPhoto: Boolean(apiItem.hide_agent_photo ?? apiItem.hideAgentPhoto),
+    hideAgentContact: Boolean(apiItem.hide_agent_contact ?? apiItem.hideAgentContact),
+    hideExactAddress: Boolean(apiItem.hide_exact_address ?? apiItem.hideExactAddress),
+    hideFloorPlan: Boolean(apiItem.hide_floor_plan ?? apiItem.hideFloorPlan),
+    hideMortgageCalculator: Boolean(apiItem.hide_mortgage_calculator ?? apiItem.hideMortgageCalculator),
+    brochuresVault: Array.isArray(apiItem.brochures_vault) ? apiItem.brochures_vault : [],
     agentId: Number(apiItem.agent_id) || Number(apiItem.agentId) || 1,
     history: Array.isArray(apiItem.history) && apiItem.history.length > 0 ? apiItem.history : [
       { id: 1, date: 'Recent', event: 'Listed on GBREL Portal', price: price, status: 'Active', notes: 'Database Synced' }
@@ -844,7 +860,36 @@ export const useProperties = () => {
 
   const getPropertyById = (id: number | string) => {
     const numId = Number(id)
+    if (!isNaN(numId)) {
+      const foundById = propertiesData.value.find(p => p.id === numId)
+      if (foundById) return foundById
+    }
+    const strId = String(id).toLowerCase().trim()
+    const foundBySlug = propertiesData.value.find(p => (p.slug || '').toLowerCase() === strId)
+    if (foundBySlug) return foundBySlug
     return propertiesData.value.find(p => p.id === numId) || propertiesData.value[0]
+  }
+
+  const fetchPropertyById = async (idOrSlug: string | number): Promise<PropertyItem | null> => {
+    try {
+      const res = await fetch(useApiUrl(`/properties/${idOrSlug}`))
+      if (res.ok) {
+        const json = await res.json()
+        if (json && json.success && json.data) {
+          const mapped = mapDbItemToPropertyItem(json.data)
+          const idx = propertiesData.value.findIndex(p => p.id === mapped.id)
+          if (idx >= 0) {
+            propertiesData.value[idx] = mapped
+          } else {
+            propertiesData.value.push(mapped)
+          }
+          return mapped
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch property by id/slug from API:', err)
+    }
+    return getPropertyById(idOrSlug)
   }
 
   const getAgentById = (id: number | string) => {
@@ -1219,6 +1264,7 @@ export const useProperties = () => {
     isAgentsLoading: isAgentsLoadingRef,
     lastSynced,
     getPropertyById,
+    fetchPropertyById,
     getAgentById,
     getPropertiesByAgent,
     fetchProperties,

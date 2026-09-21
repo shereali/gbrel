@@ -90,7 +90,13 @@
 
       <!-- Price Row -->
       <div class="card-price-row">
-        <div>
+        <div v-if="property.hidePrice">
+          <div class="card-price" style="font-size: 1.05rem; color: #D4AF37; font-weight: 800;">
+            🔐 {{ property.priceDisplayText || 'Price on Application' }}
+          </div>
+          <div class="card-price-sub" style="color: #64748B;">Confidential Mandate</div>
+        </div>
+        <div v-else>
           <div class="card-price">{{ formatBDT(property.price) }}</div>
           <div v-if="property.priceUnit" class="card-price-sub">{{ property.priceUnit }}</div>
           <div v-else-if="property.squareFootage" class="card-price-sub">৳ {{ Math.round(property.price / property.squareFootage).toLocaleString() }} / Sq. Ft.</div>

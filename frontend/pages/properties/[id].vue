@@ -1,6 +1,26 @@
 <template>
   <div style="background: #F8FAFC; min-height: 100vh; padding: 40px 0 80px;">
-    <div class="container">
+    <!-- Loading Skeleton State -->
+    <div v-if="isLoadingProperty && !property" class="container text-center" style="padding: 100px 0;">
+      <span class="animate-spin inline-block" style="font-size: 2.5rem; color: var(--color-gold); margin-bottom: 16px;">◌</span>
+      <h2 style="font-size: 1.4rem; font-weight: 700; color: #0F172A;">Loading Verified Property Mandate...</h2>
+      <p style="color: #64748B; font-size: 0.9rem;">Fetching live title deeds, specifications, and collateral from database.</p>
+    </div>
+
+    <!-- Error / Not Found State -->
+    <div v-else-if="!property" class="container text-center" style="padding: 80px 0;">
+      <div style="font-size: 3rem; margin-bottom: 14px;">🏛️</div>
+      <h2 style="font-size: 1.5rem; font-weight: 800; color: #0F172A; margin-bottom: 8px;">Property Mandate Not Found</h2>
+      <p style="color: #64748B; font-size: 0.95rem; max-width: 480px; margin: 0 auto 24px;">
+        This listing may have been settled, archived, or is private under non-disclosure.
+      </p>
+      <NuxtLink to="/properties" class="btn btn-gold">
+        <span>Browse Active Verified Catalog →</span>
+      </NuxtLink>
+    </div>
+
+    <!-- Live Property Page Content -->
+    <div v-else class="container">
       <!-- Breadcrumb -->
       <div class="flex items-center justify-between flex-wrap gap-4" style="margin-bottom: 24px;">
         <div class="flex items-center gap-2" style="font-size: 0.85rem; color: #64748B;">
@@ -50,12 +70,15 @@
             <span v-else class="badge badge-status">{{ property.propertyType }}</span>
             <span class="badge badge-featured">{{ property.listingType }}</span>
             <span v-if="property.hasOpenHouse" class="badge badge-urgent">Open House Scheduled</span>
+            <span v-if="property.hidePrice" class="badge" style="background:#FEF3C7; color:#B45309; font-weight:700; border:1px solid #FCD34D;">
+              🔐 Confidential Valuation (NDA)
+            </span>
             <a 
               v-if="property.brochureUrl" 
               :href="property.brochureUrl" 
               target="_blank" 
               class="badge" 
-              style="background:#FEF3C7; color:#B45309; font-weight:700; border:1px solid #FCD34D; text-decoration:none;"
+              style="background:#E0F2FE; color:#0369A1; font-weight:700; border:1px solid #BAE6FD; text-decoration:none;"
             >
               📄 PDF Brochure Attached
             </a>
@@ -65,24 +88,53 @@
             {{ property.title }}
           </h1>
 
+          <!-- Location (Respects hideExactAddress) -->
           <div class="flex items-center gap-2" style="color: #64748B; font-size: 0.95rem;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
               <circle cx="12" cy="10" r="3"/>
             </svg>
-            <span>{{ property.address }} ({{ property.areaName }}, {{ property.city }})</span>
+            <span v-if="property.hideExactAddress">
+              {{ property.areaName }}, {{ property.state }} (Prime Corridor • Confidential Enclave Address)
+            </span>
+            <span v-else>
+              {{ property.address }} ({{ property.areaName }}, {{ property.city }})
+            </span>
           </div>
         </div>
 
-        <!-- Price Display -->
-        <div style="text-align: right; background: #FFFFFF; border: 1.5px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px 24px; box-shadow: var(--shadow-sm);">
-          <div style="font-size: 0.78rem; color: #64748B; text-transform: uppercase; font-weight: 700;">Asking Valuation</div>
-          <div style="font-family: var(--font-ui); font-size: 2.1rem; font-weight: 800; color: #059669; line-height: 1.1; font-variant-numeric: tabular-nums;">
-            {{ formatBDT(property.price) }}
+        <!-- Price Display Card (Respects hidePrice option) -->
+        <div style="text-align: right; background: #FFFFFF; border: 1.5px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px 24px; box-shadow: var(--shadow-sm); min-width: 260px;">
+          <!-- Case A: Price is Hidden (Confidential Mandate) -->
+          <div v-if="property.hidePrice">
+            <div style="font-size: 0.76rem; color: #B45309; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; display:flex; align-items:center; justify-content:flex-end; gap:4px;">
+              <span>🔐 Confidential Mandate</span>
+            </div>
+            <div style="font-family: var(--font-display); font-size: 1.45rem; font-weight: 800; color: var(--color-gold); line-height: 1.2; margin-top: 4px;">
+              {{ property.priceDisplayText || 'Price on Application (POA)' }}
+            </div>
+            <div style="font-size: 0.78rem; color: #64748B; margin-top: 6px;">
+              Financials released upon NDA verification
+            </div>
+            <button 
+              class="btn btn-sm btn-gold" 
+              style="margin-top: 10px; width: 100%; font-size: 0.8rem; padding: 6px 12px;"
+              @click="requestConfidentialPricing"
+            >
+              Request Price & NDA →
+            </button>
           </div>
-          <div v-if="property.priceUnit" style="font-size: 0.85rem; color: #64748B; margin-top: 2px;">{{ property.priceUnit }}</div>
-          <div v-else-if="property.squareFootage" style="font-size: 0.82rem; color: #64748B; margin-top: 2px;">
-            ৳ {{ Math.round(property.price / property.squareFootage).toLocaleString() }} / Sq. Ft.
+
+          <!-- Case B: Public Asking Price Display -->
+          <div v-else>
+            <div style="font-size: 0.78rem; color: #64748B; text-transform: uppercase; font-weight: 700;">Asking Valuation</div>
+            <div style="font-family: var(--font-ui); font-size: 2.1rem; font-weight: 800; color: #059669; line-height: 1.1; font-variant-numeric: tabular-nums;">
+              {{ formatBDT(property.price) }}
+            </div>
+            <div v-if="property.priceUnit" style="font-size: 0.85rem; color: #64748B; margin-top: 2px;">{{ property.priceUnit }}</div>
+            <div v-else-if="property.squareFootage" style="font-size: 0.82rem; color: #64748B; margin-top: 2px;">
+              ৳ {{ Math.round(property.price / property.squareFootage).toLocaleString() }} / Sq. Ft.
+            </div>
           </div>
         </div>
       </div>
@@ -142,9 +194,26 @@
         <!-- 6-Tabbed Details Container -->
         <main>
           <PropertyTabs :property="property" />
+
+          <!-- Floor Plan Confidentiality Notice if hideFloorPlan is true -->
+          <div 
+            v-if="property.hideFloorPlan" 
+            style="margin-top: 24px; background: #FFFFFF; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 24px; border-left: 4px solid var(--color-gold);"
+          >
+            <div class="flex items-center gap-3 mb-2">
+              <span style="font-size: 1.5rem;">📐</span>
+              <h3 style="font-size: 1.15rem; font-weight: 800; color: #0F172A; margin: 0;">Architectural Blueprints & Floor Layouts (Restricted)</h3>
+            </div>
+            <p style="color: #64748B; font-size: 0.88rem; line-height: 1.6; margin-bottom: 14px;">
+              To protect the architectural intellectual property and physical security of the mandate, detailed Cadastral maps, floor schematics, and structural calculations are provided upon formal non-disclosure agreement (NDA).
+            </p>
+            <button class="btn btn-sm btn-outline" @click="requestFloorPlan">
+              Request Architectural Blueprints Under NDA →
+            </button>
+          </div>
         </main>
 
-        <!-- Sticky Verified Mandate Advisory Card & Schedule Site Visit -->
+        <!-- Sticky Advisor & Inquiry Card -->
         <aside>
           <div style="background: #FFFFFF; border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: 28px; box-shadow: var(--shadow-md); position: sticky; top: 100px;">
             <!-- Official Brochure Download CTA -->
@@ -162,7 +231,7 @@
                   <line x1="12" y1="18" x2="12" y2="12"/>
                   <polyline points="9 15 12 18 15 15"/>
                 </svg>
-                <span>Download Project Brochure (PDF)</span>
+                <span>Download Official Brochure (PDF)</span>
               </a>
               <button 
                 v-else 
@@ -173,14 +242,12 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                   <polyline points="14 2 14 8 20 8"/>
-                  <line x1="12" y1="18" x2="12" y2="12"/>
-                  <polyline points="9 15 12 18 15 15"/>
                 </svg>
                 <span>Request Project Brochure</span>
               </button>
             </div>
 
-            <!-- VIP Site Visit Button (Primary Hunter CTA) -->
+            <!-- VIP Site Visit Button -->
             <button class="btn btn-emerald btn-lg" style="width: 100%; margin-bottom: 20px; font-weight: 800;" @click="scheduleModalOpen = true">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -191,20 +258,47 @@
               <span>Schedule VIP Site Viewing</span>
             </button>
 
-            <!-- Agent Profile Summary -->
+            <!-- Advisor Profile Summary (Respects hideAgentPhoto) -->
             <div class="flex items-center gap-4" style="margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--color-border);">
-              <img :src="agent.photo" :alt="agent.name" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--color-gold);" />
+              <!-- If hideAgentPhoto is true: Institutional Gold Seal -->
+              <div 
+                v-if="property.hideAgentPhoto"
+                style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #0A1128 0%, #1E293B 100%); border: 2px solid var(--color-gold); display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(212,175,55,0.25);"
+                title="GBREL Institutional Certified Mandate"
+              >
+                <span style="font-size: 1.2rem;">🏛️</span>
+                <span style="font-size: 0.55rem; color: var(--color-gold); font-weight: 800; letter-spacing: 0.05em;">GBREL</span>
+              </div>
+
+              <!-- Normal Agent Photo -->
+              <img 
+                v-else
+                :src="agent.photo" 
+                :alt="agent.name" 
+                style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--color-gold); flex-shrink: 0;" 
+              />
+
               <div>
                 <NuxtLink :to="`/agents/${agent.id}`">
                   <h4 style="font-size: 1.1rem; font-weight: 800; color: #0F172A; line-height: 1.2;">{{ agent.name }}</h4>
                 </NuxtLink>
-                <div style="font-size: 0.8rem; color: #059669; font-weight: 700;"><span aria-hidden="true">★</span> {{ agent.rating }} ({{ agent.reviewCount }} Reviews)</div>
-                <div style="font-size: 0.8rem; color: #64748B;">{{ agent.agency }}</div>
+                <div style="font-size: 0.8rem; color: #059669; font-weight: 700;">
+                  <span aria-hidden="true">★</span> {{ agent.rating }} ({{ agent.reviewCount }} Reviews)
+                </div>
+                <div style="font-size: 0.8rem; color: #64748B;">
+                  {{ property.hideAgentPhoto ? 'Institutional Mandate Advisor' : agent.agency }}
+                </div>
               </div>
             </div>
 
-            <!-- Agent Contact Buttons -->
-            <div class="flex gap-2" style="margin-bottom: 24px;">
+            <!-- Agent Contact Buttons (Respects hideAgentContact) -->
+            <div v-if="property.hideAgentContact" style="margin-bottom: 20px; background: rgba(10,17,40,0.03); padding: 10px 14px; border-radius: var(--radius-md); border: 1px dashed var(--color-border); text-align: center;">
+              <div style="font-size: 0.78rem; font-weight: 700; color: #0F172A;">Protected Mandate Hotline</div>
+              <div style="font-size: 0.75rem; color: #64748B; margin-top: 2px;">
+                Direct calls routed via GBREL Corporate Concierge to safeguard owner privacy.
+              </div>
+            </div>
+            <div v-else class="flex gap-2" style="margin-bottom: 24px;">
               <a 
                 :href="`https://wa.me/${agent.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(agent.name)},%20I%20am%20inquiring%20about:%20${encodeURIComponent(property.title)}`" 
                 target="_blank" 
@@ -224,7 +318,7 @@
 
             <!-- In-line Inquiry Form -->
             <div v-if="!inquirySubmitted">
-              <strong style="display:block; font-size: 0.95rem; color: #0A1128; margin-bottom: 12px;">Direct Property Inquiry</strong>
+              <strong style="display:block; font-size: 0.95rem; color: #0A1128; margin-bottom: 12px;">Direct Mandate Inquiry</strong>
               <form @submit.prevent="submitInquiry">
                 <div class="form-group" style="margin-bottom: 10px;">
                   <input v-model="inquiryForm.name" type="text" placeholder="Your Name" required class="form-input" />
@@ -238,8 +332,8 @@
                 <div class="form-group" style="margin-bottom: 14px;">
                   <textarea v-model="inquiryForm.message" rows="3" class="form-textarea" placeholder="I am interested in this listing and would like legal documentation & price negotiation details..."></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
-                  <span>Send Direct Inquiry</span>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" :disabled="isSubmittingInquiry">
+                  <span>{{ isSubmittingInquiry ? 'Dispatching...' : 'Send Direct Inquiry' }}</span>
                 </button>
               </form>
             </div>
@@ -255,6 +349,7 @@
 
     <!-- Schedule Site Visit Modal -->
     <ScheduleModal 
+      v-if="property"
       :is-open="scheduleModalOpen" 
       :property-id="property.id" 
       :property-title="property.title"
@@ -266,7 +361,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { useProperties } from '~/composables/useProperties'
+import { useProperties, type PropertyItem } from '~/composables/useProperties'
 import { formatBDT } from '~/composables/useCurrency'
 import { useAuth } from '~/composables/useAuth'
 import { useCompare } from '~/composables/useCompare'
@@ -278,12 +373,24 @@ import { useToast } from '~/composables/useToast'
 
 const toast = useToast()
 const route = useRoute()
-const { getPropertyById, getAgentById, fetchProperties } = useProperties()
+const { getPropertyById, fetchPropertyById, getAgentById, fetchProperties } = useProperties()
 const { isPropertySaved, toggleSaveProperty, user } = useAuth()
 const { isInCompare, toggleCompare } = useCompare()
 
-const property = computed(() => getPropertyById(route.params.id as string))
-const agent = computed(() => getAgentById(property.value.agentId))
+const isLoadingProperty = ref(true)
+const dynamicProperty = ref<PropertyItem | null>(null)
+
+// Fallback to local store or dynamic state
+const property = computed<PropertyItem>(() => {
+  return dynamicProperty.value || getPropertyById(route.params.id as string)
+})
+
+const agent = computed(() => {
+  if (property.value?.agentId) {
+    return getAgentById(property.value.agentId)
+  }
+  return getAgentById(1)
+})
 
 const scheduleModalOpen = ref(false)
 const lightboxOpen = ref(false)
@@ -310,6 +417,7 @@ const openLightbox = (idx: number) => {
 }
 
 const prevPhoto = () => {
+  if (!property.value) return
   if (currentLightboxIdx.value > 0) {
     currentLightboxIdx.value--
   } else {
@@ -318,6 +426,7 @@ const prevPhoto = () => {
 }
 
 const nextPhoto = () => {
+  if (!property.value) return
   if (currentLightboxIdx.value < property.value.images.length - 1) {
     currentLightboxIdx.value++
   } else {
@@ -328,10 +437,23 @@ const nextPhoto = () => {
 const isSubmittingInquiry = ref(false)
 
 onMounted(async () => {
+  isLoadingProperty.value = true
+  try {
+    const idOrSlug = route.params.id as string
+    const loaded = await fetchPropertyById(idOrSlug)
+    if (loaded) {
+      dynamicProperty.value = loaded
+    }
+  } catch (err) {
+    console.error('Failed to load property details:', err)
+  } finally {
+    isLoadingProperty.value = false
+  }
   await fetchProperties()
 })
 
 const submitInquiry = async () => {
+  if (!property.value) return
   isSubmittingInquiry.value = true
   try {
     await fetch(useApiUrl('/leads'), {
@@ -357,8 +479,21 @@ const submitInquiry = async () => {
 }
 
 const requestBrochure = () => {
+  if (!property.value) return
   inquiryForm.message = `Hello, please email me the official architectural brochure, floor layout, and legal deeds for "${property.value.title}".`
   toast.info('Brochure Request', 'Please submit the inquiry form below and our advisor will dispatch the PDF deck.')
+}
+
+const requestConfidentialPricing = () => {
+  if (!property.value) return
+  inquiryForm.message = `Confidential NDA & Pricing Inquiry for "${property.value.title}". Please dispatch valuation breakdown and non-disclosure agreement.`
+  toast.info('Confidential Mandate', 'Please submit the inquiry form to receive private valuation disclosures.')
+}
+
+const requestFloorPlan = () => {
+  if (!property.value) return
+  inquiryForm.message = `Request for Architectural Floor Plans & Blueprints for "${property.value.title}" under Non-Disclosure Agreement.`
+  toast.info('Floor Plan Request', 'Submit inquiry to receive confidential architectural layout.')
 }
 </script>
 

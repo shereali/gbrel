@@ -243,15 +243,23 @@ Route::get('/properties', function (Request $request) {
 });
 
 Route::get('/properties/{id}', function ($id) {
-    $property = Property::find($id);
+    $property = is_numeric($id) 
+        ? (Property::find($id) ?: Property::where('slug', $id)->first()) 
+        : Property::where('slug', $id)->first();
 
     if (!$property) {
         return response()->json(['success' => false, 'message' => 'Property not found in database'], 404);
     }
 
+    $property->load(['agent']);
+    $brochures = Brochure::where('property_id', $property->id)->where('is_public', true)->get();
+
+    $data = $property->toArray();
+    $data['brochures_vault'] = $brochures;
+
     return response()->json([
         'success' => true,
-        'data' => $property
+        'data' => $data
     ]);
 });
 
