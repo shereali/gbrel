@@ -217,7 +217,7 @@
   position: relative;
   z-index: 2;
   text-align: center;
-  max-width: 960px;
+  max-width: 1140px;
   margin: 0 auto;
 }
 
@@ -273,23 +273,35 @@
 .search-tabs {
   display: flex;
   gap: 6px;
-  padding: 6px;
+  padding: 5px;
   background: rgba(15, 23, 42, 0.06);
   border-radius: var(--radius-lg);
   margin-bottom: 12px;
   overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.search-tabs::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .search-tab-btn {
-  padding: 10px 20px;
+  flex: 1 1 0;
+  min-width: max-content;
+  padding: 9px 16px;
   border-radius: var(--radius-md);
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   color: var(--color-primary);
   background: transparent;
   cursor: pointer;
   transition: all var(--transition-fast);
   white-space: nowrap;
+  text-align: center;
 }
 
 .search-tab-btn.active {
@@ -300,35 +312,39 @@
 
 .search-inputs-grid {
   display: grid;
-  grid-template-columns: 2fr 1.3fr 1.3fr 1.3fr auto;
-  gap: 12px;
-  padding: 8px;
+  grid-template-columns: 2.2fr 1.3fr 1.3fr 1.2fr auto;
+  gap: 10px;
+  padding: 6px;
   align-items: center;
 }
 
 .search-input-field {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: #FFFFFF;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 10px 14px;
+  padding: 9px 12px;
+  min-width: 0;
 }
 
 .search-input-field input, .search-input-field select {
   width: 100%;
+  min-width: 0;
   border: none;
   background: transparent;
   color: var(--color-text-main);
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
 }
 
 .search-submit-btn {
-  height: 52px;
-  padding: 0 28px;
+  height: 48px;
+  padding: 0 24px;
   border-radius: var(--radius-md);
+  white-space: nowrap;
 }
 
 .hero-quick-chips {

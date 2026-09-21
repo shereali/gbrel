@@ -355,7 +355,7 @@ const featuredProperties = computed(() => {
 }
 
 .hero-content {
-  max-width: 960px;
+  max-width: 1140px;
   margin: 0 auto;
   position: relative;
   z-index: 2;
@@ -408,7 +408,9 @@ const featuredProperties = computed(() => {
 }
 
 .hero-search-wrapper {
-  margin-bottom: 28px;
+  max-width: 1080px;
+  margin: 0 auto 28px;
+  width: 100%;
 }
 
 /* 2. Trust Bar */
