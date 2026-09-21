@@ -13,6 +13,7 @@ use App\Models\Setting;
 use App\Models\Role;
 use App\Models\Permission;
 use App\Models\Brochure;
+use App\Models\Category;
 use App\Models\PropertyCategory;
 use App\Models\PropertyDivision;
 use App\Models\PropertyTransactionType;
@@ -948,6 +949,50 @@ Route::delete('/brochures/{id}', function ($id) {
         'success' => true,
         'message' => 'Brochure removed from vault'
     ]);
+});
+
+// 6.4. Dedicated Categories API
+Route::get('/categories', function () {
+    $categories = Category::where('is_active', true)->orderBy('sort_order')->get();
+    return response()->json([
+        'success' => true,
+        'count' => $categories->count(),
+        'data' => $categories
+    ]);
+});
+
+Route::post('/categories', function (Request $request) {
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+
+    $name = trim($input['name'] ?? '');
+    if (!$name) {
+        return response()->json(['success' => false, 'message' => 'Category name is required'], 400);
+    }
+
+    $slug = \Illuminate\Support\Str::slug($name);
+    $category = Category::firstOrCreate(
+        ['name' => $name],
+        [
+            'slug' => $slug,
+            'description' => $input['description'] ?? null,
+            'icon' => $input['icon'] ?? 'folder',
+            'image' => $input['image'] ?? null,
+            'sort_order' => (int)($input['sort_order'] ?? 99),
+            'is_active' => filter_var($input['is_active'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            'is_featured' => filter_var($input['is_featured'] ?? false, FILTER_VALIDATE_BOOLEAN)
+        ]
+    );
+
+    PropertyCategory::firstOrCreate(['name' => $name], ['slug' => $slug, 'is_active' => true, 'sort_order' => 99]);
+    $allCatNames = Category::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
+    Setting::setVal('property_categories', $allCatNames);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Category saved successfully in database',
+        'data' => $category
+    ], 201);
 });
 
 // 6.5. Dynamic Property Form Options API (Dedicated Tables + Realtime Persistence)
