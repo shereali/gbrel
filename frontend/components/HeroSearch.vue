@@ -115,7 +115,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const tabs = [
-  { id: 'sale', label: 'Buy Properties' },
+  { id: 'sale', label: 'Sale Properties' },
   { id: 'lease', label: 'Rent / Lease' },
   { id: 'plots', label: 'Plots & Land' },
   { id: 'commercial', label: 'Commercial' },
@@ -129,7 +129,7 @@ const selectedState = ref('')
 const selectedPriceMax = ref('')
 
 const searchPlaceholder = computed(() => {
-  if (activeTab.value === 'sale') return 'Location or project (e.g. Gulshan, Purbachal...)'
+  if (activeTab.value === 'sale') return 'Search properties for sale (e.g. Gulshan, Purbachal...)'
   if (activeTab.value === 'lease') return 'Location or project (e.g. Banani, Motijheel...)'
   if (activeTab.value === 'plots') return 'Location or sector (e.g. Purbachal, Jalshiri...)'
   if (activeTab.value === 'commercial') return 'Location or zone (e.g. Tejgaon, Motijheel...)'

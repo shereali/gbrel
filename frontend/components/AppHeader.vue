@@ -142,13 +142,13 @@
           <span>Sign In</span>
         </NuxtLink>
 
-        <!-- List Property CTA (Desktop > 1024px) -->
-        <NuxtLink to="/list-property" class="btn btn-sm btn-gold desktop-cta">
+        <!-- Sell / List Property CTA (Desktop > 1024px) -->
+        <NuxtLink to="/list-property" class="btn btn-sm btn-gold desktop-cta" title="Sell your property with GBREL">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          <span>List Property</span>
+          <span>Sell Property</span>
         </NuxtLink>
 
         <!-- Mobile Hamburger Button (Visible <= 1024px) -->
@@ -262,7 +262,7 @@
           <!-- Drawer Action CTAs -->
           <div class="drawer-actions-footer">
             <NuxtLink to="/list-property" class="btn btn-gold btn-lg" style="width:100%; margin-bottom:10px;" @click="mobileMenuOpen = false">
-              <span>+ List Property / Land</span>
+              <span>+ Sell Your Property</span>
             </NuxtLink>
 
             <div v-if="isAuthenticated" style="display:flex; flex-direction:column; gap:8px;">
