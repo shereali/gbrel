@@ -15,7 +15,7 @@ export interface PropertyItem {
   pricePrefix?: string
   listingType: 'Sale' | 'Lease' | 'Delisted'
   propertyType: 'Flat' | 'Plot' | 'Land' | 'Land Share' | 'Duplex' | 'Hotel' | 'Commercial' | 'Penthouse'
-  status: 'Active' | 'Sold' | 'Delisted' | 'Under Offer'
+  status: 'Active' | 'Sold' | 'Delisted' | 'Under Offer' | 'Draft'
   bedrooms: number
   bathrooms: number
   balconies?: number
@@ -855,7 +855,7 @@ export const useProperties = () => {
   const lastSynced = computed(() => lastPropertiesSyncedAt.value)
 
   const featuredProperties = computed(() => 
-    propertiesData.value.filter(p => p.isFeatured)
+    propertiesData.value.filter(p => p.isFeatured && p.status !== 'Draft' && p.status !== 'Delisted')
   )
 
   const getPropertyById = (id: number | string) => {

@@ -109,7 +109,8 @@
           <!-- Status Filter -->
           <select v-model="inventoryStatusFilter" class="form-select" style="width: auto;">
             <option value="">All Statuses</option>
-            <option value="Active">Active</option>
+            <option value="Active">Active (Live)</option>
+            <option value="Draft">Draft</option>
             <option value="Under Offer">Under Offer</option>
             <option value="Sold">Sold</option>
             <option value="Delisted">Delisted</option>
@@ -202,7 +203,7 @@
                     </strong>
                     <div class="flex items-center gap-2 flex-wrap" style="margin-top:2px;">
                       <span style="font-size:0.78rem; color:var(--admin-text-muted);">
-                        MySQL ID: #{{ prop.id }} • {{ prop.areaName }}, {{ prop.city }}
+                        ID: #{{ prop.id }} • {{ prop.areaName }}, {{ prop.city }}
                       </span>
                       <a 
                         v-if="prop.brochureUrl" 
@@ -262,9 +263,11 @@
                   :disabled="updatingStatusId === prop.id"
                   @change="handleStatusChange(prop.id, $event)"
                   class="status-inline-select"
-                  title="Change status in MySQL database"
+                  :style="prop.status === 'Draft' ? 'border-color: #F59E0B; color: #FCD34D;' : (prop.status === 'Active' ? 'border-color: #10B981;' : '')"
+                  title="Change property status"
                 >
-                  <option value="Active">Active</option>
+                  <option value="Active">Active (Live)</option>
+                  <option value="Draft">Draft (Private)</option>
                   <option value="Under Offer">Under Offer</option>
                   <option value="Sold">Sold</option>
                   <option value="Delisted">Delisted</option>
@@ -299,454 +302,472 @@
     </div>
 
     <!-- ======================================================================
-         MODAL 1: ADD / EDIT PROPERTY MANDATE (WITH FEATURE IMAGE & GALLERY)
+         MODAL 1: ADD / EDIT PROPERTY WITH INTERACTIVE COMPLETION GUIDE
          ====================================================================== -->
     <div v-if="showPropModal" ref="propModalRoot" class="admin-modal-overlay" @click.self="closePropModal">
-      <div class="admin-modal-card wide animate-fade-in-up" style="max-width:780px;">
+      <div class="admin-modal-card wide animate-fade-in-up" style="max-width:1040px;">
         <div class="admin-modal-header">
-          <div>
-            <h3 class="admin-modal-title">
-              {{ editingPropId ? 'Edit Property (#' + editingPropId + ')' : 'Add New Property' }}
-            </h3>
-            <p class="panel-sub">Configure property details, pricing, legal clearance, and photos</p>
+          <div class="flex items-center gap-3 flex-wrap">
+            <div>
+              <h3 class="admin-modal-title">
+                {{ editingPropId ? 'Edit Property (#' + editingPropId + ')' : 'Add New Property' }}
+              </h3>
+              <p class="panel-sub">Configure specifications, media, and follow the step-by-step guideline</p>
+            </div>
+            <span 
+              class="badge-admin" 
+              :class="propForm.status === 'Active' ? 'active' : (propForm.status === 'Draft' ? 'pending' : 'neutral')"
+              style="font-size:0.75rem;"
+            >
+              <span style="font-size:0.7rem;">●</span> {{ propForm.status || 'Draft' }} Mode
+            </span>
           </div>
-          <button class="admin-modal-close" @click="closePropModal" aria-label="Close modal">✕</button>
+          <div class="flex items-center gap-2">
+            <button 
+              type="button" 
+              class="btn btn-sm" 
+              :class="showGuideSidebar ? 'btn-gold' : 'btn-outline-white'" 
+              @click="showGuideSidebar = !showGuideSidebar"
+              style="font-size:0.78rem; padding:4px 10px;"
+              title="Toggle Property Checklist Guide"
+            >
+              📋 {{ showGuideSidebar ? 'Hide Guide' : 'Show Guide' }} ({{ completedStepsCount }}/{{ totalStepsCount }})
+            </button>
+            <button class="admin-modal-close" @click="closePropModal" aria-label="Close modal">✕</button>
+          </div>
         </div>
 
-        <form @submit.prevent="handleSaveProperty" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+        <form @submit.prevent="handleSaveProperty('Active')" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
           <div class="admin-modal-body" style="max-height:74vh; overflow-y:auto; padding:20px;">
-            <!-- Row 1: Title & Category -->
-            <div class="grid grid-2" style="gap:14px; margin-bottom:14px;">
-              <div class="form-group">
-                <label class="form-label">Property Title *</label>
-                <input v-model="propForm.title" type="text" required placeholder="e.g. 10 Katha Corner Plot at Purbachal Sector 17" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Category *</label>
-                <select v-model="propForm.propertyType" class="form-select">
-                  <option value="Land Share">Land Share (Co-Ownership Project)</option>
-                  <option value="Flat">Flat / Luxury Apartment</option>
-                  <option value="Plot">Residential Plot (Katha)</option>
-                  <option value="Land">Freehold Land (Bigha)</option>
-                  <option value="Hotel">Hotel & Beach Resort</option>
-                  <option value="Duplex">Duplex & Penthouse</option>
-                  <option value="Commercial">Commercial / Corporate Office</option>
-                </select>
-              </div>
-            </div>
+            <div class="property-modal-flex-layout">
+              
+              <!-- LEFT COLUMN: PROPERTY FORM SECTIONS -->
+              <div class="property-modal-form-col">
+                
+                <!-- Section 1: Basic Details & Category -->
+                <div id="sec-basic" class="property-form-section">
+                  <div class="flex items-center justify-between mb-3">
+                    <h4 style="font-size:0.92rem; font-weight:700; color:var(--color-gold); margin:0; display:flex; align-items:center; gap:6px;">
+                      <span>1. Basic Details & Category</span>
+                    </h4>
+                    <span v-if="propForm.title && propForm.propertyType" style="color:#10B981; font-size:0.78rem; font-weight:700;">✔ Completed</span>
+                  </div>
 
-            <!-- Row 2: Location & Price -->
-            <div class="grid grid-3" style="gap:14px; margin-bottom:14px;">
-              <div class="form-group">
-                <label class="form-label">Division / Region *</label>
-                <select v-model="propForm.state" class="form-select">
-                  <option value="Dhaka North">Dhaka North</option>
-                  <option value="Dhaka South">Dhaka South</option>
-                  <option value="Chittagong">Chittagong & Cox's Bazar</option>
-                  <option value="Sylhet">Sylhet</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Area Name / Hub *</label>
-                <input v-model="propForm.areaName" type="text" required placeholder="e.g. Gulshan-2, Purbachal" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Asking Price (BDT Taka) *</label>
-                <input v-model.number="propForm.price" type="number" required placeholder="35000000" class="form-input" />
-                <div v-if="propForm.price" style="font-size:0.75rem; color:#10B981; margin-top:3px; font-weight:700;">
-                  Formatted: {{ formatBDT(propForm.price) }}
+                  <div class="grid grid-2" style="gap:14px; margin-bottom:12px;">
+                    <div class="form-group">
+                      <label class="form-label">Property Title</label>
+                      <input v-model="propForm.title" type="text" placeholder="e.g. 10 Katha Corner Plot at Purbachal Sector 17" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Category *</label>
+                      <select v-model="propForm.propertyType" class="form-select">
+                        <option value="Land Share">Land Share (Co-Ownership Project)</option>
+                        <option value="Flat">Flat / Luxury Apartment</option>
+                        <option value="Plot">Residential Plot (Katha)</option>
+                        <option value="Land">Freehold Land (Bigha)</option>
+                        <option value="Hotel">Hotel & Beach Resort</option>
+                        <option value="Duplex">Duplex & Penthouse</option>
+                        <option value="Commercial">Commercial / Corporate Office</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-2" style="gap:14px;">
+                    <div class="form-group">
+                      <label class="form-label">Transaction Type</label>
+                      <select v-model="propForm.listingType" class="form-select">
+                        <option value="Sale">For Sale</option>
+                        <option value="Lease">For Lease / Rent</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Property Lifecycle Status</label>
+                      <select v-model="propForm.status" class="form-select">
+                        <option value="Draft">Draft (Save privately, not live)</option>
+                        <option value="Active">Active (Publish live to website)</option>
+                        <option value="Under Offer">Under Offer</option>
+                        <option value="Sold">Sold</option>
+                        <option value="Delisted">Delisted</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <!-- Row 3: Dimensions & Specs -->
-            <div class="grid grid-4" style="gap:12px; margin-bottom:14px;">
-              <div class="form-group">
-                <label class="form-label">Sq. Footage</label>
-                <input v-model.number="propForm.squareFootage" type="number" placeholder="2400" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Land Size</label>
-                <input v-model.number="propForm.landSize" type="number" step="0.5" placeholder="5" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Land Unit</label>
-                <select v-model="propForm.landUnit" class="form-select">
-                  <option value="Katha">Katha</option>
-                  <option value="Bigha">Bigha</option>
-                  <option value="Shotok">Shotok / Decimal</option>
-                  <option value="Sqft">Sq. Ft.</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Beds / Baths</label>
-                <div class="flex gap-2">
-                  <input v-model.number="propForm.bedrooms" type="number" placeholder="Beds" class="form-input" />
-                  <input v-model.number="propForm.bathrooms" type="number" placeholder="Baths" class="form-input" />
+                <!-- Section 2: Location & Region -->
+                <div id="sec-location" class="property-form-section">
+                  <div class="flex items-center justify-between mb-3">
+                    <h4 style="font-size:0.92rem; font-weight:700; color:var(--color-gold); margin:0; display:flex; align-items:center; gap:6px;">
+                      <span>2. Location & Area</span>
+                    </h4>
+                    <span v-if="propForm.state && propForm.areaName" style="color:#10B981; font-size:0.78rem; font-weight:700;">✔ Completed</span>
+                  </div>
+
+                  <div class="grid grid-2" style="gap:14px; margin-bottom:12px;">
+                    <div class="form-group">
+                      <label class="form-label">Division / Region *</label>
+                      <select v-model="propForm.state" class="form-select">
+                        <option value="Dhaka North">Dhaka North</option>
+                        <option value="Dhaka South">Dhaka South</option>
+                        <option value="Chittagong">Chittagong & Cox's Bazar</option>
+                        <option value="Sylhet">Sylhet</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Area Name / Hub *</label>
+                      <input v-model="propForm.areaName" type="text" required placeholder="e.g. Gulshan-2, Banani, Purbachal" class="form-input" />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Street Address & Landmark</label>
+                    <input v-model="propForm.address" type="text" placeholder="Road, Block, Sector, Landmark" class="form-input" />
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <!-- Row 4: Street Address -->
-            <div class="grid grid-1" style="gap:14px; margin-bottom:14px;">
-              <div class="form-group">
-                <label class="form-label">Street Address & Landmark</label>
-                <input v-model="propForm.address" type="text" placeholder="Road, Block, Sector, Landmark" class="form-input" />
-              </div>
-            </div>
+                <!-- Section 3: Pricing & Valuation -->
+                <div id="sec-pricing" class="property-form-section">
+                  <div class="flex items-center justify-between mb-3">
+                    <h4 style="font-size:0.92rem; font-weight:700; color:var(--color-gold); margin:0; display:flex; align-items:center; gap:6px;">
+                      <span>3. Pricing & Valuation</span>
+                    </h4>
+                    <span v-if="propForm.price > 0 || propForm.hidePrice" style="color:#10B981; font-size:0.78rem; font-weight:700;">✔ Completed</span>
+                  </div>
 
-            <!-- Row 5: Tagline & Description -->
-            <div class="grid grid-1" style="gap:14px; margin-bottom:16px;">
-              <div class="form-group">
-                <label class="form-label">Tagline / Key Selling Point</label>
-                <input v-model="propForm.tagline" type="text" placeholder="e.g. Panoramic Lakefront Skyline View with Private Terrace" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Comprehensive Description</label>
-                <textarea v-model="propForm.description" rows="2" placeholder="Provide full details regarding the property layout, accessibility, and legal documentation..." class="form-input" style="resize:vertical;"></textarea>
-              </div>
-            </div>
-
-            <!-- ========================================================== -->
-            <!-- MEDIA & VISUAL ASSETS: FEATURE IMAGE & GALLERY MANAGER -->
-            <!-- ========================================================== -->
-            <div class="media-manager-card">
-              <div class="flex items-center justify-between flex-wrap gap-2" style="margin-bottom:12px;">
-                <div>
-                  <h4 style="font-size:0.95rem; font-weight:800; color:var(--admin-text-primary); display:flex; align-items:center; gap:8px;">
-                    <span>📸 Media Assets & Visual Showcase</span>
-                    <span class="badge" style="background:rgba(212,175,55,0.15); color:var(--color-gold); font-size:0.75rem;">
-                      Total: {{ (propForm.featureImage ? 1 : 0) + propForm.gallery.length }} Photos
-                    </span>
-                  </h4>
-                  <p style="font-size:0.78rem; color:var(--admin-text-muted); margin-top:2px;">
-                    Set your Primary Cover / Featured Image and upload or link multiple HD Gallery Photos for client showcase.
-                  </p>
+                  <div class="grid grid-2" style="gap:14px;">
+                    <div class="form-group">
+                      <label class="form-label">Asking Price (BDT Taka) *</label>
+                      <input v-model.number="propForm.price" type="number" placeholder="35000000" class="form-input" />
+                      <div v-if="propForm.price" style="font-size:0.75rem; color:#10B981; margin-top:3px; font-weight:700;">
+                        Preview: {{ formatBDT(propForm.price) }}
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Price Visibility Option</label>
+                      <div style="background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:6px; border:1px solid var(--admin-border-subtle); margin-top:2px;">
+                        <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.82rem; color:#FFF;">
+                          <input v-model="propForm.hidePrice" type="checkbox" style="width:15px; height:15px; accent-color:var(--color-gold);" />
+                          <span>🔐 Hide Price (Display Price on Application / POA)</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <button 
-                    type="button" 
-                    class="btn btn-sm btn-outline-white" 
-                    style="font-size:0.75rem; padding:4px 8px;"
-                    @click="applySampleGalleryPack"
-                    title="Insert 3 sample luxury architectural photos"
-                  >
-                    + Sample Gallery Pack
-                  </button>
+
+                <!-- Section 4: Dimensions & Specifications -->
+                <div id="sec-specs" class="property-form-section">
+                  <div class="flex items-center justify-between mb-3">
+                    <h4 style="font-size:0.92rem; font-weight:700; color:var(--color-gold); margin:0; display:flex; align-items:center; gap:6px;">
+                      <span>4. Dimensions & Specifications</span>
+                    </h4>
+                    <span v-if="propForm.squareFootage > 0 || propForm.landSize > 0" style="color:#10B981; font-size:0.78rem; font-weight:700;">✔ Completed</span>
+                  </div>
+
+                  <div class="grid grid-4" style="gap:12px;">
+                    <div class="form-group">
+                      <label class="form-label">Sq. Footage</label>
+                      <input v-model.number="propForm.squareFootage" type="number" placeholder="2400" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Land Size</label>
+                      <input v-model.number="propForm.landSize" type="number" step="0.5" placeholder="5" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Land Unit</label>
+                      <select v-model="propForm.landUnit" class="form-select">
+                        <option value="Katha">Katha</option>
+                        <option value="Bigha">Bigha</option>
+                        <option value="Shotok">Shotok / Decimal</option>
+                        <option value="Sqft">Sq. Ft.</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Beds / Baths</label>
+                      <div class="flex gap-2">
+                        <input v-model.number="propForm.bedrooms" type="number" placeholder="Beds" class="form-input" />
+                        <input v-model.number="propForm.bathrooms" type="number" placeholder="Baths" class="form-input" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
+                <!-- Section 5: Highlights & Overview -->
+                <div id="sec-details" class="property-form-section">
+                  <div class="flex items-center justify-between mb-3">
+                    <h4 style="font-size:0.92rem; font-weight:700; color:var(--color-gold); margin:0; display:flex; align-items:center; gap:6px;">
+                      <span>5. Highlights & Description</span>
+                    </h4>
+                    <span v-if="propForm.tagline || propForm.description" style="color:#10B981; font-size:0.78rem; font-weight:700;">✔ Completed</span>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom:12px;">
+                    <label class="form-label">Tagline / Key Selling Point</label>
+                    <input v-model="propForm.tagline" type="text" placeholder="e.g. Panoramic Lakefront Skyline View with Private Terrace" class="form-input" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Comprehensive Description</label>
+                    <textarea v-model="propForm.description" rows="2" placeholder="Provide full details regarding property layout, access, and neighborhood highlights..." class="form-input" style="resize:vertical;"></textarea>
+                  </div>
+                </div>
+
+                <!-- Section 6: Media & Visual Assets -->
+                <div id="sec-media" class="property-form-section">
+                  <div class="flex items-center justify-between mb-3">
+                    <h4 style="font-size:0.92rem; font-weight:700; color:var(--color-gold); margin:0; display:flex; align-items:center; gap:6px;">
+                      <span>6. Photos & Media Showcase</span>
+                      <span class="badge" style="background:rgba(212,175,55,0.15); color:var(--color-gold); font-size:0.75rem;">
+                        {{ (propForm.featureImage ? 1 : 0) + propForm.gallery.length }} Photos
+                      </span>
+                    </h4>
+                    <span v-if="propForm.featureImage" style="color:#10B981; font-size:0.78rem; font-weight:700;">✔ Cover Set</span>
+                  </div>
+
+                  <!-- Primary Featured Cover Image -->
+                  <div style="background:rgba(255,255,255,0.02); padding:14px; border-radius:var(--radius-md); border:1px solid var(--admin-border-subtle); margin-bottom:14px;">
+                    <label class="form-label" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                      <span style="font-weight:700; color:#10B981;">★ Primary Featured Cover Image</span>
+                      <button type="button" class="btn btn-sm btn-outline-white" style="font-size:0.72rem; padding:3px 8px;" @click="applySampleCover">
+                        ✨ Random Cover Preset
+                      </button>
+                    </label>
+
+                    <div class="grid grid-2" style="gap:14px; align-items:center;">
+                      <div class="feature-img-preview-box">
+                        <img :src="propForm.featureImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'" alt="Cover Preview" />
+                        <div class="feature-img-badge">
+                          <span>★ Featured Cover Photo</span>
+                        </div>
+                      </div>
+
+                      <div class="flex flex-col gap-2">
+                        <input v-model="propForm.featureImage" type="url" placeholder="Paste image URL (https://...)" class="form-input" style="width:100%; font-size:0.85rem;" />
+                        <input ref="featureFileInput" type="file" accept="image/*" style="display:none;" @change="onFeatureFileSelected" />
+                        <div class="flex items-center gap-2">
+                          <button type="button" class="btn btn-sm btn-emerald flex-1" :disabled="isUploadingFeature" @click="triggerFeatureUpload" style="font-size:0.8rem;">
+                            <span v-if="isUploadingFeature" class="animate-spin mr-1">◌</span>
+                            <span>{{ isUploadingFeature ? 'Uploading...' : '📁 Upload Cover File' }}</span>
+                          </button>
+                          <button v-if="propForm.featureImage" type="button" class="btn btn-sm btn-outline-white" @click="propForm.featureImage = ''" style="font-size:0.8rem; padding:6px 10px;">
+                            Clear
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Gallery Images -->
+                  <div style="background:rgba(255,255,255,0.02); padding:14px; border-radius:var(--radius-md); border:1px solid var(--admin-border-subtle);">
+                    <div class="flex items-center justify-between flex-wrap gap-2" style="margin-bottom:10px;">
+                      <label class="form-label" style="font-weight:700; color:var(--color-gold); margin-bottom:0;">
+                        🖼 Gallery Photos ({{ propForm.gallery.length }} shots)
+                      </label>
+                      <input ref="galleryFileInput" type="file" multiple accept="image/*" style="display:none;" @change="onGalleryFilesSelected" />
+                      <div class="flex items-center gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-white" style="font-size:0.75rem; padding:3px 8px;" @click="applySampleGalleryPack">
+                          Sample Pack
+                        </button>
+                        <button type="button" class="btn btn-sm btn-emerald" :disabled="isUploadingGallery" @click="triggerGalleryUpload" style="font-size:0.75rem; padding:3px 8px;">
+                          <span v-if="isUploadingGallery" class="animate-spin mr-1">◌</span>
+                          <span>Upload Photos</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="flex gap-2" style="margin-bottom:10px;">
+                      <input v-model="newGalleryUrl" type="url" placeholder="Paste gallery image URL..." class="form-input" style="flex:1; font-size:0.82rem;" @keydown.enter.prevent="addGalleryUrl" />
+                      <button type="button" class="btn btn-sm btn-outline-white" @click="addGalleryUrl" style="font-size:0.8rem;">Add</button>
+                    </div>
+
+                    <div v-if="propForm.gallery.length > 0" class="gallery-grid">
+                      <div v-for="(imgUrl, idx) in propForm.gallery" :key="idx" class="gallery-item-card">
+                        <img :src="imgUrl" :alt="'Gallery ' + (idx + 1)" loading="lazy" />
+                        <div class="gallery-item-overlay">
+                          <div class="flex justify-between items-center">
+                            <span style="font-size:0.68rem; color:#FFF; font-weight:700; background:rgba(0,0,0,0.6); padding:2px 5px; border-radius:3px;">#{{ idx + 1 }}</span>
+                            <button type="button" class="gallery-btn-action danger" @click="removeGalleryItem(idx)">✕</button>
+                          </div>
+                          <button type="button" class="gallery-btn-action star" @click="makeCover(idx)">★ Set as Cover</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Section 7: Project Brochure -->
+                <div id="sec-brochure" class="property-form-section">
+                  <div class="flex items-center justify-between mb-3">
+                    <h4 style="font-size:0.92rem; font-weight:700; color:var(--color-gold); margin:0; display:flex; align-items:center; gap:6px;">
+                      <span>7. Project Brochure & Documents</span>
+                    </h4>
+                    <span v-if="propForm.brochureUrl" style="color:#10B981; font-size:0.78rem; font-weight:700;">✔ Attached</span>
+                  </div>
+
+                  <input ref="brochureFileInput" type="file" accept=".pdf,.doc,.docx" style="display:none;" @change="onBrochureFileSelected" />
+                  <div class="flex items-center gap-2 mb-2">
+                    <button type="button" class="btn btn-sm btn-emerald" :disabled="isUploadingBrochure" @click="triggerBrochureUpload" style="font-size:0.8rem;">
+                      <span v-if="isUploadingBrochure" class="animate-spin mr-1">◌</span>
+                      <span>{{ isUploadingBrochure ? 'Uploading...' : 'Upload PDF Brochure' }}</span>
+                    </button>
+                    <input v-model="propForm.brochureUrl" type="url" placeholder="Or paste direct brochure URL (e.g. /storage/... or https://...)" class="form-input" style="flex:1; font-size:0.82rem;" />
+                    <button v-if="propForm.brochureUrl" type="button" class="btn btn-sm btn-outline-white" @click="propForm.brochureUrl = ''" style="font-size:0.75rem;">Clear</button>
+                  </div>
+                </div>
+
+                <!-- Section 8: Legal Clearances -->
+                <div id="sec-legal" class="property-form-section">
+                  <div class="flex items-center justify-between mb-3">
+                    <h4 style="font-size:0.92rem; font-weight:700; color:var(--color-gold); margin:0; display:flex; align-items:center; gap:6px;">
+                      <span>8. Legal & Verification Badges</span>
+                    </h4>
+                    <span v-if="propForm.isRajukApproved" style="color:#10B981; font-size:0.78rem; font-weight:700;">✔ Verified</span>
+                  </div>
+
+                  <div class="flex items-center gap-6 flex-wrap">
+                    <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem;">
+                      <input v-model="propForm.isRajukApproved" type="checkbox" style="width:16px; height:16px; accent-color:#10B981;" />
+                      <span>RAJUK / CDA Approved Plan Verified</span>
+                    </label>
+                    <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem;">
+                      <input v-model="propForm.isFeatured" type="checkbox" style="width:16px; height:16px; accent-color:#D4AF37;" />
+                      <span>Feature on Live Homepage Showcase</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Section 9: Privacy Controls -->
+                <div id="sec-privacy" class="property-form-section" style="border-color:rgba(212,175,55,0.25);">
+                  <div class="flex items-center justify-between mb-3">
+                    <h4 style="font-size:0.92rem; font-weight:700; color:var(--color-gold); margin:0; display:flex; align-items:center; gap:6px;">
+                      <span>9. Privacy & Confidentiality Controls</span>
+                    </h4>
+                    <span style="font-size:0.75rem; color:var(--admin-text-muted);">Confidential client protections</span>
+                  </div>
+
+                  <div class="grid grid-2" style="gap:10px;">
+                    <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.82rem; color:#FFF;">
+                      <input v-model="propForm.hideAgentPhoto" type="checkbox" style="width:15px; height:15px; accent-color:#D4AF37;" />
+                      <span>🛡️ Hide Advisor Photo (Show Official Crest)</span>
+                    </label>
+                    <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.82rem; color:#FFF;">
+                      <input v-model="propForm.hideExactAddress" type="checkbox" style="width:15px; height:15px; accent-color:#38BDF8;" />
+                      <span>📍 Hide Exact Street / Plot Address</span>
+                    </label>
+                    <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.82rem; color:#FFF;">
+                      <input v-model="propForm.hideFloorPlan" type="checkbox" style="width:15px; height:15px; accent-color:#A855F7;" />
+                      <span>📐 Gate Floor Plans (NDA Required)</span>
+                    </label>
+                    <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.82rem; color:#FFF;">
+                      <input v-model="propForm.hideAgentContact" type="checkbox" style="width:15px; height:15px; accent-color:#10B981;" />
+                      <span>🔒 Route Inquiries through Corporate Concierge</span>
+                    </label>
+                  </div>
+                </div>
+
               </div>
 
-              <!-- PART A: PRIMARY FEATURED COVER IMAGE -->
-              <div style="background:var(--admin-bg-surface); padding:14px; border-radius:var(--radius-md); border:1px solid var(--admin-border-subtle); margin-bottom:14px;">
-                <label class="form-label" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                  <span style="font-weight:700; color:#10B981; display:flex; align-items:center; gap:6px;">
-                    <span>★ Primary Featured Cover Image</span>
-                    <span style="font-size:0.75rem; color:var(--admin-text-muted); font-weight:normal;">(Appears on Homepage, Listing Cards & Detail Header)</span>
+              <!-- RIGHT COLUMN: INTERACTIVE GUIDELINE & CHECKLIST NOTE -->
+              <aside v-if="showGuideSidebar" class="property-guide-sidebar">
+                <div class="flex items-center justify-between">
+                  <div style="font-size:0.88rem; font-weight:800; color:#FFF; display:flex; align-items:center; gap:6px;">
+                    <span>📋 Property Guide</span>
+                  </div>
+                  <span class="badge" style="background:rgba(212,175,55,0.15); color:var(--color-gold); font-size:0.7rem; font-weight:700;">
+                    {{ completedStepsCount }}/{{ totalStepsCount }} Done
                   </span>
-                  <button 
-                    type="button" 
-                    class="btn btn-sm btn-outline-white" 
-                    style="font-size:0.72rem; padding:3px 8px;"
-                    @click="applySampleCover"
-                  >
-                    ✨ Random Cover Preset
-                  </button>
-                </label>
+                </div>
 
-                <div class="grid grid-2" style="gap:14px; align-items:center;">
-                  <!-- Live Preview Box -->
-                  <div class="feature-img-preview-box">
-                    <img 
-                      :src="propForm.featureImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'" 
-                      alt="Featured Cover Preview" 
-                    />
-                    <div class="feature-img-badge">
-                      <span>★ Featured Cover Photo</span>
-                    </div>
+                <!-- Readiness Progress Bar -->
+                <div>
+                  <div class="flex justify-between items-center" style="font-size:0.75rem; color:var(--admin-text-muted); margin-bottom:4px;">
+                    <span>Readiness Meter</span>
+                    <strong :style="{ color: completionPercentage === 100 ? '#10B981' : 'var(--color-gold)' }">{{ completionPercentage }}%</strong>
                   </div>
-
-                  <!-- URL Input & Upload Controls -->
-                  <div class="flex flex-col gap-3">
-                    <div>
-                      <label style="font-size:0.8rem; color:var(--admin-text-muted); display:block; margin-bottom:4px;">Feature Image URL</label>
-                      <input 
-                        v-model="propForm.featureImage" 
-                        type="url" 
-                        placeholder="https://images.unsplash.com/..." 
-                        class="form-input" 
-                        style="width:100%; font-size:0.85rem;" 
-                      />
-                    </div>
-
-                    <!-- Hidden File Input for Feature Image -->
-                    <input 
-                      ref="featureFileInput" 
-                      type="file" 
-                      accept="image/*" 
-                      style="display:none;" 
-                      @change="onFeatureFileSelected" 
-                    />
-
-                    <div class="flex items-center gap-2">
-                      <button 
-                        type="button" 
-                        class="btn btn-sm btn-emerald flex-1" 
-                        :disabled="isUploadingFeature" 
-                        @click="triggerFeatureUpload"
-                        style="font-size:0.82rem; justify-content:center;"
-                      >
-                        <span v-if="isUploadingFeature" class="animate-spin" style="display:inline-block; margin-right:4px;">◌</span>
-                        <span>{{ isUploadingFeature ? 'Uploading Cover...' : '📁 Upload Cover File' }}</span>
-                      </button>
-
-                      <button 
-                        v-if="propForm.featureImage"
-                        type="button" 
-                        class="btn btn-sm btn-outline-white" 
-                        @click="propForm.featureImage = ''" 
-                        title="Clear cover image"
-                        style="font-size:0.8rem; padding:6px 10px;"
-                      >
-                        Clear
-                      </button>
-                    </div>
-                    <p style="font-size:0.75rem; color:var(--admin-text-muted);">
-                      Supports direct web image URLs or local files (.jpg, .png, .webp).
-                    </p>
+                  <div style="background:rgba(255,255,255,0.08); height:6px; border-radius:3px; overflow:hidden;">
+                    <div 
+                      :style="{ 
+                        width: completionPercentage + '%', 
+                        background: completionPercentage === 100 ? '#10B981' : 'linear-gradient(90deg, #D4AF37, #10B981)',
+                        height: '100%',
+                        transition: 'width 0.3s ease'
+                      }"
+                    ></div>
                   </div>
                 </div>
-              </div>
 
-              <!-- PART B: PROPERTY GALLERY IMAGES -->
-              <div style="background:var(--admin-bg-surface); padding:14px; border-radius:var(--radius-md); border:1px solid var(--admin-border-subtle);">
-                <div class="flex items-center justify-between flex-wrap gap-2" style="margin-bottom:10px;">
-                  <label class="form-label" style="font-weight:700; color:var(--color-gold); margin-bottom:0; display:flex; align-items:center; gap:6px;">
-                    <span>🖼 Photo Gallery ({{ propForm.gallery.length }} Additional Shots)</span>
-                    <span style="font-size:0.75rem; color:var(--admin-text-muted); font-weight:normal;">(Interior, Bedroom, Kitchen, Master Plan, Aerial)</span>
-                  </label>
-
-                  <!-- Hidden Multi-File Input for Gallery -->
-                  <input 
-                    ref="galleryFileInput" 
-                    type="file" 
-                    multiple 
-                    accept="image/*" 
-                    style="display:none;" 
-                    @change="onGalleryFilesSelected" 
-                  />
-
-                  <button 
-                    type="button" 
-                    class="btn btn-sm btn-outline-white" 
-                    :disabled="isUploadingGallery"
-                    @click="triggerGalleryUpload"
-                    style="font-size:0.78rem; padding:4px 10px; display:inline-flex; align-items:center; gap:6px;"
-                  >
-                    <span v-if="isUploadingGallery" class="animate-spin">◌</span>
-                    <span>{{ isUploadingGallery ? 'Uploading Photos...' : '📁 Upload Gallery Photos (Multi)' }}</span>
-                  </button>
-                </div>
-
-                <!-- Add Image by URL Bar -->
-                <div class="flex items-center gap-2" style="margin-bottom:12px;">
-                  <input 
-                    v-model="newGalleryUrl" 
-                    type="url" 
-                    placeholder="Paste gallery image URL (e.g. https://...)" 
-                    class="form-input" 
-                    style="flex:1; font-size:0.85rem;" 
-                    @keydown.enter.prevent="addGalleryUrl"
-                  />
-                  <button 
-                    type="button" 
-                    class="btn btn-sm btn-emerald" 
-                    @click="addGalleryUrl"
-                    style="font-size:0.82rem; white-space:nowrap;"
-                  >
-                    Add to Gallery
-                  </button>
-                </div>
-
-                <!-- Gallery Thumbnails Grid -->
-                <div v-if="propForm.gallery.length > 0" class="gallery-grid">
+                <!-- Clickable Guideline Items -->
+                <div class="space-y-1" style="max-height:360px; overflow-y:auto; padding-right:2px;">
                   <div 
-                    v-for="(imgUrl, idx) in propForm.gallery" 
-                    :key="idx" 
-                    class="gallery-item-card"
+                    v-for="(item, idx) in guideItems" 
+                    :key="item.id"
+                    class="guide-step-item"
+                    :class="{ 'is-done': item.isCompleted }"
+                    @click="scrollToSection(item.id)"
+                    :title="'Click to jump to ' + item.title"
                   >
-                    <img :src="imgUrl" :alt="'Gallery photo ' + (idx + 1)" loading="lazy" />
-                    <div class="gallery-item-overlay">
-                      <div class="flex justify-between items-center">
-                        <span style="font-size:0.68rem; color:#FFF; font-weight:700; background:rgba(0,0,0,0.6); padding:2px 5px; border-radius:3px;">
-                          #{{ idx + 1 }}
-                        </span>
-                        <button 
-                          type="button" 
-                          class="gallery-btn-action danger" 
-                          @click="removeGalleryItem(idx)" 
-                          title="Remove from gallery"
-                        >
-                          ✕
-                        </button>
+                    <div class="guide-check-circle" :class="item.isCompleted ? 'done' : 'pending'">
+                      <span v-if="item.isCompleted">✔</span>
+                      <span v-else>{{ idx + 1 }}</span>
+                    </div>
+                    <div style="flex:1; min-width:0;">
+                      <div style="font-size:0.8rem; font-weight:700; color:#FFF; line-height:1.2;">
+                        {{ item.title }}
                       </div>
-
-                      <div class="flex justify-center" style="margin-top:auto;">
-                        <button 
-                          type="button" 
-                          class="gallery-btn-action star" 
-                          @click="makeCover(idx)" 
-                          title="Set this image as primary featured cover"
-                          style="width:100%; text-align:center; font-weight:700;"
-                        >
-                          ★ Make Cover
-                        </button>
+                      <div style="font-size:0.72rem; color:var(--admin-text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
+                        {{ item.sub }}
                       </div>
                     </div>
+                    <span style="font-size:0.75rem; color:var(--admin-text-muted);">›</span>
                   </div>
                 </div>
 
-                <!-- Empty Gallery State -->
-                <div v-else style="padding:20px; text-align:center; background:var(--admin-bg-surface-secondary); border-radius:var(--radius-sm); border:1px dashed var(--admin-border-subtle);">
-                  <p style="font-size:0.82rem; color:var(--admin-text-muted); margin:0;">
-                    No additional gallery photos added yet. Use the upload button or URL bar above to enrich this mandate.
-                  </p>
-                </div>
-              </div>
-
-              <!-- PART C: OFFICIAL PROJECT BROCHURE (PDF / DOC) -->
-              <div style="background:var(--admin-bg-surface); padding:14px; border-radius:var(--radius-md); border:1px solid var(--admin-border-subtle); margin-top:14px;">
-                <div class="flex items-center justify-between flex-wrap gap-2" style="margin-bottom:8px;">
-                  <label class="form-label" style="font-weight:700; color:#38BDF8; margin-bottom:0; display:flex; align-items:center; gap:6px;">
-                    <span>📑 Official Project Brochure (PDF / DOC)</span>
-                    <span style="font-size:0.75rem; color:var(--admin-text-muted); font-weight:normal;">(Downloadable on Public Listing & Detail Page)</span>
-                  </label>
-
-                  <!-- Hidden File Input for Brochure -->
-                  <input 
-                    ref="brochureFileInput" 
-                    type="file" 
-                    accept=".pdf,.doc,.docx,application/pdf" 
-                    style="display:none;" 
-                    @change="onBrochureFileSelected" 
-                  />
-
-                  <button 
-                    type="button" 
-                    class="btn btn-sm btn-outline-white" 
-                    :disabled="isUploadingBrochure"
-                    @click="triggerBrochureUpload"
-                    style="font-size:0.78rem; padding:4px 10px; display:inline-flex; align-items:center; gap:6px;"
-                  >
-                    <span v-if="isUploadingBrochure" class="animate-spin">◌</span>
-                    <span>{{ isUploadingBrochure ? 'Uploading PDF...' : '📁 Upload Brochure File' }}</span>
-                  </button>
-                </div>
-
-                <div v-if="propForm.brochureUrl" class="flex items-center justify-between gap-3" style="background:rgba(56, 189, 248, 0.08); border:1px solid rgba(56, 189, 248, 0.3); border-radius:var(--radius-sm); padding:10px 14px; margin-bottom:8px;">
-                  <div class="flex items-center gap-2" style="overflow:hidden;">
-                    <span style="background:#EF4444; color:#FFF; font-size:0.7rem; font-weight:800; padding:2px 6px; border-radius:3px; flex-shrink:0;">PDF</span>
-                    <a :href="propForm.brochureUrl" target="_blank" style="color:#38BDF8; font-size:0.85rem; font-weight:600; text-decoration:underline; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
-                      {{ propForm.brochureUrl.split('/').pop() || 'Attached Project Brochure' }}
-                    </a>
+                <!-- Dynamic Step Tip -->
+                <div style="background:rgba(212,175,55,0.08); border:1px solid rgba(212,175,55,0.2); border-radius:8px; padding:10px 12px;">
+                  <div style="font-size:0.74rem; font-weight:700; color:var(--color-gold); margin-bottom:3px; display:flex; align-items:center; gap:4px;">
+                    <span>💡 Recommendation:</span>
                   </div>
-                  <div class="flex items-center gap-2 flex-shrink-0">
-                    <a :href="propForm.brochureUrl" target="_blank" class="btn btn-sm btn-outline-white" style="font-size:0.75rem; padding:3px 8px;">Preview</a>
-                    <button type="button" class="btn btn-sm btn-outline-white" style="font-size:0.75rem; padding:3px 8px; color:#EF4444;" @click="propForm.brochureUrl = ''">Clear</button>
-                  </div>
-                </div>
-
-                <input 
-                  v-model="propForm.brochureUrl" 
-                  type="url" 
-                  placeholder="Or paste direct brochure URL (e.g. /storage/brochures/... or https://...)" 
-                  class="form-input" 
-                  style="font-size:0.82rem; width:100%;" 
-                />
-              </div>
-            </div>
-
-            <!-- Row 7: Flags -->
-            <div class="flex items-center gap-6 flex-wrap" style="padding:12px 16px; border-radius:8px; border:1px solid var(--admin-border-subtle);">
-              <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.88rem;">
-                <input v-model="propForm.isRajukApproved" type="checkbox" style="width:16px; height:16px; accent-color:#10B981;" />
-                <span>RAJUK / CDA Approved Plan Verified</span>
-              </label>
-              <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.88rem;">
-                <input v-model="propForm.isFeatured" type="checkbox" style="width:16px; height:16px; accent-color:#D4AF37;" />
-                <span>Feature on Live Homepage Showcase</span>
-              </label>
-            </div>
-
-            <!-- Row 8: Client Privacy & Display Controls (NDA & Hide Options) -->
-            <div style="background:var(--admin-bg-surface); padding:16px; border-radius:var(--radius-md); border:1px solid rgba(212, 175, 55, 0.25); margin-top:14px;">
-              <div class="flex items-center justify-between mb-3">
-                <label class="form-label" style="font-weight:700; color:var(--color-gold); margin-bottom:0; display:flex; align-items:center; gap:6px;">
-                  <span>👁️ Privacy & Display Controls (Confidential / NDA Mandates)</span>
-                </label>
-                <span style="font-size:0.75rem; color:var(--admin-text-muted);">Toggle public visibility of sensitive fields</span>
-              </div>
-
-              <div class="grid grid-2" style="gap:12px; margin-bottom:12px;">
-                <!-- Hide Price Toggle -->
-                <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:6px; border:1px solid var(--admin-border-subtle);">
-                  <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; font-weight:600; color:#FFF;">
-                    <input v-model="propForm.hidePrice" type="checkbox" style="width:16px; height:16px; accent-color:#EF4444;" />
-                    <span>🔐 Hide Asking Price (Price on Application)</span>
-                  </label>
-                  <div v-if="propForm.hidePrice" style="margin-top:8px;">
-                    <input 
-                      v-model="propForm.priceDisplayText" 
-                      type="text" 
-                      placeholder="Display text (e.g. Price on Application / POA)" 
-                      class="form-input" 
-                      style="font-size:0.8rem; padding:4px 8px;"
-                    />
-                  </div>
-                </div>
-
-                <!-- Hide Agent Photo Toggle -->
-                <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:6px; border:1px solid var(--admin-border-subtle);">
-                  <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; font-weight:600; color:#FFF;">
-                    <input v-model="propForm.hideAgentPhoto" type="checkbox" style="width:16px; height:16px; accent-color:#D4AF37;" />
-                    <span>🛡️ Hide Advisor Photo (Show GBREL Crest)</span>
-                  </label>
-                  <p style="font-size:0.72rem; color:var(--admin-text-muted); margin:4px 0 0 24px;">
-                    Displays institutional gold verification emblem instead of personal photo.
-                  </p>
-                </div>
-              </div>
-
-              <div class="grid grid-2" style="gap:12px;">
-                <!-- Hide Exact Address Toggle -->
-                <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:6px; border:1px solid var(--admin-border-subtle);">
-                  <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; font-weight:600; color:#FFF;">
-                    <input v-model="propForm.hideExactAddress" type="checkbox" style="width:16px; height:16px; accent-color:#38BDF8;" />
-                    <span>📍 Hide Exact Street / Plot Address</span>
-                  </label>
-                  <p style="font-size:0.72rem; color:var(--admin-text-muted); margin:4px 0 0 24px;">
-                    Displays Area and Division only (e.g. "Gulshan-2, Dhaka North").
+                  <p style="font-size:0.76rem; color:#E2E8F0; line-height:1.4; margin:0;">
+                    {{ activeGuideTip }}
                   </p>
                 </div>
 
-                <!-- Hide Floor Plan / Layout Toggle -->
-                <div style="background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:6px; border:1px solid var(--admin-border-subtle);">
-                  <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; font-weight:600; color:#FFF;">
-                    <input v-model="propForm.hideFloorPlan" type="checkbox" style="width:16px; height:16px; accent-color:#A855F7;" />
-                    <span>📐 Gate Floor Plans (NDA Required)</span>
-                  </label>
-                  <p style="font-size:0.72rem; color:var(--admin-text-muted); margin:4px 0 0 24px;">
-                    Architectural blueprint is restricted for vetted buyers upon request.
-                  </p>
-                </div>
-              </div>
+                <!-- Quick Save Action Inside Guide -->
+                <button 
+                  type="button" 
+                  class="btn btn-sm btn-outline-white" 
+                  style="width:100%; font-size:0.8rem; padding:7px;" 
+                  :disabled="isSaving" 
+                  @click="handleSaveProperty('Draft')"
+                >
+                  <span>💾 Save Current Draft</span>
+                </button>
+              </aside>
+
             </div>
           </div>
 
           <div class="admin-modal-footer">
+            <div class="flex items-center gap-2 mr-auto" style="font-size:0.82rem; color:var(--admin-text-muted);">
+              <span>Readiness: <strong>{{ completionPercentage }}%</strong> ({{ completedStepsCount }}/{{ totalStepsCount }} completed)</span>
+            </div>
             <button type="button" class="btn btn-sm btn-outline-white" :disabled="isSaving" @click="closePropModal">Cancel</button>
-            <button type="submit" class="btn btn-sm btn-emerald" :disabled="isSaving" style="display:inline-flex; align-items:center; gap:6px;">
+            <button 
+              type="button" 
+              class="btn btn-sm btn-outline-white" 
+              :disabled="isSaving"
+              @click="handleSaveProperty('Draft')"
+              title="Save as Draft without publishing to public visitors"
+            >
+              <span>💾 Save as Draft</span>
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-sm btn-emerald" 
+              :disabled="isSaving" 
+              @click="handleSaveProperty('Active')"
+              style="display:inline-flex; align-items:center; gap:6px;"
+              title="Publish property live on public website"
+            >
               <span v-if="isSaving" class="animate-spin">◌</span>
-              <span>{{ isSaving ? 'Saving...' : (editingPropId ? 'Save Changes' : 'Publish Property') }}</span>
+              <span>{{ isSaving ? 'Saving...' : (editingPropId ? 'Save & Publish Live' : 'Publish Property') }}</span>
             </button>
           </div>
         </form>
@@ -823,6 +844,7 @@ const editingPropId = ref<number | null>(null)
 const propModalRoot = ref<HTMLElement | null>(null)
 const deleteModalTarget = ref<PropertyItem | null>(null)
 
+const showGuideSidebar = ref(true)
 const isSaving = ref(false)
 const isDeleting = ref(false)
 const isUploadingFeature = ref(false)
@@ -874,6 +896,7 @@ const propForm = reactive({
   tagline: '',
   description: '',
   propertyType: 'Flat' as any,
+  status: 'Draft' as 'Active' | 'Sold' | 'Delisted' | 'Under Offer' | 'Draft',
   state: 'Dhaka North',
   areaName: 'Gulshan-2',
   address: 'Kemal Ataturk Avenue, Dhaka',
@@ -899,6 +922,93 @@ const propForm = reactive({
   hideMortgageCalculator: false,
   agentId: 1
 })
+
+// ============================================================================
+// PROPERTY COMPLETION GUIDE & SECTION NAVIGATION
+// ============================================================================
+const guideItems = computed(() => [
+  {
+    id: 'sec-basic',
+    title: '1. Basic Identity & Status',
+    sub: propForm.title ? `${propForm.title.slice(0, 26)}... (${propForm.status})` : 'Listing title & status required',
+    isCompleted: Boolean(propForm.title?.trim() && propForm.propertyType)
+  },
+  {
+    id: 'sec-location',
+    title: '2. Location & Address',
+    sub: propForm.areaName ? `${propForm.areaName}, ${propForm.state}` : 'Area & neighborhood needed',
+    isCompleted: Boolean(propForm.areaName?.trim() && propForm.state)
+  },
+  {
+    id: 'sec-pricing',
+    title: '3. Pricing & Valuation',
+    sub: propForm.hidePrice ? 'Confidential (POA)' : (propForm.price > 0 ? formatBDT(propForm.price) : 'Asking price needed'),
+    isCompleted: Boolean(propForm.hidePrice || propForm.price > 0)
+  },
+  {
+    id: 'sec-specs',
+    title: '4. Dimensions & Specs',
+    sub: (propForm.squareFootage > 0 || propForm.landSize > 0) ? `${formatArea(propForm.squareFootage, propForm.landSize, propForm.landUnit)} • ${propForm.bedrooms} Beds` : 'Sqft or Land size needed',
+    isCompleted: Boolean(propForm.squareFootage > 0 || propForm.landSize > 0)
+  },
+  {
+    id: 'sec-details',
+    title: '5. Highlights & Description',
+    sub: propForm.description ? 'Description provided' : (propForm.tagline ? 'Tagline entered' : 'Add selling description'),
+    isCompleted: Boolean(propForm.tagline?.trim() || propForm.description?.trim())
+  },
+  {
+    id: 'sec-media',
+    title: '6. Photos & Media Showcase',
+    sub: propForm.featureImage ? `${(propForm.featureImage ? 1 : 0) + propForm.gallery.length} visual asset(s)` : 'Feature cover photo required',
+    isCompleted: Boolean(propForm.featureImage?.trim())
+  },
+  {
+    id: 'sec-brochure',
+    title: '7. Brochure PDF Attachment',
+    sub: propForm.brochureUrl ? 'PDF Brochure attached' : 'Optional sales deck PDF',
+    isCompleted: Boolean(propForm.brochureUrl?.trim())
+  },
+  {
+    id: 'sec-legal',
+    title: '8. Legal Clearances',
+    sub: propForm.isRajukApproved ? 'RAJUK/CDA Verified' : 'Compliance checklist review',
+    isCompleted: Boolean(propForm.isRajukApproved)
+  },
+  {
+    id: 'sec-privacy',
+    title: '9. Privacy & Confidentiality',
+    sub: (propForm.hideAgentPhoto || propForm.hideExactAddress || propForm.hideFloorPlan || propForm.hidePrice) ? 'Privacy protections enabled' : 'Standard public exposure',
+    isCompleted: true
+  }
+])
+
+const totalStepsCount = computed(() => guideItems.value.length)
+const completedStepsCount = computed(() => guideItems.value.filter(i => i.isCompleted).length)
+const completionPercentage = computed(() => {
+  if (totalStepsCount.value === 0) return 0
+  return Math.round((completedStepsCount.value / totalStepsCount.value) * 100)
+})
+
+const activeGuideTip = computed(() => {
+  if (!propForm.title?.trim()) return 'Add a descriptive headline (e.g., "Grand 3,500 Sqft Duplex Penthouse in Gulshan-2").'
+  if (!propForm.areaName?.trim()) return 'Enter the neighborhood or landmark to assist map matching.'
+  if (!propForm.featureImage?.trim()) return 'Upload a high-resolution hero cover photo or choose a preset to entice luxury buyers.'
+  if (!propForm.brochureUrl?.trim()) return 'Upload an architectural floorplan or sales brochure PDF for investor downloads.'
+  if (completionPercentage.value === 100) return 'All essential details are filled! The listing is ready for public publication.'
+  return 'Review specifications, dimensions, and legal compliance before publishing live.'
+})
+
+const scrollToSection = (sectionId: string) => {
+  const el = document.getElementById(sectionId)
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el.classList.add('section-highlight-pulse')
+    setTimeout(() => {
+      el.classList.remove('section-highlight-pulse')
+    }, 1500)
+  }
+}
 
 const filteredProperties = computed(() => {
   return properties.value.filter(p => {
@@ -944,6 +1054,7 @@ const openAddPropertyModal = () => {
   propForm.tagline = ''
   propForm.description = ''
   propForm.propertyType = 'Flat'
+  propForm.status = 'Draft'
   propForm.state = 'Dhaka North'
   propForm.areaName = ''
   propForm.address = ''
@@ -977,6 +1088,7 @@ const openEditPropertyModal = (p: PropertyItem) => {
   propForm.tagline = p.tagline || ''
   propForm.description = p.description || ''
   propForm.propertyType = p.propertyType as any
+  propForm.status = p.status || 'Active'
   propForm.state = p.state
   propForm.areaName = p.areaName
   propForm.address = p.address
@@ -1108,7 +1220,37 @@ const applySampleGalleryPack = () => {
   toast.info('Sample Pack Loaded', 'Attached luxury architectural gallery photos.')
 }
 
-const handleSaveProperty = async () => {
+const handleSaveProperty = async (targetStatus?: 'Draft' | 'Active') => {
+  // If targetStatus is explicitly given, override propForm.status
+  if (targetStatus) {
+    propForm.status = targetStatus
+  }
+
+  // Soft handling for Draft saving so users can save partial progress anytime
+  if (propForm.status === 'Draft') {
+    if (!propForm.title.trim()) {
+      propForm.title = 'Untitled Draft Property'
+    }
+    if (!propForm.areaName.trim()) {
+      propForm.areaName = 'Unspecified Location'
+    }
+    if (!propForm.address.trim()) {
+      propForm.address = 'Draft Address'
+    }
+  } else {
+    // Stricter validation for Publishing Live
+    if (!propForm.title.trim()) {
+      toast.warning('Title Required', 'Please provide a property title before publishing.')
+      scrollToSection('sec-basic')
+      return
+    }
+    if (!propForm.areaName.trim()) {
+      toast.warning('Location Required', 'Please enter an area name before publishing.')
+      scrollToSection('sec-location')
+      return
+    }
+  }
+
   isSaving.value = true
   try {
     const featureCover = propForm.featureImage.trim()
@@ -1121,6 +1263,7 @@ const handleSaveProperty = async () => {
         tagline: propForm.tagline,
         description: propForm.description,
         propertyType: propForm.propertyType,
+        status: propForm.status,
         state: propForm.state,
         areaName: propForm.areaName,
         address: propForm.address,
@@ -1144,16 +1287,25 @@ const handleSaveProperty = async () => {
         hideFloorPlan: propForm.hideFloorPlan,
         hideMortgageCalculator: propForm.hideMortgageCalculator
       })
-      toast.success('MySQL Updated', `Successfully updated "${propForm.title}" with ${allImages.length} photo(s).`)
+      if (propForm.status === 'Draft') {
+        toast.success('💾 Draft Saved', `Property draft #${editingPropId.value} saved.`)
+      } else {
+        toast.success('Property Published', `Successfully updated and published "${propForm.title}".`)
+      }
     } else {
       const created = await addProperty({
         ...propForm,
+        status: propForm.status,
         featureImage: featureCover,
         gallery: validGallery,
         images: allImages,
         brochureUrl: propForm.brochureUrl.trim() || undefined
       })
-      toast.success('Property Created', `Property #${created?.id || ''} published successfully with ${allImages.length} photo(s).`)
+      if (propForm.status === 'Draft') {
+        toast.success('💾 Draft Saved', `New property saved as Draft #${created?.id || ''}. You can complete it anytime.`)
+      } else {
+        toast.success('Property Published', `Property #${created?.id || ''} published successfully on live portal.`)
+      }
     }
     showPropModal.value = false
     editingPropId.value = null

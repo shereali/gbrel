@@ -346,15 +346,16 @@ const cleanWhatsapp = computed(() => {
 })
 
 const featuredProperties = computed(() => {
-  const featured = properties.value.filter(p => p.isFeatured)
-  return featured.length > 0 ? featured.slice(0, 6) : properties.value.slice(0, 6)
+  const publicProps = properties.value.filter(p => p.status !== 'Draft' && p.status !== 'Delisted')
+  const featured = publicProps.filter(p => p.isFeatured)
+  return featured.length > 0 ? featured.slice(0, 6) : publicProps.slice(0, 6)
 })
 
-const flatsCount = computed(() => properties.value.filter(p => p.propertyType === 'Flat').length)
-const plotsCount = computed(() => properties.value.filter(p => p.propertyType === 'Plot' || p.propertyType === 'Land').length)
-const landShareCount = computed(() => properties.value.filter(p => p.propertyType === 'Land Share').length)
-const hotelCount = computed(() => properties.value.filter(p => p.propertyType === 'Hotel').length)
-const duplexCount = computed(() => properties.value.filter(p => p.propertyType === 'Duplex' || p.propertyType === 'Penthouse').length)
+const flatsCount = computed(() => properties.value.filter(p => p.status !== 'Draft' && p.propertyType === 'Flat').length)
+const plotsCount = computed(() => properties.value.filter(p => p.status !== 'Draft' && (p.propertyType === 'Plot' || p.propertyType === 'Land')).length)
+const landShareCount = computed(() => properties.value.filter(p => p.status !== 'Draft' && p.propertyType === 'Land Share').length)
+const hotelCount = computed(() => properties.value.filter(p => p.status !== 'Draft' && p.propertyType === 'Hotel').length)
+const duplexCount = computed(() => properties.value.filter(p => p.status !== 'Draft' && (p.propertyType === 'Duplex' || p.propertyType === 'Penthouse')).length)
 </script>
 
 <style scoped>

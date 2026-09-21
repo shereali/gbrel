@@ -360,6 +360,7 @@ const resetFilters = () => {
 
 const filteredProperties = computed(() => {
   return properties.value.filter(p => {
+    if (p.status === 'Draft' || p.status === 'Delisted') return false
     if (filters.listingType && p.listingType !== filters.listingType) return false
     if (filters.propertyType && p.propertyType !== filters.propertyType) return false
     if (filters.state && p.state !== filters.state) return false
