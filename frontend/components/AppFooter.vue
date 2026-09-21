@@ -72,6 +72,8 @@
           © {{ new Date().getFullYear() }} GBREL (Gram Bangla Real Estate Ltd.). All rights reserved. Real Estate Regulatory Authority (RAJUK/CDA) Compliant.
         </div>
         <div class="flex items-center gap-4">
+          <NuxtLink to="/directors" class="footer-link" style="color: #D4AF37; font-weight: 700;">Board of Directors</NuxtLink>
+          <span>•</span>
           <NuxtLink to="#" class="footer-link">Privacy Policy</NuxtLink>
           <span>•</span>
           <NuxtLink to="#" class="footer-link">Terms of Escrow</NuxtLink>

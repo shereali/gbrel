@@ -22,6 +22,7 @@
         <li><NuxtLink to="/properties?type=Plot" class="nav-link">Plots & Lands</NuxtLink></li>
         <li><NuxtLink to="/properties?type=Hotel" class="nav-link">Resorts</NuxtLink></li>
         <li><NuxtLink to="/agents" class="nav-link">Agents</NuxtLink></li>
+        <li><NuxtLink to="/directors" class="nav-link">Directors</NuxtLink></li>
         <li><NuxtLink to="/compare" class="nav-link">Compare</NuxtLink></li>
       </ul>
 
@@ -241,6 +242,16 @@
                 <path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
               </svg>
               <span>Regional Senior Advisors</span>
+            </NuxtLink>
+
+            <NuxtLink to="/directors" class="drawer-link" @click="mobileMenuOpen = false">
+              <svg class="drawer-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              <span>Board of Directors</span>
             </NuxtLink>
 
             <NuxtLink to="/compare" class="drawer-link" @click="mobileMenuOpen = false">
