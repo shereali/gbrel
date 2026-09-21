@@ -14,6 +14,9 @@ use App\Models\Role;
 use App\Models\Permission;
 use App\Models\Brochure;
 use App\Models\Category;
+use App\Models\Division;
+use App\Models\TransactionType;
+use App\Models\LandUnit;
 use App\Models\PropertyCategory;
 use App\Models\PropertyDivision;
 use App\Models\PropertyTransactionType;
@@ -1110,14 +1113,17 @@ Route::post('/property-options/add-item', function (Request $request) {
     $slug = \Illuminate\Support\Str::slug($item);
 
     if ($key === 'categories') {
+        Category::firstOrCreate(['name' => $item], ['slug' => $slug, 'is_active' => true, 'sort_order' => 99]);
         PropertyCategory::firstOrCreate(['name' => $item], ['slug' => $slug, 'is_active' => true, 'sort_order' => 99]);
         $data = PropertyCategory::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
         Setting::setVal('property_categories', $data);
     } elseif ($key === 'divisions') {
+        Division::firstOrCreate(['name' => $item], ['slug' => $slug, 'is_active' => true, 'sort_order' => 99]);
         PropertyDivision::firstOrCreate(['name' => $item], ['slug' => $slug, 'is_active' => true, 'sort_order' => 99]);
         $data = PropertyDivision::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
         Setting::setVal('property_divisions', $data);
     } elseif ($key === 'transaction_types') {
+        TransactionType::firstOrCreate(['name' => $item], ['slug' => $slug, 'is_active' => true, 'sort_order' => 99]);
         PropertyTransactionType::firstOrCreate(['name' => $item], ['slug' => $slug, 'is_active' => true, 'sort_order' => 99]);
         $data = PropertyTransactionType::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
         Setting::setVal('property_transaction_types', $data);
@@ -1126,6 +1132,7 @@ Route::post('/property-options/add-item', function (Request $request) {
         $data = PropertyStatus::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
         Setting::setVal('property_statuses', $data);
     } elseif ($key === 'land_units') {
+        LandUnit::firstOrCreate(['name' => $item], ['slug' => $slug, 'symbol' => $slug, 'is_active' => true, 'sort_order' => 99]);
         PropertyLandUnit::firstOrCreate(['name' => $item], ['slug' => $slug, 'symbol' => $slug, 'is_active' => true, 'sort_order' => 99]);
         $data = PropertyLandUnit::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
         Setting::setVal('property_land_units', $data);
