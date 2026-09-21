@@ -1,8 +1,6 @@
 <template>
   <div class="directors-page">
-    <!-- ======================================================================
-         1. HERO HEADER (CLEAN & DIGNIFIED)
-         ====================================================================== -->
+    <!-- Breadcrumb and Hero -->
     <header class="page-hero">
       <div class="container">
         <nav class="breadcrumb-nav" aria-label="Breadcrumb">
@@ -12,18 +10,15 @@
         </nav>
 
         <div class="hero-inner">
-          <span class="hero-tag">Corporate Leadership</span>
           <h1 class="hero-heading">Board of Directors</h1>
           <p class="hero-lead">
-            The leadership team at Gram Bangla Real Estate Ltd. (GBREL) brings together experienced professionals across real estate planning, civil project execution, finance, and technology to guide our land and residential developments in Bangladesh.
+            The leadership team guiding project planning, land verification, finance, and operations at Gram Bangla Real Estate Limited.
           </p>
         </div>
       </div>
     </header>
 
-    <!-- ======================================================================
-         2. MANAGING DIRECTOR'S STATEMENT & PROFILE
-         ====================================================================== -->
+    <!-- Managing Director Profile -->
     <section class="md-section">
       <div class="container">
         <div class="md-profile-card">
@@ -33,40 +28,39 @@
               <div class="md-photo-frame">
                 <img 
                   :src="encodeURI('/img/MD-Abdul-Quder-Talukder -Managing -Director.png')" 
-                  alt="MD Abdul Quder Talukder - Managing Director"
+                  alt="MD Abdul Quder Talukder, Managing Director"
                   class="md-photo"
                 />
               </div>
               <div class="md-caption">
                 <div class="md-caption-name">MD Abdul Quder Talukder</div>
-                <div class="md-caption-role">Founder & Managing Director</div>
+                <div class="md-caption-role">Founder and Managing Director</div>
               </div>
             </div>
 
-            <!-- MD Executive Message -->
+            <!-- MD Message -->
             <div class="md-content-pane">
               <div class="md-brand-lockup">
                 <img src="/img/logo-full.png" alt="Gram Bangla Real Estate Limited" class="corporate-brand-logo" />
               </div>
-              <div class="section-label">Executive Message</div>
-              <h2 class="md-headline">Building Trust Through Verified Ownership and Long-Term Value</h2>
+              <h2 class="md-headline">A Message from the Managing Director</h2>
 
               <div class="md-statement">
                 <p>
-                  At Gram Bangla Real Estate Ltd. (GBREL), our fundamental priority is ensuring complete peace of mind for property buyers and investors. Real estate in Bangladesh represents a lifetime of savings and generational security, which is why we hold ourselves to rigorous standards in land title verification and regulatory compliance.
+                  At Gram Bangla Real Estate Limited, our primary aim is to assist buyers in securing genuine property with complete legal security. Investing in land or housing in Bangladesh represents years of patient saving, and our buyers deserve absolute clarity at every step of the process.
                 </p>
                 <p>
-                  Every project we undertake—from prime residential sectors in Purbachal to commercial and coastal developments—undergoes thorough legal vetting across CS, SA, RS, and City Survey records before development begins. We believe that transparent documentation, scheduled project delivery, and honest communication are the cornerstones of lasting customer relationships.
+                  Before we take up any development, our legal associates review CS, SA, RS, and City Survey records directly through land offices to ensure every title is authentic and dispute free. We take full ownership of document verification and physical boundary protection.
                 </p>
                 <p>
-                  Along with our Board of Directors, I invite you to explore our verified properties and work with our team with complete confidence.
+                  Together with our directors and field engineers, we remain committed to straightforward dealings, scheduled handovers, and responsive service for clients living in Bangladesh and abroad.
                 </p>
               </div>
 
               <div class="md-footer-row">
                 <div class="md-signoff">
                   <div class="md-sign-name">MD Abdul Quder Talukder</div>
-                  <div class="md-sign-title">Managing Director, Gram Bangla Real Estate Ltd.</div>
+                  <div class="md-sign-title">Founder and Managing Director, Gram Bangla Real Estate Limited</div>
                 </div>
                 <div class="md-contact-touch">
                   <a href="mailto:md@gbrel.com" class="btn-clean-contact">
@@ -74,7 +68,7 @@
                       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                       <polyline points="22,6 12,13 2,6"/>
                     </svg>
-                    <span>Contact Managing Director's Office</span>
+                    <span>Contact Managing Director Office</span>
                   </a>
                 </div>
               </div>
@@ -84,16 +78,13 @@
       </div>
     </section>
 
-    <!-- ======================================================================
-         3. BOARD OF DIRECTORS GRID
-         ====================================================================== -->
+    <!-- Board of Directors Grid -->
     <section class="directors-section">
       <div class="container">
         <div class="section-intro">
-          <span class="section-tag">Executive Council</span>
-          <h2 class="section-title">Board of Directors & Executive Leadership</h2>
+          <h2 class="section-title">Board of Directors</h2>
           <p class="section-subtitle">
-            Meet the directors overseeing strategic planning, client engagement, technological innovation, finance, and civil project execution at GBREL.
+            Leadership team overseeing strategic planning, client relations, technology infrastructure, accounts, and site development.
           </p>
         </div>
 
@@ -108,7 +99,7 @@
               <div class="portrait-container">
                 <img 
                   :src="director.image" 
-                  :alt="director.name + ' - ' + director.designation"
+                  :alt="director.name + ', ' + director.designation"
                   class="director-portrait-img"
                 />
               </div>
@@ -117,7 +108,6 @@
             <!-- Card Content Body -->
             <div class="card-body">
               <div class="director-header-group">
-                <span class="role-pill">{{ director.roleBadge }}</span>
                 <h3 class="director-name">{{ director.name }}</h3>
                 <div class="director-designation">{{ director.designation }}</div>
               </div>
@@ -126,18 +116,9 @@
                 {{ director.bio }}
               </p>
 
-              <!-- Key Responsibilities -->
-              <div class="responsibilities-block">
-                <div class="resp-heading">Key Oversight & Responsibilities:</div>
-                <ul class="resp-list">
-                  <li v-for="(item, idx) in director.responsibilities" :key="idx">
-                    <svg class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                    <span>{{ item }}</span>
-                  </li>
-                </ul>
-              </div>
+              <p class="director-bio-extra">
+                {{ director.bioExtra }}
+              </p>
 
               <!-- Direct Corporate Contact -->
               <div class="card-footer-action">
@@ -155,24 +136,22 @@
       </div>
     </section>
 
-    <!-- ======================================================================
-         4. CORPORATE STANDARDS & GOVERNANCE
-         ====================================================================== -->
+    <!-- Corporate Contact Banner -->
     <section class="standards-section">
       <div class="container">
         <div class="standards-card">
           <div class="standards-logo-frame">
-            <img src="/img/logo-mark.png" alt="GBREL Logo" class="standards-logo-mark" />
+            <img src="/img/logo-mark.png" alt="Gram Bangla Real Estate Limited" class="standards-logo-mark" />
           </div>
           <div class="standards-content">
-            <h3 class="standards-title">Gram Bangla Real Estate Limited (GBREL)</h3>
+            <h3 class="standards-title">Gram Bangla Real Estate Limited</h3>
             <p class="standards-desc">
-              GBREL adheres strictly to Real Estate regulatory standards in Bangladesh. Every land transaction is supported by certified mutation records, non-encumbrance verification, and transparent payment schedules to protect the interests of domestic buyers and expatriates.
+              For plot inquiries, project visits, or document verification, visit our corporate office or contact our team directly.
             </p>
           </div>
           <div class="standards-action">
             <NuxtLink to="/contact" class="btn btn-outline-white">
-              <span>Contact Head Office</span>
+              <span>Contact Office</span>
             </NuxtLink>
           </div>
         </div>
@@ -185,87 +164,56 @@
 import { useHead } from '#app'
 
 useHead({
-  title: 'Board of Directors | GBREL (Gram Bangla Real Estate Ltd.)',
+  title: 'Board of Directors | Gram Bangla Real Estate Limited',
   meta: [
     {
       name: 'description',
-      content: 'Learn about the Board of Directors and executive leadership at Gram Bangla Real Estate Ltd. (GBREL). Professional management dedicated to verified land titles, client advisory, and quality urban developments.'
+      content: 'Board of Directors at Gram Bangla Real Estate Limited. Leadership guiding land verification, planning, finance, and civil construction in Bangladesh.'
     }
   ]
 })
 
-// --------------------------------------------------------------------------
-// Directors Data (Realistic, Professional, Authentic)
-// --------------------------------------------------------------------------
 const directors = [
   {
     id: 'md-abu-hanif',
     name: 'Md. Abu Hanif',
-    designation: 'Director, Administration & Accounts',
-    roleBadge: 'Director, Admin & Accounts',
+    designation: 'Director, Administration and Accounts',
     image: encodeURI('/img/abu-hanif-circle.png'),
     email: 'accounts@gbrel.com',
-    bio: 'Md. Abu Hanif oversees corporate administration, financial management, treasury operations, and statutory audit compliance at GBREL. He ensures all customer payment plans, client fund accounting, and vendor disbursements adhere to strict corporate financial controls and legal regulations.',
-    responsibilities: [
-      'Corporate financial planning, budgeting, and treasury management',
-      'Client installment accounting, escrow verification, and fund protection',
-      'Statutory audits, tax compliance, and corporate regulatory filings',
-      'General administrative operations and organizational governance'
-    ]
+    bio: 'Md. Abu Hanif oversees corporate administration, internal accounting, and financial management at Gram Bangla Real Estate Limited. He supervises day to day banking transactions, client payment schedules, vendor billing, and project expenditures.',
+    bioExtra: 'Working closely with audit professionals and legal advisors, he ensures tax compliance and sound financial governance across all ongoing land development projects.'
   },
   {
     id: 'eng-siam-talukder',
     name: 'Engr. Siam Talukder',
-    designation: 'Deputy Managing Director (DMD) & Director, Strategic Planning & Client Relations',
-    roleBadge: 'Deputy Managing Director',
+    designation: 'Deputy Managing Director',
     image: encodeURI('/img/siam-talukder-linkedin-circle.png'),
     email: 'siam.talukder@gbrel.com',
-    bio: 'Engr. Siam Talukder plays a central leadership role at GBREL, directing strategic planning, project conceptualization, and client advisory. He works directly with private investors, corporate partners, and Non-Resident Bangladeshis (NRBs), presenting project masterplans, architectural viability, and long-term land valuation.',
-    responsibilities: [
-      'Strategic planning and masterplan project presentations for major land developments',
-      'VIP and NRB client advisory, portfolio consultations, and investment structuring',
-      'High-value land acquisitions, landowner partnerships, and joint-venture negotiations',
-      'Corporate business development and investor relations'
-    ]
+    bio: 'Engr. Siam Talukder leads business planning, project presentations, and corporate client relations at Gram Bangla Real Estate Limited. He meets directly with property buyers, institutional clients, and non resident Bangladeshis to explain master layouts, road connectivity, and legal clearances.',
+    bioExtra: 'He directs joint venture discussions with landowners, monitors project feasibility, and coordinates sales and marketing initiatives across current and upcoming project areas.'
   },
   {
     id: 'eng-sher-ali-khan',
     name: 'Engr. Sher Ali Khan',
-    designation: 'Co-Founder, Director & Chief Technology Officer (CTO)',
-    roleBadge: 'Co-Founder & CTO',
+    designation: 'Co Founder and Chief Technology Officer',
     image: encodeURI('/img/Eng Sher Ali khan Director Marketing & IT .png'),
     email: 'sherali@gbrel.com',
-    bio: 'Engr. Sher Ali Khan is a Co-Founding Director and the Chief Technology Officer leading GBREL’s digital transformation and technology infrastructure. With extensive background in software engineering, he oversees the company’s PropTech discovery platforms, GIS spatial plot mapping, automated customer relationship systems, and digital investor services.',
-    responsibilities: [
-      'Architecting and scaling GBREL’s PropTech web, mobile, and client platforms',
-      'Interactive GIS land mapping and digital plot boundary verification systems',
-      'Customer acquisition infrastructure, digital marketing, and automated CRM pipelines',
-      'Data security, digital title records access, and overseas buyer portal services'
-    ]
+    bio: 'Engr. Sher Ali Khan is a Co Founder and the Chief Technology Officer in charge of digital systems and operational technology at Gram Bangla Real Estate Limited. He developed the company web platform, digital plot booking workflows, and internal management tools.',
+    bioExtra: 'With a background in software engineering, he focuses on reliable digital services that allow clients in Bangladesh and abroad to view property documents, track project milestones, and communicate with company representatives.'
   },
   {
     id: 'md-rubel-hawlader',
     name: 'Md. Rubel Hawlader',
-    designation: 'Director, Project & Transport',
-    roleBadge: 'Director, Project & Transport',
+    designation: 'Director, Project and Transport',
     image: encodeURI('/img/rubel-hawlader-circle.png'),
     email: 'projects@gbrel.com',
-    bio: 'Md. Rubel Hawlader directs on-ground civil construction, earthwork operations, heavy equipment transport, and site logistics across all GBREL sectors. He manages project execution teams to ensure on-schedule boundary demarcation, earth filling, road development, and quality engineering standards.',
-    responsibilities: [
-      'Civil construction supervision, earth filling, and ground development works',
-      'Fleet logistics and heavy excavation machinery management',
-      'Site surveying, physical boundary demarcation, and corner plot layout',
-      'Contractor supervision and project safety compliance'
-    ]
+    bio: 'Md. Rubel Hawlader manages heavy equipment transport, earth filling, and field operations across all project sites. He coordinates survey teams, civil contractors, and site supervisors during land development and boundary demarcations.',
+    bioExtra: 'He is present on location to supervise road carpeting, equipment deployment, and safety procedures, ensuring site works progress according to schedule and technical standards.'
   }
 ]
 </script>
 
 <style scoped>
-/* ==========================================================================
-   BOARD OF DIRECTORS PAGE - CLEAN, LUXURY CORPORATE AESTHETIC
-   ========================================================================== */
-
 .directors-page {
   background-color: #F8FAFC;
   min-height: 100vh;
@@ -310,19 +258,6 @@ const directors = [
 
 .hero-inner {
   max-width: 820px;
-}
-
-.hero-tag {
-  display: inline-block;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #D4AF37;
-  background: rgba(212, 175, 55, 0.12);
-  padding: 4px 12px;
-  border-radius: 4px;
-  margin-bottom: 14px;
 }
 
 .hero-heading {
@@ -414,13 +349,15 @@ const directors = [
   flex-direction: column;
 }
 
-.section-label {
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #059669;
-  margin-bottom: 8px;
+.md-brand-lockup {
+  margin-bottom: 14px;
+}
+
+.corporate-brand-logo {
+  height: 44px;
+  max-width: 260px;
+  object-fit: contain;
+  display: block;
 }
 
 .md-headline {
@@ -429,7 +366,7 @@ const directors = [
   font-weight: 800;
   color: #0A1128;
   line-height: 1.3;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .md-statement {
@@ -493,19 +430,6 @@ const directors = [
   margin-bottom: 40px;
 }
 
-.section-tag {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #059669;
-  background: #ECFDF5;
-  padding: 3px 10px;
-  border-radius: 4px;
-  margin-bottom: 10px;
-}
-
 .section-title {
   font-family: var(--font-display);
   font-size: 2rem;
@@ -544,7 +468,7 @@ const directors = [
   border-color: rgba(212, 175, 55, 0.4);
 }
 
-/* Redesigned Card Image Header */
+/* Card Image Header */
 .card-image-header {
   position: relative;
   height: 420px;
@@ -577,20 +501,6 @@ const directors = [
 
 .director-card:hover .director-portrait-img {
   transform: scale(1.02);
-}
-
-.role-pill {
-  display: inline-block;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: #0F172A;
-  background: #F1F5F9;
-  border: 1px solid var(--color-border);
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  margin-bottom: 8px;
 }
 
 /* Card Body */
@@ -626,46 +536,14 @@ const directors = [
   font-size: 0.92rem;
   line-height: 1.65;
   color: #475569;
+  margin-bottom: 12px;
+}
+
+.director-bio-extra {
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: #475569;
   margin-bottom: 20px;
-}
-
-.responsibilities-block {
-  background: #F8FAFC;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 16px 18px;
-  margin-bottom: 22px;
-}
-
-.resp-heading {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #64748B;
-  margin-bottom: 10px;
-}
-
-.resp-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.resp-list li {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 0.84rem;
-  color: #334155;
-  line-height: 1.45;
-}
-
-.check-icon {
-  color: #059669;
-  flex-shrink: 0;
-  margin-top: 3px;
 }
 
 .card-footer-action {
@@ -725,17 +603,6 @@ const directors = [
   object-fit: contain;
 }
 
-.md-brand-lockup {
-  margin-bottom: 14px;
-}
-
-.corporate-brand-logo {
-  height: 44px;
-  max-width: 260px;
-  object-fit: contain;
-  display: block;
-}
-
 .standards-title {
   font-family: var(--font-display);
   font-size: 1.35rem;
@@ -770,7 +637,7 @@ const directors = [
   }
 
   .card-image-header {
-    height: 340px;
+    height: 360px;
   }
 }
 
