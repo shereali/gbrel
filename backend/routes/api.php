@@ -13,6 +13,11 @@ use App\Models\Setting;
 use App\Models\Role;
 use App\Models\Permission;
 use App\Models\Brochure;
+use App\Models\PropertyCategory;
+use App\Models\PropertyDivision;
+use App\Models\PropertyTransactionType;
+use App\Models\PropertyStatus;
+use App\Models\PropertyLandUnit;
 use Illuminate\Support\Facades\Hash;
 
 /*
@@ -945,7 +950,7 @@ Route::delete('/brochures/{id}', function ($id) {
     ]);
 });
 
-// 6.5. Dynamic Property Form Options API (Category, Division, Transaction Type, Status, Land Unit)
+// 6.5. Dynamic Property Form Options API (Dedicated Tables + Realtime Persistence)
 Route::get('/property-options', function () {
     $defaultCategories = ['Land Share', 'Flat', 'Plot', 'Land', 'Hotel', 'Duplex', 'Commercial', 'Penthouse'];
     $defaultDivisions = ['Dhaka North', 'Dhaka South', 'Chittagong', 'Sylhet', "Cox's Bazar", 'Gazipur', 'Narayanganj', 'Rajshahi', 'Khulna', 'Barisal', 'Rangpur', 'Mymensingh'];
@@ -953,20 +958,28 @@ Route::get('/property-options', function () {
     $defaultStatuses = ['Draft', 'Active', 'Under Offer', 'Sold', 'Delisted'];
     $defaultLandUnits = ['Katha', 'Bigha', 'Shotok', 'Decimal', 'Sqft', 'Acre'];
 
-    $categories = Setting::getVal('property_categories', $defaultCategories);
-    $divisions = Setting::getVal('property_divisions', $defaultDivisions);
-    $transactionTypes = Setting::getVal('property_transaction_types', $defaultTransactionTypes);
-    $statuses = Setting::getVal('property_statuses', $defaultStatuses);
-    $landUnits = Setting::getVal('property_land_units', $defaultLandUnits);
+    try {
+        $categories = PropertyCategory::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
+        $divisions = PropertyDivision::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
+        $transactionTypes = PropertyTransactionType::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
+        $statuses = PropertyStatus::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
+        $landUnits = PropertyLandUnit::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
+    } catch (\Throwable $e) {
+        $categories = Setting::getVal('property_categories', $defaultCategories);
+        $divisions = Setting::getVal('property_divisions', $defaultDivisions);
+        $transactionTypes = Setting::getVal('property_transaction_types', $defaultTransactionTypes);
+        $statuses = Setting::getVal('property_statuses', $defaultStatuses);
+        $landUnits = Setting::getVal('property_land_units', $defaultLandUnits);
+    }
 
     return response()->json([
         'success' => true,
         'data' => [
-            'categories' => is_array($categories) ? $categories : $defaultCategories,
-            'divisions' => is_array($divisions) ? $divisions : $defaultDivisions,
-            'transaction_types' => is_array($transactionTypes) ? $transactionTypes : $defaultTransactionTypes,
-            'statuses' => is_array($statuses) ? $statuses : $defaultStatuses,
-            'land_units' => is_array($landUnits) ? $landUnits : $defaultLandUnits
+            'categories' => !empty($categories) ? $categories : $defaultCategories,
+            'divisions' => !empty($divisions) ? $divisions : $defaultDivisions,
+            'transaction_types' => !empty($transactionTypes) ? $transactionTypes : $defaultTransactionTypes,
+            'statuses' => !empty($statuses) ? $statuses : $defaultStatuses,
+            'land_units' => !empty($landUnits) ? $landUnits : $defaultLandUnits
         ]
     ]);
 });
@@ -976,30 +989,64 @@ Route::post('/property-options', function (Request $request) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
     if (isset($input['categories']) && is_array($input['categories'])) {
+        foreach ($input['categories'] as $idx => $cat) {
+            PropertyCategory::updateOrCreate(
+                ['name' => trim($cat)],
+                ['slug' => \Illuminate\Support\Str::slug($cat), 'is_active' => true, 'sort_order' => $idx + 1]
+            );
+        }
         Setting::setVal('property_categories', array_values(array_unique(array_filter($input['categories']))));
     }
+
     if (isset($input['divisions']) && is_array($input['divisions'])) {
+        foreach ($input['divisions'] as $idx => $div) {
+            PropertyDivision::updateOrCreate(
+                ['name' => trim($div)],
+                ['slug' => \Illuminate\Support\Str::slug($div), 'is_active' => true, 'sort_order' => $idx + 1]
+            );
+        }
         Setting::setVal('property_divisions', array_values(array_unique(array_filter($input['divisions']))));
     }
+
     if (isset($input['transaction_types']) && is_array($input['transaction_types'])) {
+        foreach ($input['transaction_types'] as $idx => $tt) {
+            PropertyTransactionType::updateOrCreate(
+                ['name' => trim($tt)],
+                ['slug' => \Illuminate\Support\Str::slug($tt), 'is_active' => true, 'sort_order' => $idx + 1]
+            );
+        }
         Setting::setVal('property_transaction_types', array_values(array_unique(array_filter($input['transaction_types']))));
     }
+
     if (isset($input['statuses']) && is_array($input['statuses'])) {
+        foreach ($input['statuses'] as $idx => $st) {
+            PropertyStatus::updateOrCreate(
+                ['name' => trim($st)],
+                ['slug' => \Illuminate\Support\Str::slug($st), 'is_active' => true, 'sort_order' => $idx + 1]
+            );
+        }
         Setting::setVal('property_statuses', array_values(array_unique(array_filter($input['statuses']))));
     }
+
     if (isset($input['land_units']) && is_array($input['land_units'])) {
+        foreach ($input['land_units'] as $idx => $lu) {
+            PropertyLandUnit::updateOrCreate(
+                ['name' => trim($lu)],
+                ['slug' => \Illuminate\Support\Str::slug($lu), 'is_active' => true, 'sort_order' => $idx + 1]
+            );
+        }
         Setting::setVal('property_land_units', array_values(array_unique(array_filter($input['land_units']))));
     }
 
     return response()->json([
         'success' => true,
-        'message' => 'Property configuration options updated successfully',
+        'message' => 'Property configuration options updated successfully in database tables',
         'data' => [
-            'categories' => Setting::getVal('property_categories', ['Land Share', 'Flat', 'Plot', 'Land', 'Hotel', 'Duplex', 'Commercial', 'Penthouse']),
-            'divisions' => Setting::getVal('property_divisions', ['Dhaka North', 'Dhaka South', 'Chittagong', 'Sylhet', "Cox's Bazar", 'Gazipur', 'Narayanganj', 'Rajshahi', 'Khulna', 'Barisal', 'Rangpur', 'Mymensingh']),
-            'transaction_types' => Setting::getVal('property_transaction_types', ['Sale', 'Lease', 'Joint Venture', 'Auction']),
-            'statuses' => Setting::getVal('property_statuses', ['Draft', 'Active', 'Under Offer', 'Sold', 'Delisted']),
-            'land_units' => Setting::getVal('property_land_units', ['Katha', 'Bigha', 'Shotok', 'Decimal', 'Sqft', 'Acre'])
+            'categories' => PropertyCategory::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray(),
+            'divisions' => PropertyDivision::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray(),
+            'transaction_types' => PropertyTransactionType::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray(),
+            'statuses' => PropertyStatus::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray(),
+            'land_units' => PropertyLandUnit::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray()
         ]
     ]);
 });
@@ -1015,41 +1062,36 @@ Route::post('/property-options/add-item', function (Request $request) {
         return response()->json(['success' => false, 'message' => 'Both key and item are required'], 400);
     }
 
-    $settingKeyMap = [
-        'categories' => 'property_categories',
-        'divisions' => 'property_divisions',
-        'transaction_types' => 'property_transaction_types',
-        'statuses' => 'property_statuses',
-        'land_units' => 'property_land_units'
-    ];
+    $slug = \Illuminate\Support\Str::slug($item);
 
-    if (!isset($settingKeyMap[$key])) {
+    if ($key === 'categories') {
+        PropertyCategory::firstOrCreate(['name' => $item], ['slug' => $slug, 'is_active' => true, 'sort_order' => 99]);
+        $data = PropertyCategory::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
+        Setting::setVal('property_categories', $data);
+    } elseif ($key === 'divisions') {
+        PropertyDivision::firstOrCreate(['name' => $item], ['slug' => $slug, 'is_active' => true, 'sort_order' => 99]);
+        $data = PropertyDivision::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
+        Setting::setVal('property_divisions', $data);
+    } elseif ($key === 'transaction_types') {
+        PropertyTransactionType::firstOrCreate(['name' => $item], ['slug' => $slug, 'is_active' => true, 'sort_order' => 99]);
+        $data = PropertyTransactionType::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
+        Setting::setVal('property_transaction_types', $data);
+    } elseif ($key === 'statuses') {
+        PropertyStatus::firstOrCreate(['name' => $item], ['slug' => $slug, 'is_active' => true, 'sort_order' => 99]);
+        $data = PropertyStatus::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
+        Setting::setVal('property_statuses', $data);
+    } elseif ($key === 'land_units') {
+        PropertyLandUnit::firstOrCreate(['name' => $item], ['slug' => $slug, 'symbol' => $slug, 'is_active' => true, 'sort_order' => 99]);
+        $data = PropertyLandUnit::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
+        Setting::setVal('property_land_units', $data);
+    } else {
         return response()->json(['success' => false, 'message' => 'Invalid configuration key'], 400);
-    }
-
-    $dbKey = $settingKeyMap[$key];
-    $defaults = [
-        'property_categories' => ['Land Share', 'Flat', 'Plot', 'Land', 'Hotel', 'Duplex', 'Commercial', 'Penthouse'],
-        'property_divisions' => ['Dhaka North', 'Dhaka South', 'Chittagong', 'Sylhet', "Cox's Bazar", 'Gazipur', 'Narayanganj', 'Rajshahi', 'Khulna', 'Barisal', 'Rangpur', 'Mymensingh'],
-        'property_transaction_types' => ['Sale', 'Lease', 'Joint Venture', 'Auction'],
-        'property_statuses' => ['Draft', 'Active', 'Under Offer', 'Sold', 'Delisted'],
-        'property_land_units' => ['Katha', 'Bigha', 'Shotok', 'Decimal', 'Sqft', 'Acre']
-    ];
-
-    $list = Setting::getVal($dbKey, $defaults[$dbKey]);
-    if (!is_array($list)) {
-        $list = $defaults[$dbKey];
-    }
-
-    if (!in_array($item, $list)) {
-        $list[] = $item;
-        Setting::setVal($dbKey, array_values(array_unique(array_filter($list))));
     }
 
     return response()->json([
         'success' => true,
-        'message' => "Item '{$item}' added to {$key}",
-        'data' => Setting::getVal($dbKey, $defaults[$dbKey])
+        'message' => "Item '{$item}' added to database table for {$key}",
+        'data' => $data
     ]);
 });
 
