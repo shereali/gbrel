@@ -10,6 +10,9 @@ use App\Models\Lead;
 use App\Models\FinancialTransaction;
 use App\Models\SavedProperty;
 use App\Models\Setting;
+use App\Models\Role;
+use App\Models\Permission;
+use App\Models\Brochure;
 use Illuminate\Support\Facades\Hash;
 
 /*
@@ -594,18 +597,135 @@ Route::delete('/financials/{id}', function ($id) {
     ]);
 });
 
-// 6. Users Accounts & RBAC API (Full CRUD)
+// 6. Users Accounts & RBAC API (Full CRUD with Roles & Permissions)
+Route::get('/permissions', function () {
+    $permissions = Permission::orderBy('module')->orderBy('id')->get();
+    $grouped = $permissions->groupBy('module');
+
+    return response()->json([
+        'success' => true,
+        'count' => $permissions->count(),
+        'data' => $permissions,
+        'grouped' => $grouped
+    ]);
+});
+
+Route::get('/roles', function () {
+    $roles = Role::orderBy('id')->get()->map(function ($role) {
+        return [
+            'id' => $role->id,
+            'name' => $role->name,
+            'slug' => $role->slug,
+            'description' => $role->description,
+            'permissions' => $role->permissions ?? [],
+            'is_system' => (bool)$role->is_system,
+            'users_count' => User::where('role_id', $role->id)->orWhere('role', $role->slug)->count(),
+            'created_at' => $role->created_at
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'count' => $roles->count(),
+        'data' => $roles
+    ]);
+});
+
+Route::post('/roles', function (Request $request) {
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+
+    $name = trim($input['name'] ?? '');
+    if (!$name) {
+        return response()->json(['success' => false, 'message' => 'Role name is required'], 422);
+    }
+
+    $slug = strtolower(preg_replace('/[^a-z0-9_]/', '', str_replace(' ', '_', $input['slug'] ?? $name)));
+    if (Role::where('slug', $slug)->exists()) {
+        $slug = $slug . '_' . rand(10, 99);
+    }
+
+    $perms = $input['permissions'] ?? [];
+    if (is_string($perms)) {
+        $decoded = json_decode($perms, true);
+        $perms = is_array($decoded) ? $decoded : explode(',', $perms);
+    }
+
+    $role = Role::create([
+        'name' => $name,
+        'slug' => $slug,
+        'description' => $input['description'] ?? 'Custom enterprise access role',
+        'permissions' => array_values(array_filter(array_map('trim', $perms))),
+        'is_system' => false
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Role successfully created',
+        'data' => $role
+    ], 201);
+});
+
+Route::put('/roles/{id}', function (Request $request, $id) {
+    $role = Role::findOrFail($id);
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+
+    if (isset($input['name'])) $role->name = trim($input['name']);
+    if (isset($input['description'])) $role->description = $input['description'];
+    if (isset($input['permissions'])) {
+        $perms = $input['permissions'];
+        if (is_string($perms)) {
+            $decoded = json_decode($perms, true);
+            $perms = is_array($decoded) ? $decoded : explode(',', $perms);
+        }
+        $role->permissions = array_values(array_filter(array_map('trim', $perms)));
+    }
+    $role->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Role capabilities updated',
+        'data' => $role
+    ]);
+});
+
+Route::delete('/roles/{id}', function ($id) {
+    $role = Role::findOrFail($id);
+    if ($role->is_system) {
+        return response()->json(['success' => false, 'message' => 'System protected roles cannot be deleted'], 403);
+    }
+    $role->delete();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Role deleted successfully'
+    ]);
+});
+
 Route::get('/users', function () {
     $users = User::orderBy('created_at', 'desc')->get()->map(function ($u) {
+        $roleObj = null;
+        if ($u->role_id) {
+            $roleObj = Role::find($u->role_id);
+        }
+        if (!$roleObj && $u->role) {
+            $roleObj = Role::where('slug', $u->role)->first();
+        }
+
         return [
             'id' => $u->id,
             'name' => $u->name,
             'email' => $u->email,
-            'role' => $u->role ?? (str_contains($u->email, 'admin') ? 'admin' : (str_contains($u->email, 'agent') ? 'agent' : 'buyer')),
+            'role' => $u->role ?? ($roleObj ? $roleObj->slug : 'buyer'),
+            'role_id' => $roleObj ? $roleObj->id : $u->role_id,
+            'role_name' => $roleObj ? $roleObj->name : ucfirst($u->role ?? 'Buyer'),
             'phone' => $u->phone ?? '+880 1711-000000',
             'region' => $u->region ?? 'Dhaka HQ',
             'status' => $u->status ?? 'Active',
             'avatar' => $u->avatar ?? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+            'custom_permissions' => $u->custom_permissions ?? [],
+            'effective_permissions' => $u->getEffectivePermissions(),
             'created_at' => $u->created_at
         ];
     });
@@ -631,18 +751,32 @@ Route::post('/users', function (Request $request) {
         return response()->json(['success' => false, 'message' => 'An account with this email already exists'], 422);
     }
 
-    $role = $input['role'] ?? 'agent';
-    $defaultAvatar = $role === 'admin'
-        ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop'
-        : ($role === 'agent'
-            ? 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop'
-            : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop');
+    $roleSlug = $input['role'] ?? 'agent';
+    $roleId = isset($input['role_id']) ? (int)$input['role_id'] : null;
+    if (!$roleId) {
+        $foundRole = Role::where('slug', $roleSlug)->first();
+        if ($foundRole) $roleId = $foundRole->id;
+    }
+
+    $defaultAvatar = $roleSlug === 'admin'
+        ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop'
+        : ($roleSlug === 'property_manager'
+            ? 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
+            : 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop');
+
+    $customPerms = $input['custom_permissions'] ?? $input['customPermissions'] ?? [];
+    if (is_string($customPerms)) {
+        $decoded = json_decode($customPerms, true);
+        $customPerms = is_array($decoded) ? $decoded : explode(',', $customPerms);
+    }
 
     $user = User::create([
         'name' => $input['name'] ?? 'Team Member',
         'email' => $email,
         'password' => Hash::make($input['password'] ?? 'gbrel2026!'),
-        'role' => $role,
+        'role' => $roleSlug,
+        'role_id' => $roleId,
+        'custom_permissions' => is_array($customPerms) ? array_values(array_filter($customPerms)) : [],
         'phone' => $input['phone'] ?? '+880 1819-000000',
         'region' => $input['region'] ?? 'Dhaka HQ',
         'status' => $input['status'] ?? 'Active',
@@ -651,7 +785,7 @@ Route::post('/users', function (Request $request) {
 
     return response()->json([
         'success' => true,
-        'message' => 'User account created in MySQL database',
+        'message' => 'User account created in database',
         'data' => $user
     ], 201);
 });
@@ -662,7 +796,25 @@ Route::put('/users/{id}', function (Request $request, $id) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
     if (isset($input['name'])) $user->name = $input['name'];
-    if (isset($input['role'])) $user->role = $input['role'];
+    if (isset($input['email'])) $user->email = strtolower(trim($input['email']));
+    if (isset($input['role'])) {
+        $user->role = $input['role'];
+        $foundRole = Role::where('slug', $input['role'])->first();
+        if ($foundRole) $user->role_id = $foundRole->id;
+    }
+    if (isset($input['role_id'])) {
+        $user->role_id = (int)$input['role_id'];
+        $roleObj = Role::find($user->role_id);
+        if ($roleObj) $user->role = $roleObj->slug;
+    }
+    if (isset($input['custom_permissions']) || isset($input['customPermissions'])) {
+        $perms = $input['custom_permissions'] ?? $input['customPermissions'];
+        if (is_string($perms)) {
+            $decoded = json_decode($perms, true);
+            $perms = is_array($decoded) ? $decoded : explode(',', $perms);
+        }
+        $user->custom_permissions = is_array($perms) ? array_values(array_filter($perms)) : [];
+    }
     if (isset($input['phone'])) $user->phone = $input['phone'];
     if (isset($input['region'])) $user->region = $input['region'];
     if (isset($input['status'])) $user->status = $input['status'];
@@ -674,7 +826,7 @@ Route::put('/users/{id}', function (Request $request, $id) {
 
     return response()->json([
         'success' => true,
-        'message' => 'User account updated in MySQL database',
+        'message' => 'User account updated in database',
         'data' => $user
     ]);
 });
@@ -687,7 +839,101 @@ Route::delete('/users/{id}', function ($id) {
     $user->delete();
     return response()->json([
         'success' => true,
-        'message' => 'User account deleted from MySQL database'
+        'message' => 'User account deleted from database'
+    ]);
+});
+
+// 7. Official Project Brochures & Marketing Collateral Vault API
+Route::get('/brochures', function (Request $request) {
+    $query = Brochure::with('property')->orderBy('created_at', 'desc');
+    
+    if ($request->has('property_id')) {
+        $query->where('property_id', $request->property_id);
+    }
+    if ($request->has('category')) {
+        $query->where('category', $request->category);
+    }
+
+    $brochures = $query->get()->map(function ($b) {
+        return [
+            'id' => $b->id,
+            'title' => $b->title,
+            'file_url' => $b->file_url,
+            'file_name' => $b->file_name,
+            'file_size' => $b->file_size,
+            'file_type' => $b->file_type,
+            'property_id' => $b->property_id,
+            'property_title' => $b->property ? $b->property->title : 'Corporate Collateral',
+            'property_area' => $b->property ? $b->property->area_name : 'Central HQ',
+            'category' => $b->category,
+            'download_count' => $b->download_count,
+            'is_public' => $b->is_public,
+            'created_at' => $b->created_at
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'count' => $brochures->count(),
+        'data' => $brochures
+    ]);
+});
+
+Route::post('/brochures', function (Request $request) {
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+
+    $title = trim($input['title'] ?? '');
+    $fileUrl = trim($input['file_url'] ?? $input['fileUrl'] ?? '');
+    if (!$title || !$fileUrl) {
+        return response()->json(['success' => false, 'message' => 'Title and file URL are required'], 422);
+    }
+
+    $fileName = $input['file_name'] ?? $input['fileName'] ?? basename($fileUrl);
+    $propertyId = isset($input['property_id']) && !empty($input['property_id']) ? (int)$input['property_id'] : null;
+
+    $brochure = Brochure::create([
+        'title' => $title,
+        'file_url' => $fileUrl,
+        'file_name' => $fileName,
+        'file_size' => $input['file_size'] ?? $input['fileSize'] ?? '4.5 MB',
+        'file_type' => strtoupper($input['file_type'] ?? $input['fileType'] ?? 'PDF'),
+        'property_id' => $propertyId,
+        'category' => $input['category'] ?? 'Property Brochure',
+        'download_count' => 0,
+        'is_public' => filter_var($input['is_public'] ?? $input['isPublic'] ?? true, FILTER_VALIDATE_BOOLEAN)
+    ]);
+
+    // If linked to a property, update the property's primary brochure_url
+    if ($propertyId) {
+        Property::where('id', $propertyId)->update(['brochure_url' => $fileUrl]);
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Brochure successfully archived in vault',
+        'data' => $brochure
+    ], 201);
+});
+
+Route::post('/brochures/{id}/download', function ($id) {
+    $brochure = Brochure::findOrFail($id);
+    $brochure->increment('download_count');
+
+    return response()->json([
+        'success' => true,
+        'download_count' => $brochure->download_count,
+        'file_url' => $brochure->file_url
+    ]);
+});
+
+Route::delete('/brochures/{id}', function ($id) {
+    $brochure = Brochure::findOrFail($id);
+    $brochure->delete();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Brochure removed from vault'
     ]);
 });
 
@@ -746,7 +992,8 @@ Route::post('/settings', function (Request $request) {
 // 8. Executive KPI Analytics API (Realtime Aggregations)
 Route::get('/admin/stats', function () {
     $properties = Property::all();
-    $totalValuation = $properties->sum('price');
+    $totalValuation = (float)$properties->sum('price');
+    $landShares = $properties->filter(fn($p) => $p->property_type === 'Land Share')->count();
     $flats = $properties->filter(fn($p) => in_array($p->property_type, ['Flat', 'Penthouse', 'Duplex']))->count();
     $plots = $properties->filter(fn($p) => in_array($p->property_type, ['Plot', 'Land']))->count();
     $resorts = $properties->filter(fn($p) => $p->property_type === 'Hotel')->count();
@@ -765,23 +1012,36 @@ Route::get('/admin/stats', function () {
         ];
     }
 
-    return response()->json([
+    $leadsCount = Lead::count();
+    $viewingsCount = Viewing::count();
+    $brochuresCount = Brochure::count();
+    $usersCount = User::count();
+    $pendingApprovals = Property::where('is_rajuk_approved', false)->count();
+    $settledVolume = (float)FinancialTransaction::where('status', 'Settled')->sum('amount');
+
+    $payload = [
+        'total_portfolio_valuation' => $totalValuation,
+        'total_portfolio_crores' => round($totalValuation / 10000000, 1),
+        'properties_count' => $properties->count(),
+        'land_shares_count' => $landShares,
+        'flats_count' => $flats,
+        'plots_count' => $plots,
+        'resorts_count' => $resorts,
+        'viewings_count' => $viewingsCount,
+        'leads_count' => $leadsCount,
+        'brochures_count' => $brochuresCount,
+        'users_count' => $usersCount,
+        'pending_approvals_count' => $pendingApprovals,
+        'settled_volume' => $settledVolume,
+        'regional_allocation' => $regions,
+        'recent_viewings' => Viewing::orderBy('created_at', 'desc')->take(3)->get(),
+        'unapproved_properties' => Property::where('is_rajuk_approved', false)->take(3)->get()
+    ];
+
+    return response()->json(array_merge([
         'success' => true,
-        'data' => [
-            'total_portfolio_valuation' => $totalValuation,
-            'total_portfolio_crores' => round($totalValuation / 10000000, 1),
-            'properties_count' => $properties->count(),
-            'flats_count' => $flats,
-            'plots_count' => $plots,
-            'resorts_count' => $resorts,
-            'viewings_count' => Viewing::count(),
-            'leads_count' => Lead::count(),
-            'pending_approvals_count' => Property::where('is_rajuk_approved', false)->count(),
-            'regional_allocation' => $regions,
-            'recent_viewings' => Viewing::orderBy('created_at', 'desc')->take(3)->get(),
-            'unapproved_properties' => Property::where('is_rajuk_approved', false)->take(3)->get()
-        ]
-    ]);
+        'data' => $payload
+    ], $payload));
 });
 
 Route::get('/user/saved-properties', function () {

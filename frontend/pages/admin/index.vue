@@ -51,7 +51,7 @@
         </div>
         <div class="kpi-value text-gold">{{ properties.length }} Assets</div>
         <div class="kpi-sub">
-          {{ flatsCount }} Flats • {{ plotsCount }} Plots • {{ resortsCount }} Resorts
+          {{ landSharesCount }} Land Shares • {{ flatsCount }} Flats • {{ plotsCount }} Plots
         </div>
       </div>
 
@@ -286,6 +286,7 @@ const totalPortfolioCrores = computed(() => {
   return (totalBDT / 10000000).toFixed(1)
 })
 
+const landSharesCount = computed(() => properties.value.filter(p => p.propertyType === 'Land Share').length)
 const flatsCount = computed(() => properties.value.filter(p => p.propertyType === 'Flat' || p.propertyType === 'Penthouse' || p.propertyType === 'Duplex').length)
 const plotsCount = computed(() => properties.value.filter(p => p.propertyType === 'Plot' || p.propertyType === 'Land').length)
 const resortsCount = computed(() => properties.value.filter(p => p.propertyType === 'Hotel').length)

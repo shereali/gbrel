@@ -143,7 +143,7 @@
     </section>
 
     <!-- ======================================================================
-         4. FEATURED CLIENT-HUNTER LISTINGS
+         4. FEATURED EXCLUSIVE MANDATES & RESIDENCES
          ====================================================================== -->
     <section class="section-padded" style="background: #F8FAFC; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border);">
       <div class="container">
@@ -156,7 +156,7 @@
             </p>
           </div>
           <NuxtLink to="/properties" class="btn btn-outline">
-            <span>Explore All 50+ Listings →</span>
+            <span>Explore All {{ properties.length }} Mandates →</span>
           </NuxtLink>
         </div>
 

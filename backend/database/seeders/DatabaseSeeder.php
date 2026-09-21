@@ -8,6 +8,9 @@ use App\Models\Agent;
 use App\Models\Viewing;
 use App\Models\Lead;
 use App\Models\FinancialTransaction;
+use App\Models\Role;
+use App\Models\Permission;
+use App\Models\Brochure;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,45 +21,204 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Seed Users (RBAC)
+        // 0. Seed Permissions
+        $permissionsData = [
+            // Properties
+            ['name' => 'View Properties', 'slug' => 'properties.view', 'module' => 'Properties', 'description' => 'View property catalog and specifications'],
+            ['name' => 'Create Property', 'slug' => 'properties.create', 'module' => 'Properties', 'description' => 'Publish new property mandates and land shares'],
+            ['name' => 'Edit Property', 'slug' => 'properties.edit', 'module' => 'Properties', 'description' => 'Update property details, pricing, and media'],
+            ['name' => 'Delete Property', 'slug' => 'properties.delete', 'module' => 'Properties', 'description' => 'Delist and permanently remove property records'],
+            ['name' => 'Feature Property', 'slug' => 'properties.feature', 'module' => 'Properties', 'description' => 'Toggle showcase status on live homepage'],
+            ['name' => 'Verify RAJUK / CDA Plan', 'slug' => 'properties.verify_rajuk', 'module' => 'Properties', 'description' => 'Audit and certify statutory municipal approvals'],
+            
+            // Brochures & Media
+            ['name' => 'View Brochures', 'slug' => 'brochures.view', 'module' => 'Brochures', 'description' => 'Access and download project brochures and architectural decks'],
+            ['name' => 'Upload Brochure', 'slug' => 'brochures.upload', 'module' => 'Brochures', 'description' => 'Upload and link PDF/DOC marketing brochures to mandates'],
+            ['name' => 'Delete Brochure', 'slug' => 'brochures.delete', 'module' => 'Brochures', 'description' => 'Remove brochure documents from storage and vault'],
+
+            // Leads & CRM
+            ['name' => 'View Leads', 'slug' => 'leads.view', 'module' => 'Leads CRM', 'description' => 'View incoming inquiries and buyer information'],
+            ['name' => 'Manage Lead Stages', 'slug' => 'leads.manage', 'module' => 'Leads CRM', 'description' => 'Update lead status, schedule calls, record notes'],
+            ['name' => 'Delete Lead', 'slug' => 'leads.delete', 'module' => 'Leads CRM', 'description' => 'Remove lead records from CRM database'],
+
+            // VIP Viewings
+            ['name' => 'View Site Viewings', 'slug' => 'viewings.view', 'module' => 'Site Viewings', 'description' => 'Access site viewing schedule and client roster'],
+            ['name' => 'Manage Viewings', 'slug' => 'viewings.manage', 'module' => 'Site Viewings', 'description' => 'Confirm, reschedule, or assign agents and VIP pickup'],
+
+            // Advisors
+            ['name' => 'Manage Advisors', 'slug' => 'agents.manage', 'module' => 'Advisors', 'description' => 'Create, edit, and assign real estate brokers'],
+
+            // Financials & Escrow
+            ['name' => 'View Financials', 'slug' => 'financials.view', 'module' => 'Financials & Escrow', 'description' => 'Inspect escrow balances and commission tallies'],
+            ['name' => 'Manage Escrow Settlements', 'slug' => 'financials.manage', 'module' => 'Financials & Escrow', 'description' => 'Settle transactions and verify bank guarantees'],
+
+            // Users & RBAC
+            ['name' => 'View Users & RBAC', 'slug' => 'users.view', 'module' => 'User Management', 'description' => 'View staff directory and role assignments'],
+            ['name' => 'Manage Users & Permissions', 'slug' => 'users.manage', 'module' => 'User Management', 'description' => 'Create staff, assign roles, and override custom permissions'],
+            ['name' => 'Manage Roles Matrix', 'slug' => 'roles.manage', 'module' => 'User Management', 'description' => 'Configure role capabilities and permission matrix'],
+
+            // System Settings
+            ['name' => 'Manage System Settings', 'slug' => 'settings.manage', 'module' => 'System Settings', 'description' => 'Configure mortgage interest rates, hotlines, and license numbers']
+        ];
+
+        foreach ($permissionsData as $p) {
+            Permission::updateOrCreate(['slug' => $p['slug']], $p);
+        }
+
+        // 1. Seed Roles
+        $roleAdmin = Role::updateOrCreate(
+            ['slug' => 'admin'],
+            [
+                'name' => 'Super Administrator',
+                'description' => 'Unrestricted enterprise control over all property mandates, users, legal approvals, and financial escrows.',
+                'permissions' => ['*'],
+                'is_system' => true
+            ]
+        );
+
+        $rolePropertyManager = Role::updateOrCreate(
+            ['slug' => 'property_manager'],
+            [
+                'name' => 'Property & Land Manager',
+                'description' => 'Full control over property catalog, Land Share co-ownership projects, brochure vault, and media assets.',
+                'permissions' => [
+                    'properties.view', 'properties.create', 'properties.edit', 'properties.delete', 'properties.feature',
+                    'brochures.view', 'brochures.upload', 'brochures.delete',
+                    'viewings.view', 'leads.view'
+                ],
+                'is_system' => true
+            ]
+        );
+
+        $roleLegal = Role::updateOrCreate(
+            ['slug' => 'legal_compliance'],
+            [
+                'name' => 'Legal & Compliance Officer',
+                'description' => 'Vetting RAJUK/CDA municipal plans, vetting CS/RS/BS khatians, and verifying mutation deeds.',
+                'permissions' => [
+                    'properties.view', 'properties.edit', 'properties.verify_rajuk',
+                    'brochures.view', 'brochures.upload',
+                    'leads.view', 'viewings.view'
+                ],
+                'is_system' => true
+            ]
+        );
+
+        $roleAgent = Role::updateOrCreate(
+            ['slug' => 'agent'],
+            [
+                'name' => 'Senior Real Estate Advisor',
+                'description' => 'Managing buyer relationships, scheduling VIP physical tours, and coordinating property viewings.',
+                'permissions' => [
+                    'properties.view', 'brochures.view',
+                    'leads.view', 'leads.manage',
+                    'viewings.view', 'viewings.manage'
+                ],
+                'is_system' => true
+            ]
+        );
+
+        $roleFinance = Role::updateOrCreate(
+            ['slug' => 'finance_auditor'],
+            [
+                'name' => 'Escrow & Financial Auditor',
+                'description' => 'Auditing bank escrow accounts, settling transactions, and reviewing commission distributions.',
+                'permissions' => [
+                    'financials.view', 'financials.manage',
+                    'properties.view', 'leads.view'
+                ],
+                'is_system' => true
+            ]
+        );
+
+        $roleBuyer = Role::updateOrCreate(
+            ['slug' => 'buyer'],
+            [
+                'name' => 'VIP Client / Investor',
+                'description' => 'Public catalog access, project brochure downloads, and self-service viewing requests.',
+                'permissions' => [
+                    'properties.view', 'brochures.view', 'viewings.manage'
+                ],
+                'is_system' => true
+            ]
+        );
+
+        // 2. Seed Users (RBAC Enabled)
         $adminEmail = env('ADMIN_EMAIL', 'admin@gbrel.com');
         $adminPassword = env('ADMIN_PASSWORD', 'admin123');
 
         User::updateOrCreate(
             ['email' => $adminEmail],
             [
-                'name' => 'Chief Admin (GBREL HQ)',
+                'name' => 'Engr. Siam Talukder (Managing Director)',
                 'password' => Hash::make($adminPassword),
                 'email_verified_at' => now(),
+                'role' => 'admin',
+                'role_id' => $roleAdmin->id,
+                'phone' => '+880 1819-987654',
+                'region' => 'Dhaka HQ',
+                'status' => 'Active',
+                'avatar' => 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop'
             ]
         );
 
-        if ($adminEmail !== 'admin@gbrel.com') {
-            User::updateOrCreate(
-                ['email' => 'admin@gbrel.com'],
-                [
-                    'name' => 'Chief Admin (GBREL HQ)',
-                    'password' => Hash::make($adminPassword),
-                    'email_verified_at' => now(),
-                ]
-            );
-        }
+        User::updateOrCreate(
+            ['email' => 'manager@gbrel.com'],
+            [
+                'name' => 'Tariqul Islam (Property Director)',
+                'password' => Hash::make('manager123'),
+                'email_verified_at' => now(),
+                'role' => 'property_manager',
+                'role_id' => $rolePropertyManager->id,
+                'phone' => '+880 1711-445566',
+                'region' => 'Dhaka North',
+                'status' => 'Active',
+                'avatar' => 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'legal@gbrel.com'],
+            [
+                'name' => 'Barrister Shafiul Alam (Legal Panel Head)',
+                'password' => Hash::make('legal123'),
+                'email_verified_at' => now(),
+                'role' => 'legal_compliance',
+                'role_id' => $roleLegal->id,
+                'phone' => '+880 1912-334455',
+                'region' => 'Dhaka HQ',
+                'status' => 'Active',
+                'avatar' => 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop'
+            ]
+        );
 
         User::updateOrCreate(
             ['email' => 'agent@gbrel.com'],
             [
-                'name' => 'Tanvir Ahmed (Senior Advisor)',
+                'name' => 'Tanvir Ahmed (Senior Luxury Advisor)',
                 'password' => Hash::make('agent123'),
                 'email_verified_at' => now(),
+                'role' => 'agent',
+                'role_id' => $roleAgent->id,
+                'phone' => '+880 1819-987654',
+                'region' => 'Dhaka North',
+                'status' => 'Active',
+                'avatar' => 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop'
             ]
         );
 
         User::updateOrCreate(
             ['email' => 'buyer@gbrel.com'],
             [
-                'name' => 'Shere Ali (VIP Buyer)',
+                'name' => 'Shere Ali (VIP Investor)',
                 'password' => Hash::make('buyer123'),
                 'email_verified_at' => now(),
+                'role' => 'buyer',
+                'role_id' => $roleBuyer->id,
+                'phone' => '+880 1711-234567',
+                'region' => 'Dhaka HQ',
+                'status' => 'Active',
+                'avatar' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop'
             ]
         );
 
@@ -432,6 +594,52 @@ class DatabaseSeeder extends Seeder
                 'commission_amount' => 1560000,
                 'escrow_bank' => 'BRAC Bank Escrow',
                 'status' => 'Settled'
+            ]
+        );
+
+        // 7. Seed Official Brochures Vault
+        Brochure::updateOrCreate(
+            ['id' => 1],
+            [
+                'title' => 'Purbachal Green City Executive Land Share Blueprint',
+                'file_url' => 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                'file_name' => 'purbachal_land_share_deck_2026.pdf',
+                'file_size' => '5.4 MB',
+                'file_type' => 'PDF',
+                'property_id' => 7,
+                'category' => 'Land Share Guidelines',
+                'download_count' => 48,
+                'is_public' => true
+            ]
+        );
+
+        Brochure::updateOrCreate(
+            ['id' => 2],
+            [
+                'title' => 'Lakeview Penthouse Architectural & Interior Specifications',
+                'file_url' => 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                'file_name' => 'gulshan_penthouse_architectural_deck.pdf',
+                'file_size' => '8.2 MB',
+                'file_type' => 'PDF',
+                'property_id' => 1,
+                'category' => 'Property Brochure',
+                'download_count' => 124,
+                'is_public' => true
+            ]
+        );
+
+        Brochure::updateOrCreate(
+            ['id' => 3],
+            [
+                'title' => 'GBREL Corporate Real Estate Advisory & Escrow Portfolio 2026',
+                'file_url' => 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                'file_name' => 'gbrel_corporate_profile_2026.pdf',
+                'file_size' => '12.1 MB',
+                'file_type' => 'PDF',
+                'property_id' => null,
+                'category' => 'Company Profile',
+                'download_count' => 310,
+                'is_public' => true
             ]
         );
     }

@@ -182,6 +182,18 @@
               <span>Advisors & Brokers</span>
             </NuxtLink>
 
+            <NuxtLink to="/admin/brochures" class="sidebar-link" active-class="active" title="Brochure Vault & Collateral">
+              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+              <span>Brochure Vault</span>
+              <span class="badge badge-pill-sm" style="background:rgba(56,189,248,0.15); color:#38BDF8;">PDF</span>
+            </NuxtLink>
+
             <NuxtLink to="/admin/users" class="sidebar-link" active-class="active" title="Users & RBAC Control">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -312,6 +324,18 @@
                 <path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
               </svg>
               <span>Advisors & Brokers</span>
+            </NuxtLink>
+
+            <NuxtLink to="/admin/brochures" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+              <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+              <span>Brochure Vault</span>
+              <span class="badge badge-pill-sm" style="background:rgba(56,189,248,0.15); color:#38BDF8;">PDF</span>
             </NuxtLink>
 
             <NuxtLink to="/admin/users" class="drawer-link" active-class="active" @click="mobileNavOpen = false">

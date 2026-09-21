@@ -12,9 +12,9 @@
             </div>
           </div>
           <p style="color: #CBD5E1; font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px;">
-            Bangladesh's premier client-hunter real estate marketplace. Connecting discerning buyers and expatriates with verified luxury residences, high-yield plots, and commercial resort assets.
+            Gram Bangla Real Estate Limited (GBREL) is a premier property advisory and institutional brokerage in Bangladesh. Connecting discerning homebuyers, NRB investors, and corporations with vetted luxury residences, Land Share co-ownership projects, and high-yield commercial developments.
           </p>
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 flex-wrap">
             <span class="badge badge-rajuk">RAJUK Verified</span>
             <span class="badge badge-featured">CDA Approved</span>
             <span class="badge badge-status">0% Dispute Guaranteed</span>
@@ -38,12 +38,13 @@
         <div>
           <h4 class="footer-col-title">Categories</h4>
           <ul class="footer-links-list">
+            <li><NuxtLink to="/properties?type=Land+Share" class="footer-link" style="color:var(--color-gold); font-weight:700;">Land Share Projects</NuxtLink></li>
             <li><NuxtLink to="/properties?type=Flat" class="footer-link">Luxury Flats & Duplexes</NuxtLink></li>
             <li><NuxtLink to="/properties?type=Plot" class="footer-link">Residential & Corner Plots</NuxtLink></li>
             <li><NuxtLink to="/properties?type=Hotel" class="footer-link">Beach Resorts & Hotel Suites</NuxtLink></li>
-            <li><NuxtLink to="/properties?type=Land" class="footer-link">Industrial & Agro Lands</NuxtLink></li>
-            <li><NuxtLink to="/properties?type=Commercial" class="footer-link">Grade-A Corporate Offices</NuxtLink></li>
-            <li><NuxtLink to="/list-property" class="footer-link" style="color: #D4AF37; font-weight: 700;">Sell Your Property</NuxtLink></li>
+            <li><NuxtLink to="/properties?type=Land" class="footer-link">Industrial & Freehold Lands</NuxtLink></li>
+            <li><NuxtLink to="/properties?type=Commercial" class="footer-link">Grade-A Commercial Assets</NuxtLink></li>
+            <li><NuxtLink to="/list-property" class="footer-link" style="color: #38BDF8; font-weight: 700;">Sell Your Property</NuxtLink></li>
           </ul>
         </div>
 

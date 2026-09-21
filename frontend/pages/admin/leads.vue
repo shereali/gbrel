@@ -2,8 +2,8 @@
   <div class="admin-page animate-fade-in">
     <div class="admin-header-row">
       <div>
-        <h1 class="page-title">Lead Hunter CRM & Dispatch Inbox</h1>
-        <p class="page-subtitle">High-intent buyer leads captured from WhatsApp pulse, instant callback modals, and direct property mandate inquiries.</p>
+        <h1 class="page-title">Mandate Inquiries & Client CRM</h1>
+        <p class="page-subtitle">Direct inquiries, verified WhatsApp consult requests, and scheduled consultation dispatches.</p>
       </div>
       <div class="admin-header-actions">
         <button class="btn btn-emerald" @click="showAddLeadModal = true">

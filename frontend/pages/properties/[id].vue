@@ -144,7 +144,7 @@
           <PropertyTabs :property="property" />
         </main>
 
-        <!-- Sticky Client-Hunter Lead Card & Schedule Site Visit -->
+        <!-- Sticky Verified Mandate Advisory Card & Schedule Site Visit -->
         <aside>
           <div style="background: #FFFFFF; border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: 28px; box-shadow: var(--shadow-md); position: sticky; top: 100px;">
             <!-- Official Brochure Download CTA -->
