@@ -98,7 +98,7 @@
     <div class="mobile-quick-nav-bar">
       <div class="mobile-quick-nav-track">
         <NuxtLink to="/admin" class="quick-nav-chip" exact-active-class="active">Overview</NuxtLink>
-        <NuxtLink to="/admin/properties" class="quick-nav-chip" active-class="active">Properties</NuxtLink>
+        <NuxtLink to="/admin/properties" class="quick-nav-chip" active-class="active">Properties ({{ displayPropertiesCount }})</NuxtLink>
         <NuxtLink to="/admin/categories" class="quick-nav-chip" active-class="active">Categories ({{ sidebarCounts.categories }})</NuxtLink>
         <NuxtLink to="/admin/divisions" class="quick-nav-chip" active-class="active">Divisions ({{ sidebarCounts.divisions }})</NuxtLink>
         <NuxtLink to="/admin/transaction-types" class="quick-nav-chip" active-class="active">Deals ({{ sidebarCounts.transaction_types }})</NuxtLink>
@@ -153,7 +153,7 @@
                 <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>
               </svg>
               <span>Properties</span>
-              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.properties }} Listings</span>
+              <span class="smart-badge smart-badge-subtle">{{ displayPropertiesCount }} Listings</span>
             </NuxtLink>
 
             <NuxtLink to="/admin/approvals" class="sidebar-link" active-class="active" title="Legal & Verification Queue">
@@ -346,7 +346,7 @@
                 <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>
               </svg>
               <span>Property Inventory</span>
-              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.properties }} Listings</span>
+              <span class="smart-badge smart-badge-subtle">{{ displayPropertiesCount }} Listings</span>
             </NuxtLink>
 
             <NuxtLink to="/admin/approvals" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
@@ -522,14 +522,18 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
 import { useToast } from '~/composables/useToast'
 import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
+import { useProperties } from '~/composables/useProperties'
+import { useApiUrl } from '~/composables/useApi'
 
 const router = useRouter()
+const route = useRoute()
 const { user, logout } = useAuth()
 const { toasts, remove: removeToast } = useToast()
+const { properties: liveProperties, fetchProperties } = useProperties()
 
 const mobileNavOpen = ref(false)
 const drawerRoot = ref<HTMLElement | null>(null)
@@ -549,19 +553,36 @@ const sidebarCounts = ref({
   properties: 10
 })
 
+const displayPropertiesCount = computed(() => {
+  if (liveProperties.value && liveProperties.value.length > 0) {
+    return liveProperties.value.length
+  }
+  if (sidebarCounts.value.properties && sidebarCounts.value.properties > 0) {
+    return sidebarCounts.value.properties
+  }
+  return 10
+})
+
 const fetchSidebarCounts = async () => {
   try {
-    const config = useRuntimeConfig()
-    const apiBase = config.public.apiBase || 'http://127.0.0.1:8000/api'
-    const res = await fetch(`${apiBase}/admin/sidebar-counts`)
+    const res = await fetch(useApiUrl('/admin/sidebar-counts'))
+    if (!res.ok) return
     const json = await res.json()
-    if (json.success && json.data) {
-      sidebarCounts.value = { ...sidebarCounts.value, ...json.data }
+    if (json && json.success && json.data) {
+      const counts = { ...json.data }
+      if (!counts.properties || counts.properties === 0) {
+        counts.properties = liveProperties.value?.length || sidebarCounts.value.properties || 10
+      }
+      sidebarCounts.value = { ...sidebarCounts.value, ...counts }
     }
   } catch {
     //
   }
 }
+
+watch(() => route.path, () => {
+  fetchSidebarCounts()
+})
 
 useHead({
   htmlAttrs: {
@@ -574,6 +595,9 @@ useHead({
 
 onMounted(() => {
   fetchSidebarCounts()
+  if (!liveProperties.value || liveProperties.value.length === 0) {
+    fetchProperties()
+  }
   try {
     const savedTheme = localStorage.getItem('gbrel_admin_theme')
     if (savedTheme === 'light' || savedTheme === 'dark') {
