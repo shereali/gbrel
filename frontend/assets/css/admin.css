@@ -1318,14 +1318,23 @@ body.admin-theme-light {
 
 .property-editor-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) 350px;
   gap: 28px;
   align-items: flex-start;
+}
+
+.property-guide-column-wrap {
+  width: 350px;
+  min-width: 350px;
+  flex-shrink: 0;
 }
 
 @media (max-width: 1080px) {
   .property-editor-grid {
     grid-template-columns: 1fr;
+  }
+  .property-guide-column-wrap {
+    display: none !important;
   }
 }
 
@@ -1376,28 +1385,46 @@ body.admin-theme-light {
   border: 1px solid rgba(212, 175, 55, 0.25);
 }
 
-.property-guide-panel {
-  position: -webkit-sticky;
-  position: sticky;
-  top: max(82px, calc(50vh - 290px));
-  background: var(--admin-bg-surface-alt);
-  border: 1px solid var(--admin-border-subtle);
-  border-radius: 16px;
-  padding: 18px 20px;
-  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.42);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  z-index: 30;
-  max-height: calc(100vh - 100px);
-  overflow-y: auto;
-  overflow-x: hidden !important;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(212, 175, 55, 0.35) transparent;
-  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+/* FIXED COMPLETION GUIDE: STATIONARY AT VERTICAL CENTER OF RIGHT SIDE */
+@media (min-width: 1081px) {
+  .property-guide-panel {
+    position: fixed !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    right: 32px !important;
+    width: 350px !important;
+    z-index: 50 !important;
+    background: var(--admin-bg-surface-alt);
+    border: 1px solid var(--admin-border-subtle);
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(212, 175, 55, 0.35) transparent;
+  }
+}
+
+@media (min-width: 1081px) and (max-height: 700px) {
+  .property-guide-panel {
+    top: 76px !important;
+    transform: none !important;
+    max-height: calc(100vh - 86px) !important;
+  }
+}
+
+@media (max-width: 1080px) {
+  .property-guide-panel {
+    display: none !important;
+  }
 }
 
 .property-guide-panel::-webkit-scrollbar {

@@ -470,103 +470,101 @@
 
       </div>
 
-      <!-- RIGHT COLUMN: STICKY FLOATING COMPLETION GUIDE & QUICK NAVIGATOR -->
-      <aside 
-        ref="guidePanelRef" 
-        class="property-guide-panel" 
-        :style="{ top: stickyTop }"
-      >
-        <div class="guide-floating-badge-row">
-          <div class="guide-floating-badge">
-            <span class="guide-pulse-dot"></span>
-            <span>COMPLETION GUIDE</span>
+      <!-- RIGHT COLUMN: FIXED COMPLETION GUIDE & QUICK NAVIGATOR -->
+      <div class="property-guide-column-wrap">
+        <aside class="property-guide-panel">
+          <div class="guide-floating-badge-row">
+            <div class="guide-floating-badge">
+              <span class="guide-pulse-dot"></span>
+              <span>COMPLETION GUIDE</span>
+            </div>
+            <span class="badge" style="background:rgba(212,175,55,0.15); color:var(--color-gold); font-size:0.75rem; font-weight:700;">
+              {{ completedStepsCount }}/{{ totalStepsCount }} Done
+            </span>
           </div>
-          <span class="badge" style="background:rgba(212,175,55,0.15); color:var(--color-gold); font-size:0.75rem; font-weight:700;">
-            {{ completedStepsCount }}/{{ totalStepsCount }} Done
-          </span>
-        </div>
 
-        <!-- Readiness Progress Bar -->
-        <div>
-          <div class="flex justify-between items-center" style="font-size:0.78rem; color:var(--admin-text-muted); margin-bottom:6px;">
-            <span>Listing Readiness Score</span>
-            <strong :style="{ color: completionPercentage === 100 ? '#10B981' : 'var(--color-gold)' }">{{ completionPercentage }}%</strong>
+          <!-- Readiness Progress Bar -->
+          <div>
+            <div class="flex justify-between items-center" style="font-size:0.78rem; color:var(--admin-text-muted); margin-bottom:6px;">
+              <span>Listing Readiness Score</span>
+              <strong :style="{ color: completionPercentage === 100 ? '#10B981' : 'var(--color-gold)' }">{{ completionPercentage }}%</strong>
+            </div>
+            <div style="background:rgba(255,255,255,0.08); height:8px; border-radius:4px; overflow:hidden;">
+              <div 
+                :style="{ 
+                  width: completionPercentage + '%', 
+                  background: completionPercentage === 100 ? '#10B981' : 'linear-gradient(90deg, #D4AF37, #10B981)',
+                  height: '100%',
+                  transition: 'width 0.3s ease'
+                }"
+              ></div>
+            </div>
           </div>
-          <div style="background:rgba(255,255,255,0.08); height:8px; border-radius:4px; overflow:hidden;">
+
+          <!-- Clickable Guideline Items with Active Section Tracking -->
+          <div class="guide-steps-list">
             <div 
-              :style="{ 
-                width: completionPercentage + '%', 
-                background: completionPercentage === 100 ? '#10B981' : 'linear-gradient(90deg, #D4AF37, #10B981)',
-                height: '100%',
-                transition: 'width 0.3s ease'
-              }"
-            ></div>
-          </div>
-        </div>
-
-        <!-- Clickable Guideline Items with Active Section Tracking -->
-        <div class="guide-steps-list">
-          <div 
-            v-for="(item, idx) in guideItems" 
-            :key="item.id"
-            class="guide-step-item"
-            :class="{ 'is-done': item.isCompleted, 'is-active-step': activeSectionId === item.id }"
-            @click="scrollToSection(item.id)"
-            :title="'Click to jump to ' + item.title"
-          >
-            <div class="guide-check-circle" :class="item.isCompleted ? 'done' : 'pending'">
-              <span v-if="item.isCompleted">✔</span>
-              <span v-else>{{ idx + 1 }}</span>
-            </div>
-            <div style="flex:1; min-width:0;">
-              <div class="flex items-center justify-between gap-1">
-                <div style="font-size:0.82rem; font-weight:700; color:var(--admin-text-primary); line-height:1.2;">
-                  {{ item.title }}
+              v-for="(item, idx) in guideItems" 
+              :key="item.id"
+              class="guide-step-item"
+              :class="{ 'is-done': item.isCompleted, 'is-active-step': activeSectionId === item.id }"
+              @click="scrollToSection(item.id)"
+              :title="'Click to jump to ' + item.title"
+            >
+              <div class="guide-check-circle" :class="item.isCompleted ? 'done' : 'pending'">
+                <span v-if="item.isCompleted">✔</span>
+                <span v-else>{{ idx + 1 }}</span>
+              </div>
+              <div style="flex:1; min-width:0;">
+                <div class="flex items-center justify-between gap-1">
+                  <div style="font-size:0.82rem; font-weight:700; color:var(--admin-text-primary); line-height:1.2;">
+                    {{ item.title }}
+                  </div>
+                  <span v-if="activeSectionId === item.id" style="font-size:0.65rem; color:var(--color-gold); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">
+                    Viewing
+                  </span>
                 </div>
-                <span v-if="activeSectionId === item.id" style="font-size:0.65rem; color:var(--color-gold); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">
-                  Viewing
-                </span>
+                <div style="font-size:0.72rem; color:var(--admin-text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
+                  {{ item.sub }}
+                </div>
               </div>
-              <div style="font-size:0.72rem; color:var(--admin-text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
-                {{ item.sub }}
-              </div>
+              <span style="font-size:0.75rem; color:var(--admin-text-muted);">›</span>
             </div>
-            <span style="font-size:0.75rem; color:var(--admin-text-muted);">›</span>
           </div>
-        </div>
 
-        <!-- Dynamic Recommendation Tip Box -->
-        <div style="background:rgba(212,175,55,0.08); border:1px solid rgba(212,175,55,0.25); border-radius:8px; padding:12px;">
-          <div style="font-size:0.76rem; font-weight:700; color:var(--color-gold); margin-bottom:4px; display:flex; align-items:center; gap:4px;">
-            <span>💡 Recommendation:</span>
+          <!-- Dynamic Recommendation Tip Box -->
+          <div style="background:rgba(212,175,55,0.08); border:1px solid rgba(212,175,55,0.25); border-radius:8px; padding:12px;">
+            <div style="font-size:0.76rem; font-weight:700; color:var(--color-gold); margin-bottom:4px; display:flex; align-items:center; gap:4px;">
+              <span>💡 Recommendation:</span>
+            </div>
+            <p style="font-size:0.78rem; color:var(--admin-text-secondary); line-height:1.45; margin:0;">
+              {{ activeGuideTip }}
+            </p>
           </div>
-          <p style="font-size:0.78rem; color:var(--admin-text-secondary); line-height:1.45; margin:0;">
-            {{ activeGuideTip }}
-          </p>
-        </div>
 
-        <!-- Quick Save Actions Inside Guide -->
-        <div class="flex flex-col gap-2 pt-2">
-          <button 
-            type="button" 
-            class="btn btn-sm btn-outline-white" 
-            style="width:100%; font-size:0.82rem; padding:8px;" 
-            :disabled="isSaving" 
-            @click="saveProperty('Draft')"
-          >
-            <span>💾 Save Current Draft</span>
-          </button>
-          <button 
-            type="button" 
-            class="btn btn-sm btn-emerald" 
-            style="width:100%; font-size:0.82rem; padding:8px;" 
-            :disabled="isSaving" 
-            @click="saveProperty('Active')"
-          >
-            <span>🚀 Publish Live Listing</span>
-          </button>
-        </div>
-      </aside>
+          <!-- Quick Save Actions Inside Guide -->
+          <div class="flex flex-col gap-2 pt-2">
+            <button 
+              type="button" 
+              class="btn btn-sm btn-outline-white" 
+              style="width:100%; font-size:0.82rem; padding:8px;" 
+              :disabled="isSaving" 
+              @click="saveProperty('Draft')"
+            >
+              <span>💾 Save Current Draft</span>
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-sm btn-emerald" 
+              style="width:100%; font-size:0.82rem; padding:8px;" 
+              :disabled="isSaving" 
+              @click="saveProperty('Active')"
+            >
+              <span>🚀 Publish Live Listing</span>
+            </button>
+          </div>
+        </aside>
+      </div>
     </div>
 
     <!-- MOBILE FLOATING GUIDE TRIGGER (<= 1080px) -->
@@ -691,19 +689,6 @@ const toast = useToast()
 
 const activeSectionId = ref('sec-basic')
 const mobileGuideOpen = ref(false)
-const guidePanelRef = ref<HTMLElement | null>(null)
-const stickyTop = ref('max(82px, calc(50vh - 280px))')
-
-const updateStickyCenter = () => {
-  if (typeof window === 'undefined') return
-  const panel = guidePanelRef.value
-  const vh = window.innerHeight
-  const panelH = panel ? panel.offsetHeight : 560
-  // Center panel vertically on screen: (vh - panelH) / 2
-  // Ensure it never goes above 82px to avoid touching sticky topbar
-  const calculated = Math.max(82, Math.round((vh - panelH) / 2))
-  stickyTop.value = `${calculated}px`
-}
 
 const { 
   addProperty, 
@@ -1099,19 +1084,11 @@ onMounted(async () => {
 
   setTimeout(() => {
     setupScrollSpy()
-    updateStickyCenter()
   }, 300)
-
-  if (typeof window !== 'undefined') {
-    window.addEventListener('resize', updateStickyCenter)
-  }
 })
 
 onUnmounted(() => {
   sectionObserver?.disconnect()
-  if (typeof window !== 'undefined') {
-    window.removeEventListener('resize', updateStickyCenter)
-  }
 })
 
 // Save & Publish
