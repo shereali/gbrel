@@ -23,12 +23,148 @@ use App\Models\PropertyTransactionType;
 use App\Models\PropertyStatus;
 use App\Models\PropertyLandUnit;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 
 /*
 |--------------------------------------------------------------------------
 | GBREL REST API Routes (MySQL Database & Laravel Sanctum)
 |--------------------------------------------------------------------------
 */
+
+// ==========================================
+// 0. AUTHENTICATION & SESSION MANAGEMENT
+// ==========================================
+
+Route::post('/auth/login', function (Request $request) {
+    $raw = json_decode($request->getContent(), true);
+    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
+
+    $email = strtolower(trim($input['email'] ?? ''));
+    $password = $input['password'] ?? '';
+    $remember = !empty($input['remember']);
+
+    if (!$email || !$password) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Email address and password are required.'
+        ], 422);
+    }
+
+    $user = User::where('email', $email)->first();
+    if (!$user || !Hash::check($password, $user->password)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid email address or password.'
+        ], 401);
+    }
+
+    if ($user->status && strtolower($user->status) === 'suspended') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Your account is suspended. Please contact the administrator.'
+        ], 403);
+    }
+
+    // Generate secure API session token
+    $token = bin2hex(random_bytes(32));
+    $ttlDays = $remember ? 30 : 7;
+    Cache::put("gbrel_auth_token_{$token}", $user->id, now()->addDays($ttlDays));
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Signed in successfully',
+        'token' => $token,
+        'user' => $user->toAuthPayload()
+    ]);
+});
+
+Route::get('/auth/me', function (Request $request) {
+    $authHeader = $request->header('Authorization', '');
+    $token = '';
+    if (str_starts_with($authHeader, 'Bearer ')) {
+        $token = substr($authHeader, 7);
+    }
+    if (!$token) {
+        $token = $request->query('token', '');
+    }
+
+    if (!$token) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Authentication token missing.'
+        ], 401);
+    }
+
+    $userId = Cache::get("gbrel_auth_token_{$token}");
+    if (!$userId) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Session expired or invalid token.'
+        ], 401);
+    }
+
+    $user = User::find($userId);
+    if (!$user) {
+        Cache::forget("gbrel_auth_token_{$token}");
+        return response()->json([
+            'success' => false,
+            'message' => 'User not found.'
+        ], 401);
+    }
+
+    if ($user->status && strtolower($user->status) === 'suspended') {
+        Cache::forget("gbrel_auth_token_{$token}");
+        return response()->json([
+            'success' => false,
+            'message' => 'Account suspended.'
+        ], 403);
+    }
+
+    // Refresh token lifetime on active usage
+    Cache::put("gbrel_auth_token_{$token}", $user->id, now()->addDays(7));
+
+    return response()->json([
+        'success' => true,
+        'user' => $user->toAuthPayload()
+    ]);
+});
+
+Route::post('/auth/logout', function (Request $request) {
+    $authHeader = $request->header('Authorization', '');
+    if (str_starts_with($authHeader, 'Bearer ')) {
+        $token = substr($authHeader, 7);
+        Cache::forget("gbrel_auth_token_{$token}");
+    }
+    return response()->json([
+        'success' => true,
+        'message' => 'Logged out successfully.'
+    ]);
+});
+
+Route::post('/auth/check-permission', function (Request $request) {
+    $authHeader = $request->header('Authorization', '');
+    $token = str_starts_with($authHeader, 'Bearer ') ? substr($authHeader, 7) : '';
+    $userId = $token ? Cache::get("gbrel_auth_token_{$token}") : null;
+
+    if (!$userId) {
+        return response()->json(['success' => false, 'has_permission' => false, 'message' => 'Unauthenticated'], 401);
+    }
+
+    $user = User::find($userId);
+    if (!$user) {
+        return response()->json(['success' => false, 'has_permission' => false, 'message' => 'User not found'], 401);
+    }
+
+    $slug = $request->input('permission', '');
+    $hasPerm = $user->hasPermission($slug);
+
+    return response()->json([
+        'success' => true,
+        'permission' => $slug,
+        'has_permission' => $hasPerm,
+        'is_admin' => $user->isAdmin()
+    ]);
+});
 
 // Helper: Dynamically Normalize incoming Property data (supports any camelCase or snake_case, schema-aware)
 function normalizePropertyData(array $input, bool $isCreate = true, ?int $existingId = null): array
@@ -1800,67 +1936,6 @@ Route::get('/user/saved-properties', function () {
     return response()->json([
         'success' => true,
         'data' => $properties
-    ]);
-});
-
-// 5. Auth & Sanctum API Endpoints with MySQL Verification
-Route::post('/auth/login', function (Request $request) {
-    $email = strtolower(trim($request->input('email', '')));
-    $password = $request->input('password', '');
-
-    if (!$email || !$password) {
-        return response()->json(['success' => false, 'message' => 'Email and password are required'], 422);
-    }
-
-    $dbUser = User::where('email', $email)->first();
-    if (!$dbUser || !Hash::check($password, $dbUser->password)) {
-        return response()->json(['success' => false, 'message' => 'Invalid email or password'], 401);
-    }
-
-    $token = 'sanctum_' . bin2hex(random_bytes(32));
-    $role = 'buyer';
-    if (str_contains($email, 'admin')) {
-        $role = 'admin';
-    } elseif (str_contains($email, 'agent')) {
-        $role = 'agent';
-    }
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Authentication successful via Laravel Sanctum & MySQL',
-        'token_type' => 'Bearer',
-        'token' => $token,
-        'user' => [
-            'id' => $dbUser->id,
-            'name' => $dbUser->name,
-            'email' => $dbUser->email,
-            'role' => $role,
-            'phone' => $role === 'admin' ? '+880 1912-334455' : ($role === 'agent' ? '+880 1819-987654' : '+880 1711-234567'),
-            'avatar' => $role === 'admin' 
-                ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop'
-                : ($role === 'agent' 
-                    ? 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop'
-                    : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop')
-        ]
-    ]);
-});
-
-Route::get('/auth/me', function (Request $request) {
-    return response()->json([
-        'success' => true,
-        'user' => [
-            'id' => 1,
-            'name' => 'Chief Admin (GBREL HQ)',
-            'email' => env('ADMIN_EMAIL', 'admin@gbrel.com'),
-            'role' => 'admin'
-        ]
-    ]);
-});
-
-Route::post('/auth/logout', function () {
-    return response()->json([
-        'success' => true,
-        'message' => 'Sanctum token revoked successfully'
     ]);
 });
 

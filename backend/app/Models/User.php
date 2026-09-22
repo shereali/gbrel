@@ -55,4 +55,35 @@ class User extends Authenticatable
         $all = $this->getEffectivePermissions();
         return in_array('*', $all) || in_array($slug, $all);
     }
+
+    public function isAdmin(): bool
+    {
+        $perms = $this->getEffectivePermissions();
+        if (in_array('*', $perms)) return true;
+        return in_array($this->role, ['admin', 'property_manager', 'legal_compliance', 'finance_auditor']);
+    }
+
+    public function toAuthPayload(): array
+    {
+        $roleObj = $this->roleRelation ?: ($this->role ? Role::where('slug', $this->role)->first() : null);
+        $perms = $this->getEffectivePermissions();
+        $isAdmin = $this->isAdmin();
+        $isSuperAdmin = $this->role === 'admin' || in_array('*', $perms);
+
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'email' => $this->email,
+            'role' => $this->role ?? ($roleObj ? $roleObj->slug : 'buyer'),
+            'role_id' => $roleObj ? $roleObj->id : $this->role_id,
+            'role_name' => $roleObj ? $roleObj->name : ucfirst($this->role ?? 'Buyer'),
+            'phone' => $this->phone ?? '+880 1819-000000',
+            'region' => $this->region ?? 'Dhaka HQ',
+            'status' => $this->status ?? 'Active',
+            'avatar' => $this->avatar ?? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
+            'permissions' => $perms,
+            'is_admin' => $isAdmin,
+            'is_super_admin' => $isSuperAdmin
+        ];
+    }
 }

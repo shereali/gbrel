@@ -298,7 +298,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
 import { useToast } from '~/composables/useToast'
 
@@ -310,6 +310,7 @@ useHead({
 })
 
 const router = useRouter()
+const route = useRoute()
 const { login } = useAuth()
 const toast = useToast()
 
@@ -343,9 +344,11 @@ const handleLogin = async () => {
 
   isLoading.value = true
   try {
-    const role = await login(email.value, password.value)
-    toast.success('Welcome Back', 'You have successfully signed in.')
-    if (role === 'admin') {
+    const userPayload = await login(email.value, password.value, rememberMe.value)
+    toast.success('Welcome Back', `Signed in as ${userPayload.name}`)
+    if (route.query.redirect) {
+      router.push(decodeURIComponent(String(route.query.redirect)))
+    } else if (userPayload.is_admin) {
       router.push('/admin')
     } else {
       router.push('/dashboard')

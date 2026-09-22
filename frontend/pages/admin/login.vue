@@ -101,7 +101,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
 import { useToast } from '~/composables/useToast'
 
@@ -117,7 +117,8 @@ useHead({
 })
 
 const router = useRouter()
-const { login } = useAuth()
+const route = useRoute()
+const { login, logout, isAdmin } = useAuth()
 const toast = useToast()
 
 const email = ref('admin@gbrel.com')
@@ -133,9 +134,18 @@ const handleAdminLogin = async () => {
 
   loading.value = true
   try {
-    await login(email.value, password.value)
-    toast.success('Welcome Back', 'Administrator session authenticated.')
-    router.push('/admin')
+    const userPayload = await login(email.value, password.value, true)
+    
+    // Role Authorization Check
+    if (!isAdmin.value && !userPayload.is_admin) {
+      await logout()
+      toast.error('Access Denied', 'Your account does not have administrative privileges.')
+      return
+    }
+
+    toast.success('Welcome Back', `Authenticated as ${userPayload.name}`)
+    const redirectUrl = route.query.redirect ? decodeURIComponent(String(route.query.redirect)) : '/admin'
+    router.push(redirectUrl)
   } catch (err: any) {
     toast.error('Authentication Failed', err.message || 'Invalid administrator credentials.')
   } finally {

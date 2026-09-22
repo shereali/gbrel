@@ -1,160 +1,258 @@
 import { computed } from 'vue'
+import { useApiUrl } from '~/composables/useApi'
 
 export interface UserProfile {
   id: number
   name: string
   email: string
-  role: 'buyer' | 'agent' | 'admin'
-  phone: string
-  avatar: string
-  savedProperties: number[]
-  scheduledViewings: any[]
-}
-
-const defaultBuyerUser: UserProfile = {
-  id: 3,
-  name: 'Shere Ali (VIP Buyer)',
-  email: 'buyer@gbrel.com',
-  role: 'buyer',
-  phone: '+880 1711-234567',
-  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop',
-  savedProperties: [1, 3],
-  scheduledViewings: [
-    {
-      id: 101,
-      propertyId: 1,
-      propertyTitle: 'Lakeview Penthouse at Gulshan-2 Diplomatic Zone',
-      date: '2026-09-05',
-      timeSlot: '03:00 PM - 04:00 PM',
-      agentName: 'Tanvir Ahmed (Senior Broker)',
-      status: 'Confirmed'
-    }
-  ]
-}
-
-const defaultAgentUser: UserProfile = {
-  id: 2,
-  name: 'Tanvir Ahmed (Senior Advisor)',
-  email: 'agent@gbrel.com',
-  role: 'agent',
-  phone: '+880 1819-987654',
-  avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop',
-  savedProperties: [2],
-  scheduledViewings: []
-}
-
-const defaultAdminUser: UserProfile = {
-  id: 1,
-  name: 'Chief Admin (GBREL HQ)',
-  email: 'admin@gbrel.com',
-  role: 'admin',
-  phone: '+880 1912-334455',
-  avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop',
-  savedProperties: [],
-  scheduledViewings: []
+  role: string
+  role_id?: number
+  role_name?: string
+  phone?: string
+  region?: string
+  status?: string
+  avatar?: string
+  permissions: string[]
+  is_admin?: boolean
+  is_super_admin?: boolean
+  savedProperties?: number[]
+  scheduledViewings?: any[]
 }
 
 export const useAuth = () => {
-  // Persistent Cookie Storage using Nuxt 3 useCookie (Sanctum / Token Storage)
+  // Persistent Cookie Storage (30-day session)
   const tokenCookie = useCookie<string | null>('gbrel_token', {
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24 * 30, // 30 days
     sameSite: 'lax',
     path: '/'
   })
 
   const userCookie = useCookie<UserProfile | null>('gbrel_user', {
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 60 * 24 * 30,
     sameSite: 'lax',
     path: '/',
     default: () => null
   })
 
-  const user = computed(() => userCookie.value || defaultBuyerUser)
-  const currentUser = computed(() => userCookie.value)
-  const token = computed(() => tokenCookie.value)
-  const isAuthenticated = computed(() => !!tokenCookie.value && !!userCookie.value)
-  const isAgent = computed(() => userCookie.value?.role === 'agent')
-  const isAdmin = computed(() => userCookie.value?.role === 'admin')
-  const isBuyer = computed(() => userCookie.value?.role === 'buyer')
-
-  // Switch role helper
-  const switchRole = (newRole: 'buyer' | 'agent' | 'admin') => {
-    if (newRole === 'admin') {
-      userCookie.value = { ...defaultAdminUser }
-      tokenCookie.value = 'sanctum_admin_token_' + Date.now()
-    } else if (newRole === 'agent') {
-      userCookie.value = { ...defaultAgentUser }
-      tokenCookie.value = 'sanctum_agent_token_' + Date.now()
-    } else {
-      userCookie.value = { ...defaultBuyerUser }
-      tokenCookie.value = 'sanctum_buyer_token_' + Date.now()
+  // Synchronize with localStorage on client initialization for bulletproof persistence
+  if (process.client) {
+    try {
+      const localToken = localStorage.getItem('gbrel_token')
+      const localUser = localStorage.getItem('gbrel_user')
+      if (!tokenCookie.value && localToken) {
+        tokenCookie.value = localToken
+      }
+      if (!userCookie.value && localUser) {
+        userCookie.value = JSON.parse(localUser)
+      }
+    } catch {
+      //
     }
   }
 
-  // Sanctum Login
-  const login = async (email: string, password?: string) => {
-    const cleanEmail = email.toLowerCase().trim()
-    
-    // Try Sanctum Backend API if available
-    try {
-      const response = await fetch(useApiUrl('/auth/login'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, password })
+  const user = computed<UserProfile>(() => {
+    return userCookie.value || {
+      id: 0,
+      name: 'Guest User',
+      email: '',
+      role: 'guest',
+      permissions: [],
+      savedProperties: [],
+      scheduledViewings: []
+    }
+  })
+
+  const currentUser = computed(() => userCookie.value)
+  const token = computed(() => tokenCookie.value)
+  const isAuthenticated = computed(() => !!tokenCookie.value && !!userCookie.value)
+
+  // Role Computeds
+  const isSuperAdmin = computed(() => {
+    if (!userCookie.value) return false
+    return userCookie.value.role === 'admin' || (userCookie.value.permissions || []).includes('*')
+  })
+
+  const isAdmin = computed(() => {
+    if (!userCookie.value) return false
+    const r = userCookie.value.role
+    return (
+      r === 'admin' ||
+      r === 'property_manager' ||
+      r === 'legal_compliance' ||
+      r === 'finance_auditor' ||
+      !!userCookie.value.is_admin ||
+      (userCookie.value.permissions || []).includes('*')
+    )
+  })
+
+  const isAgent = computed(() => userCookie.value?.role === 'agent')
+  const isBuyer = computed(() => userCookie.value?.role === 'buyer' || userCookie.value?.role === 'guest')
+
+  // Permission Checks
+  const hasPermission = (permissionSlug: string): boolean => {
+    if (!userCookie.value) return false
+    const perms = userCookie.value.permissions || []
+    if (perms.includes('*') || isSuperAdmin.value) {
+      return true
+    }
+    return perms.includes(permissionSlug)
+  }
+
+  const hasAnyPermission = (permissionSlugs: string[]): boolean => {
+    if (!userCookie.value) return false
+    const perms = userCookie.value.permissions || []
+    if (perms.includes('*') || isSuperAdmin.value) {
+      return true
+    }
+    return permissionSlugs.some(slug => perms.includes(slug))
+  }
+
+  // Real Database Login via Laravel Sanctum API
+  const login = async (emailInput: string, passwordInput: string, remember: boolean = true) => {
+    const cleanEmail = emailInput.toLowerCase().trim()
+
+    const res = await fetch(useApiUrl('/auth/login'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: cleanEmail,
+        password: passwordInput,
+        remember
       })
-      if (response.ok) {
-        const data = await response.json()
-        if (data.token && data.user) {
-          tokenCookie.value = data.token
-          userCookie.value = {
+    })
+
+    const data = await res.json().catch(() => null)
+
+    if (!res.ok || !data?.success) {
+      throw new Error(data?.message || 'Invalid email or password. Please verify your credentials.')
+    }
+
+    const receivedToken = data.token
+    const userPayload: UserProfile = {
+      ...data.user,
+      savedProperties: userCookie.value?.savedProperties || [1, 3],
+      scheduledViewings: userCookie.value?.scheduledViewings || []
+    }
+
+    tokenCookie.value = receivedToken
+    userCookie.value = userPayload
+
+    if (process.client) {
+      try {
+        localStorage.setItem('gbrel_token', receivedToken)
+        localStorage.setItem('gbrel_user', JSON.stringify(userPayload))
+      } catch {
+        //
+      }
+    }
+
+    return userPayload
+  }
+
+  // Token Validation & Session Synchronization
+  const initAuth = async (): Promise<UserProfile | null> => {
+    // 1. Client fallback recovery
+    if (process.client) {
+      try {
+        const localToken = localStorage.getItem('gbrel_token')
+        const localUser = localStorage.getItem('gbrel_user')
+        if (!tokenCookie.value && localToken) {
+          tokenCookie.value = localToken
+        }
+        if (!userCookie.value && localUser) {
+          userCookie.value = JSON.parse(localUser)
+        }
+      } catch {
+        //
+      }
+    }
+
+    const currentToken = tokenCookie.value
+    if (!currentToken) return null
+
+    // 2. Validate against live backend
+    try {
+      const res = await fetch(useApiUrl('/auth/me'), {
+        headers: {
+          'Authorization': `Bearer ${currentToken}`
+        }
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        if (data && data.success && data.user) {
+          const freshUser: UserProfile = {
             ...data.user,
             savedProperties: userCookie.value?.savedProperties || [1, 3],
             scheduledViewings: userCookie.value?.scheduledViewings || []
           }
-          return data.user.role
+          userCookie.value = freshUser
+          if (process.client) {
+            localStorage.setItem('gbrel_user', JSON.stringify(freshUser))
+          }
+          return freshUser
         }
+      } else if (res.status === 401 || res.status === 403) {
+        // Invalid or expired token
+        tokenCookie.value = null
+        userCookie.value = null
+        if (process.client) {
+          localStorage.removeItem('gbrel_token')
+          localStorage.removeItem('gbrel_user')
+        }
+        return null
       }
-    } catch {
-      // Offline fallback
+    } catch (err) {
+      // Keep cached session during temporary network drop
+      console.warn('GBREL Auth offline check notice:', err)
     }
 
-    // Direct Auth State Resolution
-    if (cleanEmail.includes('admin')) {
-      switchRole('admin')
-      return 'admin'
-    } else if (cleanEmail.includes('agent') || cleanEmail.includes('broker') || cleanEmail.includes('tanvir')) {
-      switchRole('agent')
-      return 'agent'
-    } else {
-      switchRole('buyer')
-      return 'buyer'
-    }
+    return userCookie.value
   }
 
   // Logout
   const logout = async () => {
+    const currentToken = tokenCookie.value || (process.client ? localStorage.getItem('gbrel_token') : null)
     try {
-      if (tokenCookie.value) {
+      if (currentToken) {
         await fetch(useApiUrl('/auth/logout'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${tokenCookie.value}`
+            'Authorization': `Bearer ${currentToken}`
           }
         })
       }
     } catch {
       //
+    } finally {
+      tokenCookie.value = null
+      userCookie.value = null
+      if (process.client) {
+        try {
+          localStorage.removeItem('gbrel_token')
+          localStorage.removeItem('gbrel_user')
+        } catch {
+          //
+        }
+      }
     }
-    tokenCookie.value = null
-    userCookie.value = null
   }
 
+  // Wishlist property helpers
   const toggleSaveProperty = (propertyId: number) => {
-    const current = userCookie.value 
+    const current = userCookie.value
       ? { ...userCookie.value }
-      : { ...defaultBuyerUser, name: 'Guest Buyer', email: '', savedProperties: [], scheduledViewings: [] }
-    
+      : {
+          id: 0,
+          name: 'Guest Buyer',
+          email: '',
+          role: 'buyer',
+          permissions: [],
+          savedProperties: [],
+          scheduledViewings: []
+        }
+
     if (!Array.isArray(current.savedProperties)) {
       current.savedProperties = []
     }
@@ -165,6 +263,11 @@ export const useAuth = () => {
       current.savedProperties.push(propertyId)
     }
     userCookie.value = current
+    if (process.client) {
+      try {
+        localStorage.setItem('gbrel_user', JSON.stringify(current))
+      } catch {}
+    }
   }
 
   const isPropertySaved = (propertyId: number) => {
@@ -172,15 +275,17 @@ export const useAuth = () => {
   }
 
   const addScheduledViewing = async (viewing: any) => {
-    const current = userCookie.value 
+    const current = userCookie.value
       ? { ...userCookie.value }
-      : { 
-          ...defaultBuyerUser, 
-          name: viewing.name || 'Guest Buyer', 
-          email: viewing.email || '', 
-          phone: viewing.phone || '', 
-          savedProperties: [], 
-          scheduledViewings: [] 
+      : {
+          id: 0,
+          name: viewing.name || 'Guest Buyer',
+          email: viewing.email || '',
+          role: 'buyer',
+          phone: viewing.phone || '',
+          permissions: [],
+          savedProperties: [],
+          scheduledViewings: []
         }
 
     if (!Array.isArray(current.scheduledViewings)) {
@@ -193,8 +298,12 @@ export const useAuth = () => {
     }
     current.scheduledViewings.push(item)
     userCookie.value = current
+    if (process.client) {
+      try {
+        localStorage.setItem('gbrel_user', JSON.stringify(current))
+      } catch {}
+    }
 
-    // Save to MySQL database via Laravel API
     try {
       await fetch(useApiUrl('/schedule-viewing'), {
         method: 'POST',
@@ -224,12 +333,15 @@ export const useAuth = () => {
     currentUser,
     token,
     isAuthenticated,
-    isAgent,
     isAdmin,
+    isSuperAdmin,
+    isAgent,
     isBuyer,
+    hasPermission,
+    hasAnyPermission,
     login,
     logout,
-    switchRole,
+    initAuth,
     toggleSaveProperty,
     isPropertySaved,
     addScheduledViewing

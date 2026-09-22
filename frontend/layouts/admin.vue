@@ -73,11 +73,11 @@
           </NuxtLink>
 
           <!-- Admin Avatar Pill -->
-          <div class="admin-user-pill" :title="user.name + ' (' + user.role + ')'">
-            <img :src="user.avatar" :alt="user.name" class="admin-user-avatar" />
+          <div class="admin-user-pill" :title="(user.name || 'Administrator') + ' (' + (user.role_name || user.role || 'Admin') + ')'">
+            <img :src="user.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop'" :alt="user.name || 'Admin'" class="admin-user-avatar" />
             <div class="admin-user-info">
-              <span class="admin-user-name">{{ user.name }}</span>
-              <span class="admin-user-role">{{ user.role.toUpperCase() }}</span>
+              <span class="admin-user-name">{{ user.name || 'Administrator' }}</span>
+              <span class="admin-user-role">{{ (user.role_name || user.role || 'Admin').toUpperCase() }}</span>
             </div>
           </div>
 
@@ -99,18 +99,18 @@
       <div class="mobile-quick-nav-track">
         <NuxtLink to="/admin" class="quick-nav-chip" exact-active-class="active">Overview</NuxtLink>
         <NuxtLink to="/admin/properties" class="quick-nav-chip" active-class="active">Properties ({{ displayPropertiesCount }})</NuxtLink>
-        <NuxtLink to="/admin/categories" class="quick-nav-chip" active-class="active">Categories ({{ sidebarCounts.categories }})</NuxtLink>
-        <NuxtLink to="/admin/divisions" class="quick-nav-chip" active-class="active">Divisions ({{ sidebarCounts.divisions }})</NuxtLink>
-        <NuxtLink to="/admin/transaction-types" class="quick-nav-chip" active-class="active">Deals ({{ sidebarCounts.transaction_types }})</NuxtLink>
-        <NuxtLink to="/admin/property-statuses" class="quick-nav-chip" active-class="active">Statuses ({{ sidebarCounts.property_statuses }})</NuxtLink>
-        <NuxtLink to="/admin/land-units" class="quick-nav-chip" active-class="active">Units ({{ sidebarCounts.land_units }})</NuxtLink>
-        <NuxtLink to="/admin/approvals" class="quick-nav-chip" active-class="active">Approvals ({{ sidebarCounts.pending }})</NuxtLink>
-        <NuxtLink to="/admin/viewings" class="quick-nav-chip" active-class="active">Tours ({{ sidebarCounts.tours }})</NuxtLink>
-        <NuxtLink to="/admin/leads" class="quick-nav-chip" active-class="active">Leads ({{ sidebarCounts.leads }})</NuxtLink>
-        <NuxtLink to="/admin/agents" class="quick-nav-chip" active-class="active">Advisors</NuxtLink>
-        <NuxtLink to="/admin/users" class="quick-nav-chip" active-class="active">Users</NuxtLink>
-        <NuxtLink to="/admin/financials" class="quick-nav-chip" active-class="active">Financials</NuxtLink>
-        <NuxtLink to="/admin/settings" class="quick-nav-chip" active-class="active">Settings</NuxtLink>
+        <NuxtLink v-if="hasPermission('properties.edit') || isSuperAdmin" to="/admin/categories" class="quick-nav-chip" active-class="active">Categories ({{ sidebarCounts.categories }})</NuxtLink>
+        <NuxtLink v-if="hasPermission('properties.edit') || isSuperAdmin" to="/admin/divisions" class="quick-nav-chip" active-class="active">Divisions ({{ sidebarCounts.divisions }})</NuxtLink>
+        <NuxtLink v-if="hasPermission('properties.edit') || isSuperAdmin" to="/admin/transaction-types" class="quick-nav-chip" active-class="active">Deals ({{ sidebarCounts.transaction_types }})</NuxtLink>
+        <NuxtLink v-if="hasPermission('properties.edit') || isSuperAdmin" to="/admin/property-statuses" class="quick-nav-chip" active-class="active">Statuses ({{ sidebarCounts.property_statuses }})</NuxtLink>
+        <NuxtLink v-if="hasPermission('properties.edit') || isSuperAdmin" to="/admin/land-units" class="quick-nav-chip" active-class="active">Units ({{ sidebarCounts.land_units }})</NuxtLink>
+        <NuxtLink v-if="hasPermission('properties.verify_rajuk') || hasPermission('properties.edit') || isSuperAdmin" to="/admin/approvals" class="quick-nav-chip" active-class="active">Approvals ({{ sidebarCounts.pending }})</NuxtLink>
+        <NuxtLink v-if="hasPermission('viewings.view') || isSuperAdmin" to="/admin/viewings" class="quick-nav-chip" active-class="active">Tours ({{ sidebarCounts.tours }})</NuxtLink>
+        <NuxtLink v-if="hasPermission('leads.view') || isSuperAdmin" to="/admin/leads" class="quick-nav-chip" active-class="active">Leads ({{ sidebarCounts.leads }})</NuxtLink>
+        <NuxtLink v-if="hasPermission('agents.manage') || isSuperAdmin" to="/admin/agents" class="quick-nav-chip" active-class="active">Advisors</NuxtLink>
+        <NuxtLink v-if="hasPermission('users.view') || hasPermission('users.manage') || isSuperAdmin" to="/admin/users" class="quick-nav-chip" active-class="active">Users</NuxtLink>
+        <NuxtLink v-if="hasPermission('financials.view') || isSuperAdmin" to="/admin/financials" class="quick-nav-chip" active-class="active">Financials</NuxtLink>
+        <NuxtLink v-if="hasPermission('settings.manage') || isSuperAdmin" to="/admin/settings" class="quick-nav-chip" active-class="active">Settings</NuxtLink>
       </div>
     </div>
 
@@ -156,7 +156,7 @@
               <span class="smart-badge smart-badge-subtle">{{ displayPropertiesCount }} Listings</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/approvals" class="sidebar-link" active-class="active" title="Legal & Verification Queue">
+            <NuxtLink v-if="hasPermission('properties.verify_rajuk') || hasPermission('properties.edit') || isSuperAdmin" to="/admin/approvals" class="sidebar-link" active-class="active" title="Legal & Verification Queue">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M9 12l2 2 4-4"/>
                 <path d="M12 3l7 4v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V7l7-4z"/>
@@ -169,7 +169,7 @@
               </span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/viewings" class="sidebar-link" active-class="active" title="Property Viewings Log">
+            <NuxtLink v-if="hasPermission('viewings.view') || isSuperAdmin" to="/admin/viewings" class="sidebar-link" active-class="active" title="Property Viewings Log">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="18" rx="2"/>
                 <line x1="16" y1="2" x2="16" y2="6"/>
@@ -184,7 +184,7 @@
               </span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/leads" class="sidebar-link" active-class="active" title="Inquiries & CRM Leads">
+            <NuxtLink v-if="hasPermission('leads.view') || isSuperAdmin" to="/admin/leads" class="sidebar-link" active-class="active" title="Inquiries & CRM Leads">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
                 <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
@@ -198,58 +198,60 @@
             </NuxtLink>
 
             <!-- Master Data & Attribute Configuration Section -->
-            <div class="sidebar-section-divider"></div>
-            <div v-if="!sidebarCollapsed" class="sidebar-section-title">Master Attributes</div>
+            <template v-if="hasPermission('properties.edit') || isSuperAdmin">
+              <div class="sidebar-section-divider"></div>
+              <div v-if="!sidebarCollapsed" class="sidebar-section-title">Master Attributes</div>
 
-            <NuxtLink to="/admin/categories" class="sidebar-link" active-class="active" title="Property Categories">
-              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-                <line x1="7" y1="7" x2="7.01" y2="7"/>
-              </svg>
-              <span>Categories</span>
-              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.categories }} Types</span>
-            </NuxtLink>
+              <NuxtLink to="/admin/categories" class="sidebar-link" active-class="active" title="Property Categories">
+                <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                  <line x1="7" y1="7" x2="7.01" y2="7"/>
+                </svg>
+                <span>Categories</span>
+                <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.categories }} Types</span>
+              </NuxtLink>
 
-            <NuxtLink to="/admin/divisions" class="sidebar-link" active-class="active" title="Divisions & Regions">
-              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                <circle cx="12" cy="10" r="3"/>
-              </svg>
-              <span>Divisions / Regions</span>
-              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.divisions }} Regions</span>
-            </NuxtLink>
+              <NuxtLink to="/admin/divisions" class="sidebar-link" active-class="active" title="Divisions & Regions">
+                <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span>Divisions / Regions</span>
+                <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.divisions }} Regions</span>
+              </NuxtLink>
 
-            <NuxtLink to="/admin/transaction-types" class="sidebar-link" active-class="active" title="Transaction Types">
-              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-              </svg>
-              <span>Transaction Types</span>
-              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.transaction_types }} Types</span>
-            </NuxtLink>
+              <NuxtLink to="/admin/transaction-types" class="sidebar-link" active-class="active" title="Transaction Types">
+                <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+                <span>Transaction Types</span>
+                <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.transaction_types }} Types</span>
+              </NuxtLink>
 
-            <NuxtLink to="/admin/property-statuses" class="sidebar-link" active-class="active" title="Property Lifecycle Statuses">
-              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
-              <span>Lifecycle Statuses</span>
-              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.property_statuses }} Statuses</span>
-            </NuxtLink>
+              <NuxtLink to="/admin/property-statuses" class="sidebar-link" active-class="active" title="Property Lifecycle Statuses">
+                <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>Lifecycle Statuses</span>
+                <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.property_statuses }} Statuses</span>
+              </NuxtLink>
 
-            <NuxtLink to="/admin/land-units" class="sidebar-link" active-class="active" title="Land & Area Units">
-              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 3H3v18h18V3z"/>
-                <path d="M3 9h4M3 15h8M9 3v4M15 3v8"/>
-              </svg>
-              <span>Land Units</span>
-              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.land_units }} Units</span>
-            </NuxtLink>
+              <NuxtLink to="/admin/land-units" class="sidebar-link" active-class="active" title="Land & Area Units">
+                <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 3H3v18h18V3z"/>
+                  <path d="M3 9h4M3 15h8M9 3v4M15 3v8"/>
+                </svg>
+                <span>Land Units</span>
+                <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.land_units }} Units</span>
+              </NuxtLink>
+            </template>
 
             <div class="sidebar-section-divider"></div>
             <div v-if="!sidebarCollapsed" class="sidebar-section-title">Administration</div>
 
-            <NuxtLink to="/admin/agents" class="sidebar-link" active-class="active" title="Agents & Advisors">
+            <NuxtLink v-if="hasPermission('agents.manage') || isSuperAdmin" to="/admin/agents" class="sidebar-link" active-class="active" title="Agents & Advisors">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <circle cx="12" cy="8" r="4"/>
                 <path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
@@ -257,7 +259,7 @@
               <span>Agents & Advisors</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/users" class="sidebar-link" active-class="active" title="User Management & Roles">
+            <NuxtLink v-if="hasPermission('users.view') || hasPermission('users.manage') || isSuperAdmin" to="/admin/users" class="sidebar-link" active-class="active" title="User Management & Roles">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                 <circle cx="9" cy="7" r="4"/>
@@ -266,7 +268,7 @@
               <span>Users & Roles</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/financials" class="sidebar-link" active-class="active" title="Financials">
+            <NuxtLink v-if="hasPermission('financials.view') || isSuperAdmin" to="/admin/financials" class="sidebar-link" active-class="active" title="Financials">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <line x1="12" y1="1" x2="12" y2="23"/>
                 <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
@@ -274,7 +276,7 @@
               <span>Financials</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/settings" class="sidebar-link" active-class="active" title="Settings">
+            <NuxtLink v-if="hasPermission('settings.manage') || isSuperAdmin" to="/admin/settings" class="sidebar-link" active-class="active" title="Settings">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <circle cx="12" cy="12" r="3"/>
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83-2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -321,11 +323,11 @@
 
           <!-- Drawer User Banner -->
           <div class="drawer-user-box">
-            <img :src="user.avatar" :alt="user.name" class="drawer-avatar" />
+            <img :src="user.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop'" :alt="user.name || 'Admin'" class="drawer-avatar" />
             <div class="drawer-user-meta">
-              <div class="drawer-name">{{ user.name }}</div>
-              <div class="drawer-email">{{ user.email }}</div>
-              <span class="badge badge-featured badge-pill-sm" style="margin-top:4px;">{{ user.role.toUpperCase() }}</span>
+              <div class="drawer-name">{{ user.name || 'Administrator' }}</div>
+              <div class="drawer-email">{{ user.email || 'admin@gbrel.com' }}</div>
+              <span class="badge badge-featured badge-pill-sm" style="margin-top:4px;">{{ (user.role_name || user.role || 'Admin').toUpperCase() }}</span>
             </div>
           </div>
 
@@ -349,7 +351,7 @@
               <span class="smart-badge smart-badge-subtle">{{ displayPropertiesCount }} Listings</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/approvals" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+            <NuxtLink v-if="hasPermission('properties.verify_rajuk') || hasPermission('properties.edit') || isSuperAdmin" to="/admin/approvals" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
               <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M9 12l2 2 4-4"/>
                 <path d="M12 3l7 4v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V7l7-4z"/>
@@ -362,7 +364,7 @@
               </span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/viewings" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+            <NuxtLink v-if="hasPermission('viewings.view') || isSuperAdmin" to="/admin/viewings" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
               <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="4" width="18" height="18" rx="2"/>
                 <line x1="16" y1="2" x2="16" y2="6"/>
@@ -377,7 +379,7 @@
               </span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/leads" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+            <NuxtLink v-if="hasPermission('leads.view') || isSuperAdmin" to="/admin/leads" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
               <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
                 <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
@@ -391,58 +393,60 @@
             </NuxtLink>
 
             <!-- Drawer Master Data Section -->
-            <div class="sidebar-section-divider"></div>
-            <div class="sidebar-section-title" style="padding-left: 14px; margin-top: 4px;">Master Attributes</div>
+            <template v-if="hasPermission('properties.edit') || isSuperAdmin">
+              <div class="sidebar-section-divider"></div>
+              <div class="sidebar-section-title" style="padding-left: 14px; margin-top: 4px;">Master Attributes</div>
 
-            <NuxtLink to="/admin/categories" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
-              <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-                <line x1="7" y1="7" x2="7.01" y2="7"/>
-              </svg>
-              <span>Categories</span>
-              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.categories }}</span>
-            </NuxtLink>
+              <NuxtLink to="/admin/categories" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+                <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                  <line x1="7" y1="7" x2="7.01" y2="7"/>
+                </svg>
+                <span>Categories</span>
+                <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.categories }}</span>
+              </NuxtLink>
 
-            <NuxtLink to="/admin/divisions" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
-              <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                <circle cx="12" cy="10" r="3"/>
-              </svg>
-              <span>Divisions / Regions</span>
-              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.divisions }}</span>
-            </NuxtLink>
+              <NuxtLink to="/admin/divisions" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+                <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span>Divisions / Regions</span>
+                <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.divisions }}</span>
+              </NuxtLink>
 
-            <NuxtLink to="/admin/transaction-types" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
-              <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-              </svg>
-              <span>Transaction Types</span>
-              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.transaction_types }}</span>
-            </NuxtLink>
+              <NuxtLink to="/admin/transaction-types" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+                <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+                <span>Transaction Types</span>
+                <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.transaction_types }}</span>
+              </NuxtLink>
 
-            <NuxtLink to="/admin/property-statuses" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
-              <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
-              <span>Lifecycle Statuses</span>
-              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.property_statuses }}</span>
-            </NuxtLink>
+              <NuxtLink to="/admin/property-statuses" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+                <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>Lifecycle Statuses</span>
+                <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.property_statuses }}</span>
+              </NuxtLink>
 
-            <NuxtLink to="/admin/land-units" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
-              <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 3H3v18h18V3z"/>
-                <path d="M3 9h4M3 15h8M9 3v4M15 3v8"/>
-              </svg>
-              <span>Land Units</span>
-              <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.land_units }}</span>
-            </NuxtLink>
+              <NuxtLink to="/admin/land-units" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+                <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 3H3v18h18V3z"/>
+                  <path d="M3 9h4M3 15h8M9 3v4M15 3v8"/>
+                </svg>
+                <span>Land Units</span>
+                <span class="smart-badge smart-badge-subtle">{{ sidebarCounts.land_units }}</span>
+              </NuxtLink>
+            </template>
 
             <div class="sidebar-section-divider"></div>
             <div class="sidebar-section-title" style="padding-left: 14px; margin-top: 4px;">Administration</div>
 
-            <NuxtLink to="/admin/agents" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+            <NuxtLink v-if="hasPermission('agents.manage') || isSuperAdmin" to="/admin/agents" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
               <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="8" r="4"/>
                 <path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
@@ -450,7 +454,7 @@
               <span>Advisors & Brokers</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/users" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+            <NuxtLink v-if="hasPermission('users.view') || hasPermission('users.manage') || isSuperAdmin" to="/admin/users" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
               <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                 <circle cx="9" cy="7" r="4"/>
@@ -459,7 +463,7 @@
               <span>Users & RBAC Control</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/financials" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+            <NuxtLink v-if="hasPermission('financials.view') || isSuperAdmin" to="/admin/financials" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
               <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="1" x2="12" y2="23"/>
                 <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
@@ -467,10 +471,10 @@
               <span>Financials & Escrow</span>
             </NuxtLink>
 
-            <NuxtLink to="/admin/settings" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+            <NuxtLink v-if="hasPermission('settings.manage') || isSuperAdmin" to="/admin/settings" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
               <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
               </svg>
               <span>System & Bank Config</span>
             </NuxtLink>
@@ -531,7 +535,7 @@ import { useApiUrl } from '~/composables/useApi'
 
 const router = useRouter()
 const route = useRoute()
-const { user, logout } = useAuth()
+const { user, currentUser, token, isAuthenticated, isAdmin, isSuperAdmin, hasPermission, logout, initAuth } = useAuth()
 const { toasts, remove: removeToast } = useToast()
 const { properties: liveProperties, fetchProperties } = useProperties()
 
@@ -593,7 +597,15 @@ useHead({
   }
 })
 
-onMounted(() => {
+onMounted(async () => {
+  // Validate real session against backend
+  await initAuth()
+
+  if (!isAuthenticated.value || !isAdmin.value) {
+    router.push(`/admin/login?redirect=${encodeURIComponent(route.fullPath)}`)
+    return
+  }
+
   fetchSidebarCounts()
   if (!liveProperties.value || liveProperties.value.length === 0) {
     fetchProperties()
@@ -640,7 +652,7 @@ watch(() => router.currentRoute.value.path, () => {
 const handleLogout = async () => {
   mobileNavOpen.value = false
   await logout()
-  router.push('/login')
+  router.push('/admin/login')
 }
 </script>
 
