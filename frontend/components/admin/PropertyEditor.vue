@@ -471,7 +471,11 @@
       </div>
 
       <!-- RIGHT COLUMN: STICKY FLOATING COMPLETION GUIDE & QUICK NAVIGATOR -->
-      <aside class="property-guide-panel">
+      <aside 
+        ref="guidePanelRef" 
+        class="property-guide-panel" 
+        :style="{ top: stickyTop }"
+      >
         <div class="guide-floating-badge-row">
           <div class="guide-floating-badge">
             <span class="guide-pulse-dot"></span>
@@ -501,7 +505,7 @@
         </div>
 
         <!-- Clickable Guideline Items with Active Section Tracking -->
-        <div class="space-y-1" style="max-height:440px; overflow-y:auto; padding-right:2px;">
+        <div class="guide-steps-list">
           <div 
             v-for="(item, idx) in guideItems" 
             :key="item.id"
@@ -606,7 +610,7 @@
           </div>
         </div>
 
-        <div class="space-y-1 mb-4" style="max-height:48vh; overflow-y:auto;">
+        <div class="guide-steps-list mb-4" style="max-height:48vh;">
           <div 
             v-for="(item, idx) in guideItems" 
             :key="item.id"
@@ -687,6 +691,19 @@ const toast = useToast()
 
 const activeSectionId = ref('sec-basic')
 const mobileGuideOpen = ref(false)
+const guidePanelRef = ref<HTMLElement | null>(null)
+const stickyTop = ref('max(82px, calc(50vh - 280px))')
+
+const updateStickyCenter = () => {
+  if (typeof window === 'undefined') return
+  const panel = guidePanelRef.value
+  const vh = window.innerHeight
+  const panelH = panel ? panel.offsetHeight : 560
+  // Center panel vertically on screen: (vh - panelH) / 2
+  // Ensure it never goes above 82px to avoid touching sticky topbar
+  const calculated = Math.max(82, Math.round((vh - panelH) / 2))
+  stickyTop.value = `${calculated}px`
+}
 
 const { 
   addProperty, 
@@ -1082,11 +1099,19 @@ onMounted(async () => {
 
   setTimeout(() => {
     setupScrollSpy()
+    updateStickyCenter()
   }, 300)
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', updateStickyCenter)
+  }
 })
 
 onUnmounted(() => {
   sectionObserver?.disconnect()
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', updateStickyCenter)
+  }
 })
 
 // Save & Publish

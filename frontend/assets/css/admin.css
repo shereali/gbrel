@@ -1202,16 +1202,41 @@ body.admin-theme-light {
   }
 }
 
+.guide-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-x: hidden !important;
+  overflow-y: auto;
+  max-height: 420px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.3) transparent;
+  padding-right: 2px;
+}
+
+.guide-steps-list::-webkit-scrollbar {
+  width: 4px;
+  height: 0px !important;
+}
+
+.guide-steps-list::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 4px;
+}
+
 .guide-step-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
-  padding: 8px 10px;
+  padding: 6px 10px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
   border: 1px solid transparent;
   background: rgba(255, 255, 255, 0.02);
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .guide-step-item:hover {
@@ -1354,28 +1379,30 @@ body.admin-theme-light {
 .property-guide-panel {
   position: -webkit-sticky;
   position: sticky;
-  top: 146px;
+  top: max(82px, calc(50vh - 290px));
   background: var(--admin-bg-surface-alt);
   border: 1px solid var(--admin-border-subtle);
   border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.38);
+  padding: 18px 20px;
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.42);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   z-index: 30;
-  max-height: calc(100vh - 165px);
+  max-height: calc(100vh - 100px);
   overflow-y: auto;
+  overflow-x: hidden !important;
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(212, 175, 55, 0.35) transparent;
-  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .property-guide-panel::-webkit-scrollbar {
-  width: 5px;
+  width: 4px;
+  height: 0px !important;
 }
 .property-guide-panel::-webkit-scrollbar-thumb {
   background: rgba(212, 175, 55, 0.35);
