@@ -663,7 +663,7 @@ const handleLogout = async () => {
   display: none;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #FFFFFF;
+  color: var(--admin-text-primary);
   width: 42px;
   height: 42px;
   border-radius: var(--radius-sm);
@@ -703,7 +703,7 @@ const handleLogout = async () => {
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 800;
-  color: #FFFFFF;
+  color: var(--admin-text-primary);
   line-height: 1.1;
   display: block;
   letter-spacing: -0.01em;
@@ -784,7 +784,7 @@ const handleLogout = async () => {
 .admin-user-name {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--admin-text-primary);
   display: block;
   line-height: 1.2;
   max-width: 100px;
@@ -1217,6 +1217,208 @@ const handleLogout = async () => {
 }
 .drawer-fade-enter-from, .drawer-fade-leave-to {
   opacity: 0;
+}
+
+/* ==========================================
+   ADMIN THEME LIGHT OVERRIDES FOR LAYOUT
+   ========================================== */
+.admin-theme-light .admin-topbar {
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+}
+
+.admin-theme-light .admin-hamburger-btn {
+  background: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+  color: #0F172A !important;
+}
+
+.admin-theme-light .admin-hamburger-btn:hover {
+  background: #E2E8F0 !important;
+}
+
+.admin-theme-light .admin-brand-name {
+  color: #0F172A !important;
+}
+
+.admin-theme-light .admin-user-pill {
+  background: #F1F5F9 !important;
+  border-color: #E2E8F0 !important;
+}
+
+.admin-theme-light .admin-user-name {
+  color: #0F172A !important;
+}
+
+.admin-theme-light .mobile-quick-nav-bar {
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+}
+
+.admin-theme-light .quick-nav-chip {
+  background: #F1F5F9 !important;
+  border-color: #E2E8F0 !important;
+  color: #334155 !important;
+}
+
+.admin-theme-light .quick-nav-chip:hover {
+  background: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+.admin-theme-light .quick-nav-chip.active {
+  background: #059669 !important;
+  border-color: #059669 !important;
+  color: #FFFFFF !important;
+}
+
+.admin-theme-light .admin-sidebar {
+  background: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03) !important;
+}
+
+.admin-theme-light .sidebar-section-title {
+  color: #64748B !important;
+}
+
+.admin-theme-light .sidebar-link {
+  color: #334155 !important;
+}
+
+.admin-theme-light .sidebar-link:hover {
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+}
+
+.admin-theme-light .sidebar-link.active {
+  background: #059669 !important;
+  color: #FFFFFF !important;
+}
+
+.admin-theme-light .sidebar-link.active .sidebar-icon {
+  color: #FFFFFF !important;
+}
+
+/* Light Theme Badges with High-Contrast Colors */
+.admin-theme-light .smart-badge {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+.admin-theme-light .smart-badge-pending {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(217, 119, 6, 0.4) !important;
+  color: #B45309 !important;
+  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.15) !important;
+}
+.admin-theme-light .smart-badge-pending .smart-badge-dot {
+  background: #D97706 !important;
+  box-shadow: 0 0 5px #D97706 !important;
+}
+.admin-theme-light .smart-badge-pending .smart-badge-ping {
+  background: rgba(217, 119, 6, 0.45) !important;
+}
+
+.admin-theme-light .smart-badge-tours {
+  background: rgba(14, 165, 233, 0.12) !important;
+  border-color: rgba(14, 165, 233, 0.4) !important;
+  color: #0369A1 !important;
+  box-shadow: 0 1px 4px rgba(14, 165, 233, 0.15) !important;
+}
+.admin-theme-light .smart-badge-tours .smart-badge-dot {
+  background: #0284C7 !important;
+  box-shadow: 0 0 5px #0284C7 !important;
+}
+.admin-theme-light .smart-badge-tours .smart-badge-ping {
+  background: rgba(14, 165, 233, 0.45) !important;
+}
+
+.admin-theme-light .smart-badge-leads {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(5, 150, 105, 0.4) !important;
+  color: #047857 !important;
+  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.15) !important;
+}
+.admin-theme-light .smart-badge-leads .smart-badge-dot {
+  background: #059669 !important;
+  box-shadow: 0 0 5px #059669 !important;
+}
+.admin-theme-light .smart-badge-leads .smart-badge-ping {
+  background: rgba(5, 150, 105, 0.45) !important;
+}
+
+.admin-theme-light .smart-badge-subtle {
+  background: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+  color: #334155 !important;
+}
+.admin-theme-light .smart-badge-subtle:hover {
+  background: rgba(212, 175, 55, 0.15) !important;
+  border-color: rgba(180, 83, 9, 0.4) !important;
+  color: #B45309 !important;
+}
+
+.admin-theme-light .sidebar-section-divider {
+  background: #E2E8F0 !important;
+}
+
+.admin-theme-light .sidebar-system-card {
+  background: #F8FAFC !important;
+  border-color: #CBD5E1 !important;
+}
+
+/* Light Theme Mobile Drawer */
+.admin-theme-light .admin-drawer-panel {
+  background: #FFFFFF !important;
+  border-right-color: #E2E8F0 !important;
+  color: #0F172A !important;
+  box-shadow: 15px 0 35px rgba(0, 0, 0, 0.1) !important;
+}
+
+.admin-theme-light .drawer-header {
+  border-bottom-color: #E2E8F0 !important;
+}
+
+.admin-theme-light .drawer-close-btn {
+  background: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+  color: #0F172A !important;
+}
+
+.admin-theme-light .drawer-close-btn:hover {
+  background: #E2E8F0 !important;
+}
+
+.admin-theme-light .drawer-user-box {
+  background: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+}
+
+.admin-theme-light .drawer-name {
+  color: #0F172A !important;
+}
+
+.admin-theme-light .drawer-email {
+  color: #64748B !important;
+}
+
+.admin-theme-light .drawer-link {
+  color: #334155 !important;
+}
+
+.admin-theme-light .drawer-link:hover {
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+}
+
+.admin-theme-light .drawer-link.active {
+  background: #059669 !important;
+  color: #FFFFFF !important;
+}
+
+.admin-theme-light .drawer-footer {
+  border-top-color: #E2E8F0 !important;
 }
 
 /* 5. Responsive Breakpoint Rules */

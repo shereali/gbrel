@@ -142,8 +142,8 @@
 
         <div v-else-if="filteredItems.length === 0" class="empty-state-box">
           <div style="font-size: 2.2rem; margin-bottom: 8px;">🔍</div>
-          <div style="font-size: 1.05rem; font-weight: 700; color: #FFFFFF;">No records found</div>
-          <p style="color: #94A3B8; font-size: 0.88rem; max-width: 400px; margin: 6px auto 16px;">
+          <div style="font-size: 1.05rem; font-weight: 700; color: var(--admin-text-primary);">No records found</div>
+          <p style="color: var(--admin-text-muted); font-size: 0.88rem; max-width: 400px; margin: 6px auto 16px;">
             No items matched your search query. Try clearing the filter or add a new {{ singularName.toLowerCase() }}.
           </p>
           <button class="btn btn-gold btn-sm" @click="openCreateModal">
@@ -384,8 +384,8 @@
             <!-- Live Multiplier Preview -->
             <div class="preview-box">
               <span class="text-xs text-muted" style="margin-bottom: 4px; display: block;">Unit Calculation Formula:</span>
-              <div style="font-size: 0.9rem; color: #FFFFFF;">
-                1 {{ form.name || 'Unit' }} = <span style="color: #D4AF37; font-weight: 800;">{{ formatMultiplier(form.sqft_multiplier) }}</span> Square Feet
+              <div style="font-size: 0.9rem; color: var(--admin-text-primary);">
+                1 {{ form.name || 'Unit' }} = <span style="color: var(--color-gold); font-weight: 800;">{{ formatMultiplier(form.sqft_multiplier) }}</span> Square Feet
               </div>
             </div>
           </template>
@@ -416,11 +416,11 @@
     <div v-if="deleteModalOpen" class="master-modal-overlay" @click.self="deleteModalOpen = false">
       <div class="master-modal-card delete-card">
         <div class="delete-icon">⚠️</div>
-        <h3 style="font-size: 1.15rem; font-weight: 800; color: #FFFFFF; margin-bottom: 8px;">
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--admin-text-primary); margin-bottom: 8px;">
           Delete {{ singularName }}?
         </h3>
-        <p style="color: #94A3B8; font-size: 0.88rem; line-height: 1.5; margin-bottom: 20px;">
-          Are you sure you want to delete <strong style="color: #FFFFFF;">{{ itemToDelete?.name }}</strong>? 
+        <p style="color: var(--admin-text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 20px;">
+          Are you sure you want to delete <strong style="color: var(--admin-text-primary);">{{ itemToDelete?.name }}</strong>? 
           This will remove it from MySQL table <code class="code-pill">{{ tableName }}</code> and update the live property options list.
         </p>
 
@@ -792,14 +792,14 @@ onMounted(() => {
 
 .master-tab-item:hover {
   background: rgba(255, 255, 255, 0.09);
-  color: #FFFFFF;
-  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--admin-text-primary);
+  border-color: var(--admin-border-hover);
 }
 
 .master-tab-item.active {
   background: rgba(212, 175, 55, 0.14);
   border-color: var(--color-gold);
-  color: #FFFFFF;
+  color: var(--admin-text-primary);
   box-shadow: 0 4px 14px rgba(212, 175, 55, 0.15);
 }
 
@@ -1159,7 +1159,7 @@ onMounted(() => {
 
 .btn-table-action:hover {
   background: rgba(255, 255, 255, 0.12);
-  color: #FFFFFF;
+  color: var(--admin-text-primary);
 }
 
 .btn-delete:hover {
@@ -1212,7 +1212,7 @@ onMounted(() => {
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 800;
-  color: #FFFFFF;
+  color: var(--admin-text-primary);
 }
 
 .modal-sub {
@@ -1227,7 +1227,7 @@ onMounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  color: #FFFFFF;
+  color: var(--admin-text-primary);
   cursor: pointer;
   font-size: 0.95rem;
   display: flex;

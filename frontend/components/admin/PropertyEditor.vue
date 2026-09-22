@@ -17,7 +17,7 @@
             <span>›</span>
             <span>{{ isEditing ? `Edit Listing #${propId}` : 'Create New Listing' }}</span>
           </div>
-          <h2 style="font-size:1.1rem; font-weight:800; color:#FFF; margin:0; line-height:1.2;">
+          <h2 style="font-size:1.1rem; font-weight:800; color:var(--admin-text-primary); margin:0; line-height:1.2;">
             {{ propForm.title ? propForm.title : (isEditing ? 'Edit Property' : 'New Property Listing') }}
           </h2>
         </div>
@@ -189,7 +189,7 @@
             <div style="background:rgba(255,255,255,0.02); padding:14px; border-radius:var(--radius-md); border:1px solid var(--admin-border-subtle);">
               <label class="flex items-center gap-2" style="cursor:pointer; margin-bottom:8px;">
                 <input v-model="propForm.hidePrice" type="checkbox" style="width:16px; height:16px; accent-color:var(--color-gold);" />
-                <span style="font-weight:700; font-size:0.88rem; color:#FFF;">Hide Exact Price (Price on Application)</span>
+                <span style="font-weight:700; font-size:0.88rem; color:var(--admin-text-primary);">Hide Exact Price (Price on Application)</span>
               </label>
               <p style="font-size:0.75rem; color:var(--admin-text-muted); margin:0 0 8px 0; line-height:1.4;">
                 Replaces numerical price with a confidential badge on public pages to safeguard seller discretion.
@@ -423,11 +423,11 @@
           </div>
 
           <div class="flex items-center gap-8 flex-wrap">
-            <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.9rem; color:#FFF;">
+            <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.9rem; color:var(--admin-text-primary);">
               <input v-model="propForm.isRajukApproved" type="checkbox" style="width:18px; height:18px; accent-color:#10B981;" />
               <span>RAJUK / CDA Approved Building Plan Verified</span>
             </label>
-            <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.9rem; color:#FFF;">
+            <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.9rem; color:var(--admin-text-primary);">
               <input v-model="propForm.isFeatured" type="checkbox" style="width:18px; height:18px; accent-color:#D4AF37;" />
               <span>Feature on Live Homepage Showcase (Star Badge)</span>
             </label>
@@ -449,19 +449,19 @@
           </p>
 
           <div class="grid grid-2" style="gap:12px;">
-            <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; color:#FFF;">
+            <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; color:var(--admin-text-primary);">
               <input v-model="propForm.hideAgentPhoto" type="checkbox" style="width:16px; height:16px; accent-color:#D4AF37;" />
               <span>🛡️ Hide Advisor Photo (Display Official GBREL Crest)</span>
             </label>
-            <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; color:#FFF;">
+            <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; color:var(--admin-text-primary);">
               <input v-model="propForm.hideExactAddress" type="checkbox" style="width:16px; height:16px; accent-color:#38BDF8;" />
               <span>📍 Hide Exact Street / Plot Address (Show Area Only)</span>
             </label>
-            <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; color:#FFF;">
+            <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; color:var(--admin-text-primary);">
               <input v-model="propForm.hideFloorPlan" type="checkbox" style="width:16px; height:16px; accent-color:#A855F7;" />
               <span>📐 Gate Floor Plans (Signed NDA Required to View)</span>
             </label>
-            <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; color:#FFF;">
+            <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; color:var(--admin-text-primary);">
               <input v-model="propForm.hideAgentContact" type="checkbox" style="width:16px; height:16px; accent-color:#10B981;" />
               <span>🔒 Route Inquiries through Corporate Concierge</span>
             </label>
@@ -473,7 +473,7 @@
       <!-- RIGHT COLUMN: STICKY COMPLETION GUIDE & QUICK NAVIGATOR -->
       <aside class="property-guide-panel">
         <div class="flex items-center justify-between">
-          <div style="font-size:0.95rem; font-weight:800; color:#FFF; display:flex; align-items:center; gap:8px;">
+          <div style="font-size:0.95rem; font-weight:800; color:var(--admin-text-primary); display:flex; align-items:center; gap:8px;">
             <span>📋 Completion Guide</span>
           </div>
           <span class="badge" style="background:rgba(212,175,55,0.15); color:var(--color-gold); font-size:0.75rem; font-weight:700;">
@@ -514,7 +514,7 @@
               <span v-else>{{ idx + 1 }}</span>
             </div>
             <div style="flex:1; min-width:0;">
-              <div style="font-size:0.82rem; font-weight:700; color:#FFF; line-height:1.2;">
+              <div style="font-size:0.82rem; font-weight:700; color:var(--admin-text-primary); line-height:1.2;">
                 {{ item.title }}
               </div>
               <div style="font-size:0.72rem; color:var(--admin-text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
@@ -530,7 +530,7 @@
           <div style="font-size:0.76rem; font-weight:700; color:var(--color-gold); margin-bottom:4px; display:flex; align-items:center; gap:4px;">
             <span>💡 Recommendation:</span>
           </div>
-          <p style="font-size:0.78rem; color:#E2E8F0; line-height:1.45; margin:0;">
+          <p style="font-size:0.78rem; color:var(--admin-text-secondary); line-height:1.45; margin:0;">
             {{ activeGuideTip }}
           </p>
         </div>
