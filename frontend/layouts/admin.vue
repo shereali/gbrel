@@ -626,7 +626,7 @@ const handleLogout = async () => {
   min-height: 100vh;
   font-family: var(--font-sans);
   color: var(--admin-text-primary);
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* 1. Admin Topbar */

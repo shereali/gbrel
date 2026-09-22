@@ -470,11 +470,12 @@
 
       </div>
 
-      <!-- RIGHT COLUMN: STICKY COMPLETION GUIDE & QUICK NAVIGATOR -->
+      <!-- RIGHT COLUMN: STICKY FLOATING COMPLETION GUIDE & QUICK NAVIGATOR -->
       <aside class="property-guide-panel">
-        <div class="flex items-center justify-between">
-          <div style="font-size:0.95rem; font-weight:800; color:var(--admin-text-primary); display:flex; align-items:center; gap:8px;">
-            <span>📋 Completion Guide</span>
+        <div class="guide-floating-badge-row">
+          <div class="guide-floating-badge">
+            <span class="guide-pulse-dot"></span>
+            <span>COMPLETION GUIDE</span>
           </div>
           <span class="badge" style="background:rgba(212,175,55,0.15); color:var(--color-gold); font-size:0.75rem; font-weight:700;">
             {{ completedStepsCount }}/{{ totalStepsCount }} Done
@@ -499,13 +500,13 @@
           </div>
         </div>
 
-        <!-- Clickable Guideline Items -->
-        <div class="space-y-1" style="max-height:420px; overflow-y:auto; padding-right:2px;">
+        <!-- Clickable Guideline Items with Active Section Tracking -->
+        <div class="space-y-1" style="max-height:440px; overflow-y:auto; padding-right:2px;">
           <div 
             v-for="(item, idx) in guideItems" 
             :key="item.id"
             class="guide-step-item"
-            :class="{ 'is-done': item.isCompleted }"
+            :class="{ 'is-done': item.isCompleted, 'is-active-step': activeSectionId === item.id }"
             @click="scrollToSection(item.id)"
             :title="'Click to jump to ' + item.title"
           >
@@ -514,8 +515,13 @@
               <span v-else>{{ idx + 1 }}</span>
             </div>
             <div style="flex:1; min-width:0;">
-              <div style="font-size:0.82rem; font-weight:700; color:var(--admin-text-primary); line-height:1.2;">
-                {{ item.title }}
+              <div class="flex items-center justify-between gap-1">
+                <div style="font-size:0.82rem; font-weight:700; color:var(--admin-text-primary); line-height:1.2;">
+                  {{ item.title }}
+                </div>
+                <span v-if="activeSectionId === item.id" style="font-size:0.65rem; color:var(--color-gold); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">
+                  Viewing
+                </span>
               </div>
               <div style="font-size:0.72rem; color:var(--admin-text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
                 {{ item.sub }}
@@ -559,6 +565,79 @@
       </aside>
     </div>
 
+    <!-- MOBILE FLOATING GUIDE TRIGGER (<= 1080px) -->
+    <button 
+      type="button" 
+      class="mobile-floating-guide-btn" 
+      @click="mobileGuideOpen = true"
+      title="Open Property Completion Guide"
+    >
+      <span>📋 Guide ({{ completedStepsCount }}/{{ totalStepsCount }})</span>
+      <span style="background:rgba(0,0,0,0.25); padding:2px 6px; border-radius:10px; font-size:0.75rem;">
+        {{ completionPercentage }}%
+      </span>
+    </button>
+
+    <!-- MOBILE GUIDE BOTTOM SHEET -->
+    <div v-if="mobileGuideOpen" class="mobile-guide-overlay" @click.self="mobileGuideOpen = false">
+      <div class="mobile-guide-sheet">
+        <div class="flex items-center justify-between pb-3 mb-3" style="border-bottom:1px solid var(--admin-border-subtle);">
+          <div class="guide-floating-badge">
+            <span class="guide-pulse-dot"></span>
+            <span>COMPLETION GUIDE</span>
+          </div>
+          <button class="btn btn-sm btn-outline-white" @click="mobileGuideOpen = false">✕ Close</button>
+        </div>
+
+        <div class="mb-3">
+          <div class="flex justify-between items-center" style="font-size:0.78rem; color:var(--admin-text-muted); margin-bottom:6px;">
+            <span>Listing Readiness Score</span>
+            <strong :style="{ color: completionPercentage === 100 ? '#10B981' : 'var(--color-gold)' }">{{ completionPercentage }}%</strong>
+          </div>
+          <div style="background:rgba(255,255,255,0.08); height:8px; border-radius:4px; overflow:hidden;">
+            <div 
+              :style="{ 
+                width: completionPercentage + '%', 
+                background: completionPercentage === 100 ? '#10B981' : 'linear-gradient(90deg, #D4AF37, #10B981)',
+                height: '100%',
+                transition: 'width 0.3s ease'
+              }"
+            ></div>
+          </div>
+        </div>
+
+        <div class="space-y-1 mb-4" style="max-height:48vh; overflow-y:auto;">
+          <div 
+            v-for="(item, idx) in guideItems" 
+            :key="item.id"
+            class="guide-step-item"
+            :class="{ 'is-done': item.isCompleted, 'is-active-step': activeSectionId === item.id }"
+            @click="scrollToSection(item.id)"
+          >
+            <div class="guide-check-circle" :class="item.isCompleted ? 'done' : 'pending'">
+              <span v-if="item.isCompleted">✔</span>
+              <span v-else>{{ idx + 1 }}</span>
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div class="flex items-center justify-between gap-1">
+                <div style="font-size:0.85rem; font-weight:700; color:var(--admin-text-primary);">{{ item.title }}</div>
+                <span v-if="activeSectionId === item.id" style="font-size:0.65rem; color:var(--color-gold); font-weight:800; text-transform:uppercase;">
+                  Viewing
+                </span>
+              </div>
+              <div style="font-size:0.75rem; color:var(--admin-text-muted);">{{ item.sub }}</div>
+            </div>
+            <span style="font-size:0.85rem; color:var(--admin-text-muted);">›</span>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <button type="button" class="btn btn-sm btn-outline-white flex-1" @click="saveProperty('Draft')">Save Draft</button>
+          <button type="button" class="btn btn-sm btn-emerald flex-1" @click="saveProperty('Active')">Publish Live</button>
+        </div>
+      </div>
+    </div>
+
     <!-- QUICK MODAL TO ADD CUSTOM DYNAMIC OPTION -->
     <div v-if="customOptionModal.isOpen" class="admin-modal-overlay" @click.self="customOptionModal.isOpen = false">
       <div class="admin-modal-card animate-fade-in-up" style="max-width:420px;">
@@ -592,7 +671,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useProperties, type PropertyItem } from '~/composables/useProperties'
 import { usePropertyOptions } from '~/composables/usePropertyOptions'
@@ -605,6 +684,9 @@ const props = defineProps<{
 
 const router = useRouter()
 const toast = useToast()
+
+const activeSectionId = ref('sec-basic')
+const mobileGuideOpen = ref(false)
 
 const { 
   addProperty, 
@@ -817,14 +899,44 @@ const activeGuideTip = computed(() => {
 })
 
 const scrollToSection = (sectionId: string) => {
+  activeSectionId.value = sectionId
   const el = document.getElementById(sectionId)
   if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const yOffset = -146
+    const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset
+    window.scrollTo({ top: y, behavior: 'smooth' })
     el.classList.add('section-highlight-pulse')
     setTimeout(() => {
       el.classList.remove('section-highlight-pulse')
     }, 1500)
   }
+  mobileGuideOpen.value = false
+}
+
+let sectionObserver: IntersectionObserver | null = null
+
+const setupScrollSpy = () => {
+  if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return
+
+  sectionObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        activeSectionId.value = entry.target.id
+      }
+    }
+  }, {
+    rootMargin: '-130px 0px -40% 0px',
+    threshold: 0.1
+  })
+
+  const sectionIds = [
+    'sec-basic', 'sec-location', 'sec-pricing', 'sec-specs', 
+    'sec-details', 'sec-media', 'sec-brochure', 'sec-legal', 'sec-privacy'
+  ]
+  sectionIds.forEach(id => {
+    const el = document.getElementById(id)
+    if (el) sectionObserver?.observe(el)
+  })
 }
 
 // Media upload helpers
@@ -967,6 +1079,14 @@ onMounted(async () => {
   } else {
     propForm.status = 'Draft'
   }
+
+  setTimeout(() => {
+    setupScrollSpy()
+  }, 300)
+})
+
+onUnmounted(() => {
+  sectionObserver?.disconnect()
 })
 
 // Save & Publish
