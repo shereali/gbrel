@@ -1927,25 +1927,30 @@ Route::get('/admin/stats', function () {
     $plots = $properties->filter(fn($p) => in_array($p->property_type, ['Plot', 'Land']))->count();
     $resorts = $properties->filter(fn($p) => $p->property_type === 'Hotel')->count();
 
-    // Regional allocation
+    // Regional allocation computed dynamically across all states
     $regions = [];
     $grouped = $properties->groupBy('state');
     foreach ($grouped as $state => $items) {
-        $sum = $items->sum('price');
+        $sum = (float)$items->sum('price');
         $pct = $totalValuation > 0 ? round(($sum / $totalValuation) * 100, 1) : 0;
+        $stateName = trim($state ?: 'Other Divisions');
         $regions[] = [
-            'region' => $state,
+            'region' => $stateName,
             'count' => $items->count(),
             'valuation' => $sum,
+            'valuation_crores' => round($sum / 10000000, 2),
             'percentage' => $pct
         ];
     }
 
-    $leadsCount = Lead::count();
-    $viewingsCount = Viewing::count();
+    $leads = Lead::orderBy('created_at', 'desc')->get();
+    $viewings = Viewing::orderBy('created_at', 'desc')->get();
     $brochuresCount = Brochure::count();
     $usersCount = User::count();
-    $pendingApprovals = Property::where('is_rajuk_approved', false)->count();
+    $pendingApprovals = Property::where('is_rajuk_approved', false)
+        ->orWhereNull('is_rajuk_approved')
+        ->orderBy('created_at', 'desc')
+        ->get();
     $settledVolume = (float)FinancialTransaction::where('status', 'Settled')->sum('amount');
 
     $payload = [
@@ -1956,15 +1961,18 @@ Route::get('/admin/stats', function () {
         'flats_count' => $flats,
         'plots_count' => $plots,
         'resorts_count' => $resorts,
-        'viewings_count' => $viewingsCount,
-        'leads_count' => $leadsCount,
+        'viewings_count' => $viewings->count(),
+        'confirmed_viewings_count' => $viewings->where('status', 'Confirmed')->count(),
+        'leads_count' => $leads->count(),
+        'active_leads_count' => $leads->where('status', 'Active')->count(),
         'brochures_count' => $brochuresCount,
         'users_count' => $usersCount,
-        'pending_approvals_count' => $pendingApprovals,
+        'pending_approvals_count' => $pendingApprovals->count(),
         'settled_volume' => $settledVolume,
         'regional_allocation' => $regions,
-        'recent_viewings' => Viewing::orderBy('created_at', 'desc')->take(3)->get(),
-        'unapproved_properties' => Property::where('is_rajuk_approved', false)->take(3)->get()
+        'recent_viewings' => $viewings->take(4)->values(),
+        'recent_leads' => $leads->take(4)->values(),
+        'unapproved_properties' => $pendingApprovals->take(4)->values()
     ];
 
     return response()->json(array_merge([
