@@ -17,7 +17,7 @@
       <!-- Sign In Form -->
       <form @submit.prevent="handleAdminLogin">
         <div class="form-group" style="margin-bottom: 18px;">
-          <label for="admin-email" class="form-label" style="display: block; font-size: 0.82rem; font-weight: 600; color: #CBD5E1; margin-bottom: 6px;">Email Address</label>
+          <label for="admin-email" class="form-label" style="display: block; font-size: 0.82rem; font-weight: 600; color: #CBD5E1; margin-bottom: 6px;">Email or Username</label>
           <div style="position: relative; display: flex; align-items: center;">
             <svg style="position: absolute; left: 14px; color: #64748B; pointer-events: none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
@@ -26,17 +26,17 @@
             <input 
               id="admin-email"
               v-model="email" 
-              type="email" 
+              type="text" 
               required 
-              autocomplete="email"
-              placeholder="admin@gbrel.com" 
+              autocomplete="username email"
+              placeholder="admin@gbrel.com or admin" 
               class="form-input" 
               style="width: 100%; background: #1E293B; color: #FFF; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 11px 14px 11px 42px; font-size: 0.9rem;" 
             />
           </div>
         </div>
 
-        <div class="form-group" style="margin-bottom: 24px;">
+        <div class="form-group" style="margin-bottom: 20px;">
           <label for="admin-password" class="form-label" style="display: block; font-size: 0.82rem; font-weight: 600; color: #CBD5E1; margin-bottom: 6px;">Password</label>
           <div style="position: relative; display: flex; align-items: center;">
             <svg style="position: absolute; left: 14px; color: #64748B; pointer-events: none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -49,7 +49,7 @@
               :type="showPassword ? 'text' : 'password'" 
               required 
               autocomplete="current-password"
-              placeholder="Enter admin password" 
+              placeholder="Enter password (e.g. admin123 or password)" 
               class="form-input" 
               style="width: 100%; background: #1E293B; color: #FFF; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 11px 40px 11px 42px; font-size: 0.9rem;" 
             />
@@ -68,6 +68,36 @@
                 <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
                 <line x1="1" y1="1" x2="23" y2="23"/>
               </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Credentials Autofill Selector -->
+        <div style="margin-bottom: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px;">
+          <div style="font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94A3B8; font-weight: 700; margin-bottom: 8px;">
+            Quick Fill Demo Credentials
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button 
+              type="button" 
+              @click="setCredentials('admin@gbrel.com', 'admin123')"
+              style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34D399; font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"
+            >
+              <span>👑 Super Admin</span>
+            </button>
+            <button 
+              type="button" 
+              @click="setCredentials('manager@gbrel.com', 'manager123')"
+              style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #60A5FA; font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"
+            >
+              <span>🏢 Manager</span>
+            </button>
+            <button 
+              type="button" 
+              @click="setCredentials('legal@gbrel.com', 'legal123')"
+              style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #FBBF24; font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"
+            >
+              <span>⚖️ Legal</span>
             </button>
           </div>
         </div>
@@ -125,6 +155,11 @@ const email = ref('admin@gbrel.com')
 const password = ref('admin123')
 const showPassword = ref(false)
 const loading = ref(false)
+
+const setCredentials = (e: string, p: string) => {
+  email.value = e
+  password.value = p
+}
 
 const handleAdminLogin = async () => {
   if (!email.value || !password.value) {
