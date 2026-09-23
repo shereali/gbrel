@@ -578,7 +578,7 @@
                 </div>
 
                 <!-- Specific Requirements Textarea -->
-                <div class="form-group mb-4">
+                <div class="form-group inquiry-textarea-group mb-4">
                   <label class="form-label-sm">Specific Inquiries or Offer Range:</label>
                   <textarea v-model="inquiryForm.message" rows="2" class="form-textarea" placeholder="Note your specific floor preferences, deed verification requests, or target closing timeline..."></textarea>
                 </div>
@@ -589,7 +589,14 @@
                     <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
                     <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
                   </svg>
-                  <span>{{ isSubmittingInquiry ? 'Verifying & Dispatching...' : 'Request Private Dossier & Pricing →' }}</span>
+                  <svg v-else width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="btn-dossier-icon">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                  <span>{{ isSubmittingInquiry ? 'Verifying & Dispatching...' : 'Request Private Dossier & Pricing' }}</span>
+                  <span v-if="!isSubmittingInquiry" class="btn-arrow-icon">→</span>
                 </button>
 
                 <div class="inquiry-trust-note">
@@ -715,7 +722,18 @@
           </div>
 
           <button type="submit" class="btn btn-emerald btn-lg btn-block btn-submit-luxury" :disabled="isSubmittingInquiry">
-            <span>{{ isSubmittingInquiry ? 'Dispatching...' : 'Get Private Dossier & Pricing →' }}</span>
+            <svg v-if="isSubmittingInquiry" class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+              <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
+            </svg>
+            <svg v-else width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="btn-dossier-icon">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            <span>{{ isSubmittingInquiry ? 'Dispatching...' : 'Get Private Dossier & Pricing' }}</span>
+            <span v-if="!isSubmittingInquiry" class="btn-arrow-icon">→</span>
           </button>
         </form>
       </div>
@@ -1989,10 +2007,80 @@ const copyMandateLink = async () => {
   border-color: #0A1128;
 }
 
+/* Textarea Gap & Styling */
+.inquiry-textarea-group {
+  margin-bottom: 22px !important;
+}
+
+.inquiry-textarea-group .form-textarea {
+  margin-top: 6px;
+  border-radius: 10px;
+  border: 1.5px solid #CBD5E1;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  min-height: 72px;
+  padding: 10px 14px;
+  transition: all 0.2s ease;
+}
+
+.inquiry-textarea-group .form-textarea:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+}
+
+/* Smart Luxury Submit Button */
 .btn-submit-luxury {
-  font-weight: 850;
-  padding: 12px 18px;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(52, 211, 153, 0.3) !important;
+  font-size: 0.9rem !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.25px !important;
+  border-radius: 10px !important;
+  min-height: 44px !important;
+  padding: 11px 20px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3) !important;
+  cursor: pointer;
+  transition: all 0.2s ease !important;
+  margin-top: 8px;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.btn-submit-luxury:hover:not(:disabled) {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+  transform: translateY(-1.5px) !important;
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.42) !important;
+}
+
+.btn-submit-luxury:hover:not(:disabled) .btn-arrow-icon {
+  transform: translateX(4px);
+}
+
+.btn-submit-luxury:active:not(:disabled) {
+  transform: scale(0.98) !important;
+}
+
+.btn-submit-luxury:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.btn-dossier-icon {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.btn-arrow-icon {
+  display: inline-block;
+  font-size: 1.1rem;
+  line-height: 1;
+  font-weight: 800;
+  transition: transform 0.2s ease;
 }
 
 .inquiry-trust-note {
