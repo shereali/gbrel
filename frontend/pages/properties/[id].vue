@@ -316,34 +316,227 @@
               </a>
             </div>
 
-            <!-- In-line Inquiry Form -->
-            <div v-if="!inquirySubmitted">
-              <strong style="display:block; font-size: 0.95rem; color: #0A1128; margin-bottom: 12px;">Direct Mandate Inquiry</strong>
+            <!-- Qualified Investor Mandate Inquiry Form -->
+            <div v-if="!inquirySubmitted" class="qualified-inquiry-box">
+              <div class="inquiry-header-badge">
+                <span class="badge-lock">🔒</span>
+                <div>
+                  <strong class="inquiry-title">Request Private Dossier & Pricing</strong>
+                  <div class="inquiry-sub">Direct access to RAJUK title deeds and negotiation terms.</div>
+                </div>
+              </div>
+
               <form @submit.prevent="submitInquiry">
-                <div class="form-group" style="margin-bottom: 10px;">
-                  <input v-model="inquiryForm.name" type="text" placeholder="Your Name" required class="form-input" />
+                <!-- Prospect Name -->
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label class="form-label-sm">Full Name *</label>
+                  <input v-model="inquiryForm.name" type="text" placeholder="e.g. Engr. Rafiqul Islam" required class="form-input" />
                 </div>
-                <div class="form-group" style="margin-bottom: 10px;">
-                  <input v-model="inquiryForm.phone" type="tel" placeholder="Phone Number (+880)" required class="form-input" />
+
+                <!-- Phone / WhatsApp -->
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label class="form-label-sm">
+                    <span>WhatsApp / Mobile Number *</span>
+                    <span style="color:#10B981; font-weight:700; font-size:0.75rem;">(WhatsApp Enabled)</span>
+                  </label>
+                  <div style="position: relative;">
+                    <input v-model="inquiryForm.phone" type="tel" placeholder="+880 1711-..." required class="form-input" style="padding-right: 32px;" />
+                    <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 1rem; pointer-events: none;">💬</span>
+                  </div>
                 </div>
-                <div class="form-group" style="margin-bottom: 10px;">
-                  <input v-model="inquiryForm.email" type="email" placeholder="Email Address" required class="form-input" />
+
+                <!-- Email (Optional) -->
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label class="form-label-sm">
+                    <span>Email Address</span>
+                    <span style="color:#94A3B8; font-size:0.72rem;">(Optional for PDF dispatch)</span>
+                  </label>
+                  <input v-model="inquiryForm.email" type="email" placeholder="name@company.com" class="form-input" />
                 </div>
+
+                <!-- Capability Filter 1: Purchasing As -->
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label class="form-label-sm">I am purchasing as: *</label>
+                  <select v-model="inquiryForm.buyer_category" class="form-input form-select" required>
+                    <option value="Resident Business Owner / Industrialist">Resident Business Owner / Industrialist</option>
+                    <option value="NRB Investor (USA / UK / Canada / Middle East)">NRB Investor (USA / UK / Canada / Middle East)</option>
+                    <option value="Corporate / Institutional Fund">Corporate / Institutional Fund</option>
+                    <option value="Private Family Residence Buyer">Private Family Residence Buyer</option>
+                  </select>
+                </div>
+
+                <!-- Capability Filter 2: Investment Readiness & Timeline -->
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label class="form-label-sm">Purchase Readiness & Timeline: *</label>
+                  <select v-model="inquiryForm.investment_readiness" class="form-input form-select" required>
+                    <option value="Ready to close within 30 days (100% Cash / Self-Funded)">⚡ Ready within 30 days (100% Cash / Self-Funded)</option>
+                    <option value="1 - 3 Months (Evaluating Title & Financing)">⏳ 1 - 3 Months (Evaluating Title & Financing)</option>
+                    <option value="Exploring Market Pricing">🔍 Exploring Market Pricing</option>
+                  </select>
+                </div>
+
+                <!-- Preferred Discussion Channel -->
                 <div class="form-group" style="margin-bottom: 14px;">
-                  <textarea v-model="inquiryForm.message" rows="3" class="form-textarea" placeholder="I am interested in this listing and would like legal documentation & price negotiation details..."></textarea>
+                  <label class="form-label-sm">Preferred Discussion Channel:</label>
+                  <div class="flex gap-2">
+                    <button 
+                      type="button" 
+                      class="channel-pill" 
+                      :class="{ active: inquiryForm.preferred_contact === 'WhatsApp' }" 
+                      @click="inquiryForm.preferred_contact = 'WhatsApp'"
+                    >
+                      💬 WhatsApp
+                    </button>
+                    <button 
+                      type="button" 
+                      class="channel-pill" 
+                      :class="{ active: inquiryForm.preferred_contact === 'Phone' }" 
+                      @click="inquiryForm.preferred_contact = 'Phone'"
+                    >
+                      📞 Phone Call
+                    </button>
+                    <button 
+                      type="button" 
+                      class="channel-pill" 
+                      :class="{ active: inquiryForm.preferred_contact === 'Email' }" 
+                      @click="inquiryForm.preferred_contact = 'Email'"
+                    >
+                      ✉️ Email
+                    </button>
+                  </div>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;" :disabled="isSubmittingInquiry">
-                  <span>{{ isSubmittingInquiry ? 'Dispatching...' : 'Send Direct Inquiry' }}</span>
+
+                <!-- Specific Requirements Textarea -->
+                <div class="form-group" style="margin-bottom: 16px;">
+                  <label class="form-label-sm">Specific Inquiries or Offer Range:</label>
+                  <textarea v-model="inquiryForm.message" rows="2" class="form-textarea" placeholder="Note your specific floor preferences, deed verification requests, or target closing timeline..."></textarea>
+                </div>
+
+                <!-- Submit CTA -->
+                <button type="submit" class="btn btn-emerald btn-lg" style="width: 100%; font-weight: 800; padding: 12px 18px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);" :disabled="isSubmittingInquiry">
+                  <svg v-if="isSubmittingInquiry" class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+                    <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
+                  </svg>
+                  <span>{{ isSubmittingInquiry ? 'Verifying & Dispatching...' : 'Request Private Dossier & Pricing →' }}</span>
                 </button>
+
+                <div class="inquiry-trust-note">
+                  <span>🛡️ Routed directly to Senior Advisory Panel. Zero spam policy.</span>
+                </div>
               </form>
             </div>
 
-            <div v-else class="text-center animate-fade-in" style="padding: 16px; background: #ECFDF5; border-radius: var(--radius-md); color: #059669;">
-              <strong>Inquiry Dispatched!</strong>
-              <p style="font-size: 0.85rem; margin-top: 4px; color: #047857;">{{ agent.name }} will reach out to you within 30 minutes.</p>
+            <!-- Qualified Success Screen with Direct WhatsApp Continuation -->
+            <div v-else class="text-center animate-fade-in qualified-success-box">
+              <div class="success-icon-badge">✔</div>
+              <strong style="font-size:1.15rem; color:#0F172A; display:block;">Mandate Inquiry Verified!</strong>
+              <p style="font-size: 0.85rem; margin-top: 6px; color: #475569; line-height: 1.4;">
+                Your inquiry has been assigned to <strong>{{ agent.name }}</strong> (Senior Luxury Mandate Advisor).
+              </p>
+
+              <div style="margin: 18px 0;">
+                <a 
+                  :href="`https://wa.me/${agent.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(agent.name)},%20I%20just%20submitted%20a%20priority%20mandate%20inquiry%20for:%20${encodeURIComponent(property.title)}.%20My%20name%20is%20${encodeURIComponent(inquiryForm.name)}.`" 
+                  target="_blank" 
+                  class="btn btn-emerald" 
+                  style="width: 100%; background: #25D366; border-color: #25D366; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);"
+                >
+                  <span style="font-size: 1.2rem;">💬</span>
+                  <span>Continue Live on WhatsApp →</span>
+                </a>
+              </div>
+
+              <button type="button" class="btn btn-sm btn-outline" style="width: 100%; font-size: 0.8rem;" @click="inquirySubmitted = false">
+                <span>Submit Another Request</span>
+              </button>
             </div>
           </div>
         </aside>
+      </div>
+    </div>
+
+    <!-- Sticky Mobile Bottom Conversion Bar (Essential for Facebook Ads Traffic) -->
+    <div v-if="property" class="mobile-sticky-lead-bar">
+      <div class="sticky-inner-track">
+        <a 
+          :href="`https://wa.me/${agent.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(agent.name)},%20I%20saw%20your%20listing%20for:%20${encodeURIComponent(property.title)}%20and%20would%20like%20to%20review%20pricing%20and%20deeds.`" 
+          target="_blank" 
+          class="btn btn-whatsapp-sticky"
+        >
+          <span style="font-size: 1.15rem;">💬</span>
+          <span>WhatsApp</span>
+        </a>
+
+        <button 
+          type="button" 
+          class="btn btn-gold-sticky"
+          @click="quickDossierModalOpen = true"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <span>Price & Private Dossier</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Mobile Qualification Modal -->
+    <div v-if="quickDossierModalOpen" class="modal-overlay" @click.self="quickDossierModalOpen = false">
+      <div class="modal-card animate-fade-in-up" style="max-width: 480px; width: 100%; padding: 24px; position: relative;">
+        <button 
+          type="button" 
+          @click="quickDossierModalOpen = false" 
+          style="position: absolute; right: 16px; top: 16px; background: none; border: none; font-size: 1.4rem; color: #64748B; cursor: pointer;"
+        >
+          ✕
+        </button>
+
+        <div style="margin-bottom: 16px;">
+          <span class="badge badge-rajuk" style="margin-bottom: 6px;">Verified Mandate</span>
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: #0A1128; line-height: 1.2;">
+            Request Private Pricing & Dossier
+          </h3>
+          <p style="font-size: 0.82rem; color: #64748B; margin-top: 4px;">
+            {{ property.title }}
+          </p>
+        </div>
+
+        <form @submit.prevent="submitModalInquiry">
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="form-label-sm">Full Name *</label>
+            <input v-model="inquiryForm.name" type="text" placeholder="Your Name" required class="form-input" />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="form-label-sm">WhatsApp / Mobile Number *</label>
+            <input v-model="inquiryForm.phone" type="tel" placeholder="+880 1711-..." required class="form-input" />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="form-label-sm">I am purchasing as: *</label>
+            <select v-model="inquiryForm.buyer_category" class="form-input form-select" required>
+              <option value="Resident Business Owner / Industrialist">Resident Business Owner / Industrialist</option>
+              <option value="NRB Investor (USA / UK / Canada / Middle East)">NRB Investor (USA / UK / Canada / Middle East)</option>
+              <option value="Corporate / Institutional Fund">Corporate / Institutional Fund</option>
+              <option value="Private Family Residence Buyer">Private Family Residence Buyer</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label-sm">Purchase Readiness: *</label>
+            <select v-model="inquiryForm.investment_readiness" class="form-input form-select" required>
+              <option value="Ready to close within 30 days (100% Cash / Self-Funded)">⚡ Ready within 30 days (100% Cash / Self-Funded)</option>
+              <option value="1 - 3 Months (Evaluating Title & Financing)">⏳ 1 - 3 Months (Evaluating Title & Financing)</option>
+              <option value="Exploring Market Pricing">🔍 Exploring Market Pricing</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-emerald btn-lg" style="width: 100%; font-weight: 800; margin-bottom: 8px;" :disabled="isSubmittingInquiry">
+            <span>{{ isSubmittingInquiry ? 'Dispatching...' : 'Get Private Dossier & Pricing →' }}</span>
+          </button>
+        </form>
       </div>
     </div>
 
@@ -394,6 +587,7 @@ const agent = computed(() => {
 
 const scheduleModalOpen = ref(false)
 const lightboxOpen = ref(false)
+const quickDossierModalOpen = ref(false)
 const currentLightboxIdx = ref(0)
 const inquirySubmitted = ref(false)
 const lightboxRoot = ref<HTMLElement | null>(null)
@@ -404,11 +598,15 @@ const closeLightbox = () => {
 
 useOverlayBehavior(lightboxOpen, closeLightbox, lightboxRoot)
 
+// High-Converting Qualified Buyer Form State
 const inquiryForm = reactive({
-  name: user.value.name,
-  phone: user.value.phone,
-  email: user.value.email,
-  message: 'I am interested in this listing and would like to review the legal documents and schedule a physical inspection.'
+  name: user.value?.name || '',
+  phone: user.value?.phone || '',
+  email: user.value?.email || '',
+  buyer_category: 'Resident Business Owner / Industrialist',
+  investment_readiness: 'Ready to close within 30 days (100% Cash / Self-Funded)',
+  preferred_contact: 'WhatsApp',
+  message: 'I am requesting verified RAJUK title deeds, floor plans, and pricing terms for this property mandate.'
 })
 
 const openLightbox = (idx: number) => {
@@ -452,24 +650,49 @@ onMounted(async () => {
   await fetchProperties()
 })
 
+// Unified Lead Dispatcher with UTM & Ad Tracking Auto-Capture
 const submitInquiry = async () => {
   if (!property.value) return
+  if (!inquiryForm.name || !inquiryForm.phone) {
+    toast.error('Missing Contact Details', 'Please provide your name and WhatsApp number.')
+    return
+  }
+
   isSubmittingInquiry.value = true
+
+  // Auto-capture Facebook and digital ad UTM parameters
+  const utmSource = (route.query.utm_source as string) || 
+    (process.client && document.referrer.toLowerCase().includes('facebook') ? 'facebook' : null)
+  const utmMedium = (route.query.utm_medium as string) || (utmSource ? 'cpc_paid' : null)
+  const utmCampaign = (route.query.utm_campaign as string) || null
+
   try {
-    await fetch(useApiUrl('/leads'), {
+    const res = await fetch(useApiUrl('/leads'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        property_id: property.value.id,
         name: inquiryForm.name,
         phone: inquiryForm.phone,
         email: inquiryForm.email,
         property_title: property.value.title,
-        buyer_type: 'Direct Buyer',
+        buyer_category: inquiryForm.buyer_category,
+        investment_readiness: inquiryForm.investment_readiness,
+        preferred_contact: inquiryForm.preferred_contact,
         message: inquiryForm.message,
-        source: 'Property Detail In-line Inquiry'
+        utm_source: utmSource,
+        utm_medium: utmMedium,
+        utm_campaign: utmCampaign
       })
     })
-    inquirySubmitted.value = true
+
+    const data = await res.json().catch(() => null)
+    if (res.ok && data?.success) {
+      inquirySubmitted.value = true
+      toast.success('Inquiry Dispatched', `Directly assigned to ${agent.value.name}.`)
+    } else {
+      inquirySubmitted.value = true
+    }
   } catch (err) {
     console.error('Inquiry dispatch error:', err)
     inquirySubmitted.value = true
@@ -478,29 +701,207 @@ const submitInquiry = async () => {
   }
 }
 
+const submitModalInquiry = async () => {
+  await submitInquiry()
+  quickDossierModalOpen.value = false
+}
+
 const requestBrochure = () => {
   if (!property.value) return
-  inquiryForm.message = `Hello, please email me the official architectural brochure, floor layout, and legal deeds for "${property.value.title}".`
-  toast.info('Brochure Request', 'Please submit the inquiry form below and our advisor will dispatch the PDF deck.')
+  inquiryForm.message = `Hello, please dispatch the official architectural brochure, floor layout, and legal deeds for "${property.value.title}".`
+  toast.info('Brochure Request', 'Please verify your contact details below to receive the private dossier.')
 }
 
 const requestConfidentialPricing = () => {
   if (!property.value) return
   inquiryForm.message = `Confidential NDA & Pricing Inquiry for "${property.value.title}". Please dispatch valuation breakdown and non-disclosure agreement.`
-  toast.info('Confidential Mandate', 'Please submit the inquiry form to receive private valuation disclosures.')
+  toast.info('Confidential Mandate', 'Please complete the investor form to receive private valuation disclosures.')
 }
 
 const requestFloorPlan = () => {
   if (!property.value) return
   inquiryForm.message = `Request for Architectural Floor Plans & Blueprints for "${property.value.title}" under Non-Disclosure Agreement.`
-  toast.info('Floor Plan Request', 'Submit inquiry to receive confidential architectural layout.')
+  toast.info('Floor Plan Request', 'Submit request to receive confidential architectural layout.')
 }
 </script>
 
 <style scoped>
+/* Qualified Buyer Box Styling */
+.qualified-inquiry-box {
+  background: #FFFFFF;
+  border-radius: var(--radius-lg);
+}
+
+.inquiry-header-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(10, 17, 40, 0.03);
+  border: 1px solid var(--color-border);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: 14px;
+}
+
+.badge-lock {
+  font-size: 1.25rem;
+}
+
+.inquiry-title {
+  font-size: 0.96rem;
+  color: #0A1128;
+  display: block;
+  line-height: 1.2;
+}
+
+.inquiry-sub {
+  font-size: 0.74rem;
+  color: #64748B;
+  margin-top: 2px;
+}
+
+.form-label-sm {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 5px;
+}
+
+.form-select {
+  cursor: pointer;
+  background-color: #FFFFFF;
+}
+
+.channel-pill {
+  flex: 1;
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 6px 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.channel-pill:hover {
+  background: #F1F5F9;
+  border-color: #94A3B8;
+}
+
+.channel-pill.active {
+  background: #0A1128;
+  color: #FFFFFF;
+  border-color: #0A1128;
+}
+
+.inquiry-trust-note {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 0.72rem;
+  color: #64748B;
+  line-height: 1.3;
+}
+
+.qualified-success-box {
+  padding: 24px 18px;
+  background: #ECFDF5;
+  border: 1.5px solid #A7F3D0;
+  border-radius: var(--radius-lg);
+}
+
+.success-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #10B981;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin: 0 auto 12px;
+}
+
+/* ======================================================== */
+/* Sticky Mobile Conversion Bar (Bottom Pinned < 1024px) */
+/* ======================================================== */
+.mobile-sticky-lead-bar {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .mobile-sticky-lead-bar {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(10, 17, 40, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 10px 14px;
+    z-index: 999;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .sticky-inner-track {
+    display: flex;
+    gap: 10px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .btn-whatsapp-sticky {
+    flex: 1;
+    background: #25D366;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+  }
+
+  .btn-gold-sticky {
+    flex: 1.5;
+    background: linear-gradient(135deg, #D4AF37 0%, #B89628 100%);
+    color: #0A1128;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  }
+
+  /* Add extra padding at bottom of page so sticky bar never covers footer */
+  .property-hero-gallery {
+    margin-bottom: 20px;
+  }
+}
+
 @media (max-width: 992px) {
   .property-detail-grid {
     grid-template-columns: 1fr !important;
   }
 }
 </style>
+

@@ -38,16 +38,44 @@
 
     <!-- Leads List -->
     <div style="display:flex; flex-direction:column; gap:16px;">
-      <div v-for="lead in filteredLeads" :key="lead.id" class="panel-card">
+      <div v-for="lead in filteredLeads" :key="lead.id" class="panel-card" style="position: relative;">
         <div class="flex justify-between items-start flex-wrap gap-4" style="margin-bottom:12px;">
           <div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <strong style="font-size:1.18rem;">{{ lead.name }}</strong>
-              <span class="badge badge-featured" style="font-size:0.75rem;">{{ lead.type }}</span>
+            <div class="flex items-center gap-2 flex-wrap" style="margin-bottom: 6px;">
+              <strong style="font-size:1.18rem; color: var(--admin-text-primary);">{{ lead.name }}</strong>
+              
+              <!-- Buyer Category Badge -->
+              <span class="badge badge-featured" style="font-size:0.75rem;">
+                {{ lead.buyer_category || lead.type }}
+              </span>
+
+              <!-- Investment Readiness Filter Badge -->
+              <span 
+                v-if="lead.investment_readiness" 
+                class="badge" 
+                :style="lead.investment_readiness.includes('30 days') ? 'background:rgba(16,185,129,0.15); color:#10B981; border:1px solid rgba(16,185,129,0.3); font-weight:700;' : 'background:rgba(59,130,246,0.15); color:#60A5FA; border:1px solid rgba(59,130,246,0.3);'"
+              >
+                {{ lead.investment_readiness.includes('30 days') ? '⚡ 100% Cash Ready (30 Days)' : lead.investment_readiness }}
+              </span>
+
+              <!-- Ad Source Attribution -->
+              <span 
+                v-if="lead.utm_source === 'facebook'" 
+                class="badge" 
+                style="background:rgba(24,119,242,0.15); color:#3B82F6; border:1px solid rgba(24,119,242,0.35); font-weight:700;"
+                :title="lead.utm_campaign ? 'Campaign: ' + lead.utm_campaign : 'Facebook Paid Lead'"
+              >
+                📘 Facebook Ad {{ lead.utm_campaign ? '(' + lead.utm_campaign + ')' : '' }}
+              </span>
+
               <span class="badge badge-status" style="font-size:0.75rem;">Captured {{ lead.date }}</span>
             </div>
+
             <div style="font-size:0.88rem; margin-top:4px;" class="text-subtle">
               Target Property: <strong style="color:#10B981;">{{ lead.property }}</strong>
+              <span v-if="lead.preferred_contact" style="margin-left: 10px; color: #94A3B8; font-size: 0.8rem;">
+                • Preferred: <strong style="color:#FFF;">{{ lead.preferred_contact }}</strong>
+              </span>
             </div>
           </div>
 
@@ -60,11 +88,11 @@
               <option value="Converted">Status: Converted</option>
             </select>
 
-            <a :href="`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}`" target="_blank" class="btn btn-sm btn-emerald" style="background:#25D366; border-color:#25D366;">
-              WhatsApp Dispatch
+            <a :href="`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(lead.name)},%20this%20is%20GBREL%20Advisory%20regarding%20your%20mandate%20inquiry%20for%20${encodeURIComponent(lead.property)}`" target="_blank" class="btn btn-sm btn-emerald" style="background:#25D366; border-color:#25D366; font-weight:700;">
+              <span>💬 WhatsApp Dispatch</span>
             </a>
             <a :href="`tel:${lead.phone}`" class="btn btn-sm btn-outline-white">
-              Call {{ lead.phone }}
+              <span>📞 Call {{ lead.phone }}</span>
             </a>
           </div>
         </div>
@@ -156,8 +184,13 @@ const fetchLeads = async () => {
         leadsList.value = json.data.map(l => ({
           ...l,
           property: l.property_title || l.property || 'Direct Inquiry',
-          type: l.buyer_type || l.type || 'Direct Buyer',
-          stage: l.stage || 'New',
+          type: l.buyer_category || l.buyer_type || l.lead_type || l.type || 'Direct Buyer',
+          buyer_category: l.buyer_category || l.lead_type,
+          investment_readiness: l.investment_readiness,
+          preferred_contact: l.preferred_contact,
+          utm_source: l.utm_source,
+          utm_campaign: l.utm_campaign,
+          stage: l.status || l.stage || 'New',
           date: l.created_at ? new Date(l.created_at).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : (l.date || 'Recent')
         }))
       }

@@ -697,18 +697,26 @@ Route::post('/leads', function (Request $request) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
     $lead = Lead::create([
-        'name' => $input['name'] ?? 'Interested Buyer',
-        'phone' => $input['phone'] ?? '+880 1819-000000',
-        'email' => $input['email'] ?? null,
+        'property_id' => !empty($input['property_id']) ? (int)$input['property_id'] : null,
+        'name' => trim((string)($input['name'] ?? 'Interested Buyer')),
+        'phone' => trim((string)($input['phone'] ?? '+880 1819-000000')),
+        'email' => !empty($input['email']) ? trim((string)$input['email']) : null,
         'property_title' => $input['property_title'] ?? $input['property'] ?? 'General Inquiry',
-        'lead_type' => $input['lead_type'] ?? $input['type'] ?? 'Direct Inquiry',
-        'message' => $input['message'] ?? 'Inquiry submitted via portal.',
-        'status' => $input['status'] ?? $input['stage'] ?? 'New'
+        'lead_type' => $input['buyer_category'] ?? $input['lead_type'] ?? $input['type'] ?? 'Direct Inquiry',
+        'buyer_category' => $input['buyer_category'] ?? 'Resident Business Owner',
+        'investment_readiness' => $input['investment_readiness'] ?? 'Ready to close (1-3 Months)',
+        'budget_range' => $input['budget_range'] ?? null,
+        'preferred_contact' => $input['preferred_contact'] ?? 'WhatsApp',
+        'message' => $input['message'] ?? 'Inquiry submitted via property portal.',
+        'status' => $input['status'] ?? $input['stage'] ?? 'Active',
+        'utm_source' => $input['utm_source'] ?? null,
+        'utm_medium' => $input['utm_medium'] ?? null,
+        'utm_campaign' => $input['utm_campaign'] ?? null,
     ]);
 
     return response()->json([
         'success' => true,
-        'message' => 'Lead captured and saved to MySQL database',
+        'message' => 'High-intent lead captured and saved to MySQL database',
         'data' => $lead
     ], 201);
 });
