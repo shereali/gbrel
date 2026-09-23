@@ -84,7 +84,7 @@
             </a>
           </div>
 
-          <h1 style="font-size: 2.4rem; font-weight: 800; color: #0A1128; line-height: 1.25; margin-bottom: 8px;">
+          <h1 class="property-title-text">
             {{ property.title }}
           </h1>
 
@@ -104,10 +104,10 @@
         </div>
 
         <!-- Price Display Card (Respects hidePrice option) -->
-        <div style="text-align: right; background: #FFFFFF; border: 1.5px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px 24px; box-shadow: var(--shadow-sm); min-width: 260px;">
+        <div class="property-price-card">
           <!-- Case A: Price is Hidden (Confidential Mandate) -->
           <div v-if="property.hidePrice">
-            <div style="font-size: 0.76rem; color: #B45309; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; display:flex; align-items:center; justify-content:flex-end; gap:4px;">
+            <div class="confidential-badge-row">
               <span>🔐 Confidential Mandate</span>
             </div>
             <div style="font-family: var(--font-display); font-size: 1.45rem; font-weight: 800; color: var(--color-gold); line-height: 1.2; margin-top: 4px;">
@@ -219,8 +219,8 @@
             <!-- Official Brochure Download CTA -->
             <div style="margin-bottom: 16px;">
               <a 
-                v-if="property.brochureUrl" 
-                :href="property.brochureUrl" 
+                v-if="property.brochureUrl || (property.brochuresVault && property.brochuresVault.length > 0)" 
+                :href="property.brochureUrl || property.brochuresVault[0].file_url" 
                 target="_blank" 
                 class="btn btn-gold btn-lg" 
                 style="width: 100%; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; box-shadow: 0 4px 14px rgba(212, 175, 55, 0.25);"
@@ -828,6 +828,37 @@ const requestFloorPlan = () => {
   margin: 0 auto 12px;
 }
 
+/* Responsive Property Title & Price Card */
+.property-title-text {
+  font-size: clamp(1.6rem, 3.8vw, 2.4rem);
+  font-weight: 800;
+  color: #0A1128;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+
+.property-price-card {
+  text-align: right;
+  background: #FFFFFF;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 16px 24px;
+  box-shadow: var(--shadow-sm);
+  min-width: 260px;
+}
+
+.confidential-badge-row {
+  font-size: 0.76rem;
+  color: #B45309;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
 /* ======================================================== */
 /* Sticky Mobile Conversion Bar (Bottom Pinned < 1024px) */
 /* ======================================================== */
@@ -901,6 +932,19 @@ const requestFloorPlan = () => {
 @media (max-width: 992px) {
   .property-detail-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .property-price-card {
+    width: 100%;
+    text-align: left;
+    min-width: 0;
+    padding: 14px 18px;
+  }
+
+  .confidential-badge-row {
+    justify-content: flex-start;
   }
 }
 </style>

@@ -159,9 +159,9 @@ const timeSlots = [
 const form = reactive({
   date: minDate.value,
   timeSlot: '02:30 PM - 04:00 PM',
-  name: user.value.name,
-  phone: user.value.phone,
-  email: user.value.email,
+  name: user.value?.name && user.value.name !== 'Guest User' && user.value.name !== 'Guest Buyer' ? user.value.name : '',
+  phone: user.value?.phone || '',
+  email: user.value?.email || '',
   contactMethod: 'WhatsApp',
   pickupRequested: false
 })
@@ -172,10 +172,14 @@ const submitViewing = () => {
     propertyTitle: props.propertyTitle,
     date: form.date,
     timeSlot: form.timeSlot,
+    name: form.name,
     visitorName: form.name,
+    phone: form.phone,
     visitorPhone: form.phone,
+    email: form.email,
     visitorEmail: form.email,
     contactMethod: form.contactMethod,
+    vipPickup: form.pickupRequested,
     pickupRequested: form.pickupRequested
   })
   isSubmitted.value = true
