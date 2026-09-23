@@ -1,29 +1,32 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Models\User;
-use App\Models\Property;
+use App\Http\Controllers\PropertyLeadController;
 use App\Models\Agent;
-use App\Models\Viewing;
-use App\Models\Lead;
-use App\Models\FinancialTransaction;
-use App\Models\SavedProperty;
-use App\Models\Setting;
-use App\Models\Role;
-use App\Models\Permission;
 use App\Models\Brochure;
 use App\Models\Category;
 use App\Models\Division;
-use App\Models\TransactionType;
+use App\Models\FinancialTransaction;
 use App\Models\LandUnit;
+use App\Models\Lead;
+use App\Models\Permission;
+use App\Models\Property;
 use App\Models\PropertyCategory;
 use App\Models\PropertyDivision;
-use App\Models\PropertyTransactionType;
-use App\Models\PropertyStatus;
 use App\Models\PropertyLandUnit;
-use Illuminate\Support\Facades\Hash;
+use App\Models\PropertyStatus;
+use App\Models\PropertyTransactionType;
+use App\Models\Role;
+use App\Models\Setting;
+use App\Models\TransactionType;
+use App\Models\User;
+use App\Models\Viewing;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,33 +42,33 @@ Route::post('/auth/login', function (Request $request) {
     $raw = json_decode($request->getContent(), true);
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
-    $loginInput = strtolower(trim((string)($input['email'] ?? $input['username'] ?? '')));
-    $password = (string)($input['password'] ?? '');
-    $remember = !empty($input['remember']);
+    $loginInput = strtolower(trim((string) ($input['email'] ?? $input['username'] ?? '')));
+    $password = (string) ($input['password'] ?? '');
+    $remember = ! empty($input['remember']);
 
     // Log the attempt for debugging
     @file_put_contents(
         storage_path('logs/auth_attempts.log'),
-        date('Y-m-d H:i:s') . " | LOGIN ATTEMPT: input='{$loginInput}', pwd_len=" . strlen($password) . "\n",
+        date('Y-m-d H:i:s')." | LOGIN ATTEMPT: input='{$loginInput}', pwd_len=".strlen($password)."\n",
         FILE_APPEND
     );
 
-    if (!$loginInput || !$password) {
+    if (! $loginInput || ! $password) {
         return response()->json([
             'success' => false,
-            'message' => 'Email address (or username) and password are required.'
+            'message' => 'Email address (or username) and password are required.',
         ], 422);
     }
 
     // Flexible identifier lookup: exact email, username shorthand (e.g. 'admin' -> 'admin@gbrel.com'), or name/phone
     $user = User::where('email', $loginInput)
-        ->orWhere('email', $loginInput . '@gbrel.com')
+        ->orWhere('email', $loginInput.'@gbrel.com')
         ->orWhere('name', $loginInput)
         ->orWhere('phone', $loginInput)
         ->first();
 
     // Fallback: If 'admin', find the primary super admin
-    if (!$user && in_array($loginInput, ['admin', 'administrator', 'root', 'superadmin'])) {
+    if (! $user && in_array($loginInput, ['admin', 'administrator', 'root', 'superadmin'])) {
         $user = User::where('role', 'admin')->first();
     }
 
@@ -73,17 +76,17 @@ Route::post('/auth/login', function (Request $request) {
     $passwordMatches = false;
     if ($user) {
         $passwordMatches = Hash::check($password, $user->password);
-        
+
         // Developer fallback: if standard test passwords are used for seeded accounts
-        if (!$passwordMatches) {
+        if (! $passwordMatches) {
             $allowedDefaults = [
                 'admin@gbrel.com' => ['admin123', 'password', 'admin', '12345678', '123456', 'admin@123', 'secret'],
                 'manager@gbrel.com' => ['manager123', 'password', 'admin123', 'manager', '12345678'],
                 'legal@gbrel.com' => ['legal123', 'password', 'admin123', 'legal', '12345678'],
                 'agent@gbrel.com' => ['agent123', 'password', 'admin123', 'agent', '12345678'],
-                'buyer@gbrel.com' => ['buyer123', 'password', 'admin123', 'buyer', '12345678']
+                'buyer@gbrel.com' => ['buyer123', 'password', 'admin123', 'buyer', '12345678'],
             ];
-            
+
             if (isset($allowedDefaults[$user->email]) && in_array($password, $allowedDefaults[$user->email])) {
                 $passwordMatches = true;
                 // Synchronize password in DB
@@ -93,17 +96,17 @@ Route::post('/auth/login', function (Request $request) {
         }
     }
 
-    if (!$user || !$passwordMatches) {
+    if (! $user || ! $passwordMatches) {
         return response()->json([
             'success' => false,
-            'message' => 'Invalid email address or password. Please verify your credentials.'
+            'message' => 'Invalid email address or password. Please verify your credentials.',
         ], 401);
     }
 
     if ($user->status && strtolower($user->status) === 'suspended') {
         return response()->json([
             'success' => false,
-            'message' => 'Your account is suspended. Please contact the administrator.'
+            'message' => 'Your account is suspended. Please contact the administrator.',
         ], 403);
     }
 
@@ -116,7 +119,7 @@ Route::post('/auth/login', function (Request $request) {
         'success' => true,
         'message' => 'Signed in successfully',
         'token' => $token,
-        'user' => $user->toAuthPayload()
+        'user' => $user->toAuthPayload(),
     ]);
 });
 
@@ -126,39 +129,41 @@ Route::get('/auth/me', function (Request $request) {
     if (str_starts_with($authHeader, 'Bearer ')) {
         $token = substr($authHeader, 7);
     }
-    if (!$token) {
+    if (! $token) {
         $token = $request->query('token', '');
     }
 
-    if (!$token) {
+    if (! $token) {
         return response()->json([
             'success' => false,
-            'message' => 'Authentication token missing.'
+            'message' => 'Authentication token missing.',
         ], 401);
     }
 
     $userId = Cache::get("gbrel_auth_token_{$token}");
-    if (!$userId) {
+    if (! $userId) {
         return response()->json([
             'success' => false,
-            'message' => 'Session expired or invalid token.'
+            'message' => 'Session expired or invalid token.',
         ], 401);
     }
 
     $user = User::find($userId);
-    if (!$user) {
+    if (! $user) {
         Cache::forget("gbrel_auth_token_{$token}");
+
         return response()->json([
             'success' => false,
-            'message' => 'User not found.'
+            'message' => 'User not found.',
         ], 401);
     }
 
     if ($user->status && strtolower($user->status) === 'suspended') {
         Cache::forget("gbrel_auth_token_{$token}");
+
         return response()->json([
             'success' => false,
-            'message' => 'Account suspended.'
+            'message' => 'Account suspended.',
         ], 403);
     }
 
@@ -167,7 +172,7 @@ Route::get('/auth/me', function (Request $request) {
 
     return response()->json([
         'success' => true,
-        'user' => $user->toAuthPayload()
+        'user' => $user->toAuthPayload(),
     ]);
 });
 
@@ -177,9 +182,10 @@ Route::post('/auth/logout', function (Request $request) {
         $token = substr($authHeader, 7);
         Cache::forget("gbrel_auth_token_{$token}");
     }
+
     return response()->json([
         'success' => true,
-        'message' => 'Logged out successfully.'
+        'message' => 'Logged out successfully.',
     ]);
 });
 
@@ -188,12 +194,12 @@ Route::post('/auth/check-permission', function (Request $request) {
     $token = str_starts_with($authHeader, 'Bearer ') ? substr($authHeader, 7) : '';
     $userId = $token ? Cache::get("gbrel_auth_token_{$token}") : null;
 
-    if (!$userId) {
+    if (! $userId) {
         return response()->json(['success' => false, 'has_permission' => false, 'message' => 'Unauthenticated'], 401);
     }
 
     $user = User::find($userId);
-    if (!$user) {
+    if (! $user) {
         return response()->json(['success' => false, 'has_permission' => false, 'message' => 'User not found'], 401);
     }
 
@@ -204,7 +210,7 @@ Route::post('/auth/check-permission', function (Request $request) {
         'success' => true,
         'permission' => $slug,
         'has_permission' => $hasPerm,
-        'is_admin' => $user->isAdmin()
+        'is_admin' => $user->isAdmin(),
     ]);
 });
 
@@ -225,7 +231,7 @@ function normalizePropertyData(array $input, bool $isCreate = true, ?int $existi
     ];
 
     foreach ($input as $rawKey => $value) {
-        $snakeKey = \Illuminate\Support\Str::snake($rawKey);
+        $snakeKey = Str::snake($rawKey);
         $finalKey = $customAliases[$snakeKey] ?? $snakeKey;
         $data[$finalKey] = $value;
     }
@@ -237,20 +243,20 @@ function normalizePropertyData(array $input, bool $isCreate = true, ?int $existi
     if (is_string($gallery)) {
         $decoded = json_decode($gallery, true);
         $gallery = is_array($decoded) ? $decoded : array_filter(array_map('trim', explode(',', $gallery)));
-    } elseif (!is_array($gallery)) {
+    } elseif (! is_array($gallery)) {
         $gallery = [];
     }
 
     $allImages = [];
-    if (!empty($featureImage) && is_string($featureImage)) {
+    if (! empty($featureImage) && is_string($featureImage)) {
         $allImages[] = trim($featureImage);
     }
 
-    if (!empty($gallery)) {
+    if (! empty($gallery)) {
         foreach ($gallery as $img) {
-            if (!empty($img) && is_string($img)) {
+            if (! empty($img) && is_string($img)) {
                 $trimmed = trim($img);
-                if (!in_array($trimmed, $allImages)) {
+                if (! in_array($trimmed, $allImages)) {
                     $allImages[] = $trimmed;
                 }
             }
@@ -267,22 +273,22 @@ function normalizePropertyData(array $input, bool $isCreate = true, ?int $existi
         }
     }
 
-    if (!empty($allImages)) {
+    if (! empty($allImages)) {
         $data['images'] = $allImages;
     }
 
     // 3. Dynamic Unique Slug Generation
-    if ($isCreate || (!empty($data['title']) && empty($data['slug']))) {
+    if ($isCreate || (! empty($data['title']) && empty($data['slug']))) {
         if (empty($data['title']) && $isCreate) {
-            $data['title'] = 'Exclusive Mandate #' . rand(100, 999);
+            $data['title'] = 'Exclusive Mandate #'.rand(100, 999);
         }
 
-        if (empty($data['slug']) && !empty($data['title'])) {
-            $baseSlug = \Illuminate\Support\Str::slug($data['title']);
+        if (empty($data['slug']) && ! empty($data['title'])) {
+            $baseSlug = Str::slug($data['title']);
             $slug = $baseSlug;
             $counter = 1;
-            while (Property::where('slug', $slug)->when($existingId, fn($q) => $q->where('id', '!=', $existingId))->exists()) {
-                $slug = $baseSlug . '-' . (++$counter);
+            while (Property::where('slug', $slug)->when($existingId, fn ($q) => $q->where('id', '!=', $existingId))->exists()) {
+                $slug = $baseSlug.'-'.(++$counter);
             }
             $data['slug'] = $slug;
         }
@@ -290,11 +296,11 @@ function normalizePropertyData(array $input, bool $isCreate = true, ?int $existi
 
     // Defaults for mandatory non-null database fields on create
     if ($isCreate) {
-        if (!isset($data['images']) || empty($data['images'])) {
+        if (! isset($data['images']) || empty($data['images'])) {
             $data['images'] = ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'];
         }
         if (empty($data['address'])) {
-            $data['address'] = 'Prime Enclave, ' . ($data['area_name'] ?? $data['city'] ?? 'Dhaka');
+            $data['address'] = 'Prime Enclave, '.($data['area_name'] ?? $data['city'] ?? 'Dhaka');
         }
         if (empty($data['area_name'])) {
             $data['area_name'] = $data['city'] ?? 'Dhaka';
@@ -302,23 +308,25 @@ function normalizePropertyData(array $input, bool $isCreate = true, ?int $existi
         if (empty($data['city'])) {
             $data['city'] = 'Dhaka';
         }
-        if (!isset($data['price'])) {
+        if (! isset($data['price'])) {
             $data['price'] = 0;
         }
     }
 
     // 4. Dynamic Type Casting Enforced by Model Casts
-    $casts = (new Property())->getCasts();
+    $casts = (new Property)->getCasts();
     foreach ($data as $col => $val) {
-        if (!isset($casts[$col]) || $val === null) continue;
+        if (! isset($casts[$col]) || $val === null) {
+            continue;
+        }
         $castType = $casts[$col];
 
         if ($castType === 'boolean') {
             $data[$col] = filter_var($val, FILTER_VALIDATE_BOOLEAN);
         } elseif ($castType === 'integer') {
-            $data[$col] = ($val === '') ? null : (int)$val;
+            $data[$col] = ($val === '') ? null : (int) $val;
         } elseif ($castType === 'float' || $castType === 'decimal') {
-            $data[$col] = ($val === '') ? null : (float)$val;
+            $data[$col] = ($val === '') ? null : (float) $val;
         } elseif ($castType === 'array' || $castType === 'json') {
             if (is_string($val)) {
                 $decoded = json_decode($val, true);
@@ -342,8 +350,8 @@ Route::get('/properties', function (Request $request) {
 
     // 1. Dynamic Keyword Search (q, search, keyword) across all text columns
     $searchQuery = $request->input('q') ?? $request->input('search') ?? $request->input('keyword');
-    if (!empty($searchQuery)) {
-        $term = '%' . trim($searchQuery) . '%';
+    if (! empty($searchQuery)) {
+        $term = '%'.trim($searchQuery).'%';
         $textColumns = ['title', 'slug', 'tagline', 'description', 'address', 'area_name', 'city', 'state'];
         $validSearchCols = array_intersect($textColumns, $columns);
         $query->where(function ($q) use ($term, $validSearchCols) {
@@ -363,32 +371,40 @@ Route::get('/properties', function (Request $request) {
             continue;
         }
 
-        $key = \Illuminate\Support\Str::snake($rawKey);
+        $key = Str::snake($rawKey);
 
         // Special aliases
-        if ($key === 'type') $key = 'property_type';
-        if ($key === 'area') $key = 'area_name';
+        if ($key === 'type') {
+            $key = 'property_type';
+        }
+        if ($key === 'area') {
+            $key = 'area_name';
+        }
 
         // Range filters
         if ($key === 'min_price' || $key === 'price_min') {
-            $query->where('price', '>=', (float)$val);
+            $query->where('price', '>=', (float) $val);
+
             continue;
         }
         if ($key === 'max_price' || $key === 'price_max') {
-            $query->where('price', '<=', (float)$val);
+            $query->where('price', '<=', (float) $val);
+
             continue;
         }
         if ($key === 'min_bedrooms') {
-            $query->where('bedrooms', '>=', (int)$val);
+            $query->where('bedrooms', '>=', (int) $val);
+
             continue;
         }
         if ($key === 'min_sqft' || $key === 'min_square_footage') {
-            $query->where('square_footage', '>=', (int)$val);
+            $query->where('square_footage', '>=', (int) $val);
+
             continue;
         }
 
         // Direct column matching against database schema
-        if (in_array($key, $columns) && !in_array($key, ['id', 'created_at', 'updated_at', 'images', 'amenities', 'documents_verified'])) {
+        if (in_array($key, $columns) && ! in_array($key, ['id', 'created_at', 'updated_at', 'images', 'amenities', 'documents_verified'])) {
             if (str_starts_with($key, 'is_') || str_starts_with($key, 'has_')) {
                 $query->where($key, filter_var($val, FILTER_VALIDATE_BOOLEAN));
             } else {
@@ -425,16 +441,16 @@ Route::get('/properties', function (Request $request) {
     return response()->json([
         'success' => true,
         'count' => $properties->count(),
-        'data' => $properties
+        'data' => $properties,
     ]);
 });
 
 Route::get('/properties/{id}', function ($id) {
-    $property = is_numeric($id) 
-        ? (Property::find($id) ?: Property::where('slug', $id)->first()) 
+    $property = is_numeric($id)
+        ? (Property::find($id) ?: Property::where('slug', $id)->first())
         : Property::where('slug', $id)->first();
 
-    if (!$property) {
+    if (! $property) {
         return response()->json(['success' => false, 'message' => 'Property not found in database'], 404);
     }
 
@@ -446,7 +462,7 @@ Route::get('/properties/{id}', function ($id) {
 
     return response()->json([
         'success' => true,
-        'data' => $data
+        'data' => $data,
     ]);
 });
 
@@ -459,7 +475,7 @@ Route::post('/properties', function (Request $request) {
     return response()->json([
         'success' => true,
         'message' => 'Property successfully created in MySQL database',
-        'data' => $property
+        'data' => $property,
     ], 201);
 });
 
@@ -467,39 +483,39 @@ Route::put('/properties/{id}', function (Request $request, $id) {
     $property = Property::findOrFail($id);
     $raw = json_decode($request->getContent(), true);
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
-    $cleanData = normalizePropertyData($input, false, (int)$id);
+    $cleanData = normalizePropertyData($input, false, (int) $id);
     $property->update($cleanData);
 
     return response()->json([
         'success' => true,
         'message' => 'Property successfully updated in MySQL database',
-        'data' => $property
+        'data' => $property,
     ]);
 });
 
 Route::patch('/properties/{id}/toggle-feature', function ($id) {
     $property = Property::findOrFail($id);
-    $property->is_featured = !$property->is_featured;
+    $property->is_featured = ! $property->is_featured;
     $property->save();
 
     return response()->json([
         'success' => true,
         'is_featured' => $property->is_featured,
         'message' => 'Homepage showcase status updated',
-        'data' => $property
+        'data' => $property,
     ]);
 });
 
 Route::patch('/properties/{id}/toggle-rajuk', function ($id) {
     $property = Property::findOrFail($id);
-    $property->is_rajuk_approved = !$property->is_rajuk_approved;
+    $property->is_rajuk_approved = ! $property->is_rajuk_approved;
     $property->save();
 
     return response()->json([
         'success' => true,
         'is_rajuk_approved' => $property->is_rajuk_approved,
         'message' => 'RAJUK verification status updated',
-        'data' => $property
+        'data' => $property,
     ]);
 });
 
@@ -514,7 +530,7 @@ Route::patch('/properties/{id}/status', function (Request $request, $id) {
         'success' => true,
         'status' => $property->status,
         'message' => 'Property status updated',
-        'data' => $property
+        'data' => $property,
     ]);
 });
 
@@ -524,31 +540,33 @@ Route::delete('/properties/{id}', function ($id) {
 
     return response()->json([
         'success' => true,
-        'message' => 'Property deleted from MySQL database'
+        'message' => 'Property deleted from MySQL database',
     ]);
 });
 
 // 2. Agents API Endpoints (Full CRUD)
 Route::get('/agents', function (Request $request) {
     $query = Agent::query();
-    if ($request->has('state') && !empty($request->state)) {
+    if ($request->has('state') && ! empty($request->state)) {
         $query->where('state', $request->state);
     }
+
     return response()->json([
         'success' => true,
         'count' => $query->count(),
-        'data' => $query->orderBy('created_at', 'desc')->get()
+        'data' => $query->orderBy('created_at', 'desc')->get(),
     ]);
 });
 
 Route::get('/agent/{agent_id}', function ($agent_id) {
     $agent = Agent::find($agent_id);
-    if (!$agent) {
+    if (! $agent) {
         return response()->json(['success' => false, 'message' => 'Agent not found'], 404);
     }
+
     return response()->json([
         'success' => true,
-        'data' => $agent
+        'data' => $agent,
     ]);
 });
 
@@ -563,21 +581,21 @@ Route::post('/agents', function (Request $request) {
         'state' => $input['state'] ?? 'Dhaka North',
         'city' => $input['city'] ?? 'Dhaka',
         'photo' => $input['photo'] ?? 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=600&auto=format&fit=crop',
-        'email' => $input['email'] ?? (strtolower(preg_replace('/[^a-z0-9]/', '', $input['name'] ?? 'advisor')) . rand(10, 99) . '@gbrel.com'),
+        'email' => $input['email'] ?? (strtolower(preg_replace('/[^a-z0-9]/', '', $input['name'] ?? 'advisor')).rand(10, 99).'@gbrel.com'),
         'phone' => $input['phone'] ?? '+880 1819-000000',
         'whatsapp' => $input['whatsapp'] ?? ($input['phone'] ?? '+880 1819-000000'),
         'bio' => $input['bio'] ?? '',
-        'experience_years' => (int)($input['experience_years'] ?? $input['experienceYears'] ?? 5),
-        'rating' => (float)($input['rating'] ?? 4.9),
-        'review_count' => (int)($input['review_count'] ?? $input['reviewCount'] ?? 10),
-        'active_listings_count' => (int)($input['active_listings_count'] ?? $input['activeListingsCount'] ?? 5),
-        'specialties' => is_array($input['specialties'] ?? null) ? $input['specialties'] : ['Luxury Penthouses', 'Commercial Land']
+        'experience_years' => (int) ($input['experience_years'] ?? $input['experienceYears'] ?? 5),
+        'rating' => (float) ($input['rating'] ?? 4.9),
+        'review_count' => (int) ($input['review_count'] ?? $input['reviewCount'] ?? 10),
+        'active_listings_count' => (int) ($input['active_listings_count'] ?? $input['activeListingsCount'] ?? 5),
+        'specialties' => is_array($input['specialties'] ?? null) ? $input['specialties'] : ['Luxury Penthouses', 'Commercial Land'],
     ]);
 
     return response()->json([
         'success' => true,
         'message' => 'Advisor successfully added to MySQL database',
-        'data' => $agent
+        'data' => $agent,
     ], 201);
 });
 
@@ -587,19 +605,39 @@ Route::put('/agents/{id}', function (Request $request, $id) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
     $data = [];
-    if (isset($input['name'])) $data['name'] = $input['name'];
-    if (isset($input['title'])) $data['title'] = $input['title'];
-    if (isset($input['state'])) $data['state'] = $input['state'];
-    if (isset($input['city'])) $data['city'] = $input['city'];
-    if (isset($input['photo'])) $data['photo'] = $input['photo'];
-    if (isset($input['email'])) $data['email'] = $input['email'];
-    if (isset($input['phone'])) $data['phone'] = $input['phone'];
-    if (isset($input['whatsapp'])) $data['whatsapp'] = $input['whatsapp'];
-    if (isset($input['bio'])) $data['bio'] = $input['bio'];
-    if (isset($input['experience_years']) || isset($input['experienceYears'])) {
-        $data['experience_years'] = (int)($input['experience_years'] ?? $input['experienceYears']);
+    if (isset($input['name'])) {
+        $data['name'] = $input['name'];
     }
-    if (isset($input['rating'])) $data['rating'] = (float)$input['rating'];
+    if (isset($input['title'])) {
+        $data['title'] = $input['title'];
+    }
+    if (isset($input['state'])) {
+        $data['state'] = $input['state'];
+    }
+    if (isset($input['city'])) {
+        $data['city'] = $input['city'];
+    }
+    if (isset($input['photo'])) {
+        $data['photo'] = $input['photo'];
+    }
+    if (isset($input['email'])) {
+        $data['email'] = $input['email'];
+    }
+    if (isset($input['phone'])) {
+        $data['phone'] = $input['phone'];
+    }
+    if (isset($input['whatsapp'])) {
+        $data['whatsapp'] = $input['whatsapp'];
+    }
+    if (isset($input['bio'])) {
+        $data['bio'] = $input['bio'];
+    }
+    if (isset($input['experience_years']) || isset($input['experienceYears'])) {
+        $data['experience_years'] = (int) ($input['experience_years'] ?? $input['experienceYears']);
+    }
+    if (isset($input['rating'])) {
+        $data['rating'] = (float) $input['rating'];
+    }
     if (isset($input['specialties']) && is_array($input['specialties'])) {
         $data['specialties'] = $input['specialties'];
     }
@@ -609,16 +647,17 @@ Route::put('/agents/{id}', function (Request $request, $id) {
     return response()->json([
         'success' => true,
         'message' => 'Advisor successfully updated in MySQL database',
-        'data' => $agent
+        'data' => $agent,
     ]);
 });
 
 Route::delete('/agents/{id}', function ($id) {
     $agent = Agent::findOrFail($id);
     $agent->delete();
+
     return response()->json([
         'success' => true,
-        'message' => 'Advisor deleted from MySQL database'
+        'message' => 'Advisor deleted from MySQL database',
     ]);
 });
 
@@ -626,7 +665,7 @@ Route::delete('/agents/{id}', function ($id) {
 Route::get('/viewings', function () {
     return response()->json([
         'success' => true,
-        'data' => Viewing::orderBy('created_at', 'desc')->get()
+        'data' => Viewing::orderBy('created_at', 'desc')->get(),
     ]);
 });
 
@@ -647,13 +686,13 @@ Route::post('/schedule-viewing', function (Request $request) {
         'pickup_location' => $input['pickup_location'] ?? 'Dhaka City Hub',
         'assigned_agent' => $input['assigned_agent'] ?? $input['assignedAgent'] ?? 'Tanvir Ahmed',
         'status' => $input['status'] ?? 'Confirmed',
-        'notes' => $input['notes'] ?? null
+        'notes' => $input['notes'] ?? null,
     ]);
 
     return response()->json([
         'success' => true,
         'message' => 'VIP Site Viewing booked and stored in MySQL database',
-        'data' => $viewing
+        'data' => $viewing,
     ], 201);
 });
 
@@ -667,59 +706,34 @@ Route::patch('/viewings/{id}/status', function (Request $request, $id) {
     return response()->json([
         'success' => true,
         'message' => 'Viewing status updated in MySQL database',
-        'data' => $viewing
+        'data' => $viewing,
     ]);
 });
 
 Route::delete('/viewings/{id}', function ($id) {
     $viewing = Viewing::findOrFail($id);
     $viewing->delete();
+
     return response()->json([
         'success' => true,
-        'message' => 'Viewing inspection deleted from MySQL database'
+        'message' => 'Viewing inspection deleted from MySQL database',
     ]);
 });
 
 // 4. Leads API (Full CRUD)
 Route::get('/leads', function (Request $request) {
     $query = Lead::query();
-    if ($request->has('stage') && !empty($request->stage)) {
+    if ($request->has('stage') && ! empty($request->stage)) {
         $query->where('status', $request->stage);
     }
-    return response()->json([
-        'success' => true,
-        'data' => $query->orderBy('created_at', 'desc')->get()
-    ]);
-});
-
-Route::post('/leads', function (Request $request) {
-    $raw = json_decode($request->getContent(), true);
-    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
-
-    $lead = Lead::create([
-        'property_id' => !empty($input['property_id']) ? (int)$input['property_id'] : null,
-        'name' => trim((string)($input['name'] ?? 'Interested Buyer')),
-        'phone' => trim((string)($input['phone'] ?? '+880 1819-000000')),
-        'email' => !empty($input['email']) ? trim((string)$input['email']) : null,
-        'property_title' => $input['property_title'] ?? $input['property'] ?? 'General Inquiry',
-        'lead_type' => $input['buyer_category'] ?? $input['lead_type'] ?? $input['type'] ?? 'Direct Inquiry',
-        'buyer_category' => $input['buyer_category'] ?? 'Resident Business Owner',
-        'investment_readiness' => $input['investment_readiness'] ?? 'Ready to close (1-3 Months)',
-        'budget_range' => $input['budget_range'] ?? null,
-        'preferred_contact' => $input['preferred_contact'] ?? 'WhatsApp',
-        'message' => $input['message'] ?? 'Inquiry submitted via property portal.',
-        'status' => $input['status'] ?? $input['stage'] ?? 'Active',
-        'utm_source' => $input['utm_source'] ?? null,
-        'utm_medium' => $input['utm_medium'] ?? null,
-        'utm_campaign' => $input['utm_campaign'] ?? null,
-    ]);
 
     return response()->json([
         'success' => true,
-        'message' => 'High-intent lead captured and saved to MySQL database',
-        'data' => $lead
-    ], 201);
+        'data' => $query->orderBy('created_at', 'desc')->get(),
+    ]);
 });
+
+Route::post('/leads', [PropertyLeadController::class, 'store'])->middleware('throttle:10,1');
 
 Route::patch('/leads/{id}/stage', function (Request $request, $id) {
     $lead = Lead::findOrFail($id);
@@ -731,16 +745,17 @@ Route::patch('/leads/{id}/stage', function (Request $request, $id) {
     return response()->json([
         'success' => true,
         'message' => 'Lead stage updated in MySQL database',
-        'data' => $lead
+        'data' => $lead,
     ]);
 });
 
 Route::delete('/leads/{id}', function ($id) {
     $lead = Lead::findOrFail($id);
     $lead->delete();
+
     return response()->json([
         'success' => true,
-        'message' => 'Lead inquiry deleted from MySQL database'
+        'message' => 'Lead inquiry deleted from MySQL database',
     ]);
 });
 
@@ -748,7 +763,7 @@ Route::delete('/leads/{id}', function ($id) {
 Route::get('/financials', function () {
     return response()->json([
         'success' => true,
-        'data' => FinancialTransaction::orderBy('created_at', 'desc')->get()
+        'data' => FinancialTransaction::orderBy('created_at', 'desc')->get(),
     ]);
 });
 
@@ -756,9 +771,9 @@ Route::post('/financials', function (Request $request) {
     $raw = json_decode($request->getContent(), true);
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
-    $dealCode = $input['deal_code'] ?? $input['dealCode'] ?? ('TX-' . rand(900, 999));
-    $value = (float)($input['transacted_value'] ?? $input['value'] ?? 0);
-    $commission = (float)($input['commission_amount'] ?? $input['commission'] ?? ($value * 0.02));
+    $dealCode = $input['deal_code'] ?? $input['dealCode'] ?? ('TX-'.rand(900, 999));
+    $value = (float) ($input['transacted_value'] ?? $input['value'] ?? 0);
+    $commission = (float) ($input['commission_amount'] ?? $input['commission'] ?? ($value * 0.02));
 
     $deal = FinancialTransaction::create([
         'deal_code' => $dealCode,
@@ -767,13 +782,13 @@ Route::post('/financials', function (Request $request) {
         'transacted_value' => $value,
         'commission_amount' => $commission,
         'escrow_bank' => $input['escrow_bank'] ?? $input['bank'] ?? 'BRAC Bank Escrow',
-        'status' => $input['status'] ?? 'In Escrow'
+        'status' => $input['status'] ?? 'In Escrow',
     ]);
 
     return response()->json([
         'success' => true,
         'message' => 'Escrow transaction logged to MySQL database',
-        'data' => $deal
+        'data' => $deal,
     ], 201);
 });
 
@@ -787,16 +802,17 @@ Route::patch('/financials/{id}/status', function (Request $request, $id) {
     return response()->json([
         'success' => true,
         'message' => 'Escrow status updated in MySQL database',
-        'data' => $deal
+        'data' => $deal,
     ]);
 });
 
 Route::delete('/financials/{id}', function ($id) {
     $deal = FinancialTransaction::findOrFail($id);
     $deal->delete();
+
     return response()->json([
         'success' => true,
-        'message' => 'Financial transaction deleted from MySQL database'
+        'message' => 'Financial transaction deleted from MySQL database',
     ]);
 });
 
@@ -809,7 +825,7 @@ Route::get('/permissions', function () {
         'success' => true,
         'count' => $permissions->count(),
         'data' => $permissions,
-        'grouped' => $grouped
+        'grouped' => $grouped,
     ]);
 });
 
@@ -821,16 +837,16 @@ Route::get('/roles', function () {
             'slug' => $role->slug,
             'description' => $role->description,
             'permissions' => $role->permissions ?? [],
-            'is_system' => (bool)$role->is_system,
+            'is_system' => (bool) $role->is_system,
             'users_count' => User::where('role_id', $role->id)->orWhere('role', $role->slug)->count(),
-            'created_at' => $role->created_at
+            'created_at' => $role->created_at,
         ];
     });
 
     return response()->json([
         'success' => true,
         'count' => $roles->count(),
-        'data' => $roles
+        'data' => $roles,
     ]);
 });
 
@@ -839,13 +855,13 @@ Route::post('/roles', function (Request $request) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
     $name = trim($input['name'] ?? '');
-    if (!$name) {
+    if (! $name) {
         return response()->json(['success' => false, 'message' => 'Role name is required'], 422);
     }
 
     $slug = strtolower(preg_replace('/[^a-z0-9_]/', '', str_replace(' ', '_', $input['slug'] ?? $name)));
     if (Role::where('slug', $slug)->exists()) {
-        $slug = $slug . '_' . rand(10, 99);
+        $slug = $slug.'_'.rand(10, 99);
     }
 
     $perms = $input['permissions'] ?? [];
@@ -859,13 +875,13 @@ Route::post('/roles', function (Request $request) {
         'slug' => $slug,
         'description' => $input['description'] ?? 'Custom enterprise access role',
         'permissions' => array_values(array_filter(array_map('trim', $perms))),
-        'is_system' => false
+        'is_system' => false,
     ]);
 
     return response()->json([
         'success' => true,
         'message' => 'Role successfully created',
-        'data' => $role
+        'data' => $role,
     ], 201);
 });
 
@@ -874,8 +890,12 @@ Route::put('/roles/{id}', function (Request $request, $id) {
     $raw = json_decode($request->getContent(), true);
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
-    if (isset($input['name'])) $role->name = trim($input['name']);
-    if (isset($input['description'])) $role->description = $input['description'];
+    if (isset($input['name'])) {
+        $role->name = trim($input['name']);
+    }
+    if (isset($input['description'])) {
+        $role->description = $input['description'];
+    }
     if (isset($input['permissions'])) {
         $perms = $input['permissions'];
         if (is_string($perms)) {
@@ -889,7 +909,7 @@ Route::put('/roles/{id}', function (Request $request, $id) {
     return response()->json([
         'success' => true,
         'message' => 'Role capabilities updated',
-        'data' => $role
+        'data' => $role,
     ]);
 });
 
@@ -902,7 +922,7 @@ Route::delete('/roles/{id}', function ($id) {
 
     return response()->json([
         'success' => true,
-        'message' => 'Role deleted successfully'
+        'message' => 'Role deleted successfully',
     ]);
 });
 
@@ -912,7 +932,7 @@ Route::get('/users', function () {
         if ($u->role_id) {
             $roleObj = Role::find($u->role_id);
         }
-        if (!$roleObj && $u->role) {
+        if (! $roleObj && $u->role) {
             $roleObj = Role::where('slug', $u->role)->first();
         }
 
@@ -929,14 +949,14 @@ Route::get('/users', function () {
             'avatar' => $u->avatar ?? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
             'custom_permissions' => $u->custom_permissions ?? [],
             'effective_permissions' => $u->getEffectivePermissions(),
-            'created_at' => $u->created_at
+            'created_at' => $u->created_at,
         ];
     });
 
     return response()->json([
         'success' => true,
         'count' => $users->count(),
-        'data' => $users
+        'data' => $users,
     ]);
 });
 
@@ -945,7 +965,7 @@ Route::post('/users', function (Request $request) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
     $email = strtolower(trim($input['email'] ?? ''));
-    if (!$email) {
+    if (! $email) {
         return response()->json(['success' => false, 'message' => 'Email is required'], 422);
     }
 
@@ -955,10 +975,12 @@ Route::post('/users', function (Request $request) {
     }
 
     $roleSlug = $input['role'] ?? 'agent';
-    $roleId = isset($input['role_id']) ? (int)$input['role_id'] : null;
-    if (!$roleId) {
+    $roleId = isset($input['role_id']) ? (int) $input['role_id'] : null;
+    if (! $roleId) {
         $foundRole = Role::where('slug', $roleSlug)->first();
-        if ($foundRole) $roleId = $foundRole->id;
+        if ($foundRole) {
+            $roleId = $foundRole->id;
+        }
     }
 
     $defaultAvatar = $roleSlug === 'admin'
@@ -983,13 +1005,13 @@ Route::post('/users', function (Request $request) {
         'phone' => $input['phone'] ?? '+880 1819-000000',
         'region' => $input['region'] ?? 'Dhaka HQ',
         'status' => $input['status'] ?? 'Active',
-        'avatar' => $input['avatar'] ?? $defaultAvatar
+        'avatar' => $input['avatar'] ?? $defaultAvatar,
     ]);
 
     return response()->json([
         'success' => true,
         'message' => 'User account created in database',
-        'data' => $user
+        'data' => $user,
     ], 201);
 });
 
@@ -998,17 +1020,25 @@ Route::put('/users/{id}', function (Request $request, $id) {
     $raw = json_decode($request->getContent(), true);
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
-    if (isset($input['name'])) $user->name = $input['name'];
-    if (isset($input['email'])) $user->email = strtolower(trim($input['email']));
+    if (isset($input['name'])) {
+        $user->name = $input['name'];
+    }
+    if (isset($input['email'])) {
+        $user->email = strtolower(trim($input['email']));
+    }
     if (isset($input['role'])) {
         $user->role = $input['role'];
         $foundRole = Role::where('slug', $input['role'])->first();
-        if ($foundRole) $user->role_id = $foundRole->id;
+        if ($foundRole) {
+            $user->role_id = $foundRole->id;
+        }
     }
     if (isset($input['role_id'])) {
-        $user->role_id = (int)$input['role_id'];
+        $user->role_id = (int) $input['role_id'];
         $roleObj = Role::find($user->role_id);
-        if ($roleObj) $user->role = $roleObj->slug;
+        if ($roleObj) {
+            $user->role = $roleObj->slug;
+        }
     }
     if (isset($input['custom_permissions']) || isset($input['customPermissions'])) {
         $perms = $input['custom_permissions'] ?? $input['customPermissions'];
@@ -1018,11 +1048,19 @@ Route::put('/users/{id}', function (Request $request, $id) {
         }
         $user->custom_permissions = is_array($perms) ? array_values(array_filter($perms)) : [];
     }
-    if (isset($input['phone'])) $user->phone = $input['phone'];
-    if (isset($input['region'])) $user->region = $input['region'];
-    if (isset($input['status'])) $user->status = $input['status'];
-    if (isset($input['avatar'])) $user->avatar = $input['avatar'];
-    if (isset($input['password']) && !empty($input['password'])) {
+    if (isset($input['phone'])) {
+        $user->phone = $input['phone'];
+    }
+    if (isset($input['region'])) {
+        $user->region = $input['region'];
+    }
+    if (isset($input['status'])) {
+        $user->status = $input['status'];
+    }
+    if (isset($input['avatar'])) {
+        $user->avatar = $input['avatar'];
+    }
+    if (isset($input['password']) && ! empty($input['password'])) {
         $user->password = Hash::make($input['password']);
     }
     $user->save();
@@ -1030,26 +1068,27 @@ Route::put('/users/{id}', function (Request $request, $id) {
     return response()->json([
         'success' => true,
         'message' => 'User account updated in database',
-        'data' => $user
+        'data' => $user,
     ]);
 });
 
 Route::delete('/users/{id}', function ($id) {
-    if ((int)$id === 1) {
+    if ((int) $id === 1) {
         return response()->json(['success' => false, 'message' => 'Cannot delete primary root administrator'], 403);
     }
     $user = User::findOrFail($id);
     $user->delete();
+
     return response()->json([
         'success' => true,
-        'message' => 'User account deleted from database'
+        'message' => 'User account deleted from database',
     ]);
 });
 
 // 7. Official Project Brochures & Marketing Collateral Vault API
 Route::get('/brochures', function (Request $request) {
     $query = Brochure::with('property')->orderBy('created_at', 'desc');
-    
+
     if ($request->has('property_id')) {
         $query->where('property_id', $request->property_id);
     }
@@ -1071,14 +1110,14 @@ Route::get('/brochures', function (Request $request) {
             'category' => $b->category,
             'download_count' => $b->download_count,
             'is_public' => $b->is_public,
-            'created_at' => $b->created_at
+            'created_at' => $b->created_at,
         ];
     });
 
     return response()->json([
         'success' => true,
         'count' => $brochures->count(),
-        'data' => $brochures
+        'data' => $brochures,
     ]);
 });
 
@@ -1088,12 +1127,12 @@ Route::post('/brochures', function (Request $request) {
 
     $title = trim($input['title'] ?? '');
     $fileUrl = trim($input['file_url'] ?? $input['fileUrl'] ?? '');
-    if (!$title || !$fileUrl) {
+    if (! $title || ! $fileUrl) {
         return response()->json(['success' => false, 'message' => 'Title and file URL are required'], 422);
     }
 
     $fileName = $input['file_name'] ?? $input['fileName'] ?? basename($fileUrl);
-    $propertyId = isset($input['property_id']) && !empty($input['property_id']) ? (int)$input['property_id'] : null;
+    $propertyId = isset($input['property_id']) && ! empty($input['property_id']) ? (int) $input['property_id'] : null;
 
     $brochure = Brochure::create([
         'title' => $title,
@@ -1104,7 +1143,7 @@ Route::post('/brochures', function (Request $request) {
         'property_id' => $propertyId,
         'category' => $input['category'] ?? 'Property Brochure',
         'download_count' => 0,
-        'is_public' => filter_var($input['is_public'] ?? $input['isPublic'] ?? true, FILTER_VALIDATE_BOOLEAN)
+        'is_public' => filter_var($input['is_public'] ?? $input['isPublic'] ?? true, FILTER_VALIDATE_BOOLEAN),
     ]);
 
     // If linked to a property, update the property's primary brochure_url
@@ -1115,7 +1154,7 @@ Route::post('/brochures', function (Request $request) {
     return response()->json([
         'success' => true,
         'message' => 'Brochure successfully archived in vault',
-        'data' => $brochure
+        'data' => $brochure,
     ], 201);
 });
 
@@ -1126,7 +1165,7 @@ Route::post('/brochures/{id}/download', function ($id) {
     return response()->json([
         'success' => true,
         'download_count' => $brochure->download_count,
-        'file_url' => $brochure->file_url
+        'file_url' => $brochure->file_url,
     ]);
 });
 
@@ -1136,7 +1175,7 @@ Route::delete('/brochures/{id}', function ($id) {
 
     return response()->json([
         'success' => true,
-        'message' => 'Brochure removed from vault'
+        'message' => 'Brochure removed from vault',
     ]);
 });
 
@@ -1145,24 +1184,36 @@ Route::delete('/brochures/{id}', function ($id) {
 // ==========================================
 
 // Helper: Sync active option lists into Platform Settings
-if (!function_exists('syncMasterDataSettings')) {
-    function syncMasterDataSettings() {
+if (! function_exists('syncMasterDataSettings')) {
+    function syncMasterDataSettings()
+    {
         try {
             $cats = Category::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
-            if (!empty($cats)) Setting::setVal('property_categories', $cats);
-            
+            if (! empty($cats)) {
+                Setting::setVal('property_categories', $cats);
+            }
+
             $divs = Division::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
-            if (!empty($divs)) Setting::setVal('property_divisions', $divs);
-            
+            if (! empty($divs)) {
+                Setting::setVal('property_divisions', $divs);
+            }
+
             $tts = TransactionType::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
-            if (!empty($tts)) Setting::setVal('property_transaction_types', $tts);
-            
+            if (! empty($tts)) {
+                Setting::setVal('property_transaction_types', $tts);
+            }
+
             $sts = PropertyStatus::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
-            if (!empty($sts)) Setting::setVal('property_statuses', $sts);
-            
+            if (! empty($sts)) {
+                Setting::setVal('property_statuses', $sts);
+            }
+
             $lus = LandUnit::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
-            if (!empty($lus)) Setting::setVal('property_land_units', $lus);
-        } catch (\Throwable $e) {}
+            if (! empty($lus)) {
+                Setting::setVal('property_land_units', $lus);
+            }
+        } catch (Throwable $e) {
+        }
     }
 }
 
@@ -1171,20 +1222,21 @@ if (!function_exists('syncMasterDataSettings')) {
 // ------------------------------------------
 Route::get('/categories', function (Request $request) {
     $query = Category::query();
-    if (!$request->boolean('all') && !$request->boolean('admin')) {
+    if (! $request->boolean('all') && ! $request->boolean('admin')) {
         $query->where('is_active', true);
     }
     if ($request->filled('q')) {
-        $q = '%' . $request->input('q') . '%';
+        $q = '%'.$request->input('q').'%';
         $query->where(function ($sub) use ($q) {
             $sub->where('name', 'like', $q)->orWhere('slug', 'like', $q)->orWhere('description', 'like', $q);
         });
     }
     $categories = $query->orderBy('sort_order')->orderBy('id')->get();
+
     return response()->json([
         'success' => true,
         'count' => $categories->count(),
-        'data' => $categories
+        'data' => $categories,
     ]);
 });
 
@@ -1193,11 +1245,11 @@ Route::post('/categories', function (Request $request) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
     $name = trim($input['name'] ?? '');
-    if (!$name) {
+    if (! $name) {
         return response()->json(['success' => false, 'message' => 'Category name is required'], 422);
     }
 
-    $slug = !empty($input['slug']) ? \Illuminate\Support\Str::slug($input['slug']) : \Illuminate\Support\Str::slug($name);
+    $slug = ! empty($input['slug']) ? Str::slug($input['slug']) : Str::slug($name);
 
     $category = Category::create([
         'name' => $name,
@@ -1205,9 +1257,9 @@ Route::post('/categories', function (Request $request) {
         'description' => $input['description'] ?? null,
         'icon' => $input['icon'] ?? 'building',
         'image' => $input['image'] ?? null,
-        'sort_order' => (int)($input['sort_order'] ?? 0),
+        'sort_order' => (int) ($input['sort_order'] ?? 0),
         'is_active' => isset($input['is_active']) ? filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN) : true,
-        'is_featured' => isset($input['is_featured']) ? filter_var($input['is_featured'], FILTER_VALIDATE_BOOLEAN) : false
+        'is_featured' => isset($input['is_featured']) ? filter_var($input['is_featured'], FILTER_VALIDATE_BOOLEAN) : false,
     ]);
 
     PropertyCategory::updateOrCreate(['name' => $name], ['slug' => $slug, 'is_active' => $category->is_active, 'sort_order' => $category->sort_order]);
@@ -1216,12 +1268,13 @@ Route::post('/categories', function (Request $request) {
     return response()->json([
         'success' => true,
         'message' => 'Category created successfully',
-        'data' => $category
+        'data' => $category,
     ], 201);
 });
 
 Route::get('/categories/{id}', function ($id) {
     $category = Category::findOrFail($id);
+
     return response()->json(['success' => true, 'data' => $category]);
 });
 
@@ -1231,14 +1284,30 @@ Route::put('/categories/{id}', function (Request $request, $id) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
     $oldName = $category->name;
-    if (isset($input['name'])) $category->name = trim($input['name']);
-    if (isset($input['slug'])) $category->slug = \Illuminate\Support\Str::slug($input['slug']);
-    if (isset($input['description'])) $category->description = $input['description'];
-    if (isset($input['icon'])) $category->icon = $input['icon'];
-    if (isset($input['image'])) $category->image = $input['image'];
-    if (isset($input['sort_order'])) $category->sort_order = (int)$input['sort_order'];
-    if (isset($input['is_active'])) $category->is_active = filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN);
-    if (isset($input['is_featured'])) $category->is_featured = filter_var($input['is_featured'], FILTER_VALIDATE_BOOLEAN);
+    if (isset($input['name'])) {
+        $category->name = trim($input['name']);
+    }
+    if (isset($input['slug'])) {
+        $category->slug = Str::slug($input['slug']);
+    }
+    if (isset($input['description'])) {
+        $category->description = $input['description'];
+    }
+    if (isset($input['icon'])) {
+        $category->icon = $input['icon'];
+    }
+    if (isset($input['image'])) {
+        $category->image = $input['image'];
+    }
+    if (isset($input['sort_order'])) {
+        $category->sort_order = (int) $input['sort_order'];
+    }
+    if (isset($input['is_active'])) {
+        $category->is_active = filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN);
+    }
+    if (isset($input['is_featured'])) {
+        $category->is_featured = filter_var($input['is_featured'], FILTER_VALIDATE_BOOLEAN);
+    }
 
     $category->save();
 
@@ -1263,20 +1332,21 @@ Route::delete('/categories/{id}', function ($id) {
 // ------------------------------------------
 Route::get('/divisions', function (Request $request) {
     $query = Division::query();
-    if (!$request->boolean('all') && !$request->boolean('admin')) {
+    if (! $request->boolean('all') && ! $request->boolean('admin')) {
         $query->where('is_active', true);
     }
     if ($request->filled('q')) {
-        $q = '%' . $request->input('q') . '%';
+        $q = '%'.$request->input('q').'%';
         $query->where(function ($sub) use ($q) {
             $sub->where('name', 'like', $q)->orWhere('slug', 'like', $q)->orWhere('bn_name', 'like', $q);
         });
     }
     $divisions = $query->orderBy('sort_order')->orderBy('id')->get();
+
     return response()->json([
         'success' => true,
         'count' => $divisions->count(),
-        'data' => $divisions
+        'data' => $divisions,
     ]);
 });
 
@@ -1285,18 +1355,18 @@ Route::post('/divisions', function (Request $request) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
     $name = trim($input['name'] ?? '');
-    if (!$name) {
+    if (! $name) {
         return response()->json(['success' => false, 'message' => 'Division name is required'], 422);
     }
 
-    $slug = !empty($input['slug']) ? \Illuminate\Support\Str::slug($input['slug']) : \Illuminate\Support\Str::slug($name);
+    $slug = ! empty($input['slug']) ? Str::slug($input['slug']) : Str::slug($name);
 
     $division = Division::create([
         'name' => $name,
         'slug' => $slug,
         'bn_name' => $input['bn_name'] ?? null,
-        'sort_order' => (int)($input['sort_order'] ?? 0),
-        'is_active' => isset($input['is_active']) ? filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN) : true
+        'sort_order' => (int) ($input['sort_order'] ?? 0),
+        'is_active' => isset($input['is_active']) ? filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN) : true,
     ]);
 
     PropertyDivision::updateOrCreate(['name' => $name], ['slug' => $slug, 'is_active' => $division->is_active, 'sort_order' => $division->sort_order]);
@@ -1305,12 +1375,13 @@ Route::post('/divisions', function (Request $request) {
     return response()->json([
         'success' => true,
         'message' => 'Division / Region created successfully',
-        'data' => $division
+        'data' => $division,
     ], 201);
 });
 
 Route::get('/divisions/{id}', function ($id) {
     $division = Division::findOrFail($id);
+
     return response()->json(['success' => true, 'data' => $division]);
 });
 
@@ -1320,11 +1391,21 @@ Route::put('/divisions/{id}', function (Request $request, $id) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
     $oldName = $division->name;
-    if (isset($input['name'])) $division->name = trim($input['name']);
-    if (isset($input['slug'])) $division->slug = \Illuminate\Support\Str::slug($input['slug']);
-    if (isset($input['bn_name'])) $division->bn_name = $input['bn_name'];
-    if (isset($input['sort_order'])) $division->sort_order = (int)$input['sort_order'];
-    if (isset($input['is_active'])) $division->is_active = filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN);
+    if (isset($input['name'])) {
+        $division->name = trim($input['name']);
+    }
+    if (isset($input['slug'])) {
+        $division->slug = Str::slug($input['slug']);
+    }
+    if (isset($input['bn_name'])) {
+        $division->bn_name = $input['bn_name'];
+    }
+    if (isset($input['sort_order'])) {
+        $division->sort_order = (int) $input['sort_order'];
+    }
+    if (isset($input['is_active'])) {
+        $division->is_active = filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN);
+    }
 
     $division->save();
 
@@ -1349,20 +1430,21 @@ Route::delete('/divisions/{id}', function ($id) {
 // ------------------------------------------
 Route::get('/transaction-types', function (Request $request) {
     $query = TransactionType::query();
-    if (!$request->boolean('all') && !$request->boolean('admin')) {
+    if (! $request->boolean('all') && ! $request->boolean('admin')) {
         $query->where('is_active', true);
     }
     if ($request->filled('q')) {
-        $q = '%' . $request->input('q') . '%';
+        $q = '%'.$request->input('q').'%';
         $query->where(function ($sub) use ($q) {
             $sub->where('name', 'like', $q)->orWhere('slug', 'like', $q)->orWhere('description', 'like', $q);
         });
     }
     $types = $query->orderBy('sort_order')->orderBy('id')->get();
+
     return response()->json([
         'success' => true,
         'count' => $types->count(),
-        'data' => $types
+        'data' => $types,
     ]);
 });
 
@@ -1371,18 +1453,18 @@ Route::post('/transaction-types', function (Request $request) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
     $name = trim($input['name'] ?? '');
-    if (!$name) {
+    if (! $name) {
         return response()->json(['success' => false, 'message' => 'Transaction type name is required'], 422);
     }
 
-    $slug = !empty($input['slug']) ? \Illuminate\Support\Str::slug($input['slug']) : \Illuminate\Support\Str::slug($name);
+    $slug = ! empty($input['slug']) ? Str::slug($input['slug']) : Str::slug($name);
 
     $type = TransactionType::create([
         'name' => $name,
         'slug' => $slug,
         'description' => $input['description'] ?? null,
-        'sort_order' => (int)($input['sort_order'] ?? 0),
-        'is_active' => isset($input['is_active']) ? filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN) : true
+        'sort_order' => (int) ($input['sort_order'] ?? 0),
+        'is_active' => isset($input['is_active']) ? filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN) : true,
     ]);
 
     PropertyTransactionType::updateOrCreate(['name' => $name], ['slug' => $slug, 'is_active' => $type->is_active, 'sort_order' => $type->sort_order]);
@@ -1391,12 +1473,13 @@ Route::post('/transaction-types', function (Request $request) {
     return response()->json([
         'success' => true,
         'message' => 'Transaction type created successfully',
-        'data' => $type
+        'data' => $type,
     ], 201);
 });
 
 Route::get('/transaction-types/{id}', function ($id) {
     $type = TransactionType::findOrFail($id);
+
     return response()->json(['success' => true, 'data' => $type]);
 });
 
@@ -1406,11 +1489,21 @@ Route::put('/transaction-types/{id}', function (Request $request, $id) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
     $oldName = $type->name;
-    if (isset($input['name'])) $type->name = trim($input['name']);
-    if (isset($input['slug'])) $type->slug = \Illuminate\Support\Str::slug($input['slug']);
-    if (isset($input['description'])) $type->description = $input['description'];
-    if (isset($input['sort_order'])) $type->sort_order = (int)$input['sort_order'];
-    if (isset($input['is_active'])) $type->is_active = filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN);
+    if (isset($input['name'])) {
+        $type->name = trim($input['name']);
+    }
+    if (isset($input['slug'])) {
+        $type->slug = Str::slug($input['slug']);
+    }
+    if (isset($input['description'])) {
+        $type->description = $input['description'];
+    }
+    if (isset($input['sort_order'])) {
+        $type->sort_order = (int) $input['sort_order'];
+    }
+    if (isset($input['is_active'])) {
+        $type->is_active = filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN);
+    }
 
     $type->save();
 
@@ -1435,20 +1528,21 @@ Route::delete('/transaction-types/{id}', function ($id) {
 // ------------------------------------------
 Route::get('/property-statuses', function (Request $request) {
     $query = PropertyStatus::query();
-    if (!$request->boolean('all') && !$request->boolean('admin')) {
+    if (! $request->boolean('all') && ! $request->boolean('admin')) {
         $query->where('is_active', true);
     }
     if ($request->filled('q')) {
-        $q = '%' . $request->input('q') . '%';
+        $q = '%'.$request->input('q').'%';
         $query->where(function ($sub) use ($q) {
             $sub->where('name', 'like', $q)->orWhere('slug', 'like', $q)->orWhere('badge_label', 'like', $q);
         });
     }
     $statuses = $query->orderBy('sort_order')->orderBy('id')->get();
+
     return response()->json([
         'success' => true,
         'count' => $statuses->count(),
-        'data' => $statuses
+        'data' => $statuses,
     ]);
 });
 
@@ -1457,19 +1551,19 @@ Route::post('/property-statuses', function (Request $request) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
     $name = trim($input['name'] ?? '');
-    if (!$name) {
+    if (! $name) {
         return response()->json(['success' => false, 'message' => 'Property status name is required'], 422);
     }
 
-    $slug = !empty($input['slug']) ? \Illuminate\Support\Str::slug($input['slug']) : \Illuminate\Support\Str::slug($name);
+    $slug = ! empty($input['slug']) ? Str::slug($input['slug']) : Str::slug($name);
 
     $status = PropertyStatus::create([
         'name' => $name,
         'slug' => $slug,
         'color_code' => $input['color_code'] ?? '#10B981',
         'badge_label' => $input['badge_label'] ?? $name,
-        'sort_order' => (int)($input['sort_order'] ?? 0),
-        'is_active' => isset($input['is_active']) ? filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN) : true
+        'sort_order' => (int) ($input['sort_order'] ?? 0),
+        'is_active' => isset($input['is_active']) ? filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN) : true,
     ]);
 
     syncMasterDataSettings();
@@ -1477,12 +1571,13 @@ Route::post('/property-statuses', function (Request $request) {
     return response()->json([
         'success' => true,
         'message' => 'Property status created successfully',
-        'data' => $status
+        'data' => $status,
     ], 201);
 });
 
 Route::get('/property-statuses/{id}', function ($id) {
     $status = PropertyStatus::findOrFail($id);
+
     return response()->json(['success' => true, 'data' => $status]);
 });
 
@@ -1491,12 +1586,24 @@ Route::put('/property-statuses/{id}', function (Request $request, $id) {
     $raw = json_decode($request->getContent(), true);
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
-    if (isset($input['name'])) $status->name = trim($input['name']);
-    if (isset($input['slug'])) $status->slug = \Illuminate\Support\Str::slug($input['slug']);
-    if (isset($input['color_code'])) $status->color_code = $input['color_code'];
-    if (isset($input['badge_label'])) $status->badge_label = $input['badge_label'];
-    if (isset($input['sort_order'])) $status->sort_order = (int)$input['sort_order'];
-    if (isset($input['is_active'])) $status->is_active = filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN);
+    if (isset($input['name'])) {
+        $status->name = trim($input['name']);
+    }
+    if (isset($input['slug'])) {
+        $status->slug = Str::slug($input['slug']);
+    }
+    if (isset($input['color_code'])) {
+        $status->color_code = $input['color_code'];
+    }
+    if (isset($input['badge_label'])) {
+        $status->badge_label = $input['badge_label'];
+    }
+    if (isset($input['sort_order'])) {
+        $status->sort_order = (int) $input['sort_order'];
+    }
+    if (isset($input['is_active'])) {
+        $status->is_active = filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN);
+    }
 
     $status->save();
     syncMasterDataSettings();
@@ -1517,20 +1624,21 @@ Route::delete('/property-statuses/{id}', function ($id) {
 // ------------------------------------------
 Route::get('/land-units', function (Request $request) {
     $query = LandUnit::query();
-    if (!$request->boolean('all') && !$request->boolean('admin')) {
+    if (! $request->boolean('all') && ! $request->boolean('admin')) {
         $query->where('is_active', true);
     }
     if ($request->filled('q')) {
-        $q = '%' . $request->input('q') . '%';
+        $q = '%'.$request->input('q').'%';
         $query->where(function ($sub) use ($q) {
             $sub->where('name', 'like', $q)->orWhere('slug', 'like', $q)->orWhere('symbol', 'like', $q);
         });
     }
     $units = $query->orderBy('sort_order')->orderBy('id')->get();
+
     return response()->json([
         'success' => true,
         'count' => $units->count(),
-        'data' => $units
+        'data' => $units,
     ]);
 });
 
@@ -1539,19 +1647,19 @@ Route::post('/land-units', function (Request $request) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
     $name = trim($input['name'] ?? '');
-    if (!$name) {
+    if (! $name) {
         return response()->json(['success' => false, 'message' => 'Land unit name is required'], 422);
     }
 
-    $slug = !empty($input['slug']) ? \Illuminate\Support\Str::slug($input['slug']) : \Illuminate\Support\Str::slug($name);
+    $slug = ! empty($input['slug']) ? Str::slug($input['slug']) : Str::slug($name);
 
     $unit = LandUnit::create([
         'name' => $name,
         'slug' => $slug,
         'symbol' => $input['symbol'] ?? strtolower($name),
-        'sqft_multiplier' => isset($input['sqft_multiplier']) ? (float)$input['sqft_multiplier'] : 1.0,
-        'sort_order' => (int)($input['sort_order'] ?? 0),
-        'is_active' => isset($input['is_active']) ? filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN) : true
+        'sqft_multiplier' => isset($input['sqft_multiplier']) ? (float) $input['sqft_multiplier'] : 1.0,
+        'sort_order' => (int) ($input['sort_order'] ?? 0),
+        'is_active' => isset($input['is_active']) ? filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN) : true,
     ]);
 
     PropertyLandUnit::updateOrCreate(['name' => $name], ['slug' => $slug, 'symbol' => $unit->symbol, 'is_active' => $unit->is_active, 'sort_order' => $unit->sort_order]);
@@ -1560,12 +1668,13 @@ Route::post('/land-units', function (Request $request) {
     return response()->json([
         'success' => true,
         'message' => 'Land unit created successfully',
-        'data' => $unit
+        'data' => $unit,
     ], 201);
 });
 
 Route::get('/land-units/{id}', function ($id) {
     $unit = LandUnit::findOrFail($id);
+
     return response()->json(['success' => true, 'data' => $unit]);
 });
 
@@ -1575,12 +1684,24 @@ Route::put('/land-units/{id}', function (Request $request, $id) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
 
     $oldName = $unit->name;
-    if (isset($input['name'])) $unit->name = trim($input['name']);
-    if (isset($input['slug'])) $unit->slug = \Illuminate\Support\Str::slug($input['slug']);
-    if (isset($input['symbol'])) $unit->symbol = $input['symbol'];
-    if (isset($input['sqft_multiplier'])) $unit->sqft_multiplier = (float)$input['sqft_multiplier'];
-    if (isset($input['sort_order'])) $unit->sort_order = (int)$input['sort_order'];
-    if (isset($input['is_active'])) $unit->is_active = filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN);
+    if (isset($input['name'])) {
+        $unit->name = trim($input['name']);
+    }
+    if (isset($input['slug'])) {
+        $unit->slug = Str::slug($input['slug']);
+    }
+    if (isset($input['symbol'])) {
+        $unit->symbol = $input['symbol'];
+    }
+    if (isset($input['sqft_multiplier'])) {
+        $unit->sqft_multiplier = (float) $input['sqft_multiplier'];
+    }
+    if (isset($input['sort_order'])) {
+        $unit->sort_order = (int) $input['sort_order'];
+    }
+    if (isset($input['is_active'])) {
+        $unit->is_active = filter_var($input['is_active'], FILTER_VALIDATE_BOOLEAN);
+    }
 
     $unit->save();
 
@@ -1608,24 +1729,26 @@ Route::get('/admin/sidebar-counts', function () {
         $drafts = 0;
         try {
             $drafts = Property::where('status', 'Draft')->count();
-        } catch (\Throwable $e) {}
+        } catch (Throwable $e) {
+        }
 
         $pendingApprovals = 0;
         try {
-            if (\Illuminate\Support\Facades\Schema::hasColumn('properties', 'is_approved')) {
+            if (Schema::hasColumn('properties', 'is_approved')) {
                 $pendingApprovals = Property::where('is_approved', false)->count();
             }
-        } catch (\Throwable $e) {}
+        } catch (Throwable $e) {
+        }
 
         $pendingTotal = $drafts > 0 ? $drafts : ($pendingApprovals > 0 ? $pendingApprovals : 2);
-        
+
         $tours = 0;
         try {
             $tours = Viewing::whereNotIn('status', ['completed', 'cancelled'])->count();
             if ($tours === 0) {
                 $tours = Viewing::count() ?: 4;
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $tours = 4;
         }
 
@@ -1635,14 +1758,15 @@ Route::get('/admin/sidebar-counts', function () {
             if ($leads === 0) {
                 $leads = Lead::count() ?: 4;
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $leads = 4;
         }
 
         $propertiesCount = 0;
         try {
             $propertiesCount = Property::count();
-        } catch (\Throwable $e) {}
+        } catch (Throwable $e) {
+        }
         if ($propertiesCount === 0) {
             $propertiesCount = 10;
         }
@@ -1650,27 +1774,32 @@ Route::get('/admin/sidebar-counts', function () {
         $catCount = 8;
         try {
             $catCount = Category::count() ?: 8;
-        } catch (\Throwable $e) {}
+        } catch (Throwable $e) {
+        }
 
         $divCount = 12;
         try {
             $divCount = Division::count() ?: 12;
-        } catch (\Throwable $e) {}
+        } catch (Throwable $e) {
+        }
 
         $dealCount = 4;
         try {
             $dealCount = TransactionType::count() ?: 4;
-        } catch (\Throwable $e) {}
+        } catch (Throwable $e) {
+        }
 
         $statusCount = 5;
         try {
             $statusCount = PropertyStatus::count() ?: 5;
-        } catch (\Throwable $e) {}
+        } catch (Throwable $e) {
+        }
 
         $unitCount = 6;
         try {
             $unitCount = LandUnit::count() ?: 6;
-        } catch (\Throwable $e) {}
+        } catch (Throwable $e) {
+        }
 
         return response()->json([
             'success' => true,
@@ -1683,14 +1812,15 @@ Route::get('/admin/sidebar-counts', function () {
                 'transaction_types' => $dealCount,
                 'property_statuses' => $statusCount,
                 'land_units' => $unitCount,
-                'properties' => $propertiesCount
-            ]
+                'properties' => $propertiesCount,
+            ],
         ]);
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         $fallbackProps = 10;
         try {
             $fallbackProps = Property::count() ?: 10;
-        } catch (\Throwable $e2) {}
+        } catch (Throwable $e2) {
+        }
 
         return response()->json([
             'success' => true,
@@ -1703,8 +1833,8 @@ Route::get('/admin/sidebar-counts', function () {
                 'transaction_types' => 4,
                 'property_statuses' => 5,
                 'land_units' => 6,
-                'properties' => $fallbackProps
-            ]
+                'properties' => $fallbackProps,
+            ],
         ]);
     }
 });
@@ -1739,7 +1869,7 @@ Route::get('/property-options', function () {
         if (empty($landUnits)) {
             $landUnits = PropertyLandUnit::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray();
         }
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         $categories = Setting::getVal('property_categories', $defaultCategories);
         $divisions = Setting::getVal('property_divisions', $defaultDivisions);
         $transactionTypes = Setting::getVal('property_transaction_types', $defaultTransactionTypes);
@@ -1750,12 +1880,12 @@ Route::get('/property-options', function () {
     return response()->json([
         'success' => true,
         'data' => [
-            'categories' => !empty($categories) ? $categories : $defaultCategories,
-            'divisions' => !empty($divisions) ? $divisions : $defaultDivisions,
-            'transaction_types' => !empty($transactionTypes) ? $transactionTypes : $defaultTransactionTypes,
-            'statuses' => !empty($statuses) ? $statuses : $defaultStatuses,
-            'land_units' => !empty($landUnits) ? $landUnits : $defaultLandUnits
-        ]
+            'categories' => ! empty($categories) ? $categories : $defaultCategories,
+            'divisions' => ! empty($divisions) ? $divisions : $defaultDivisions,
+            'transaction_types' => ! empty($transactionTypes) ? $transactionTypes : $defaultTransactionTypes,
+            'statuses' => ! empty($statuses) ? $statuses : $defaultStatuses,
+            'land_units' => ! empty($landUnits) ? $landUnits : $defaultLandUnits,
+        ],
     ]);
 });
 
@@ -1767,7 +1897,7 @@ Route::post('/property-options', function (Request $request) {
         foreach ($input['categories'] as $idx => $cat) {
             PropertyCategory::updateOrCreate(
                 ['name' => trim($cat)],
-                ['slug' => \Illuminate\Support\Str::slug($cat), 'is_active' => true, 'sort_order' => $idx + 1]
+                ['slug' => Str::slug($cat), 'is_active' => true, 'sort_order' => $idx + 1]
             );
         }
         Setting::setVal('property_categories', array_values(array_unique(array_filter($input['categories']))));
@@ -1777,7 +1907,7 @@ Route::post('/property-options', function (Request $request) {
         foreach ($input['divisions'] as $idx => $div) {
             PropertyDivision::updateOrCreate(
                 ['name' => trim($div)],
-                ['slug' => \Illuminate\Support\Str::slug($div), 'is_active' => true, 'sort_order' => $idx + 1]
+                ['slug' => Str::slug($div), 'is_active' => true, 'sort_order' => $idx + 1]
             );
         }
         Setting::setVal('property_divisions', array_values(array_unique(array_filter($input['divisions']))));
@@ -1787,7 +1917,7 @@ Route::post('/property-options', function (Request $request) {
         foreach ($input['transaction_types'] as $idx => $tt) {
             PropertyTransactionType::updateOrCreate(
                 ['name' => trim($tt)],
-                ['slug' => \Illuminate\Support\Str::slug($tt), 'is_active' => true, 'sort_order' => $idx + 1]
+                ['slug' => Str::slug($tt), 'is_active' => true, 'sort_order' => $idx + 1]
             );
         }
         Setting::setVal('property_transaction_types', array_values(array_unique(array_filter($input['transaction_types']))));
@@ -1797,7 +1927,7 @@ Route::post('/property-options', function (Request $request) {
         foreach ($input['statuses'] as $idx => $st) {
             PropertyStatus::updateOrCreate(
                 ['name' => trim($st)],
-                ['slug' => \Illuminate\Support\Str::slug($st), 'is_active' => true, 'sort_order' => $idx + 1]
+                ['slug' => Str::slug($st), 'is_active' => true, 'sort_order' => $idx + 1]
             );
         }
         Setting::setVal('property_statuses', array_values(array_unique(array_filter($input['statuses']))));
@@ -1807,7 +1937,7 @@ Route::post('/property-options', function (Request $request) {
         foreach ($input['land_units'] as $idx => $lu) {
             PropertyLandUnit::updateOrCreate(
                 ['name' => trim($lu)],
-                ['slug' => \Illuminate\Support\Str::slug($lu), 'is_active' => true, 'sort_order' => $idx + 1]
+                ['slug' => Str::slug($lu), 'is_active' => true, 'sort_order' => $idx + 1]
             );
         }
         Setting::setVal('property_land_units', array_values(array_unique(array_filter($input['land_units']))));
@@ -1821,8 +1951,8 @@ Route::post('/property-options', function (Request $request) {
             'divisions' => PropertyDivision::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray(),
             'transaction_types' => PropertyTransactionType::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray(),
             'statuses' => PropertyStatus::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray(),
-            'land_units' => PropertyLandUnit::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray()
-        ]
+            'land_units' => PropertyLandUnit::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray(),
+        ],
     ]);
 });
 
@@ -1833,11 +1963,11 @@ Route::post('/property-options/add-item', function (Request $request) {
     $key = $input['key'] ?? null; // 'categories', 'divisions', 'transaction_types', 'statuses', 'land_units'
     $item = trim($input['item'] ?? '');
 
-    if (!$key || !$item) {
+    if (! $key || ! $item) {
         return response()->json(['success' => false, 'message' => 'Both key and item are required'], 400);
     }
 
-    $slug = \Illuminate\Support\Str::slug($item);
+    $slug = Str::slug($item);
 
     if ($key === 'categories') {
         Category::firstOrCreate(['name' => $item], ['slug' => $slug, 'is_active' => true, 'sort_order' => 99]);
@@ -1870,7 +2000,7 @@ Route::post('/property-options/add-item', function (Request $request) {
     return response()->json([
         'success' => true,
         'message' => "Item '{$item}' added to database table for {$key}",
-        'data' => $data
+        'data' => $data,
     ]);
 });
 
@@ -1883,12 +2013,12 @@ Route::get('/settings', function () {
         'whatsapp_number' => Setting::getVal('whatsapp_number', '+880 1819-987654'),
         'chauffeur_base' => Setting::getVal('chauffeur_base', 'Gulshan-2 Diplomatic Enclave, Dhaka'),
         'commission_rate' => Setting::getVal('commission_rate', '2.0%'),
-        'site_title' => Setting::getVal('site_title', 'GBREL | Luxury Real Estate & Land in Bangladesh')
+        'site_title' => Setting::getVal('site_title', 'GBREL | Luxury Real Estate & Land in Bangladesh'),
     ];
 
     return response()->json([
         'success' => true,
-        'data' => $defaultSettings
+        'data' => $defaultSettings,
     ]);
 });
 
@@ -1921,25 +2051,25 @@ Route::post('/settings', function (Request $request) {
             'brac_rate' => Setting::getVal('brac_rate', '9.40%'),
             'whatsapp_number' => Setting::getVal('whatsapp_number', '+880 1819-987654'),
             'chauffeur_base' => Setting::getVal('chauffeur_base', 'Gulshan-2 Diplomatic Enclave, Dhaka'),
-            'commission_rate' => Setting::getVal('commission_rate', '2.0%')
-        ]
+            'commission_rate' => Setting::getVal('commission_rate', '2.0%'),
+        ],
     ]);
 });
 
 // 8. Executive KPI Analytics API (Realtime Aggregations)
 Route::get('/admin/stats', function () {
     $properties = Property::all();
-    $totalValuation = (float)$properties->sum('price');
-    $landShares = $properties->filter(fn($p) => $p->property_type === 'Land Share')->count();
-    $flats = $properties->filter(fn($p) => in_array($p->property_type, ['Flat', 'Penthouse', 'Duplex']))->count();
-    $plots = $properties->filter(fn($p) => in_array($p->property_type, ['Plot', 'Land']))->count();
-    $resorts = $properties->filter(fn($p) => $p->property_type === 'Hotel')->count();
+    $totalValuation = (float) $properties->sum('price');
+    $landShares = $properties->filter(fn ($p) => $p->property_type === 'Land Share')->count();
+    $flats = $properties->filter(fn ($p) => in_array($p->property_type, ['Flat', 'Penthouse', 'Duplex']))->count();
+    $plots = $properties->filter(fn ($p) => in_array($p->property_type, ['Plot', 'Land']))->count();
+    $resorts = $properties->filter(fn ($p) => $p->property_type === 'Hotel')->count();
 
     // Regional allocation computed dynamically across all states
     $regions = [];
     $grouped = $properties->groupBy('state');
     foreach ($grouped as $state => $items) {
-        $sum = (float)$items->sum('price');
+        $sum = (float) $items->sum('price');
         $pct = $totalValuation > 0 ? round(($sum / $totalValuation) * 100, 1) : 0;
         $stateName = trim($state ?: 'Other Divisions');
         $regions[] = [
@@ -1947,7 +2077,7 @@ Route::get('/admin/stats', function () {
             'count' => $items->count(),
             'valuation' => $sum,
             'valuation_crores' => round($sum / 10000000, 2),
-            'percentage' => $pct
+            'percentage' => $pct,
         ];
     }
 
@@ -1959,7 +2089,7 @@ Route::get('/admin/stats', function () {
         ->orWhereNull('is_rajuk_approved')
         ->orderBy('created_at', 'desc')
         ->get();
-    $settledVolume = (float)FinancialTransaction::where('status', 'Settled')->sum('amount');
+    $settledVolume = (float) FinancialTransaction::where('status', 'Settled')->sum('amount');
 
     $payload = [
         'total_portfolio_valuation' => $totalValuation,
@@ -1980,20 +2110,21 @@ Route::get('/admin/stats', function () {
         'regional_allocation' => $regions,
         'recent_viewings' => $viewings->take(4)->values(),
         'recent_leads' => $leads->take(4)->values(),
-        'unapproved_properties' => $pendingApprovals->take(4)->values()
+        'unapproved_properties' => $pendingApprovals->take(4)->values(),
     ];
 
     return response()->json(array_merge([
         'success' => true,
-        'data' => $payload
+        'data' => $payload,
     ], $payload));
 });
 
 Route::get('/user/saved-properties', function () {
     $properties = Property::take(2)->get();
+
     return response()->json([
         'success' => true,
-        'data' => $properties
+        'data' => $properties,
     ]);
 });
 
@@ -2003,15 +2134,15 @@ Route::post('/upload', function (Request $request) {
     if ($request->hasFile('image')) {
         $file = $request->file('image');
         $ext = $file->getClientOriginalExtension() ?: 'jpg';
-        $filename = 'prop_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+        $filename = 'prop_'.time().'_'.rand(1000, 9999).'.'.$ext;
         $path = $file->storeAs('properties', $filename, 'public');
-        $url = '/storage/' . $path;
+        $url = '/storage/'.$path;
 
         return response()->json([
             'success' => true,
             'message' => 'Feature image uploaded successfully',
             'url' => $url,
-            'urls' => [$url]
+            'urls' => [$url],
         ]);
     }
 
@@ -2020,16 +2151,16 @@ Route::post('/upload', function (Request $request) {
         $urls = [];
         foreach ($request->file('images') as $file) {
             $ext = $file->getClientOriginalExtension() ?: 'jpg';
-            $filename = 'prop_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+            $filename = 'prop_'.time().'_'.rand(1000, 9999).'.'.$ext;
             $path = $file->storeAs('properties', $filename, 'public');
-            $urls[] = '/storage/' . $path;
+            $urls[] = '/storage/'.$path;
         }
 
         return response()->json([
             'success' => true,
-            'message' => count($urls) . ' gallery images uploaded successfully',
+            'message' => count($urls).' gallery images uploaded successfully',
             'urls' => $urls,
-            'url' => $urls[0] ?? null
+            'url' => $urls[0] ?? null,
         ]);
     }
 
@@ -2039,9 +2170,9 @@ Route::post('/upload', function (Request $request) {
         $originalName = $file->getClientOriginalName();
         $cleanName = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
         $ext = $file->getClientOriginalExtension() ?: 'pdf';
-        $filename = 'brochure_' . time() . '_' . $cleanName . '.' . $ext;
+        $filename = 'brochure_'.time().'_'.$cleanName.'.'.$ext;
         $path = $file->storeAs('brochures', $filename, 'public');
-        $url = '/storage/' . $path;
+        $url = '/storage/'.$path;
 
         return response()->json([
             'success' => true,
@@ -2049,41 +2180,43 @@ Route::post('/upload', function (Request $request) {
             'url' => $url,
             'original_name' => $originalName,
             'filename' => $filename,
-            'size' => $file->getSize()
+            'size' => $file->getSize(),
         ]);
     }
 
     // 4. Support Base64 image upload
-    if ($request->has('base64') && !empty($request->base64)) {
+    if ($request->has('base64') && ! empty($request->base64)) {
         $raw = $request->base64;
         if (preg_match('/^data:image\/(\w+);base64,/', $raw, $type)) {
             $raw = substr($raw, strpos($raw, ',') + 1);
             $type = strtolower($type[1]);
             $decoded = base64_decode($raw);
-            $filename = 'prop_' . time() . '_' . rand(1000, 9999) . '.' . $type;
-            \Illuminate\Support\Facades\Storage::disk('public')->put('properties/' . $filename, $decoded);
-            $url = '/storage/properties/' . $filename;
+            $filename = 'prop_'.time().'_'.rand(1000, 9999).'.'.$type;
+            Storage::disk('public')->put('properties/'.$filename, $decoded);
+            $url = '/storage/properties/'.$filename;
+
             return response()->json([
                 'success' => true,
                 'message' => 'Image decoded and stored',
                 'url' => $url,
-                'urls' => [$url]
+                'urls' => [$url],
             ]);
         }
     }
 
     return response()->json([
         'success' => false,
-        'message' => 'No valid file provided. Please attach image, images[], or brochure.'
+        'message' => 'No valid file provided. Please attach image, images[], or brochure.',
     ], 400);
 });
 
 // Direct Storage Access Route
 Route::get('/storage/{path}', function ($path) {
-    $fullPath = storage_path('app/public/' . $path);
-    if (!file_exists($fullPath)) {
+    $fullPath = storage_path('app/public/'.$path);
+    if (! file_exists($fullPath)) {
         return response()->json(['error' => 'File not found'], 404);
     }
     $mime = mime_content_type($fullPath) ?: 'image/jpeg';
+
     return response()->file($fullPath, ['Content-Type' => $mime]);
 })->where('path', '.*');

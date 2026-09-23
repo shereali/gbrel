@@ -393,6 +393,7 @@ useHead({
 
 const { properties, fetchProperties } = useProperties()
 const toast = useToast()
+const { token } = useAuth()
 
 const refreshing = ref(false)
 const activeQueueFilter = ref<'all' | 'legal' | 'viewings' | 'leads'>('all')
@@ -409,7 +410,7 @@ const backendRegions = ref<any[]>([])
 
 const fetchStats = async () => {
   try {
-    const res = await fetch(useApiUrl('/admin/stats'))
+    const res = await fetch(useApiUrl('/admin/stats'), { headers: { Authorization: `Bearer ${token.value}` } })
     if (res.ok) {
       const data = await res.json()
       if (data && data.success) {

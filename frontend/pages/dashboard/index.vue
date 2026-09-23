@@ -277,15 +277,16 @@ import { useApiUrl } from '~/composables/useApi'
 import PropertyCard from '~/components/PropertyCard.vue'
 
 const route = useRoute()
-const { user, switchRole } = useAuth()
+const { user, switchRole, token, hasPermission, isSuperAdmin } = useAuth()
 const { properties, getPropertyById, fetchProperties } = useProperties()
 
 const activeTab = ref('overview')
 const realLeads = ref<any[]>([])
 
 const fetchRealLeads = async () => {
+  if (!isSuperAdmin.value && !hasPermission('leads.view') && !hasPermission('leads.manage')) return
   try {
-    const res = await fetch(useApiUrl('/leads'))
+    const res = await fetch(useApiUrl('/leads'), { headers: { Authorization: `Bearer ${token.value}` } })
     if (res.ok) {
       const json = await res.json()
       if (json && json.success && Array.isArray(json.data)) {

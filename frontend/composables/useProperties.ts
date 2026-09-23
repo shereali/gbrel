@@ -754,7 +754,7 @@ const mapDbItemToAgentItem = (item: any): AgentItem => {
   }
 }
 
-const mapDbItemToPropertyItem = (apiItem: any): PropertyItem => {
+const mapDbItemToPropertyItem = (apiItem: any, strict = false): PropertyItem => {
   const price = Number(apiItem.price) || 0
   const areaName = apiItem.area_name || apiItem.areaName || 'Dhaka Hub'
   const sqft = Number(apiItem.square_footage) || Number(apiItem.squareFootage) || 0
@@ -764,9 +764,9 @@ const mapDbItemToPropertyItem = (apiItem: any): PropertyItem => {
     id: Number(apiItem.id),
     title: apiItem.title || 'Untitled Mandate',
     slug: apiItem.slug || 'property-' + apiItem.id,
-    tagline: apiItem.tagline || 'Verified Legal Ownership & Direct Handover',
-    description: apiItem.description || `Exclusive real estate mandate in ${areaName}. Verified by GBREL legal due diligence panel.`,
-    address: apiItem.address || `Road 1, ${areaName}`,
+    tagline: apiItem.tagline || (strict ? '' : 'Verified Legal Ownership & Direct Handover'),
+    description: apiItem.description || (strict ? '' : `Exclusive real estate mandate in ${areaName}. Verified by GBREL legal due diligence panel.`),
+    address: apiItem.address || (strict ? '' : `Road 1, ${areaName}`),
     city: apiItem.city || 'Dhaka',
     state: apiItem.state || 'Dhaka North',
     areaName: areaName,
@@ -785,29 +785,29 @@ const mapDbItemToPropertyItem = (apiItem: any): PropertyItem => {
     parking: Number(apiItem.parking) || 0,
     floorNumber: apiItem.floor_number ? Number(apiItem.floor_number) : undefined,
     totalFloors: apiItem.total_floors ? Number(apiItem.total_floors) : undefined,
-    facing: (apiItem.facing || 'South') as any,
-    completionStatus: (apiItem.completion_status || apiItem.completionStatus || 'Ready') as any,
-    yearBuilt: apiItem.year_built ? Number(apiItem.year_built) : 2024,
+    facing: (apiItem.facing || (strict ? undefined : 'South')) as any,
+    completionStatus: (apiItem.completion_status || apiItem.completionStatus || (strict ? '' : 'Ready')) as any,
+    yearBuilt: apiItem.year_built ? Number(apiItem.year_built) : (strict ? undefined : 2024),
     isFeatured: Boolean(apiItem.is_featured ?? apiItem.isFeatured),
     isRajukApproved: Boolean(apiItem.is_rajuk_approved ?? apiItem.isRajukApproved),
     isVerified: Boolean(apiItem.is_verified ?? apiItem.isVerified ?? true),
     hasOpenHouse: Boolean(apiItem.has_open_house ?? apiItem.hasOpenHouse),
     openHouseDate: apiItem.open_house_date || undefined,
-    lat: Number(apiItem.latitude) || Number(apiItem.lat) || 23.7925,
-    lng: Number(apiItem.longitude) || Number(apiItem.lng) || 90.4167,
+    lat: Number(apiItem.latitude) || Number(apiItem.lat) || (strict ? 0 : 23.7925),
+    lng: Number(apiItem.longitude) || Number(apiItem.lng) || (strict ? 0 : 90.4167),
     images: Array.isArray(apiItem.images) && apiItem.images.length > 0 
       ? apiItem.images 
-      : (apiItem.feature_image ? [apiItem.feature_image] : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop']),
+      : (apiItem.feature_image ? [apiItem.feature_image] : (strict ? [] : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'])),
     featureImage: apiItem.feature_image || apiItem.featureImage || (Array.isArray(apiItem.images) && apiItem.images.length > 0 ? apiItem.images[0] : 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'),
     gallery: Array.isArray(apiItem.gallery) && apiItem.gallery.length > 0
       ? apiItem.gallery 
       : (Array.isArray(apiItem.images) && apiItem.images.length > 1 ? apiItem.images.slice(1) : []),
     amenities: Array.isArray(apiItem.amenities) && apiItem.amenities.length > 0 
       ? apiItem.amenities 
-      : ['24/7 Generator', 'Security CCTV', 'Elevator Access'],
+      : (strict ? [] : ['24/7 Generator', 'Security CCTV', 'Elevator Access']),
     documentsVerified: Array.isArray(apiItem.documents_verified) && apiItem.documents_verified.length > 0 
       ? apiItem.documents_verified 
-      : ['Clear Freehold Title Deed', 'Mutation Cleared', 'RAJUK Allotment'],
+      : (strict ? [] : ['Clear Freehold Title Deed', 'Mutation Cleared', 'RAJUK Allotment']),
     brochureUrl: apiItem.brochure_url || apiItem.brochureUrl || undefined,
     hidePrice: Boolean(apiItem.hide_price ?? apiItem.hidePrice),
     priceDisplayText: apiItem.price_display_text || apiItem.priceDisplayText || 'Price on Application',
@@ -870,13 +870,13 @@ export const useProperties = () => {
     return propertiesData.value.find(p => p.id === numId) || propertiesData.value[0]
   }
 
-  const fetchPropertyById = async (idOrSlug: string | number): Promise<PropertyItem | null> => {
+  const fetchPropertyById = async (idOrSlug: string | number, options: { strict?: boolean } = {}): Promise<PropertyItem | null> => {
     try {
       const res = await fetch(useApiUrl(`/properties/${idOrSlug}`))
       if (res.ok) {
         const json = await res.json()
         if (json && json.success && json.data) {
-          const mapped = mapDbItemToPropertyItem(json.data)
+          const mapped = mapDbItemToPropertyItem(json.data, options.strict)
           const idx = propertiesData.value.findIndex(p => p.id === mapped.id)
           if (idx >= 0) {
             propertiesData.value[idx] = mapped
@@ -889,7 +889,8 @@ export const useProperties = () => {
     } catch (err) {
       console.warn('Failed to fetch property by id/slug from API:', err)
     }
-    return getPropertyById(idOrSlug)
+    // Landing pages must not display a seeded or unrelated listing after an API failure.
+    return options.strict ? null : getPropertyById(idOrSlug)
   }
 
   const getAgentById = (id: number | string) => {
@@ -918,7 +919,7 @@ export const useProperties = () => {
         const json = await res.json()
         if (json && json.success && Array.isArray(json.data)) {
           if (json.data.length > 0 || opts.force || opts.q || opts.state || opts.type || opts.status) {
-            propertiesData.value = json.data.map(mapDbItemToPropertyItem)
+            propertiesData.value = json.data.map((item: any) => mapDbItemToPropertyItem(item))
           }
           lastPropertiesSyncedAt.value = new Date()
         }

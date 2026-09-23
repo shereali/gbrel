@@ -21,7 +21,7 @@
       <div class="flex justify-between items-center flex-wrap gap-3">
         <div class="flex items-center gap-2 flex-wrap">
           <button 
-            v-for="cat in ['All', 'NRB Investor', 'Direct Buyer', 'Hospitality ROI']" 
+            v-for="cat in ['All', 'Ready within 3 months', 'Own / family use', 'Investment']" 
             :key="cat"
             class="btn btn-sm"
             :class="selectedType === cat ? 'btn-gold' : 'btn-outline-white'"
@@ -31,7 +31,7 @@
           </button>
         </div>
         <div style="font-size:0.85rem; color:#94A3B8; font-weight:600;">
-          {{ filteredLeads.length }} Qualified Leads
+          {{ filteredLeads.length }} Inquiries · readiness is self-reported
         </div>
       </div>
     </div>
@@ -55,7 +55,7 @@
                 class="badge" 
                 :style="lead.investment_readiness.includes('30 days') ? 'background:rgba(16,185,129,0.15); color:#10B981; border:1px solid rgba(16,185,129,0.3); font-weight:700;' : 'background:rgba(59,130,246,0.15); color:#60A5FA; border:1px solid rgba(59,130,246,0.3);'"
               >
-                {{ lead.investment_readiness.includes('30 days') ? '⚡ 100% Cash Ready (30 Days)' : lead.investment_readiness }}
+                {{ lead.investment_readiness }}
               </span>
 
               <!-- Ad Source Attribution -->
@@ -72,6 +72,7 @@
             </div>
 
             <div style="font-size:0.88rem; margin-top:4px;" class="text-subtle">
+              <p v-if="lead.budget_range" style="margin-bottom: 8px;">Budget fit: <strong>{{ lead.budget_range }}</strong></p>
               Target Property: <strong style="color:#10B981;">{{ lead.property }}</strong>
               <span v-if="lead.preferred_contact" style="margin-left: 10px; color: #94A3B8; font-size: 0.8rem;">
                 • Preferred: <strong style="color:#FFF;">{{ lead.preferred_contact }}</strong>
@@ -97,7 +98,7 @@
           </div>
         </div>
 
-        <div style="background:var(--admin-bg-surface-alt); border:1px solid var(--admin-border-subtle); padding:14px 18px; border-radius:var(--radius-md); font-size:0.88rem; line-height:1.5;">
+        <div style="background:var(--admin-bg-surface-alt); border:1px solid var(--admin-border-subtle); padding:14px 18px; border-radius:var(--radius-md); font-size:0.88rem; line-height:1.5; white-space:pre-line; overflow-wrap:anywhere;">
           "{{ lead.message }}"
         </div>
       </div>
@@ -167,6 +168,7 @@ definePageMeta({
 })
 
 const toast = useToast()
+const { token } = useAuth()
 const selectedType = ref('All')
 const showAddLeadModal = ref(false)
 const isLoading = ref(false)
@@ -177,7 +179,8 @@ const leadsList = ref<any[]>([])
 const fetchLeads = async () => {
   isLoading.value = true
   try {
-    const res = await fetch(useApiUrl('/leads'))
+    const res = await fetch(useApiUrl('/leads'), { headers: { Authorization: `Bearer ${token.value}` } })
+    if (!res.ok) throw new Error('Lead access failed')
     if (res.ok) {
       const json = await res.json()
       if (json && json.success && Array.isArray(json.data)) {
@@ -197,6 +200,7 @@ const fetchLeads = async () => {
     }
   } catch (err) {
     console.error('Failed to fetch leads:', err)
+    toast.error('Could not load inquiries', 'Please check your session and lead access permissions.')
   } finally {
     isLoading.value = false
   }
@@ -208,6 +212,8 @@ onMounted(async () => {
 
 const filteredLeads = computed(() => {
   if (selectedType.value === 'All') return leadsList.value
+  if (selectedType.value === 'Ready within 3 months') return leadsList.value.filter(l =>
+    ['Within 30 days', '1–3 months'].includes(l.investment_readiness) && l.budget_range === 'Listed price fits budget')
   return leadsList.value.filter(l => (l.type || '').includes(selectedType.value))
 })
 
@@ -261,7 +267,7 @@ const updateStage = async (id: number, event: Event) => {
   try {
     const res = await fetch(useApiUrl(`/leads/${id}/stage`), {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token.value}` },
       body: JSON.stringify({ stage: newStage })
     })
     if (!res.ok) throw new Error('Failed to update stage on server')

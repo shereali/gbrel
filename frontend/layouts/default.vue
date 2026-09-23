@@ -12,10 +12,15 @@
     <ComparisonDrawer />
 
     <!-- Floating WhatsApp Pulse & VIP Instant Callback Hunter Widget -->
-    <LeadHunterWidget />
+    <LeadHunterWidget v-if="!isPropertyDetail" />
 
     <!-- Luxury Footer -->
-    <AppFooter />
+    <footer v-if="isPropertyDetail" class="property-footer">
+      <strong>GBREL · Gram Bangla Real Estate</strong>
+      <span>প্রপার্টি সম্পর্কে জানুন। বুঝে সিদ্ধান্ত নিন।</span>
+      <NuxtLink to="/properties">সব প্রপার্টি দেখুন →</NuxtLink>
+    </footer>
+    <AppFooter v-else />
 
     <!-- Global Website Toast Container -->
     <div class="toast-container" aria-live="polite">
@@ -49,6 +54,8 @@ import LeadHunterWidget from '~/components/LeadHunterWidget.vue'
 import { useToast } from '~/composables/useToast'
 
 const { toasts, remove: removeToast } = useToast()
+const route = useRoute()
+const isPropertyDetail = computed(() => /^\/properties\/[^/]+\/?$/.test(route.path))
 </script>
 
 <style scoped>
@@ -62,4 +69,7 @@ const { toasts, remove: removeToast } = useToast()
   flex: 1;
   min-height: calc(100vh - 80px);
 }
+.property-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18px; padding: 28px max(20px, calc((100vw - 1160px) / 2)); background: #edf2e9; color: #36513e; font-size: 12px; line-height: 1.8; }
+.property-footer a { color: #246346; }
+@media (max-width: 767px) { .property-footer { flex-direction: column; padding-bottom: calc(120px + env(safe-area-inset-bottom)); } }
 </style>
