@@ -641,7 +641,9 @@
             class="btn-whatsapp-sticky"
             aria-label="Chat on WhatsApp"
           >
-            <span style="font-size: 1.15rem;">💬</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.969.54 1.861.855 2.796.855 3.18 0 5.767-2.587 5.768-5.766 0-3.18-2.586-5.767-5.768-5.767zm7.531 5.766c-.002 4.153-3.38 7.531-7.531 7.531-.019 0-.038 0-.057 0-1.284 0-2.53-.332-3.64-.962l-4.053 1.063 1.082-3.953c-.707-1.16-1.082-2.493-1.082-3.864.002-4.153 3.38-7.531 7.531-7.531 4.153 0 7.531 3.378 7.531 7.531z"/>
+            </svg>
             <span>WhatsApp</span>
           </a>
 
@@ -650,7 +652,7 @@
             class="btn-gold-sticky"
             @click="quickDossierModalOpen = true"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14 2 14 8 20 8"/>
             </svg>
@@ -1827,27 +1829,27 @@ const copyMandateLink = async () => {
 }
 
 .direct-contact-action-row {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .btn-contact-whatsapp {
   background: #25D366 !important;
   color: #FFFFFF !important;
-  border: 1px solid #22C55E !important;
-  font-weight: 800 !important;
-  font-size: 1.02rem !important;
-  border-radius: var(--radius-md, 12px) !important;
-  padding: 14px 20px !important;
-  min-height: 50px !important;
+  border: 1px solid #16A34A !important;
+  font-weight: 750 !important;
+  font-size: 0.88rem !important;
+  border-radius: 10px !important;
+  padding: 8px 12px !important;
+  min-height: 40px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 10px !important;
+  gap: 6px !important;
   text-decoration: none !important;
-  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35) !important;
+  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.25) !important;
   transition: all 0.2s ease !important;
   width: 100% !important;
   box-sizing: border-box !important;
@@ -1856,22 +1858,22 @@ const copyMandateLink = async () => {
 .btn-contact-whatsapp:hover {
   background: #20BD5A !important;
   transform: translateY(-1.5px) !important;
-  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45) !important;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35) !important;
 }
 
 .btn-contact-call {
   background: #FFFFFF !important;
   color: #0F172A !important;
   border: 1.5px solid #CBD5E1 !important;
-  font-weight: 800 !important;
-  font-size: 1.02rem !important;
-  border-radius: var(--radius-md, 12px) !important;
-  padding: 14px 20px !important;
-  min-height: 50px !important;
+  font-weight: 750 !important;
+  font-size: 0.88rem !important;
+  border-radius: 10px !important;
+  padding: 8px 12px !important;
+  min-height: 40px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 10px !important;
+  gap: 6px !important;
   text-decoration: none !important;
   transition: all 0.2s ease !important;
   width: 100% !important;
@@ -2080,74 +2082,87 @@ const copyMandateLink = async () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 8px;
     max-width: 600px;
     margin: 0 auto;
   }
 
   .mobile-price-preview {
     flex-shrink: 0;
+    max-width: 120px;
   }
 
   .mobile-price-val {
-    font-size: 1.1rem;
+    font-size: 0.96rem;
     font-weight: 850;
     color: #D4AF37;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: 1.2;
+    line-height: 1.15;
   }
 
   .mobile-price-type {
-    font-size: 0.72rem;
+    font-size: 0.65rem;
     color: #94A3B8;
     text-transform: uppercase;
     font-weight: 700;
+    letter-spacing: 0.4px;
   }
 
   .mobile-sticky-btns {
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex: 1;
-    justify-content: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
   }
 
   .btn-whatsapp-sticky {
     background: #25D366;
     color: #FFFFFF;
     border: none;
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 0.88rem;
-    font-weight: 800;
+    border-radius: 20px;
+    padding: 0 12px;
+    font-size: 0.8rem;
+    font-weight: 750;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 5px;
     text-decoration: none;
-    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+    box-shadow: 0 2px 8px rgba(37, 211, 102, 0.28);
     white-space: nowrap;
-    min-height: 42px;
+    height: 36px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+  }
+
+  .btn-whatsapp-sticky:active {
+    transform: scale(0.96);
   }
 
   .btn-gold-sticky {
     background: linear-gradient(135deg, #D4AF37 0%, #B89628 100%);
     color: #0A1128;
     border: none;
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 0.88rem;
-    font-weight: 850;
+    border-radius: 20px;
+    padding: 0 12px;
+    font-size: 0.8rem;
+    font-weight: 800;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 5px;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.28);
     white-space: nowrap;
-    min-height: 42px;
+    height: 36px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+  }
+
+  .btn-gold-sticky:active {
+    transform: scale(0.96);
   }
 }
 

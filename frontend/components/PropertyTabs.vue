@@ -1,17 +1,51 @@
 <template>
   <div class="property-tabs-container">
-    <!-- Tabs Header Bar (Smooth Horizontal Scrollable on Mobile) -->
-    <div class="tabs-navigation-bar">
+    <!-- Tabs Header Wrapper with Left & Right Carets (Mobile & Desktop/Laptop Scrollable) -->
+    <div class="tabs-header-wrapper">
+      <!-- Left Caret Button (Smoothly scrolls left) -->
       <button 
-        v-for="tab in tabList" 
-        :key="tab.id"
-        type="button"
-        class="tab-nav-btn"
-        :class="{ active: activeTab === tab.id }"
-        @click="activeTab = tab.id"
+        type="button" 
+        class="tab-caret-btn caret-left" 
+        :class="{ 'caret-disabled': !canScrollLeft }"
+        aria-label="Scroll tabs left"
+        @click="scrollTabs('left')"
       >
-        <span class="tab-icon">{{ tab.icon }}</span>
-        <span class="tab-label">{{ tab.label }}</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+
+      <!-- Scrollable Tabs Track -->
+      <div 
+        ref="tabsNavRef" 
+        class="tabs-navigation-bar"
+        @scroll="checkScrollability"
+        @wheel="onTabsWheel"
+      >
+        <button 
+          v-for="tab in tabList" 
+          :key="tab.id"
+          type="button"
+          class="tab-nav-btn"
+          :class="{ active: activeTab === tab.id }"
+          @click="selectTab(tab.id, $event)"
+        >
+          <span class="tab-icon">{{ tab.icon }}</span>
+          <span class="tab-label">{{ tab.label }}</span>
+        </button>
+      </div>
+
+      <!-- Right Caret Button (Smoothly scrolls right) -->
+      <button 
+        type="button" 
+        class="tab-caret-btn caret-right" 
+        :class="{ 'caret-disabled': !canScrollRight }"
+        aria-label="Scroll tabs right"
+        @click="scrollTabs('right')"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
       </button>
     </div>
 
@@ -529,7 +563,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useProperties, type PropertyItem } from '~/composables/useProperties'
 import { formatBDT, formatArea } from '~/composables/useCurrency'
 
@@ -539,6 +573,59 @@ const props = defineProps<{
 
 const { properties } = useProperties()
 const activeTab = ref('overview')
+
+// Horizontal Tabs Scroll Navigation State
+const tabsNavRef = ref<HTMLElement | null>(null)
+const canScrollLeft = ref(false)
+const canScrollRight = ref(false)
+
+const checkScrollability = () => {
+  const el = tabsNavRef.value
+  if (!el) return
+  canScrollLeft.value = el.scrollLeft > 4
+  canScrollRight.value = el.scrollLeft + el.clientWidth < el.scrollWidth - 6
+}
+
+const scrollTabs = (direction: 'left' | 'right') => {
+  const el = tabsNavRef.value
+  if (!el) return
+  const scrollDistance = Math.max(el.clientWidth * 0.55, 180)
+  el.scrollBy({
+    left: direction === 'left' ? -scrollDistance : scrollDistance,
+    behavior: 'smooth'
+  })
+  setTimeout(checkScrollability, 320)
+}
+
+const onTabsWheel = (e: WheelEvent) => {
+  const el = tabsNavRef.value
+  if (!el) return
+  // If user scrolls vertically over the horizontal tab bar, map to horizontal scrolling
+  if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && el.scrollWidth > el.clientWidth) {
+    e.preventDefault()
+    el.scrollLeft += e.deltaY
+    checkScrollability()
+  }
+}
+
+const selectTab = (tabId: string, event?: Event) => {
+  activeTab.value = tabId
+  if (event && event.currentTarget) {
+    const btn = event.currentTarget as HTMLElement
+    btn.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' })
+  }
+}
+
+onMounted(() => {
+  nextTick(() => {
+    checkScrollability()
+    window.addEventListener('resize', checkScrollability)
+  })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkScrollability)
+})
 
 const tabList = [
   { id: 'overview', label: 'Overview', icon: '🏛️' },
@@ -714,17 +801,66 @@ const dynamicCommunity = computed(() => {
 </script>
 
 <style scoped>
-/* Tabs Navigation Bar (Responsive Touch Scrolling) */
+/* Tabs Header Wrapper with Caret Navigation Controls */
+.tabs-header-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 28px;
+  width: 100%;
+}
+
+.tab-caret-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  color: #0F172A;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  z-index: 2;
+  padding: 0;
+}
+
+.tab-caret-btn:hover:not(.caret-disabled) {
+  background: #0A1128;
+  color: #D4AF37;
+  border-color: #0A1128;
+  transform: scale(1.08);
+}
+
+.tab-caret-btn:active:not(.caret-disabled) {
+  transform: scale(0.95);
+}
+
+.tab-caret-btn.caret-disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+  pointer-events: none;
+  border-color: #E2E8F0;
+  box-shadow: none;
+}
+
+/* Tabs Navigation Bar (Responsive Touch & Mouse Wheel Scrolling) */
 .tabs-navigation-bar {
   display: flex;
   gap: 8px;
   border-bottom: 2px solid var(--color-border);
-  margin-bottom: 28px;
   overflow-x: auto;
   white-space: nowrap;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
   padding-bottom: 4px;
+  flex: 1;
+  min-width: 0;
 }
 
 .tabs-navigation-bar::-webkit-scrollbar {
@@ -1050,6 +1186,28 @@ const dynamicCommunity = computed(() => {
 }
 
 @media (max-width: 768px) {
+  .tabs-header-wrapper {
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .tab-caret-btn {
+    width: 28px;
+    height: 28px;
+    background: #0A1128;
+    color: #D4AF37;
+    border-color: rgba(212, 175, 55, 0.4);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+  .tab-caret-btn.caret-disabled {
+    opacity: 0.2;
+    background: #F1F5F9;
+    color: #94A3B8;
+    border-color: #E2E8F0;
+  }
+  .tab-nav-btn {
+    padding: 10px 14px;
+    font-size: 0.88rem;
+  }
   .specs-highlight-box {
     grid-template-columns: 1fr;
     padding: 16px;
