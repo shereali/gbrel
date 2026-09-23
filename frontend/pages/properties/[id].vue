@@ -469,16 +469,18 @@
               <a 
                 :href="`https://wa.me/${agent.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(agent.name)},%20I%20am%20inquiring%20about:%20${encodeURIComponent(property.title)}`" 
                 target="_blank" 
-                class="btn-contact-whatsapp"
+                class="btn btn-lg btn-block btn-contact-whatsapp"
               >
-                <span style="font-size: 1.15rem;">💬</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.969.54 1.861.855 2.796.855 3.18 0 5.767-2.587 5.768-5.766 0-3.18-2.586-5.767-5.768-5.767zm7.531 5.766c-.002 4.153-3.38 7.531-7.531 7.531-.019 0-.038 0-.057 0-1.284 0-2.53-.332-3.64-.962l-4.053 1.063 1.082-3.953c-.707-1.16-1.082-2.493-1.082-3.864.002-4.153 3.38-7.531 7.531-7.531 4.153 0 7.531 3.378 7.531 7.531z"/>
+                </svg>
                 <span>WhatsApp</span>
               </a>
               <a 
                 :href="`tel:${agent.phone}`" 
-                class="btn-contact-call"
+                class="btn btn-outline btn-lg btn-block btn-contact-call"
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                 </svg>
                 <span>Call Agent</span>
@@ -632,27 +634,29 @@
           <div class="mobile-price-type">{{ property.propertyType }}</div>
         </div>
 
-        <a 
-          :href="`https://wa.me/${agent.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(agent.name)},%20I%20saw%20your%20listing%20for:%20${encodeURIComponent(property.title)}%20and%20would%20like%20to%20review%20pricing%20and%20deeds.`" 
-          target="_blank" 
-          class="btn-whatsapp-sticky"
-          aria-label="Chat on WhatsApp"
-        >
-          <span style="font-size: 1.2rem;">💬</span>
-          <span>WhatsApp</span>
-        </a>
+        <div class="mobile-sticky-btns">
+          <a 
+            :href="`https://wa.me/${agent.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(agent.name)},%20I%20saw%20your%20listing%20for:%20${encodeURIComponent(property.title)}%20and%20would%20like%20to%20review%20pricing%20and%20deeds.`" 
+            target="_blank" 
+            class="btn-whatsapp-sticky"
+            aria-label="Chat on WhatsApp"
+          >
+            <span style="font-size: 1.15rem;">💬</span>
+            <span>WhatsApp</span>
+          </a>
 
-        <button 
-          type="button" 
-          class="btn-gold-sticky"
-          @click="quickDossierModalOpen = true"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-          </svg>
-          <span>Price & Dossier</span>
-        </button>
+          <button 
+            type="button" 
+            class="btn-gold-sticky"
+            @click="quickDossierModalOpen = true"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span>Price & Dossier</span>
+          </button>
+        </div>
       </div>
     </aside>
 
@@ -1824,53 +1828,60 @@ const copyMandateLink = async () => {
 
 .direct-contact-action-row {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 10px;
   margin-bottom: 20px;
 }
 
 .btn-contact-whatsapp {
-  flex: 1;
-  background: #25D366;
-  color: #FFFFFF;
-  font-weight: 750;
-  font-size: 0.88rem;
-  border-radius: 8px;
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  text-decoration: none;
-  box-shadow: 0 3px 10px rgba(37, 211, 102, 0.25);
-  transition: all 0.2s ease;
+  background: #25D366 !important;
+  color: #FFFFFF !important;
+  border: 1px solid #22C55E !important;
+  font-weight: 800 !important;
+  font-size: 1.02rem !important;
+  border-radius: var(--radius-md, 12px) !important;
+  padding: 14px 20px !important;
+  min-height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  text-decoration: none !important;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35) !important;
+  transition: all 0.2s ease !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .btn-contact-whatsapp:hover {
-  background: #20BD5A;
-  transform: translateY(-1px);
+  background: #20BD5A !important;
+  transform: translateY(-1.5px) !important;
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45) !important;
 }
 
 .btn-contact-call {
-  flex: 1;
-  background: #FFFFFF;
-  color: #0F172A;
-  border: 1.5px solid #E2E8F0;
-  font-weight: 750;
-  font-size: 0.88rem;
-  border-radius: 8px;
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  text-decoration: none;
-  transition: all 0.2s ease;
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  border: 1.5px solid #CBD5E1 !important;
+  font-weight: 800 !important;
+  font-size: 1.02rem !important;
+  border-radius: var(--radius-md, 12px) !important;
+  padding: 14px 20px !important;
+  min-height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .btn-contact-call:hover {
-  background: #F8FAFC;
-  border-color: #CBD5E1;
-  transform: translateY(-1px);
+  background: #F8FAFC !important;
+  border-color: #94A3B8 !important;
+  transform: translateY(-1.5px) !important;
 }
 
 /* Qualified Form Box */
@@ -2068,14 +2079,14 @@ const copyMandateLink = async () => {
   .sticky-inner-track {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
     max-width: 600px;
     margin: 0 auto;
   }
 
   .mobile-price-preview {
-    flex: 1;
-    min-width: 0;
+    flex-shrink: 0;
   }
 
   .mobile-price-val {
@@ -2095,38 +2106,63 @@ const copyMandateLink = async () => {
     font-weight: 700;
   }
 
+  .mobile-sticky-btns {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    justify-content: flex-end;
+  }
+
   .btn-whatsapp-sticky {
     background: #25D366;
     color: #FFFFFF;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 10px 14px;
     font-size: 0.88rem;
     font-weight: 800;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
     text-decoration: none;
     box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
-    flex-shrink: 0;
+    white-space: nowrap;
+    min-height: 42px;
   }
 
   .btn-gold-sticky {
     background: linear-gradient(135deg, #D4AF37 0%, #B89628 100%);
     color: #0A1128;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 10px 14px;
     font-size: 0.88rem;
     font-weight: 850;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
-    flex-shrink: 0;
+    white-space: nowrap;
+    min-height: 42px;
+  }
+}
+
+/* Prevent global floating hunter stack from overlapping the sticky bottom bar on property page */
+:global(.floating-hunter-stack) {
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+  z-index: 990 !important;
+}
+
+@media (max-width: 768px) {
+  :global(.floating-hunter-stack) {
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    right: 12px !important;
+    transform: scale(0.8);
+    transform-origin: bottom right;
   }
 }
 
@@ -2265,10 +2301,6 @@ const copyMandateLink = async () => {
   .sticky-concierge-card {
     padding: 18px;
     border-radius: 16px;
-  }
-
-  .direct-contact-action-row {
-    flex-direction: column;
   }
 
   .channel-pills-row {
