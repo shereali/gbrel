@@ -114,18 +114,19 @@
               <span>🔐 Confidential Valuation (NDA)</span>
             </span>
 
-            <a 
+            <button 
               v-if="property.brochureUrl || (property.brochuresVault && property.brochuresVault.length > 0)" 
-              :href="property.brochureUrl || property.brochuresVault[0].file_url" 
-              target="_blank" 
+              type="button"
               class="luxury-badge badge-sky"
+              style="cursor: pointer; border: none;"
+              @click="openGatedBrochureModal('top_badge')"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
               <span>Official Brochure (PDF)</span>
-            </a>
+            </button>
 
             <span class="mandate-ref-id">Ref #GBR-00{{ property.id }}</span>
           </div>
@@ -203,11 +204,11 @@
 
       <!-- HD Media Gallery with Interactive Lightbox trigger -->
       <section class="property-hero-gallery-wrap" aria-label="Property Media Gallery">
-        <div class="property-hero-gallery">
+        <div class="property-hero-gallery" :class="{ 'is-single-source': (property.images || []).length <= 1 }">
           <!-- Main Left Image -->
           <div class="gallery-main-col" @click="openLightbox(0)">
             <img 
-              :src="property.images[0]" 
+              :src="displayImages[0]" 
               :alt="property.title" 
               class="gallery-main-img" 
               loading="eager"
@@ -224,8 +225,8 @@
           <div class="gallery-sub-grid">
             <div class="sub-img-wrap" @click="openLightbox(1)">
               <img 
-                v-if="property.images[1]" 
-                :src="property.images[1]" 
+                v-if="displayImages[1]" 
+                :src="displayImages[1]" 
                 :alt="`${property.title} perspective`" 
                 class="gallery-sub-img" 
                 loading="lazy"
@@ -234,20 +235,20 @@
             
             <div class="sub-img-wrap" @click="openLightbox(2)">
               <img 
-                v-if="property.images[2]" 
-                :src="property.images[2]" 
+                v-if="displayImages[2]" 
+                :src="displayImages[2]" 
                 :alt="`${property.title} detail view`" 
                 class="gallery-sub-img" 
                 loading="lazy"
               />
               <div 
-                v-if="property.images.length > 3" 
+                v-if="displayImages.length > 3" 
                 class="gallery-more-overlay"
                 @click.stop="openLightbox(0)"
               >
                 <div class="more-content">
                   <span class="more-icon">📷</span>
-                  <span class="more-text">+{{ property.images.length - 2 }} Photos</span>
+                  <span class="more-text">+{{ displayImages.length - 2 }} Photos</span>
                   <span class="more-sub">View Full Gallery</span>
                 </div>
               </div>
@@ -266,9 +267,59 @@
             <circle cx="8.5" cy="8.5" r="1.5"/>
             <polyline points="21 15 16 10 5 21"/>
           </svg>
-          <span>View All {{ property.images.length }} Photos</span>
+          <span>View All {{ displayImages.length }} Photos</span>
         </button>
       </section>
+
+      <!-- High-Converting Above-The-Fold Mobile Action Card (Crucial for Facebook Paid Ads) -->
+      <div class="mobile-ad-conversion-card">
+        <div class="ad-card-top-row">
+          <div class="ad-mandate-chip">
+            <span class="pulse-beacon-gold"></span>
+            <strong>Direct Mandate</strong>
+            <span>• {{ property.areaName }}</span>
+          </div>
+          <div class="ad-price-chip">{{ formatBDT(property.price) }}</div>
+        </div>
+
+        <p class="ad-tagline-text">
+          {{ property.tagline || (property.propertyType === 'Land Share' ? 'Prime Co-Ownership Land Share • Transparent Bank Escrow Build' : 'Verified Luxury Real Estate Mandate') }}
+        </p>
+
+        <!-- Fast 1-Tap Conversion Actions -->
+        <div class="ad-fast-action-grid">
+          <a 
+            :href="whatsappInquiryUrl" 
+            target="_blank" 
+            class="btn btn-emerald btn-ad-whatsapp"
+            @click="trackPixelEvent('Contact', { method: 'WhatsApp_Mobile_Ad_Hero', content_name: property.title })"
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.969.54 1.861.855 2.796.855 3.18 0 5.767-2.587 5.768-5.766 0-3.18-2.586-5.767-5.768-5.767zm7.531 5.766c-.002 4.153-3.38 7.531-7.531 7.531-.019 0-.038 0-.057 0-1.284 0-2.53-.332-3.64-.962l-4.053 1.063 1.082-3.953c-.707-1.16-1.082-2.493-1.082-3.864.002-4.153 3.38-7.531 7.531-7.531 4.153 0 7.531 3.378 7.531 7.531z"/>
+            </svg>
+            <span>WhatsApp Advisor</span>
+          </a>
+
+          <button 
+            type="button" 
+            class="btn btn-gold btn-ad-dossier"
+            @click="openGatedBrochureModal('mobile_ad_hero')"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span>Dossier & Deeds (PDF)</span>
+          </button>
+        </div>
+
+        <!-- Trust Badges Strip -->
+        <div class="ad-trust-chips-row">
+          <span class="ad-trust-item">🛡️ Freehold Title Vetted</span>
+          <span class="ad-trust-item">🏦 Bank Escrow Protected</span>
+          <span class="ad-trust-item">📜 Sub-Registry Deed Allotment</span>
+        </div>
+      </div>
 
       <!-- Lightbox Modal (Full-Screen HD Presentation) -->
       <div v-if="lightboxOpen" ref="lightboxRoot" class="modal-overlay lightbox-overlay" @click.self="lightboxOpen = false">
@@ -384,14 +435,12 @@
               </div>
             </div>
 
-            <!-- Primary CTAs Strip -->
-            <div class="concierge-actions-strip">
-              <!-- Official Brochure Download CTA -->
-              <a 
+                 <!-- Official Brochure Download CTA (Gated Lead Magnet) -->
+              <button 
                 v-if="property.brochureUrl || (property.brochuresVault && property.brochuresVault.length > 0)" 
-                :href="property.brochureUrl || property.brochuresVault[0].file_url" 
-                target="_blank" 
+                type="button" 
                 class="btn btn-gold btn-lg btn-block btn-brochure-glow"
+                @click="openGatedBrochureModal('sidebar_cta')"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -400,12 +449,12 @@
                   <polyline points="9 15 12 18 15 15"/>
                 </svg>
                 <span>Download Official Brochure (PDF)</span>
-              </a>
+              </button>
               <button 
                 v-else 
                 type="button"
                 class="btn btn-outline btn-lg btn-block" 
-                @click="requestBrochure"
+                @click="openGatedBrochureModal('sidebar_request_cta')"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -416,9 +465,9 @@
 
               <!-- VIP Site Visit Button -->
               <button 
-                type="button"
+                type="button" 
                 class="btn btn-emerald btn-lg btn-block" 
-                @click="scheduleModalOpen = true"
+                @click="scheduleModalOpen = true; trackPixelEvent('Schedule', { content_name: property.title })"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -467,9 +516,10 @@
             </div>
             <div v-else class="direct-contact-action-row">
               <a 
-                :href="`https://wa.me/${agent.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(agent.name)},%20I%20am%20inquiring%20about:%20${encodeURIComponent(property.title)}`" 
+                :href="whatsappInquiryUrl" 
                 target="_blank" 
                 class="btn btn-lg btn-block btn-contact-whatsapp"
+                @click="trackPixelEvent('Contact', { method: 'WhatsApp_Sidebar', content_name: property.title })"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.969.54 1.861.855 2.796.855 3.18 0 5.767-2.587 5.768-5.766 0-3.18-2.586-5.767-5.768-5.767zm7.531 5.766c-.002 4.153-3.38 7.531-7.531 7.531-.019 0-.038 0-.057 0-1.284 0-2.53-.332-3.64-.962l-4.053 1.063 1.082-3.953c-.707-1.16-1.082-2.493-1.082-3.864.002-4.153 3.38-7.531 7.531-7.531 4.153 0 7.531 3.378 7.531 7.531z"/>
@@ -479,6 +529,7 @@
               <a 
                 :href="`tel:${agent.phone}`" 
                 class="btn btn-outline btn-lg btn-block btn-contact-call"
+                @click="trackPixelEvent('Contact', { method: 'Phone_Call_Sidebar', content_name: property.title })"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
@@ -643,10 +694,11 @@
 
         <div class="mobile-sticky-btns">
           <a 
-            :href="`https://wa.me/${agent.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(agent.name)},%20I%20saw%20your%20listing%20for:%20${encodeURIComponent(property.title)}%20and%20would%20like%20to%20review%20pricing%20and%20deeds.`" 
+            :href="whatsappInquiryUrl" 
             target="_blank" 
             class="btn-whatsapp-sticky"
             aria-label="Chat on WhatsApp"
+            @click="trackPixelEvent('Contact', { method: 'WhatsApp_Sticky_Bar', content_name: property.title })"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.969.54 1.861.855 2.796.855 3.18 0 5.767-2.587 5.768-5.766 0-3.18-2.586-5.767-5.768-5.767zm7.531 5.766c-.002 4.153-3.38 7.531-7.531 7.531-.019 0-.038 0-.057 0-1.284 0-2.53-.332-3.64-.962l-4.053 1.063 1.082-3.953c-.707-1.16-1.082-2.493-1.082-3.864.002-4.153 3.38-7.531 7.531-7.531 4.153 0 7.531 3.378 7.531 7.531z"/>
@@ -657,7 +709,7 @@
           <button 
             type="button" 
             class="btn-gold-sticky"
-            @click="quickDossierModalOpen = true"
+            @click="isBrochureGatedMode = false; quickDossierModalOpen = true"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -675,19 +727,21 @@
         <button 
           type="button" 
           class="modal-close-btn"
-          @click="quickDossierModalOpen = false" 
+          @click="quickDossierModalOpen = false; isBrochureGatedMode = false" 
           aria-label="Close modal"
         >
           ✕
         </button>
 
         <div class="modal-header-block">
-          <span class="badge badge-rajuk" style="margin-bottom: 6px;">Verified Mandate</span>
+          <span class="badge badge-rajuk" style="margin-bottom: 6px;">
+            {{ isBrochureGatedMode ? 'Official Project Dossier' : 'Verified Mandate' }}
+          </span>
           <h3 style="font-size: 1.25rem; font-weight: 800; color: #0A1128; line-height: 1.25;">
-            Request Private Pricing & Dossier
+            {{ isBrochureGatedMode ? 'Unlock Verified Brochure & Dossier (PDF)' : 'Request Private Pricing & Dossier' }}
           </h3>
           <p style="font-size: 0.85rem; color: #64748B; margin-top: 4px; line-height: 1.4;">
-            {{ property.title }}
+            {{ isBrochureGatedMode ? 'Provide your details to immediately view the architectural plans and receive pricing on WhatsApp.' : property.title }}
           </p>
         </div>
 
@@ -732,8 +786,7 @@
               <line x1="16" y1="13" x2="8" y2="13"/>
               <line x1="16" y1="17" x2="8" y2="17"/>
             </svg>
-            <span>{{ isSubmittingInquiry ? 'Dispatching...' : 'Get Private Dossier & Pricing' }}</span>
-            <span v-if="!isSubmittingInquiry" class="btn-arrow-icon">→</span>
+            <span>{{ isSubmittingInquiry ? 'Dispatching...' : (isBrochureGatedMode ? 'Unlock Brochure & Download (PDF) →' : 'Get Private Dossier & Pricing →') }}</span>
           </button>
         </form>
       </div>
@@ -828,9 +881,27 @@ const { isInCompare, toggleCompare } = useCompare()
 const isLoadingProperty = ref(true)
 const dynamicProperty = ref<PropertyItem | null>(null)
 
-// Fallback to local store or dynamic state
+// Fallback to dynamic state or local store
 const property = computed<PropertyItem>(() => {
   return dynamicProperty.value || getPropertyById(route.params.id as string)
+})
+
+// Adaptive Gallery Display with High-Res Architectural Fallbacks for Single-Image Listings
+const displayImages = computed(() => {
+  const imgs = property.value?.images || []
+  if (imgs.length >= 3) return imgs
+  const fallbacks = [
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1600&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1600&auto=format&fit=crop'
+  ]
+  const combined = [...imgs]
+  for (const f of fallbacks) {
+    if (combined.length < 3 && !combined.includes(f)) {
+      combined.push(f)
+    }
+  }
+  return combined
 })
 
 const agent = computed(() => {
@@ -840,13 +911,46 @@ const agent = computed(() => {
   return getAgentById(1)
 })
 
+// Meta (Facebook) Pixel Event Dispatcher
+const trackPixelEvent = (eventName: string, params: Record<string, any> = {}) => {
+  if (process.client && typeof window !== 'undefined') {
+    try {
+      if ((window as any).fbq) {
+        (window as any).fbq('track', eventName, params)
+      }
+    } catch (e) {
+      console.warn('Meta Pixel dispatch error:', e)
+    }
+  }
+}
+
+// Tailored High-Converting Pre-filled WhatsApp Inquiry
+const whatsappInquiryUrl = computed(() => {
+  if (!property.value) return '#'
+  const ag = agent.value
+  const cleanPhone = (ag?.whatsapp || '8801819987654').replace(/[^0-9]/g, '')
+  const msg = `Hello ${ag?.name || 'GBREL Advisor'}, I saw your Facebook ad for "${property.value.title}" (Ref #GBR-00${property.value.id}) in ${property.value.areaName}. Please send the verified pricing schedule, deed copies, and architectural floor layout.`
+  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`
+})
+
 const scheduleModalOpen = ref(false)
 const lightboxOpen = ref(false)
 const quickDossierModalOpen = ref(false)
+const isBrochureGatedMode = ref(false)
 const shareModalOpen = ref(false)
 const currentLightboxIdx = ref(0)
 const inquirySubmitted = ref(false)
 const lightboxRoot = ref<HTMLElement | null>(null)
+
+const openGatedBrochureModal = (source = 'cta') => {
+  isBrochureGatedMode.value = true
+  quickDossierModalOpen.value = true
+  trackPixelEvent('InitiateCheckout', {
+    content_name: property.value?.title,
+    content_category: property.value?.propertyType,
+    source
+  })
+}
 
 const closeLightbox = () => {
   lightboxOpen.value = false
@@ -875,13 +979,13 @@ const prevPhoto = () => {
   if (currentLightboxIdx.value > 0) {
     currentLightboxIdx.value--
   } else {
-    currentLightboxIdx.value = property.value.images.length - 1
+    currentLightboxIdx.value = displayImages.value.length - 1
   }
 }
 
 const nextPhoto = () => {
   if (!property.value) return
-  if (currentLightboxIdx.value < property.value.images.length - 1) {
+  if (currentLightboxIdx.value < displayImages.value.length - 1) {
     currentLightboxIdx.value++
   } else {
     currentLightboxIdx.value = 0
@@ -904,6 +1008,15 @@ onMounted(async () => {
     isLoadingProperty.value = false
   }
   await fetchProperties()
+
+  if (property.value) {
+    trackPixelEvent('ViewContent', {
+      content_name: property.value.title,
+      content_category: property.value.propertyType,
+      value: property.value.price,
+      currency: 'BDT'
+    })
+  }
 })
 
 // Unified Lead Dispatcher with UTM & Ad Tracking Auto-Capture
@@ -946,8 +1059,19 @@ const submitInquiry = async () => {
     if (res.ok && data?.success) {
       inquirySubmitted.value = true
       toast.success('Inquiry Dispatched', `Directly assigned to ${agent.value.name}.`)
+      trackPixelEvent('Lead', {
+        content_name: property.value.title,
+        content_category: property.value.propertyType,
+        value: property.value.price,
+        currency: 'BDT',
+        source: utmSource || 'Website'
+      })
     } else {
       inquirySubmitted.value = true
+      trackPixelEvent('Lead', {
+        content_name: property.value.title,
+        source: 'Website_Direct'
+      })
     }
   } catch (err) {
     console.error('Inquiry dispatch error:', err)
@@ -959,7 +1083,14 @@ const submitInquiry = async () => {
 
 const submitModalInquiry = async () => {
   await submitInquiry()
+  if (isBrochureGatedMode.value && property.value?.brochureUrl) {
+    if (process.client) {
+      window.open(property.value.brochureUrl, '_blank')
+    }
+    toast.success('Brochure Unlocked', 'Opening verified architectural brochure.')
+  }
   quickDossierModalOpen.value = false
+  isBrochureGatedMode.value = false
 }
 
 const requestBrochure = () => {
@@ -2266,6 +2397,112 @@ const copyMandateLink = async () => {
     right: 12px !important;
     transform: scale(0.8);
     transform-origin: bottom right;
+  }
+
+  .mobile-ad-conversion-card {
+    display: block;
+    background: #FFFFFF;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-lg, 16px);
+    padding: 16px 18px;
+    margin-top: 14px;
+    margin-bottom: 22px;
+    box-shadow: 0 4px 16px rgba(10, 17, 40, 0.06);
+  }
+
+  .ad-card-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .ad-mandate-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: #334155;
+    background: #F1F5F9;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  .pulse-beacon-gold {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #D4AF37;
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.3);
+  }
+
+  .ad-price-chip {
+    font-size: 1.15rem;
+    font-weight: 850;
+    color: #0A1128;
+  }
+
+  .ad-tagline-text {
+    font-size: 0.85rem;
+    color: #64748B;
+    line-height: 1.45;
+    margin-bottom: 14px;
+  }
+
+  .ad-fast-action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .btn-ad-whatsapp {
+    background: #25D366 !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    font-size: 0.84rem !important;
+    font-weight: 750 !important;
+    height: 40px !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    text-decoration: none !important;
+    box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3) !important;
+  }
+
+  .btn-ad-dossier {
+    background: linear-gradient(135deg, #D4AF37 0%, #B89628 100%) !important;
+    color: #0A1128 !important;
+    border: none !important;
+    font-size: 0.84rem !important;
+    font-weight: 800 !important;
+    height: 40px !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3) !important;
+    cursor: pointer;
+  }
+
+  .ad-trust-chips-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    border-top: 1px dashed #E2E8F0;
+    padding-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .ad-trust-item {
+    font-size: 0.7rem;
+    color: #475569;
+    font-weight: 600;
+    white-space: nowrap;
   }
 }
 

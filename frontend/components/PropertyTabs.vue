@@ -676,16 +676,22 @@ const dynamicEstimates = computed(() => {
   const p = props.property
   const price = p.price || 4200000
   const isPurbachal = (p.areaName || '').toLowerCase().includes('purbachal') || (p.title || '').toLowerCase().includes('purbachal')
+  const isBashundhara = (p.areaName || '').toLowerCase().includes('bashundhara') || (p.title || '').toLowerCase().includes('bashundhara')
   const isLandShare = p.propertyType === 'Land Share'
 
-  const annualGrowthPct = isPurbachal ? 18.5 : 14.0
-  const growthNote = isPurbachal 
-    ? 'Outperforming National Average (Purbachal Expressway Growth Corridor)'
-    : 'Steady Capital Appreciation outperforming CPI inflation'
+  let annualGrowthPct = 14.0
+  let growthNote = 'Steady Capital Appreciation outperforming CPI inflation'
+  if (isPurbachal) {
+    annualGrowthPct = 18.5
+    growthNote = 'Outperforming National Average (Purbachal Expressway Growth Corridor)'
+  } else if (isBashundhara) {
+    annualGrowthPct = 16.5
+    growthNote = 'High Capital Security (Bashundhara Block I Diplomatic & Executive Zone)'
+  }
   
-  const completedValue = Math.round(price * 1.65)
-  const monthlyRent = Math.round(price * 0.004)
-  const annualRoiPct = 6.8
+  const completedValue = isLandShare ? Math.round(price * 2.1) : Math.round(price * 1.65)
+  const monthlyRent = Math.round(price * 0.0045)
+  const annualRoiPct = isLandShare ? 9.2 : 6.8
 
   const areaBenchmarkText = isLandShare
     ? `৳ ${Math.round(price / (p.landSize || 5)).toLocaleString()} / Share Unit`
@@ -720,6 +726,15 @@ const dynamicComparables = computed(() => {
 const dynamicSchools = computed(() => {
   const area = (props.property.areaName || '').toLowerCase()
   const title = (props.property.title || '').toLowerCase()
+
+  if (area.includes('bashundhara') || title.includes('bashundhara')) {
+    return [
+      { name: 'Aga Khan Academy Dhaka (Block I)', type: 'IB Continuum World School & Day Boarding', rating: 4.95, distanceKm: 0.8, travelMins: 2, grades: 'Playgroup to Grade 12' },
+      { name: 'International School Dhaka (ISD)', type: 'IB World School & American Curriculum', rating: 4.9, distanceKm: 2.2, travelMins: 6, grades: 'Pre-K to Grade 12' },
+      { name: 'Hurdco International School (Block E)', type: 'English Medium (Cambridge Assessment)', rating: 4.8, distanceKm: 2.5, travelMins: 7, grades: 'Playgroup to A-Levels' },
+      { name: 'North South University (NSU) & IUB', type: 'Premier Higher Education Campuses', rating: 4.9, distanceKm: 2.8, travelMins: 8, grades: 'Undergraduate & Graduate' }
+    ]
+  }
 
   if (area.includes('purbachal') || title.includes('purbachal')) {
     return [
@@ -757,6 +772,20 @@ const dynamicSchools = computed(() => {
 const dynamicCommunity = computed(() => {
   const area = (props.property.areaName || '').toLowerCase()
   const title = (props.property.title || '').toLowerCase()
+
+  if (area.includes('bashundhara') || title.includes('bashundhara')) {
+    return {
+      neighborhood: 'Bashundhara Residential Area (Block I Executive Enclave)',
+      metroDistanceKm: 1.5,
+      nearestMetroStation: 'MRT Line-1 (Bashundhara Station / Pragati Sarani)',
+      hospitalDistanceKm: 1.8,
+      nearestHospital: 'Evercare Hospital Dhaka (JCI-Accredited 425-Bed Tertiary Hospital)',
+      airportDistanceKm: 8.5,
+      safetyRating: 'Exclusive 24/7 Gated Security Patrol, Armed Guard Checkposts & Perimeter CCTV',
+      amenitiesOverview: 'Near Jamuna Future Park, Mehedi Mart, Central Mosque, Playgrounds, and Clubhouses.',
+      transitOverview: 'Direct 5-minute access to 300 Feet Purbachal Expressway, Kuril Flyover, and Pragati Sarani.'
+    }
+  }
 
   if (area.includes('purbachal') || title.includes('purbachal')) {
     return {
