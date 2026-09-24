@@ -21,7 +21,7 @@
       <div class="flex justify-between items-center flex-wrap gap-3">
         <div class="flex items-center gap-2 flex-wrap">
           <button 
-            v-for="cat in ['All', 'Ready within 3 months', 'Own / family use', 'Investment']" 
+            v-for="cat in ['All', 'Ready within 3 months', 'Own / family use', 'Investment']"
             :key="cat"
             class="btn btn-sm"
             :class="selectedType === cat ? 'btn-gold' : 'btn-outline-white'"

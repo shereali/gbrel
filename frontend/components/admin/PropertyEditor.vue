@@ -184,6 +184,8 @@
               <div style="font-size:0.82rem; color:var(--color-gold); margin-top:6px; font-weight:600;">
                 Live Preview: {{ formatBDT(propForm.price) }}
               </div>
+              <label for="property-price-unit" class="form-label" style="margin-top:12px;">Price basis / inclusions</label>
+              <input id="property-price-unit" v-model="propForm.priceUnit" class="form-input" placeholder="e.g. Per apartment, excluding registration" maxlength="255" />
             </div>
 
             <div style="background:rgba(255,255,255,0.02); padding:14px; border-radius:var(--radius-md); border:1px solid var(--admin-border-subtle);">
@@ -277,6 +279,18 @@
         </div>
 
         <!-- SECTION 5: HIGHLIGHTS & DESCRIPTION -->
+        <div class="property-editor-card">
+          <div class="property-card-header"><div class="property-card-title">Buyer decision details</div></div>
+          <p style="color:var(--admin-text-muted); margin-bottom:16px;">Publish confirmed facts only. Explain total costs and payment terms in the description; upload supporting plans in the brochure section.</p>
+          <div class="grid grid-2" style="gap:16px;">
+            <div class="form-group"><label for="property-city" class="form-label">City</label><input id="property-city" v-model="propForm.city" class="form-input" /></div>
+            <div class="form-group"><label for="property-year" class="form-label">Construction / handover year (optional)</label><input id="property-year" v-model.number="propForm.yearBuilt" type="number" min="1900" max="2200" class="form-input" /></div>
+            <div class="form-group"><label for="property-lat" class="form-label">Map latitude (optional)</label><input id="property-lat" v-model.number="propForm.lat" type="number" step="any" min="-90" max="90" class="form-input" /></div>
+            <div class="form-group"><label for="property-lng" class="form-label">Map longitude (optional)</label><input id="property-lng" v-model.number="propForm.lng" type="number" step="any" min="-180" max="180" class="form-input" /></div>
+          </div>
+          <div class="form-group" style="margin-top:16px;"><label for="property-amenities" class="form-label">Amenities — one per line</label><textarea id="property-amenities" v-model="amenitiesText" rows="4" class="form-textarea" placeholder="Dedicated parking&#10;Lift&#10;Backup power"></textarea></div>
+          <div class="form-group" style="margin-top:16px;"><label for="property-documents" class="form-label">Available ownership / approval documents — one per line</label><textarea id="property-documents" v-model="documentsText" rows="4" class="form-textarea" placeholder="List only documents actually available for review"></textarea></div>
+        </div>
         <div id="sec-details" class="property-editor-card">
           <div class="property-card-header">
             <div class="property-card-title">
@@ -733,6 +747,11 @@ const propForm = reactive({
   state: 'Dhaka North',
   areaName: '',
   address: '',
+  city: '',
+  priceUnit: '',
+  yearBuilt: '' as number | string,
+  lat: '' as number | string,
+  lng: '' as number | string,
   price: 35000000,
   bedrooms: 3,
   bathrooms: 3,
@@ -756,6 +775,9 @@ const propForm = reactive({
   hideMortgageCalculator: false,
   agentId: 1
 })
+const amenitiesText = ref('')
+const documentsText = ref('')
+const splitLines = (value: string) => value.split(/\r?\n/).map(line => line.trim()).filter(Boolean)
 
 const SAMPLE_COVERS = [
   'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop',
@@ -1044,7 +1066,7 @@ onMounted(async () => {
 
   if (isEditing.value && propId.value) {
     try {
-      const item = await fetchPropertyById(propId.value)
+      const item = await fetchPropertyById(propId.value, { strict: true })
       if (item) {
         propForm.title = item.title
         propForm.tagline = item.tagline || ''
@@ -1055,10 +1077,19 @@ onMounted(async () => {
         propForm.state = item.state || 'Dhaka North'
         propForm.areaName = item.areaName || ''
         propForm.address = item.address || ''
+        propForm.city = item.city || ''
+        propForm.priceUnit = item.priceUnit || ''
+        propForm.facing = item.facing || ''
+        propForm.completionStatus = item.completionStatus || ''
+        propForm.yearBuilt = item.yearBuilt || ''
+        propForm.lat = item.lat || ''
+        propForm.lng = item.lng || ''
+        amenitiesText.value = (item.amenities || []).join('\n')
+        documentsText.value = (item.documentsVerified || []).join('\n')
         propForm.price = item.price || 0
         propForm.bedrooms = item.bedrooms || 0
         propForm.bathrooms = item.bathrooms || 0
-        propForm.parking = item.parking || 1
+        propForm.parking = item.parking ?? 0
         propForm.squareFootage = item.squareFootage || 0
         propForm.landSize = item.landSize || 0
         propForm.landUnit = item.landUnit || 'Katha'
@@ -1074,6 +1105,10 @@ onMounted(async () => {
         propForm.hideExactAddress = Boolean(item.hideExactAddress)
         propForm.hideFloorPlan = Boolean(item.hideFloorPlan)
         propForm.hideMortgageCalculator = Boolean(item.hideMortgageCalculator)
+      } else {
+        toast.error('Property unavailable', 'Could not load this property. No changes were made.')
+        await router.push('/admin/properties')
+        return
       }
     } catch (err: any) {
       toast.error('Load Failed', err.message || 'Could not load property details.')
@@ -1131,6 +1166,15 @@ const saveProperty = async (targetStatus?: 'Draft' | 'Active') => {
         state: propForm.state,
         areaName: propForm.areaName,
         address: propForm.address,
+        city: propForm.city,
+        priceUnit: propForm.priceUnit,
+        facing: propForm.facing as any,
+        completionStatus: propForm.completionStatus as any,
+        yearBuilt: (propForm.yearBuilt === '' ? null : Number(propForm.yearBuilt)) as any,
+        lat: (propForm.lat === '' ? null : Number(propForm.lat)) as any,
+        lng: (propForm.lng === '' ? null : Number(propForm.lng)) as any,
+        amenities: splitLines(amenitiesText.value),
+        documentsVerified: splitLines(documentsText.value),
         price: propForm.price,
         bedrooms: propForm.bedrooms,
         bathrooms: propForm.bathrooms,
@@ -1143,7 +1187,7 @@ const saveProperty = async (targetStatus?: 'Draft' | 'Active') => {
         featureImage: featureCover,
         gallery: validGallery,
         images: allImages,
-        brochureUrl: propForm.brochureUrl.trim() || undefined,
+        brochureUrl: propForm.brochureUrl.trim(),
         hidePrice: propForm.hidePrice,
         priceDisplayText: propForm.priceDisplayText,
         hideAgentPhoto: propForm.hideAgentPhoto,
@@ -1161,6 +1205,11 @@ const saveProperty = async (targetStatus?: 'Draft' | 'Active') => {
     } else {
       const created = await addProperty({
         ...propForm,
+        yearBuilt: propForm.yearBuilt === '' ? null : Number(propForm.yearBuilt),
+        lat: propForm.lat === '' ? null : Number(propForm.lat),
+        lng: propForm.lng === '' ? null : Number(propForm.lng),
+        amenities: splitLines(amenitiesText.value),
+        documentsVerified: splitLines(documentsText.value),
         status: propForm.status,
         featureImage: featureCover,
         gallery: validGallery,

@@ -103,4 +103,28 @@ class PropertyLeadTest extends TestCase
         }
         $this->postJson('/api/leads', [])->assertTooManyRequests();
     }
+
+    public function test_admin_editor_fields_survive_property_update_and_clear(): void
+    {
+        $id = $this->inquiry()['property_id'];
+        $this->putJson('/api/properties/'.$id, [
+            'priceUnit' => 'Per apartment; registration extra',
+            'facing' => 'East', 'completionStatus' => 'Under Construction',
+            'city' => 'Dhaka', 'lat' => 23.8, 'lng' => 90.4, 'yearBuilt' => 2027,
+            'amenities' => ['Dedicated parking'], 'documentsVerified' => ['Title deed available'],
+            'brochureUrl' => 'https://gbrel.com/storage/actual-brochure.pdf',
+        ])->assertOk();
+        $this->getJson('/api/properties/'.$id)->assertOk()
+            ->assertJsonPath('data.price_unit', 'Per apartment; registration extra')
+            ->assertJsonPath('data.facing', 'East')
+            ->assertJsonPath('data.completion_status', 'Under Construction')
+            ->assertJsonPath('data.year_built', 2027)
+            ->assertJsonPath('data.amenities.0', 'Dedicated parking')
+            ->assertJsonPath('data.documents_verified.0', 'Title deed available');
+        $this->putJson('/api/properties/'.$id, ['brochureUrl' => '', 'amenities' => [], 'documentsVerified' => [], 'yearBuilt' => null])->assertOk();
+        $this->getJson('/api/properties/'.$id)->assertOk()
+            ->assertJsonPath('data.brochure_url', '')
+            ->assertJsonPath('data.amenities', [])
+            ->assertJsonPath('data.documents_verified', []);
+    }
 }

@@ -798,7 +798,7 @@ const mapDbItemToPropertyItem = (apiItem: any, strict = false): PropertyItem => 
     images: Array.isArray(apiItem.images) && apiItem.images.length > 0 
       ? apiItem.images 
       : (apiItem.feature_image ? [apiItem.feature_image] : (strict ? [] : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'])),
-    featureImage: apiItem.feature_image || apiItem.featureImage || (Array.isArray(apiItem.images) && apiItem.images.length > 0 ? apiItem.images[0] : 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'),
+    featureImage: apiItem.feature_image || apiItem.featureImage || (Array.isArray(apiItem.images) && apiItem.images.length > 0 ? apiItem.images[0] : (strict ? '' : 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop')),
     gallery: Array.isArray(apiItem.gallery) && apiItem.gallery.length > 0
       ? apiItem.gallery 
       : (Array.isArray(apiItem.images) && apiItem.images.length > 1 ? apiItem.images.slice(1) : []),
