@@ -12,6 +12,7 @@ export interface PropertyItem {
   areaName: string
   price: number
   priceUnit?: string
+  buyerDetails?: Record<string, string | number | null>
   pricePrefix?: string
   listingType: 'Sale' | 'Lease' | 'Delisted'
   propertyType: 'Flat' | 'Plot' | 'Land' | 'Land Share' | 'Duplex' | 'Hotel' | 'Commercial' | 'Penthouse'
@@ -772,6 +773,7 @@ const mapDbItemToPropertyItem = (apiItem: any, strict = false): PropertyItem => 
     areaName: areaName,
     price: price,
     priceUnit: apiItem.price_unit || undefined,
+    buyerDetails: apiItem.buyer_details && typeof apiItem.buyer_details === 'object' && !Array.isArray(apiItem.buyer_details) ? apiItem.buyer_details : {},
     pricePrefix: apiItem.price_prefix || undefined,
     listingType: (apiItem.listing_type || apiItem.listingType || 'Sale') as any,
     propertyType: (apiItem.property_type || apiItem.propertyType || 'Flat') as any,
@@ -817,7 +819,7 @@ const mapDbItemToPropertyItem = (apiItem: any, strict = false): PropertyItem => 
     hideFloorPlan: Boolean(apiItem.hide_floor_plan ?? apiItem.hideFloorPlan),
     hideMortgageCalculator: Boolean(apiItem.hide_mortgage_calculator ?? apiItem.hideMortgageCalculator),
     brochuresVault: Array.isArray(apiItem.brochures_vault) ? apiItem.brochures_vault : [],
-    agentId: Number(apiItem.agent_id) || Number(apiItem.agentId) || 1,
+    agentId: Number(apiItem.agent_id) || Number(apiItem.agentId) || 0,
     history: Array.isArray(apiItem.history) && apiItem.history.length > 0 ? apiItem.history : [
       { id: 1, date: 'Recent', event: 'Listed on GBREL Portal', price: price, status: 'Active', notes: 'Database Synced' }
     ],

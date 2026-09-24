@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class Property extends Model
 {
@@ -12,6 +13,7 @@ class Property extends Model
     protected $guarded = ['id'];
 
     protected $casts = [
+        'buyer_details' => 'array',
         'price' => 'float',
         'land_size' => 'float',
         'latitude' => 'float',
@@ -37,7 +39,7 @@ class Property extends Model
         'hide_mortgage_calculator' => 'boolean',
         'images' => 'array',
         'amenities' => 'array',
-        'documents_verified' => 'array'
+        'documents_verified' => 'array',
     ];
 
     protected $appends = ['feature_image', 'gallery'];
@@ -47,31 +49,32 @@ class Property extends Model
         static $columns = null;
         if ($columns === null) {
             try {
-                $columns = \Illuminate\Support\Facades\Schema::getColumnListing((new static)->getTable());
+                $columns = Schema::getColumnListing((new static)->getTable());
             } catch (\Throwable $e) {
                 $columns = [
-                    'id', 'title', 'slug', 'tagline', 'description', 'address', 'city', 'state', 'area_name',
+                    'id', 'title', 'slug', 'tagline', 'description', 'address', 'city', 'state', 'area_name', 'buyer_details',
                     'price', 'price_unit', 'hide_price', 'price_display_text', 'listing_type', 'property_type', 'status', 'bedrooms', 'bathrooms',
                     'balconies', 'square_footage', 'land_size', 'land_unit', 'parking', 'floor_number',
                     'total_floors', 'facing', 'completion_status', 'year_built', 'is_featured',
                     'is_rajuk_approved', 'is_verified', 'has_open_house', 'latitude', 'longitude',
                     'agent_id', 'hide_agent_photo', 'hide_agent_contact', 'hide_exact_address', 'hide_floor_plan', 'hide_mortgage_calculator',
-                    'images', 'amenities', 'documents_verified', 'brochure_url', 'created_at', 'updated_at'
+                    'images', 'amenities', 'documents_verified', 'brochure_url', 'created_at', 'updated_at',
                 ];
             }
         }
+
         return $columns;
     }
 
     public function getFeatureImageAttribute(): ?string
     {
-        return !empty($this->images) && is_array($this->images) ? $this->images[0] : null;
+        return ! empty($this->images) && is_array($this->images) ? $this->images[0] : null;
     }
 
     public function getGalleryAttribute(): array
     {
-        return !empty($this->images) && is_array($this->images) && count($this->images) > 1 
-            ? array_values(array_slice($this->images, 1)) 
+        return ! empty($this->images) && is_array($this->images) && count($this->images) > 1
+            ? array_values(array_slice($this->images, 1))
             : [];
     }
 

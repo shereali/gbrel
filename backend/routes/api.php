@@ -20,6 +20,7 @@ use App\Models\Setting;
 use App\Models\TransactionType;
 use App\Models\User;
 use App\Models\Viewing;
+use App\Support\PropertyBuyerDetails;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
@@ -236,6 +237,10 @@ function normalizePropertyData(array $input, bool $isCreate = true, ?int $existi
         $data[$finalKey] = $value;
     }
 
+    if (array_key_exists('buyer_details', $data)) {
+        $data['buyer_details'] = PropertyBuyerDetails::validate($data['buyer_details']);
+    }
+
     // 2. Dynamic Image Pipeline (Feature image & Gallery aggregation)
     $featureImage = $data['feature_image'] ?? $input['featureImage'] ?? $input['imageUrl'] ?? null;
     $gallery = $data['gallery'] ?? $input['gallery'] ?? $input['galleryImages'] ?? [];
@@ -297,7 +302,7 @@ function normalizePropertyData(array $input, bool $isCreate = true, ?int $existi
     // Defaults for mandatory non-null database fields on create
     if ($isCreate) {
         if (! isset($data['images']) || empty($data['images'])) {
-            $data['images'] = ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'];
+            $data['images'] = [];
         }
         if (empty($data['address'])) {
             $data['address'] = 'Prime Enclave, '.($data['area_name'] ?? $data['city'] ?? 'Dhaka');
@@ -404,7 +409,7 @@ Route::get('/properties', function (Request $request) {
         }
 
         // Direct column matching against database schema
-        if (in_array($key, $columns) && ! in_array($key, ['id', 'created_at', 'updated_at', 'images', 'amenities', 'documents_verified'])) {
+        if (in_array($key, $columns) && ! in_array($key, ['id', 'created_at', 'updated_at', 'images', 'amenities', 'documents_verified', 'buyer_details'])) {
             if (str_starts_with($key, 'is_') || str_starts_with($key, 'has_')) {
                 $query->where($key, filter_var($val, FILTER_VALIDATE_BOOLEAN));
             } else {

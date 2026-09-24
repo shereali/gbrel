@@ -16,7 +16,7 @@
           <p class="buyer-eyebrow">আপনার পরবর্তী ঠিকানা · GBREL</p>
           <h2 id="buyer-title">সিদ্ধান্ত নিন, বিস্তারিত জেনে</h2>
           <p v-if="step === 1" class="buyer-intro">দাম, পেমেন্টের শর্ত ও সাইট ভিজিট নিয়ে কথা বলুন। আপনার প্রয়োজন অনুযায়ী তথ্য পেতে ছোট্ট ফর্মটি পূরণ করুন।</p>
-          <div class="buyer-property"><strong>{{ property.title }}</strong><span>{{ property.hidePrice ? 'দাম জানতে অনুরোধ করুন' : formatBDT(property.price) }}<small v-if="!property.hidePrice"> {{ property.priceUnit }}</small></span></div>
+          <div class="buyer-property"><strong>{{ property.title }}</strong><span>{{ property.hidePrice ? 'দাম জানতে অনুরোধ করুন' : formatBDT(askingPriceSummary(property).amount) }}<small v-if="!property.hidePrice"> {{ askingPriceSummary(property).label }}</small></span></div>
           <div class="buyer-progress" aria-live="polite"><span :class="{ current: step === 1 }">১. আপনার পরিকল্পনা</span><span :class="{ current: step === 2 }">২. যোগাযোগ</span></div>
           <form v-if="step === 1" @submit.prevent="advance">
             <fieldset>
@@ -82,6 +82,7 @@
 </template>
 
 <script setup lang="ts">
+import { askingPriceSummary } from '~/utils/buyerDetails.mjs'
 import { computed, nextTick, reactive, ref } from 'vue'
 import type { PropertyItem } from '~/composables/useProperties'
 import { formatBDT } from '~/composables/useCurrency'

@@ -1,5 +1,6 @@
 <template>
-  <div class="property-editor-container animate-fade-in">
+  <div v-if="isLoading" class="property-editor-card" role="status">Loading property details…</div>
+  <div v-else class="property-editor-container animate-fade-in">
     <!-- STICKY TOPBAR & ACTIONS -->
     <div class="property-editor-topbar">
       <div class="flex items-center gap-3">
@@ -172,11 +173,12 @@
 
           <div class="grid grid-2" style="gap:16px; align-items:flex-start;">
             <div class="form-group">
-              <label class="form-label">Asking Price (BDT ৳)</label>
+              <label for="property-asking-price" class="form-label">Asking Price (BDT ৳)</label>
               <input 
+                id="property-asking-price"
                 v-model.number="propForm.price" 
                 type="number" 
-                step="50000" 
+                step="1"
                 min="0"
                 class="form-input" 
                 style="font-family:var(--font-ui); font-size:1.15rem; font-weight:800; color:#10B981;"
@@ -184,8 +186,12 @@
               <div style="font-size:0.82rem; color:var(--color-gold); margin-top:6px; font-weight:600;">
                 Live Preview: {{ formatBDT(propForm.price) }}
               </div>
-              <label for="property-price-unit" class="form-label" style="margin-top:12px;">Price basis / inclusions</label>
-              <input id="property-price-unit" v-model="propForm.priceUnit" class="form-input" placeholder="e.g. Per apartment, excluding registration" maxlength="255" />
+              <label for="property-price-basis" class="form-label" style="margin-top:12px;">How is the asking price quoted?</label>
+              <select id="property-price-basis" v-model="propForm.buyerDetails.priceBasis" class="form-select">
+                <option value="">Not provided / জানা নেই</option><option value="Total">Total property price / সম্পূর্ণ মূল্য</option><option value="Per land unit">Per selected land unit / প্রতি কাঠা ইত্যাদি</option><option value="Per sqft">Per square foot / প্রতি বর্গফুট</option><option value="Per share">Per share / প্রতি শেয়ার</option>
+              </select>
+              <label for="property-price-unit" class="form-label" style="margin-top:12px;">Price note / inclusions (optional)</label>
+              <input id="property-price-unit" v-model="propForm.priceUnit" class="form-input" placeholder="e.g. Building included; registration extra" maxlength="255" />
             </div>
 
             <div style="background:rgba(255,255,255,0.02); padding:14px; border-radius:var(--radius-md); border:1px solid var(--admin-border-subtle);">
@@ -253,6 +259,7 @@
             <div class="form-group">
               <label class="form-label">Facing Direction</label>
               <select v-model="propForm.facing" class="form-select">
+                <option value="">Not provided</option>
                 <option value="South">South Facing</option>
                 <option value="North">North Facing</option>
                 <option value="East">East Facing</option>
@@ -270,18 +277,22 @@
             <div class="form-group">
               <label class="form-label">Completion Status</label>
               <select v-model="propForm.completionStatus" class="form-select">
+                <option value="">Not provided</option>
                 <option value="Ready">Ready for Handover</option>
                 <option value="Under Construction">Under Construction</option>
                 <option value="Upcoming Project">Upcoming Project</option>
               </select>
             </div>
           </div>
+          <div class="form-group"><label for="property-total-floors" class="form-label">Total building floors (optional)</label><input id="property-total-floors" v-model.number="propForm.totalFloors" type="number" min="0" max="300" step="1" class="form-input" /></div>
         </div>
+
+        <PropertyBuyerDetailsEditor v-model="propForm.buyerDetails" :property="propForm" />
 
         <!-- SECTION 5: HIGHLIGHTS & DESCRIPTION -->
         <div class="property-editor-card">
-          <div class="property-card-header"><div class="property-card-title">Buyer decision details</div></div>
-          <p style="color:var(--admin-text-muted); margin-bottom:16px;">Publish confirmed facts only. Explain total costs and payment terms in the description; upload supporting plans in the brochure section.</p>
+          <div class="property-card-header"><div class="property-card-title">Amenities, map & supporting documents</div></div>
+          <p style="color:var(--admin-text-muted); margin-bottom:16px;">Use the buyer information sections above for sale terms. Add available amenities and document names below; upload a public brochure without personal signatures or identity details.</p>
           <div class="grid grid-2" style="gap:16px;">
             <div class="form-group"><label for="property-city" class="form-label">City</label><input id="property-city" v-model="propForm.city" class="form-input" /></div>
             <div class="form-group"><label for="property-year" class="form-label">Construction / handover year (optional)</label><input id="property-year" v-model.number="propForm.yearBuilt" type="number" min="1900" max="2200" class="form-input" /></div>
@@ -334,14 +345,11 @@
           <div style="background:rgba(255,255,255,0.02); padding:16px; border-radius:var(--radius-md); border:1px solid var(--admin-border-subtle); margin-bottom:16px;">
             <div class="flex items-center justify-between" style="margin-bottom:10px;">
               <span style="font-weight:700; color:#10B981; font-size:0.9rem;">★ Primary Featured Cover Image</span>
-              <button type="button" class="btn btn-sm btn-outline-white" style="font-size:0.75rem; padding:4px 10px;" @click="applySampleCover">
-                ✨ Random Preset Cover
-              </button>
             </div>
 
             <div class="grid grid-2" style="gap:16px; align-items:center;">
               <div class="feature-img-preview-box">
-                <img :src="propForm.featureImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop'" alt="Cover Preview" />
+                <img v-if="propForm.featureImage" :src="propForm.featureImage" alt="Cover Preview" /><p v-else class="empty-cover">Add a real property photo</p>
                 <div class="feature-img-badge">
                   <span>★ Featured Hero Cover</span>
                 </div>
@@ -371,9 +379,6 @@
               </label>
               <input ref="galleryFileInput" type="file" multiple accept="image/*" style="display:none;" @change="onGalleryFilesSelected" />
               <div class="flex items-center gap-2">
-                <button type="button" class="btn btn-sm btn-outline-white" style="font-size:0.75rem; padding:4px 10px;" @click="applySampleGalleryPack">
-                  Load Luxury Pack
-                </button>
                 <button type="button" class="btn btn-sm btn-emerald" :disabled="isUploadingGallery" @click="triggerGalleryUpload" style="font-size:0.75rem; padding:4px 12px;">
                   <span v-if="isUploadingGallery" class="animate-spin mr-1">◌</span>
                   <span>Upload Photos</span>
@@ -449,6 +454,16 @@
         </div>
 
         <!-- SECTION 9: PRIVACY & CONFIDENTIALITY CONTROLS -->
+        <div id="sec-contact" class="property-editor-card">
+          <label for="property-advisor" class="form-label">Public contact / assigned advisor</label>
+          <select id="property-advisor" v-model.number="propForm.agentId" class="form-select">
+            <option :value="0">GBREL inquiry form only</option>
+            <option v-if="propForm.agentId && !advisorOptions.some(a => a.id === propForm.agentId)" :value="propForm.agentId">Current advisor #{{ propForm.agentId }}</option>
+            <option v-for="advisor in advisorOptions" :key="advisor.id" :value="advisor.id">{{ advisor.name }}</option>
+          </select>
+          <p style="color:var(--admin-text-muted);font-size:13px;margin-top:8px;">Manage the advisor's public phone and WhatsApp in Agents &amp; Advisors. Personal owner contact details do not belong in the public description.</p>
+          <p v-if="advisorError" role="status">Advisor list could not be loaded. The existing selection is preserved.</p>
+        </div>
         <div id="sec-privacy" class="property-editor-card" style="border-color:rgba(212,175,55,0.25);">
           <div class="property-card-header">
             <div class="property-card-title">
@@ -473,7 +488,7 @@
             </label>
             <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; color:var(--admin-text-primary);">
               <input v-model="propForm.hideFloorPlan" type="checkbox" style="width:16px; height:16px; accent-color:#A855F7;" />
-              <span>📐 Gate Floor Plans (Signed NDA Required to View)</span>
+              <span>📐 Hide brochure / floor-plan download on the property page</span>
             </label>
             <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; color:var(--admin-text-primary);">
               <input v-model="propForm.hideAgentContact" type="checkbox" style="width:16px; height:16px; accent-color:#10B981;" />
@@ -520,7 +535,7 @@
             <div 
               v-for="(item, idx) in guideItems" 
               :key="item.id"
-              class="guide-step-item"
+              class="guide-step-item" role="button" tabindex="0" @keydown.enter="scrollToSection(item.id)" @keydown.space.prevent="scrollToSection(item.id)"
               :class="{ 'is-done': item.isCompleted, 'is-active-step': activeSectionId === item.id }"
               @click="scrollToSection(item.id)"
               :title="'Click to jump to ' + item.title"
@@ -626,7 +641,7 @@
           <div 
             v-for="(item, idx) in guideItems" 
             :key="item.id"
-            class="guide-step-item"
+            class="guide-step-item" role="button" tabindex="0" @keydown.enter="scrollToSection(item.id)" @keydown.space.prevent="scrollToSection(item.id)"
             :class="{ 'is-done': item.isCompleted, 'is-active-step': activeSectionId === item.id }"
             @click="scrollToSection(item.id)"
           >
@@ -688,6 +703,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import PropertyBuyerDetailsEditor from './PropertyBuyerDetailsEditor.vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useProperties, type PropertyItem } from '~/composables/useProperties'
 import { usePropertyOptions } from '~/composables/usePropertyOptions'
@@ -736,6 +752,7 @@ const brochureFileInput = ref<HTMLInputElement | null>(null)
 const route = useRoute()
 const isEditing = computed(() => Boolean(props.propertyId || route.params.id || route.query.id))
 const propId = computed(() => Number(props.propertyId || route.params.id || route.query.id) || null)
+const isLoading = ref(isEditing.value)
 
 const propForm = reactive({
   title: '',
@@ -749,21 +766,23 @@ const propForm = reactive({
   address: '',
   city: '',
   priceUnit: '',
+  buyerDetails: {} as Record<string, string | number | null>,
   yearBuilt: '' as number | string,
   lat: '' as number | string,
   lng: '' as number | string,
-  price: 35000000,
-  bedrooms: 3,
-  bathrooms: 3,
-  parking: 1,
-  squareFootage: 2400,
+  price: 0,
+  bedrooms: 0,
+  bathrooms: 0,
+  parking: 0,
+  totalFloors: '' as number | string,
+  squareFootage: 0,
   landSize: 0,
   landUnit: 'Katha',
-  facing: 'South',
-  completionStatus: 'Ready',
-  isRajukApproved: true,
+  facing: '',
+  completionStatus: '',
+  isRajukApproved: false,
   isFeatured: false,
-  featureImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop',
+  featureImage: '',
   gallery: [] as string[],
   brochureUrl: '',
   hidePrice: false,
@@ -773,27 +792,15 @@ const propForm = reactive({
   hideExactAddress: false,
   hideFloorPlan: false,
   hideMortgageCalculator: false,
-  agentId: 1
+  agentId: 0
 })
+const advisorOptions = ref<Array<{ id: number, name: string }>>([])
+const advisorError = ref(false)
 const amenitiesText = ref('')
 const documentsText = ref('')
 const splitLines = (value: string) => value.split(/\r?\n/).map(line => line.trim()).filter(Boolean)
 
-const SAMPLE_COVERS = [
-  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=1600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1600&auto=format&fit=crop'
-]
 
-const SAMPLE_GALLERY_PACK = [
-  'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=1200&auto=format&fit=crop'
-]
 
 // Modal state for adding custom option
 const customOptionModal = reactive({
@@ -852,55 +859,67 @@ const statusBadgeStyle = computed(() => {
 const guideItems = computed(() => [
   {
     id: 'sec-basic',
-    title: '1. Basic Identity & Category',
+    title: 'Basic Identity & Category',
     sub: propForm.title ? `${propForm.title.slice(0, 24)}... (${propForm.propertyType})` : 'Listing title & category needed',
     isCompleted: Boolean(propForm.title?.trim() && propForm.propertyType)
   },
   {
     id: 'sec-location',
-    title: '2. Location & Regional Mapping',
+    title: 'Location & Regional Mapping',
     sub: propForm.areaName ? `${propForm.areaName}, ${propForm.state}` : 'Area & neighborhood needed',
     isCompleted: Boolean(propForm.areaName?.trim() && propForm.state)
   },
   {
     id: 'sec-pricing',
-    title: '3. Pricing & Valuation',
+    title: 'Pricing & Valuation',
     sub: propForm.hidePrice ? 'Confidential (POA)' : (propForm.price > 0 ? formatBDT(propForm.price) : 'Asking price needed'),
     isCompleted: Boolean(propForm.hidePrice || propForm.price > 0)
   },
   {
     id: 'sec-specs',
-    title: '4. Dimensions & Specifications',
+    title: 'Dimensions & Specifications',
     sub: (propForm.squareFootage > 0 || propForm.landSize > 0) ? `${formatArea(propForm.squareFootage, propForm.landSize, propForm.landUnit)} • ${propForm.bedrooms} Beds` : 'Sqft or Land size needed',
     isCompleted: Boolean(propForm.squareFootage > 0 || propForm.landSize > 0)
   },
   {
+    id: 'sec-buyer-details',
+    title: 'Buyer information & sale terms',
+    sub: 'Building, ownership, payment and documents',
+    isCompleted: Object.values(propForm.buyerDetails).some(value => value !== '' && value !== null)
+  },
+  {
     id: 'sec-details',
-    title: '5. Highlights & Editorial Story',
+    title: 'Highlights & Editorial Story',
     sub: propForm.description ? 'Description provided' : (propForm.tagline ? 'Tagline entered' : 'Add selling description'),
     isCompleted: Boolean(propForm.tagline?.trim() || propForm.description?.trim())
   },
   {
     id: 'sec-media',
-    title: '6. Photos & Media Showcase',
+    title: 'Photos & Media Showcase',
     sub: propForm.featureImage ? `${(propForm.featureImage ? 1 : 0) + propForm.gallery.length} visual asset(s)` : 'Hero cover photo required',
     isCompleted: Boolean(propForm.featureImage?.trim())
   },
   {
     id: 'sec-brochure',
-    title: '7. Brochure PDF Attachment',
+    title: 'Brochure PDF Attachment',
     sub: propForm.brochureUrl ? 'PDF Brochure attached' : 'Optional sales deck PDF',
     isCompleted: Boolean(propForm.brochureUrl?.trim())
   },
   {
     id: 'sec-legal',
-    title: '8. Legal Clearances & Badges',
+    title: 'Legal Clearances & Badges',
     sub: propForm.isRajukApproved ? 'RAJUK/CDA Verified' : 'Compliance checklist review',
     isCompleted: Boolean(propForm.isRajukApproved)
   },
   {
+    id: 'sec-contact',
+    title: 'Public contact',
+    sub: propForm.agentId ? 'Assigned advisor selected' : 'GBREL inquiry form',
+    isCompleted: true
+  },
+  {
     id: 'sec-privacy',
-    title: '9. Privacy & Confidentiality',
+    title: 'Privacy & Confidentiality',
     sub: (propForm.hideAgentPhoto || propForm.hideExactAddress || propForm.hideFloorPlan || propForm.hidePrice) ? 'Privacy protections enabled' : 'Standard public exposure',
     isCompleted: true
   }
@@ -916,7 +935,7 @@ const completionPercentage = computed(() => {
 const activeGuideTip = computed(() => {
   if (!propForm.title?.trim()) return 'Add a descriptive headline (e.g., "Grand 3,500 Sqft Duplex Penthouse in Gulshan-2").'
   if (!propForm.areaName?.trim()) return 'Enter the neighborhood or landmark to assist map matching.'
-  if (!propForm.featureImage?.trim()) return 'Upload a high-resolution hero cover photo or choose a preset to entice luxury buyers.'
+  if (!propForm.featureImage?.trim()) return 'Upload a clear, recent photo of this property so buyers can assess its actual condition.'
   if (!propForm.brochureUrl?.trim()) return 'Upload an architectural floorplan or sales brochure PDF for investor downloads.'
   if (completionPercentage.value === 100) return 'All essential details are filled! The listing is ready for public publication.'
   return 'Review specifications, dimensions, and legal compliance before publishing live.'
@@ -955,7 +974,7 @@ const setupScrollSpy = () => {
 
   const sectionIds = [
     'sec-basic', 'sec-location', 'sec-pricing', 'sec-specs', 
-    'sec-details', 'sec-media', 'sec-brochure', 'sec-legal', 'sec-privacy'
+    'sec-buyer-details', 'sec-details', 'sec-media', 'sec-brochure', 'sec-legal', 'sec-contact', 'sec-privacy'
   ]
   sectionIds.forEach(id => {
     const el = document.getElementById(id)
@@ -1042,19 +1061,7 @@ const makeCover = (index: number) => {
   toast.success('Cover Changed', 'Selected photo set as primary cover.')
 }
 
-const applySampleCover = () => {
-  const random = SAMPLE_COVERS[Math.floor(Math.random() * SAMPLE_COVERS.length)]
-  propForm.featureImage = random
-}
 
-const applySampleGalleryPack = () => {
-  for (const s of SAMPLE_GALLERY_PACK) {
-    if (!propForm.gallery.includes(s) && s !== propForm.featureImage) {
-      propForm.gallery.push(s)
-    }
-  }
-  toast.info('Sample Pack Loaded', 'Attached luxury architectural photo pack.')
-}
 
 const handleGoBack = () => {
   router.push('/admin/properties')
@@ -1063,6 +1070,12 @@ const handleGoBack = () => {
 // Load data on mount
 onMounted(async () => {
   await fetchOptions()
+  try {
+    const response = await fetch(useApiUrl('/agents'))
+    if (!response.ok) throw new Error('Unable to load advisors')
+    const result = await response.json()
+    advisorOptions.value = Array.isArray(result.data) ? result.data.map((a: any) => ({ id: Number(a.id), name: String(a.name) })) : []
+  } catch { advisorError.value = true }
 
   if (isEditing.value && propId.value) {
     try {
@@ -1079,6 +1092,8 @@ onMounted(async () => {
         propForm.address = item.address || ''
         propForm.city = item.city || ''
         propForm.priceUnit = item.priceUnit || ''
+        propForm.buyerDetails = { ...(item.buyerDetails || {}) }
+        propForm.agentId = item.agentId || 0
         propForm.facing = item.facing || ''
         propForm.completionStatus = item.completionStatus || ''
         propForm.yearBuilt = item.yearBuilt || ''
@@ -1090,6 +1105,7 @@ onMounted(async () => {
         propForm.bedrooms = item.bedrooms || 0
         propForm.bathrooms = item.bathrooms || 0
         propForm.parking = item.parking ?? 0
+        propForm.totalFloors = item.totalFloors ?? ''
         propForm.squareFootage = item.squareFootage || 0
         propForm.landSize = item.landSize || 0
         propForm.landUnit = item.landUnit || 'Katha'
@@ -1112,11 +1128,14 @@ onMounted(async () => {
       }
     } catch (err: any) {
       toast.error('Load Failed', err.message || 'Could not load property details.')
+      await router.push('/admin/properties')
+      return
     }
   } else {
     propForm.status = 'Draft'
   }
 
+  isLoading.value = false
   setTimeout(() => {
     setupScrollSpy()
   }, 300)
@@ -1128,8 +1147,17 @@ onUnmounted(() => {
 
 // Save & Publish
 const saveProperty = async (targetStatus?: 'Draft' | 'Active') => {
+  if (isLoading.value || isSaving.value) return
   if (targetStatus) {
     propForm.status = targetStatus
+  }
+
+  const invalidDetail = document.querySelector<HTMLInputElement>('#sec-buyer-details input:invalid, #sec-buyer-details textarea:invalid, #sec-buyer-details select:invalid, .property-editor-container input[type="number"]:invalid')
+  if (invalidDetail) {
+    invalidDetail.closest('details')?.setAttribute('open', '')
+    invalidDetail.reportValidity()
+    invalidDetail.focus()
+    return
   }
 
   if (propForm.status === 'Draft') {
@@ -1145,6 +1173,11 @@ const saveProperty = async (targetStatus?: 'Draft' | 'Active') => {
     if (!propForm.areaName.trim()) {
       toast.warning('Location Required', 'Please provide the area or neighborhood name.')
       scrollToSection('sec-location')
+      return
+    }
+    if (!propForm.hidePrice && !(Number(propForm.price) > 0)) {
+      toast.warning('Price Required', 'Enter the asking price or choose Price on Application before publishing.')
+      scrollToSection('sec-pricing')
       return
     }
   }
@@ -1168,6 +1201,8 @@ const saveProperty = async (targetStatus?: 'Draft' | 'Active') => {
         address: propForm.address,
         city: propForm.city,
         priceUnit: propForm.priceUnit,
+        buyerDetails: propForm.buyerDetails,
+        agentId: (propForm.agentId || null) as any,
         facing: propForm.facing as any,
         completionStatus: propForm.completionStatus as any,
         yearBuilt: (propForm.yearBuilt === '' ? null : Number(propForm.yearBuilt)) as any,
@@ -1179,6 +1214,7 @@ const saveProperty = async (targetStatus?: 'Draft' | 'Active') => {
         bedrooms: propForm.bedrooms,
         bathrooms: propForm.bathrooms,
         parking: propForm.parking,
+        totalFloors: (propForm.totalFloors === '' ? null : Number(propForm.totalFloors)) as any,
         squareFootage: propForm.squareFootage,
         landSize: propForm.landSize,
         landUnit: propForm.landUnit as any,
@@ -1205,6 +1241,7 @@ const saveProperty = async (targetStatus?: 'Draft' | 'Active') => {
     } else {
       const created = await addProperty({
         ...propForm,
+        agentId: propForm.agentId || null,
         yearBuilt: propForm.yearBuilt === '' ? null : Number(propForm.yearBuilt),
         lat: propForm.lat === '' ? null : Number(propForm.lat),
         lng: propForm.lng === '' ? null : Number(propForm.lng),
@@ -1232,3 +1269,11 @@ const saveProperty = async (targetStatus?: 'Draft' | 'Active') => {
   }
 }
 </script>
+
+<style scoped>
+.property-editor-container :deep(.form-label),.property-editor-container :deep(h3){color:var(--admin-text-primary)}
+.property-editor-container :deep(input),.property-editor-container :deep(select),.property-editor-container :deep(textarea){min-width:0;min-height:44px}
+.empty-cover{display:grid;place-items:center;min-height:150px;color:var(--admin-text-muted);padding:20px;text-align:center}
+.property-editor-main-col{min-width:0}.guide-step-item:focus-visible{outline:2px solid #10b981;outline-offset:2px}
+@media(max-width:640px){.property-editor-topbar{position:static;margin:0 0 20px;padding:16px 0}.property-editor-topbar>div{flex-wrap:wrap;min-width:0}.property-editor-topbar h2{overflow-wrap:anywhere}.property-editor-card{padding:16px}.property-editor-container :deep(.grid-2),.property-editor-container :deep(.grid-3){grid-template-columns:minmax(0,1fr)}.property-card-header,.property-card-title{flex-wrap:wrap}.property-editor-container :deep(.form-input),.property-editor-container :deep(.form-select),.property-editor-container :deep(.form-textarea){font-size:16px!important}}
+</style>
