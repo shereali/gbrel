@@ -1743,23 +1743,37 @@ body.admin-theme-light {
 .admin-theme-light .sidebar-link.active, .admin-theme-light .sidebar-link.router-link-exact-active { background: #1D4A2A; color: #fff; }
 
 /* ==========================================================================
-   Property editor layout: checklist rail on the left, one calm column of sections, actions always visible.
+   Property editor layout: main sections on left, completion guide FIXED on right side.
    ========================================================================== */
-.admin-shell .property-editor-container { max-width: 1240px; padding-bottom: 80px; }
+.admin-shell .property-editor-container { max-width: 1440px; padding-bottom: 80px; }
 .admin-shell .property-editor-topbar {
-  position: sticky; top: 72px; margin: 0 0 20px; padding: 14px 18px; border: 1px solid var(--admin-border-subtle);
+  position: sticky; top: 72px; z-index: 30; margin: 0 0 20px; padding: 14px 18px; border: 1px solid var(--admin-border-subtle);
   border-radius: 14px; background: var(--admin-bg-surface) !important; box-shadow: 0 10px 30px -24px rgba(19, 42, 27, .5) !important;
 }
 .admin-shell .property-editor-topbar h2 { font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif !important; font-size: 1.45rem !important; font-weight: 700 !important; }
 .admin-shell .property-editor-topbar .btn-emerald { background: #E2651C; border-color: #E2651C; color: #fff; box-shadow: none; }
 .admin-shell .property-editor-topbar .btn-emerald:hover { background: #C2530F; }
-.admin-shell .property-editor-grid { grid-template-columns: 250px minmax(0, 1fr); grid-template-areas: 'guide main'; gap: 24px; }
-.admin-shell .property-editor-main-col { grid-area: main; }
-.admin-shell .property-guide-column-wrap { grid-area: guide; width: auto; min-width: 0; position: sticky; top: 160px; }
+.admin-shell .property-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-areas: 'main guide';
+  gap: 28px;
+  align-items: start;
+}
+.admin-shell .property-editor-main-col { grid-area: main; min-width: 0; }
+.admin-shell .property-guide-column-wrap {
+  grid-area: guide;
+  width: 340px;
+  min-width: 340px;
+  position: sticky;
+  top: 155px;
+  align-self: start;
+  z-index: 20;
+}
 .admin-shell .property-guide-panel {
-  position: static !important; transform: none !important; width: auto !important; max-height: calc(100vh - 180px) !important;
-  display: flex; flex-direction: column; gap: 12px; padding: 16px !important; border-radius: 14px; overflow-y: auto;
-  background: var(--admin-bg-surface) !important; border: 1px solid var(--admin-border-subtle) !important; box-shadow: none !important;
+  position: static !important; transform: none !important; width: 100% !important; max-height: calc(100vh - 175px) !important;
+  display: flex; flex-direction: column; gap: 12px; padding: 18px 16px !important; border-radius: 14px; overflow-y: auto;
+  background: var(--admin-bg-surface) !important; border: 1px solid var(--admin-border-subtle) !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
 }
 .admin-shell .guide-floating-badge { background: transparent; border: 0; padding: 0; color: var(--admin-text-primary); font-size: .95rem; letter-spacing: 0; text-transform: none; }
 .admin-shell .guide-pulse-dot { display: none; }

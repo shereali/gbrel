@@ -178,10 +178,10 @@ const showModal = ref(false)
 const form = reactive({
   name: '',
   phone: '',
-  propertyTitle: 'Lakeview Penthouse at Gulshan-2 Diplomatic Zone',
+  propertyTitle: 'Gulshan-1 Prime 15 Katha Residential Land with 2-Storey Building',
   date: new Date().toISOString().slice(0, 10),
   timeSlot: '02:30 PM - 04:00 PM',
-  assignedAgent: 'Tanvir Ahmed',
+  assignedAgent: 'মোঃ আবু হানিফ (Md. Abu Hanif)',
   pickup: true
 })
 

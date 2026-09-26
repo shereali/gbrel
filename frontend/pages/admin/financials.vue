@@ -179,9 +179,9 @@ const selectedDeal = ref<any | null>(null)
 const isLoading = ref(false)
 
 const dealsList = ref<any[]>([
-  { id: 'TX-901', property: 'Lakeview Penthouse at Gulshan-2 Diplomatic Zone', buyer: 'Dr. Farhan Chowdhury', value: 78000000, commission: 1560000, bank: 'BRAC Bank', status: 'Settled' },
-  { id: 'TX-902', property: '10 Katha Corner Plot in Purbachal Sector 17', buyer: 'Engr. Mahfuzur Rahman', value: 36000000, commission: 720000, bank: 'DBH Finance', status: 'Settled' },
-  { id: 'TX-903', property: 'Luxury Beachfront Presidential Suite at Marine Drive', buyer: 'Syed Tanzeem', value: 19000000, commission: 380000, bank: 'City Bank', status: 'In Escrow' }
+  { id: 'TX-901', property: '"Lake View" 6-Storey Luxury Edifice on 23 Katha at Road 8, Gulshan-1', buyer: 'Tariqul Islam', value: 1350000000, commission: 27000000, bank: 'Standard Chartered Bank', status: 'Settled' },
+  { id: 'TX-902', property: 'Gulshan-1 Prime 15 Katha Residential Land with 2-Storey Building', buyer: 'Engr. Mahfuzur Rahman', value: 900000000, commission: 18000000, bank: 'BRAC Bank', status: 'Settled' },
+  { id: 'TX-903', property: 'Gulshan-2 Road 48/4B 31 Katha Commercial Corner Plot & Structure', buyer: 'Dr. Farhan Chowdhury', value: 4340000000, commission: 43400000, bank: 'City Bank Escrow', status: 'In Escrow' }
 ])
 
 const formatCrore = (val: number) => {
