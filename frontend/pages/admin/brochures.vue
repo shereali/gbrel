@@ -127,7 +127,7 @@
                 </div>
               </td>
               <td>
-                <span class="badge" style="background: rgba(255,255,255,0.06); color: #E2E8F0; font-size: 0.75rem;">
+                <span class="badge" style="background: rgba(255,255,255,0.06); color: #D6DDCB; font-size: 0.75rem;">
                   {{ b.category }}
                 </span>
               </td>
@@ -143,7 +143,7 @@
                 </span>
               </td>
               <td>
-                <span style="font-size: 0.85rem; color: #CBD5E1;">{{ b.file_size }}</span>
+                <span style="font-size: 0.85rem; color: #C3CCB6;">{{ b.file_size }}</span>
               </td>
               <td>
                 <span class="badge" style="background: rgba(16,185,129,0.15); color: #34D399; font-weight: 700; font-size: 0.78rem;">
@@ -307,7 +307,7 @@
           <button class="admin-modal-close" @click="deleteTarget = null">✕</button>
         </div>
         <div class="admin-modal-body">
-          <p style="color: #E2E8F0; font-size: 0.92rem; line-height: 1.5;">
+          <p style="color: #D6DDCB; font-size: 0.92rem; line-height: 1.5;">
             Are you sure you want to delete <strong>"{{ deleteTarget.title }}"</strong>?
           </p>
           <p style="color: var(--admin-text-muted); font-size: 0.8rem; margin-top: 8px;">

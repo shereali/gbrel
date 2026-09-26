@@ -461,7 +461,7 @@ const plotsCount = computed(() => properties.value.filter(p => p.propertyType ==
 const regionColorPalette: Record<string, { color: string; gradient: string }> = {
   'Dhaka North': { color: '#10B981', gradient: 'linear-gradient(90deg, #10B981, #34D399)' },
   'Dhaka South': { color: '#3B82F6', gradient: 'linear-gradient(90deg, #3B82F6, #60A5FA)' },
-  'Chittagong': { color: '#F59E0B', gradient: 'linear-gradient(90deg, #D4AF37, #F59E0B)' },
+  'Chittagong': { color: '#F59E0B', gradient: 'linear-gradient(90deg, #E2651C, #F59E0B)' },
   'Sylhet': { color: '#EC4899', gradient: 'linear-gradient(90deg, #EC4899, #F472B6)' },
   'Rajshahi': { color: '#8B5CF6', gradient: 'linear-gradient(90deg, #8B5CF6, #A78BFA)' },
   'Khulna': { color: '#06B6D4', gradient: 'linear-gradient(90deg, #06B6D4, #22D3EE)' },
@@ -695,7 +695,7 @@ const exportReport = () => {
 }
 
 .kpi-card-emerald::before { background: linear-gradient(90deg, #10B981, transparent); }
-.kpi-card-gold::before { background: linear-gradient(90deg, #D4AF37, transparent); }
+.kpi-card-gold::before { background: linear-gradient(90deg, #E2651C, transparent); }
 .kpi-card-blue::before { background: linear-gradient(90deg, #3B82F6, transparent); }
 .kpi-card-rose::before { background: linear-gradient(90deg, #F43F5E, transparent); }
 
@@ -816,7 +816,7 @@ const exportReport = () => {
 }
 
 .summary-num.highlight {
-  color: #D4AF37;
+  color: #E2651C;
 }
 
 /* ======================================================== */
@@ -915,7 +915,7 @@ const exportReport = () => {
 }
 
 .action-queue-card.card-border-gold {
-  border-left: 4px solid #D4AF37;
+  border-left: 4px solid #E2651C;
 }
 
 .action-queue-card.card-border-blue {
@@ -942,7 +942,7 @@ const exportReport = () => {
 }
 
 .action-type-pill.type-legal {
-  background: rgba(212, 175, 55, 0.14);
+  background: rgba(226, 101, 28, 0.14);
   color: #FBBF24;
 }
 
@@ -1006,8 +1006,8 @@ const exportReport = () => {
 }
 
 .action-icon-box.icon-gold {
-  background: rgba(212, 175, 55, 0.15);
-  color: #D4AF37;
+  background: rgba(226, 101, 28, 0.15);
+  color: #E2651C;
 }
 
 .action-icon-box.icon-blue {
@@ -1165,7 +1165,7 @@ const exportReport = () => {
 
 .badge-status-subtle {
   background: rgba(148, 163, 184, 0.12);
-  color: #94A3B8;
+  color: #8E9B8F;
   border: 1px solid rgba(148, 163, 184, 0.25);
   font-size: 0.72rem;
   font-weight: 600;
@@ -1176,7 +1176,7 @@ const exportReport = () => {
 /* Light Mode Overrides for Action Queue & Cards */
 .admin-theme-light .action-queue-card {
   background: #FFFFFF;
-  border-color: #E2E8F0;
+  border-color: #D6DDCB;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
@@ -1185,17 +1185,17 @@ const exportReport = () => {
 }
 
 .admin-theme-light .meta-tag {
-  background: #F1F5F9;
-  color: #475569;
+  background: #EDF1E6;
+  color: #4A5A4E;
 }
 
 .admin-theme-light .action-card-footer {
-  border-top-color: #F1F5F9;
+  border-top-color: #EDF1E6;
 }
 
 .admin-theme-light .regional-footer-summary {
-  background: #F8FAFC;
-  border-top-color: #E2E8F0;
+  background: #F3F5EC;
+  border-top-color: #D6DDCB;
 }
 
 /* Responsive Media Queries */

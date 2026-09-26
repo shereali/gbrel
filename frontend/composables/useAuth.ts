@@ -15,6 +15,7 @@ export interface UserProfile {
   permissions: string[]
   is_admin?: boolean
   is_super_admin?: boolean
+  is_staff?: boolean
   savedProperties?: number[]
   scheduledViewings?: any[]
 }
@@ -86,6 +87,8 @@ export const useAuth = () => {
   })
 
   const isAgent = computed(() => userCookie.value?.role === 'agent')
+  const isOwner = computed(() => userCookie.value?.role === 'owner')
+  const isStaff = computed(() => !!userCookie.value && (!!userCookie.value.is_staff || isAdmin.value || isAgent.value))
   const isBuyer = computed(() => userCookie.value?.role === 'buyer' || userCookie.value?.role === 'guest')
 
   // Permission Checks
@@ -127,10 +130,13 @@ export const useAuth = () => {
       throw new Error(data?.message || 'Invalid email or password. Please verify your credentials.')
     }
 
-    const receivedToken = data.token
+    return storeSession(data.token, data.user)
+  }
+
+  const storeSession = (receivedToken: string, userData: any): UserProfile => {
     const userPayload: UserProfile = {
-      ...data.user,
-      savedProperties: userCookie.value?.savedProperties || [1, 3],
+      ...userData,
+      savedProperties: userCookie.value?.savedProperties || [],
       scheduledViewings: userCookie.value?.scheduledViewings || []
     }
 
@@ -147,6 +153,27 @@ export const useAuth = () => {
     }
 
     return userPayload
+  }
+
+  // Property owners create their own account (phone + password). Staff accounts come from the admin panel.
+  const register = async (input: { name: string; phone: string; email?: string; password: string; passwordConfirmation: string }) => {
+    const res = await fetch(useApiUrl('/auth/register'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        name: input.name,
+        phone: input.phone,
+        email: input.email || null,
+        password: input.password,
+        password_confirmation: input.passwordConfirmation
+      })
+    })
+    const data = await res.json().catch(() => null)
+    if (!res.ok || !data?.success) {
+      const firstError = data?.errors ? Object.values(data.errors).flat()[0] : null
+      throw new Error(String(firstError || data?.message || 'অ্যাকাউন্ট খোলা যায়নি। আবার চেষ্টা করুন।'))
+    }
+    return storeSession(data.token, data.user)
   }
 
   // Token Validation & Session Synchronization
@@ -183,7 +210,7 @@ export const useAuth = () => {
         if (data && data.success && data.user) {
           const freshUser: UserProfile = {
             ...data.user,
-            savedProperties: userCookie.value?.savedProperties || [1, 3],
+            savedProperties: userCookie.value?.savedProperties || [],
             scheduledViewings: userCookie.value?.scheduledViewings || []
           }
           userCookie.value = freshUser
@@ -337,9 +364,12 @@ export const useAuth = () => {
     isSuperAdmin,
     isAgent,
     isBuyer,
+    isOwner,
+    isStaff,
     hasPermission,
     hasAnyPermission,
     login,
+    register,
     logout,
     initAuth,
     toggleSaveProperty,

@@ -141,7 +141,7 @@
 
             <div style="padding:12px 16px; border-radius:8px; border:1px solid var(--admin-border-subtle);">
               <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.88rem;">
-                <input v-model="form.pickup" type="checkbox" style="width:16px; height:16px; accent-color:#D4AF37;" />
+                <input v-model="form.pickup" type="checkbox" style="width:16px; height:16px; accent-color:#E2651C;" />
                 <span>Dispatch Complimentary Chauffeur Pickup (Dhaka North / South Hub)</span>
               </label>
             </div>

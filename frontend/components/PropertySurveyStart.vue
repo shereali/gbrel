@@ -4,7 +4,7 @@
     <p class="ss-lead">কয়েকটি প্রশ্নের উত্তর দিন, আপনার পরিকল্পনা অনুযায়ী দাম, কিস্তি আর সাইট ভিজিটের তথ্য জানাব।</p>
     <p class="ss-q" :id="`ss-q-${uid}`">প্রথম প্রশ্ন: প্রপার্টিটি কী কাজে লাগাতে চান?</p>
     <div class="ss-options" role="group" :aria-labelledby="`ss-q-${uid}`">
-      <button v-for="o in purposeOptions" :key="o.value" type="button" class="ss-option" @click="emit('choose', o.value)">
+      <button v-for="o in options" :key="o.value" type="button" class="ss-option" @click="emit('choose', o.value)">
         <span>{{ o.label }}</span>
         <ChevronRight :size="20" aria-hidden="true" />
       </button>
@@ -15,9 +15,11 @@
 
 <script setup lang="ts">
 import { ChevronRight } from 'lucide-vue-next'
-import { purposeOptions } from '~/utils/leadSurvey'
+import { computed } from 'vue'
+import { purposeOptionsFor } from '~/utils/leadSurvey'
 
-defineProps<{ side?: boolean }>()
+const props = defineProps<{ side?: boolean; propertyType?: string }>()
+const options = computed(() => purposeOptionsFor(props.propertyType))
 const emit = defineEmits<{ choose: [purpose: string] }>()
 const uid = Math.random().toString(36).slice(2, 8)
 </script>
@@ -29,7 +31,7 @@ const uid = Math.random().toString(36).slice(2, 8)
 .ss-title { font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 28px; font-weight: 700; font-stretch: 108%; line-height: 1.25; color: #fff; margin: 0 90px 8px 0; }
 .ss-lead { font-size: 14px; line-height: 1.8; color: #C6D5BB; max-width: 56ch; margin: 0 0 18px; }
 .ss-q { font-size: 15px; font-weight: 600; color: #fff; margin: 0 0 10px; }
-.ss-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ss-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
 .ss-option { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 58px; padding: 12px 16px; border-radius: 12px; border: 1.5px solid rgba(255, 255, 255, .28); background: rgba(255, 255, 255, .06); color: #fff; font: inherit; font-size: 15px; font-weight: 500; text-align: left; line-height: 1.45; cursor: pointer; transition: background-color .15s ease, border-color .15s ease; }
 .ss-option:hover { background: #fff; color: #1D4A2A; border-color: #fff; }
 .ss-option:focus-visible { outline: 3px solid #E2651C; outline-offset: 3px; }

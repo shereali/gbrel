@@ -33,13 +33,11 @@
                 <strong>{{ user.name }}</strong>
                 <span>{{ user.email }}</span>
               </div>
+              <NuxtLink v-if="isOwner" to="/my-listings" @click="userMenuOpen = false">আমার প্রপার্টি</NuxtLink>
               <NuxtLink to="/dashboard" @click="userMenuOpen = false">আমার ড্যাশবোর্ড</NuxtLink>
               <NuxtLink to="/dashboard?tab=favorites" @click="userMenuOpen = false">সেভ করা প্রপার্টি ({{ savedCount }})</NuxtLink>
               <NuxtLink to="/dashboard?tab=viewings" @click="userMenuOpen = false">সাইট ভিজিটের সময়সূচি</NuxtLink>
               <NuxtLink v-if="isAdmin" to="/admin" @click="userMenuOpen = false">অ্যাডমিন প্যানেল</NuxtLink>
-              <div class="hd-menu-roles" aria-label="ডেমো রোল">
-                <button v-for="r in ['buyer','agent','admin']" :key="r" :class="{ on: user.role === r }" @click="switchRole(r)">{{ r }}</button>
-              </div>
               <button class="hd-menu-out" @click="handleLogout">সাইন আউট</button>
             </div>
           </transition>
@@ -63,6 +61,7 @@
           </div>
           <nav class="hd-panel-nav" aria-label="মোবাইল মেনু">
             <NuxtLink v-for="item in drawerItems" :key="item.to" :to="item.to" @click="mobileMenuOpen = false">{{ item.label }}</NuxtLink>
+            <NuxtLink v-if="isOwner" to="/my-listings" @click="mobileMenuOpen = false">আমার প্রপার্টি</NuxtLink>
             <NuxtLink v-if="isAuthenticated" to="/dashboard" @click="mobileMenuOpen = false">আমার ড্যাশবোর্ড</NuxtLink>
           </nav>
           <div class="hd-panel-foot">
@@ -87,7 +86,7 @@ import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
 
 const router = useRouter()
 const route = useRoute()
-const { user, isAuthenticated, isAdmin, logout, switchRole } = useAuth()
+const { user, isAuthenticated, isAdmin, isOwner, logout } = useAuth()
 const { settings, fetchSettings } = useSettings()
 
 const mobileMenuOpen = ref(false)
@@ -174,9 +173,6 @@ onUnmounted(() => {
 .hd-menu-who span { font-size: .82rem; color: var(--gb-ink-soft); overflow: hidden; text-overflow: ellipsis; }
 .hd-menu a { padding: 9px 12px; border-radius: 8px; color: var(--gb-ink); font-size: .95rem; }
 .hd-menu a:hover { background: rgba(168, 197, 123, .28); }
-.hd-menu-roles { display: flex; gap: 4px; padding: 10px 12px; border-top: 1px solid var(--gb-silt); margin-top: 6px; }
-.hd-menu-roles button { flex: 1; padding: 4px; border-radius: 6px; font-size: .78rem; background: transparent; border: 1px solid var(--gb-silt); color: var(--gb-ink-soft); cursor: pointer; text-transform: capitalize; }
-.hd-menu-roles button.on { background: var(--gb-paddy); color: #fff; border-color: var(--gb-paddy); }
 .hd-menu-out { text-align: left; padding: 9px 12px; border-radius: 8px; background: transparent; color: #A23B16; cursor: pointer; font-size: .95rem; }
 .hd-menu-out:hover { background: #FBE9DF; }
 

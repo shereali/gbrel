@@ -2,17 +2,19 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Property;
 use App\Models\Agent;
-use App\Models\Viewing;
-use App\Models\Lead;
-use App\Models\FinancialTransaction;
-use App\Models\Role;
-use App\Models\Permission;
 use App\Models\Brochure;
+use App\Models\FinancialTransaction;
+use App\Models\Lead;
+use App\Models\Permission;
+use App\Models\Property;
+use App\Models\Role;
+use App\Models\User;
+use App\Models\Viewing;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -29,8 +31,9 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Edit Property', 'slug' => 'properties.edit', 'module' => 'Properties', 'description' => 'Update property details, pricing, and media'],
             ['name' => 'Delete Property', 'slug' => 'properties.delete', 'module' => 'Properties', 'description' => 'Delist and permanently remove property records'],
             ['name' => 'Feature Property', 'slug' => 'properties.feature', 'module' => 'Properties', 'description' => 'Toggle showcase status on live homepage'],
+            ['name' => 'Review Owner Listings', 'slug' => 'listings.review', 'module' => 'Properties', 'description' => 'Review property owner submissions, verify documents, approve and publish'],
             ['name' => 'Verify RAJUK / CDA Plan', 'slug' => 'properties.verify_rajuk', 'module' => 'Properties', 'description' => 'Audit and certify statutory municipal approvals'],
-            
+
             // Brochures & Media
             ['name' => 'View Brochures', 'slug' => 'brochures.view', 'module' => 'Brochures', 'description' => 'Access and download project brochures and architectural decks'],
             ['name' => 'Upload Brochure', 'slug' => 'brochures.upload', 'module' => 'Brochures', 'description' => 'Upload and link PDF/DOC marketing brochures to mandates'],
@@ -58,7 +61,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Manage Roles Matrix', 'slug' => 'roles.manage', 'module' => 'User Management', 'description' => 'Configure role capabilities and permission matrix'],
 
             // System Settings
-            ['name' => 'Manage System Settings', 'slug' => 'settings.manage', 'module' => 'System Settings', 'description' => 'Configure mortgage interest rates, hotlines, and license numbers']
+            ['name' => 'Manage System Settings', 'slug' => 'settings.manage', 'module' => 'System Settings', 'description' => 'Configure mortgage interest rates, hotlines, and license numbers'],
         ];
 
         foreach ($permissionsData as $p) {
@@ -66,45 +69,45 @@ class DatabaseSeeder extends Seeder
         }
 
         // 1. Seed Roles
-        $roleAdmin = Role::updateOrCreate(
+        $roleAdmin = Role::firstOrCreate(
             ['slug' => 'admin'],
             [
                 'name' => 'Super Administrator',
                 'description' => 'Unrestricted enterprise control over all property mandates, users, legal approvals, and financial escrows.',
                 'permissions' => ['*'],
-                'is_system' => true
+                'is_system' => true,
             ]
         );
 
-        $rolePropertyManager = Role::updateOrCreate(
+        $rolePropertyManager = Role::firstOrCreate(
             ['slug' => 'property_manager'],
             [
                 'name' => 'Property & Land Manager',
                 'description' => 'Full control over property catalog, Land Share co-ownership projects, brochure vault, and media assets.',
                 'permissions' => [
-                    'properties.view', 'properties.create', 'properties.edit', 'properties.delete', 'properties.feature',
+                    'properties.view', 'properties.create', 'properties.edit', 'properties.delete', 'properties.feature', 'listings.review',
                     'brochures.view', 'brochures.upload', 'brochures.delete',
-                    'viewings.view', 'leads.view'
+                    'viewings.view', 'leads.view',
                 ],
-                'is_system' => true
+                'is_system' => true,
             ]
         );
 
-        $roleLegal = Role::updateOrCreate(
+        $roleLegal = Role::firstOrCreate(
             ['slug' => 'legal_compliance'],
             [
                 'name' => 'Legal & Compliance Officer',
                 'description' => 'Vetting RAJUK/CDA municipal plans, vetting CS/RS/BS khatians, and verifying mutation deeds.',
                 'permissions' => [
-                    'properties.view', 'properties.edit', 'properties.verify_rajuk',
+                    'properties.view', 'properties.edit', 'properties.verify_rajuk', 'listings.review',
                     'brochures.view', 'brochures.upload',
-                    'leads.view', 'viewings.view'
+                    'leads.view', 'viewings.view',
                 ],
-                'is_system' => true
+                'is_system' => true,
             ]
         );
 
-        $roleAgent = Role::updateOrCreate(
+        $roleAgent = Role::firstOrCreate(
             ['slug' => 'agent'],
             [
                 'name' => 'Senior Real Estate Advisor',
@@ -112,55 +115,71 @@ class DatabaseSeeder extends Seeder
                 'permissions' => [
                     'properties.view', 'brochures.view',
                     'leads.view', 'leads.manage',
-                    'viewings.view', 'viewings.manage'
+                    'viewings.view', 'viewings.manage',
                 ],
-                'is_system' => true
+                'is_system' => true,
             ]
         );
 
-        $roleFinance = Role::updateOrCreate(
+        $roleFinance = Role::firstOrCreate(
             ['slug' => 'finance_auditor'],
             [
                 'name' => 'Escrow & Financial Auditor',
                 'description' => 'Auditing bank escrow accounts, settling transactions, and reviewing commission distributions.',
                 'permissions' => [
                     'financials.view', 'financials.manage',
-                    'properties.view', 'leads.view'
+                    'properties.view', 'leads.view',
                 ],
-                'is_system' => true
+                'is_system' => true,
             ]
         );
 
-        $roleBuyer = Role::updateOrCreate(
+        Role::firstOrCreate(
+            ['slug' => 'owner'],
+            [
+                'name' => 'Property Owner',
+                'description' => 'Submits and updates their own property for GBREL to verify and sell.',
+                'permissions' => [],
+                'is_system' => true,
+            ]
+        );
+        $roleBuyer = Role::firstOrCreate(
             ['slug' => 'buyer'],
             [
                 'name' => 'VIP Client / Investor',
                 'description' => 'Public catalog access, project brochure downloads, and self-service viewing requests.',
                 'permissions' => [
-                    'properties.view', 'brochures.view', 'viewings.manage'
+                    'properties.view', 'brochures.view', 'viewings.manage',
                 ],
-                'is_system' => true
+                'is_system' => true,
             ]
         );
 
         // 2. Seed Users (RBAC Enabled)
         $adminEmail = env('ADMIN_EMAIL', 'admin@gbrel.com');
-        $adminPassword = env('ADMIN_PASSWORD', 'admin123');
+        $adminPassword = (string) env('ADMIN_PASSWORD', '');
 
-        User::updateOrCreate(
-            ['email' => $adminEmail],
-            [
-                'name' => 'Engr. Siam Talukder (Managing Director)',
+        // The admin account is created once. Its password is never reset by later deploys.
+        if (! User::where('email', $adminEmail)->exists()) {
+            if ($adminPassword === '') {
+                $adminPassword = Str::random(24);
+                Log::warning('ADMIN_PASSWORD is not set. Created '.$adminEmail.' with a random password; reset it before use.');
+            }
+            User::create([
+                'email' => $adminEmail,
+                'name' => 'GBREL Admin',
                 'password' => Hash::make($adminPassword),
                 'email_verified_at' => now(),
                 'role' => 'admin',
                 'role_id' => $roleAdmin->id,
-                'phone' => '+880 1819-987654',
-                'region' => 'Dhaka HQ',
                 'status' => 'Active',
-                'avatar' => 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop'
-            ]
-        );
+            ]);
+        }
+
+        // Demo staff, agents, listings and leads are only for local development.
+        if (! $this->shouldSeedDemoData()) {
+            return;
+        }
 
         User::updateOrCreate(
             ['email' => 'manager@gbrel.com'],
@@ -173,7 +192,7 @@ class DatabaseSeeder extends Seeder
                 'phone' => '+880 1711-445566',
                 'region' => 'Dhaka North',
                 'status' => 'Active',
-                'avatar' => 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
+                'avatar' => 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
             ]
         );
 
@@ -188,7 +207,7 @@ class DatabaseSeeder extends Seeder
                 'phone' => '+880 1912-334455',
                 'region' => 'Dhaka HQ',
                 'status' => 'Active',
-                'avatar' => 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop'
+                'avatar' => 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop',
             ]
         );
 
@@ -203,7 +222,7 @@ class DatabaseSeeder extends Seeder
                 'phone' => '+880 1819-987654',
                 'region' => 'Dhaka North',
                 'status' => 'Active',
-                'avatar' => 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop'
+                'avatar' => 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop',
             ]
         );
 
@@ -218,7 +237,7 @@ class DatabaseSeeder extends Seeder
                 'phone' => '+880 1711-234567',
                 'region' => 'Dhaka HQ',
                 'status' => 'Active',
-                'avatar' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop'
+                'avatar' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
             ]
         );
 
@@ -239,7 +258,7 @@ class DatabaseSeeder extends Seeder
                 'rating' => 4.95,
                 'review_count' => 84,
                 'active_listings_count' => 12,
-                'specialties' => ['Luxury Penthouses', 'Corner Plots', 'NRB Investments']
+                'specialties' => ['Luxury Penthouses', 'Corner Plots', 'NRB Investments'],
             ]
         );
 
@@ -259,7 +278,7 @@ class DatabaseSeeder extends Seeder
                 'rating' => 4.85,
                 'review_count' => 62,
                 'active_listings_count' => 9,
-                'specialties' => ['Beach Resorts', 'Hotel Suites', 'Commercial Land']
+                'specialties' => ['Beach Resorts', 'Hotel Suites', 'Commercial Land'],
             ]
         );
 
@@ -299,10 +318,10 @@ class DatabaseSeeder extends Seeder
                 'agent_id' => $agent1->id,
                 'images' => [
                     'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1600&auto=format&fit=crop',
-                    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200&auto=format&fit=crop'
+                    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200&auto=format&fit=crop',
                 ],
                 'amenities' => ['Private High-Speed Elevator', 'Lake-Facing Infinity Pool', '24/7 Full Power Generator Backup', 'Italian Marble Flooring'],
-                'documents_verified' => ['RAJUK Approved Building Plan', 'Mutation Parch & Updated Khajna', 'Clear Freehold Title Deed']
+                'documents_verified' => ['RAJUK Approved Building Plan', 'Mutation Parch & Updated Khajna', 'Clear Freehold Title Deed'],
             ]
         );
 
@@ -338,10 +357,10 @@ class DatabaseSeeder extends Seeder
                 'longitude' => 90.5210,
                 'agent_id' => $agent1->id,
                 'images' => [
-                    'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1600&auto=format&fit=crop'
+                    'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1600&auto=format&fit=crop',
                 ],
                 'amenities' => ['Corner Plot with Double Road Access', '100ft Avenue Frontage', 'WASA & DESCO Underground Connections Scheduled'],
-                'documents_verified' => ['RAJUK Allotment Letter', 'Mutation & Dakhila Cleared', 'CS/RS/BS Khatians Verified']
+                'documents_verified' => ['RAJUK Allotment Letter', 'Mutation & Dakhila Cleared', 'CS/RS/BS Khatians Verified'],
             ]
         );
 
@@ -379,10 +398,10 @@ class DatabaseSeeder extends Seeder
                 'longitude' => 92.0520,
                 'agent_id' => $agent2->id,
                 'images' => [
-                    'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1600&auto=format&fit=crop'
+                    'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1600&auto=format&fit=crop',
                 ],
                 'amenities' => ['5-Star Resort Operations', 'Quarterly Revenue Disbursements', 'Helipad Access', 'Private Beach Club'],
-                'documents_verified' => ['CDA & Ministry of Tourism Approvals', 'Commercial Freehold Title Deed', 'Sub-Registry Registry Pass']
+                'documents_verified' => ['CDA & Ministry of Tourism Approvals', 'Commercial Freehold Title Deed', 'Sub-Registry Registry Pass'],
             ]
         );
 
@@ -421,10 +440,10 @@ class DatabaseSeeder extends Seeder
                 'agent_id' => $agent1->id,
                 'images' => [
                     'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600&auto=format&fit=crop',
-                    'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=1200&auto=format&fit=crop'
+                    'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=1200&auto=format&fit=crop',
                 ],
                 'amenities' => ['Duplex Double Height Living Room', 'Lakeside Walking Distance', '24/7 Full Backup Generator', 'Custom Teak Wood Interior'],
-                'documents_verified' => ['RAJUK Approved Structural & Architectural Plan', 'Mutation & Land Tax Certificate Up-to-Date', 'Freehold Land Share Ratio Registered']
+                'documents_verified' => ['RAJUK Approved Structural & Architectural Plan', 'Mutation & Land Tax Certificate Up-to-Date', 'Freehold Land Share Ratio Registered'],
             ]
         );
 
@@ -462,10 +481,10 @@ class DatabaseSeeder extends Seeder
                 'agent_id' => $agent1->id,
                 'images' => [
                     'https://images.unsplash.com/photo-1524813686514-a57563d77d61?q=80&w=1600&auto=format&fit=crop',
-                    'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1200&auto=format&fit=crop'
+                    'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1200&auto=format&fit=crop',
                 ],
                 'amenities' => ['60ft Wide Commercial Avenue', 'Complete Underground Gas & Water Network', 'Boundary Demarcated & Registered'],
-                'documents_verified' => ['Bashundhara Official Allotment & Handover Deed', 'Mutation Parch & Up-to-date Dakhila Khajna Paid', 'Freehold Clear Title Vetted by Legal Counsel']
+                'documents_verified' => ['Bashundhara Official Allotment & Handover Deed', 'Mutation Parch & Up-to-date Dakhila Khajna Paid', 'Freehold Clear Title Vetted by Legal Counsel'],
             ]
         );
 
@@ -502,11 +521,11 @@ class DatabaseSeeder extends Seeder
                 'agent_id' => 1,
                 'images' => [
                     'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=1600&auto=format&fit=crop',
-                    'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=1200&auto=format&fit=crop'
+                    'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=1200&auto=format&fit=crop',
                 ],
                 'amenities' => ['24 Luxury Air-Conditioned Cottages', 'Panoramic Rolling Tea Estate Views', 'Freshwater Swimming Pool', 'Commercial Solar Power & Generator'],
                 'documents_verified' => ['Freehold DC Certified Land Record', 'Department of Environment Clearance', 'Trade License & Tourism Hotel Registration'],
-                'brochure_url' => 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+                'brochure_url' => 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
             ]
         );
 
@@ -543,11 +562,11 @@ class DatabaseSeeder extends Seeder
                 'agent_id' => $agent1->id,
                 'images' => [
                     'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1600&auto=format&fit=crop',
-                    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop'
+                    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop',
                 ],
                 'amenities' => ['Co-Ownership Deed Registration', 'Demarcated Land Share Unit', 'Dedicated Project Management Panel', 'Bank Loan Support Available'],
                 'documents_verified' => ['Combined Land Share Title Deed', 'Mutation & Dakhila Cleared', 'RAJUK Allotment Letter Examined'],
-                'brochure_url' => 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+                'brochure_url' => 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
             ]
         );
 
@@ -566,7 +585,7 @@ class DatabaseSeeder extends Seeder
                 'vip_pickup' => true,
                 'pickup_location' => 'Gulshan-2 Diplomatic Enclave',
                 'assigned_agent' => 'Tanvir Ahmed',
-                'status' => 'Confirmed'
+                'status' => 'Confirmed',
             ]
         );
 
@@ -580,7 +599,7 @@ class DatabaseSeeder extends Seeder
                 'property_title' => 'Lakeview Penthouse at Gulshan-2',
                 'lead_type' => 'NRB Investor (UK)',
                 'message' => 'Interested in title verification deeds and bank escrow transfer options.',
-                'status' => 'Active'
+                'status' => 'Active',
             ]
         );
 
@@ -593,7 +612,7 @@ class DatabaseSeeder extends Seeder
                 'transacted_value' => 78000000,
                 'commission_amount' => 1560000,
                 'escrow_bank' => 'BRAC Bank Escrow',
-                'status' => 'Settled'
+                'status' => 'Settled',
             ]
         );
 
@@ -609,7 +628,7 @@ class DatabaseSeeder extends Seeder
                 'property_id' => 7,
                 'category' => 'Land Share Guidelines',
                 'download_count' => 48,
-                'is_public' => true
+                'is_public' => true,
             ]
         );
 
@@ -624,7 +643,7 @@ class DatabaseSeeder extends Seeder
                 'property_id' => 1,
                 'category' => 'Property Brochure',
                 'download_count' => 124,
-                'is_public' => true
+                'is_public' => true,
             ]
         );
 
@@ -639,8 +658,13 @@ class DatabaseSeeder extends Seeder
                 'property_id' => null,
                 'category' => 'Company Profile',
                 'download_count' => 310,
-                'is_public' => true
+                'is_public' => true,
             ]
         );
+    }
+
+    private function shouldSeedDemoData(): bool
+    {
+        return app()->environment(['local', 'testing']) || filter_var(env('SEED_DEMO_DATA', false), FILTER_VALIDATE_BOOLEAN);
     }
 }

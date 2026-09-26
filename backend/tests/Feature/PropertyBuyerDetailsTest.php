@@ -16,6 +16,7 @@ class PropertyBuyerDetailsTest extends TestCase
 
     public function test_create_read_update_and_clear_public_buyer_details(): void
     {
+        $this->signInAs('admin');
         $response = $this->postJson('/api/properties', [
             'title' => 'Building with land', 'address' => 'Test road', 'areaName' => 'Test area',
             'price' => 140000000, 'landSize' => 31, 'landUnit' => 'Katha', 'totalFloors' => 2,
@@ -38,6 +39,7 @@ class PropertyBuyerDetailsTest extends TestCase
 
     public function test_invalid_details_and_unrecognized_private_fields_are_rejected(): void
     {
+        $this->signInAs('admin');
         $this->postJson('/api/properties', ['buyerDetails' => [
             'depositPercent' => 101, 'ownerCount' => -1, 'bankLoan' => 'verified',
             'sourceDate' => 'not a date', 'documentSummary' => str_repeat('x', 2001),

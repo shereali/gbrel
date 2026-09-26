@@ -25,7 +25,7 @@
               <img src="/img/logo-mark.png" alt="GBREL" style="width: 28px; height: 28px; object-fit: contain;" />
             </div>
             <div class="admin-brand-text">
-              <span class="admin-brand-name">GBREL <span style="color:#D4AF37;">ADMIN</span></span>
+              <span class="admin-brand-name">GBREL <span style="color:#E2651C;">ADMIN</span></span>
               <span class="admin-brand-sub">PROPERTY MANAGEMENT</span>
             </div>
           </NuxtLink>
@@ -154,6 +154,19 @@
               </svg>
               <span>Properties</span>
               <span class="smart-badge smart-badge-subtle">{{ displayPropertiesCount }} Listings</span>
+            </NuxtLink>
+
+            <NuxtLink v-if="hasPermission('listings.review') || hasPermission('properties.edit') || isSuperAdmin" to="/admin/listing-requests" class="sidebar-link" active-class="active" title="Properties submitted by owners">
+              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <path d="M9 15l2 2 4-4"/>
+              </svg>
+              <span>Owner submissions</span>
+              <span v-if="sidebarCounts.listing_requests" class="smart-badge smart-badge-pending">
+                <span class="smart-badge-dot"></span>
+                <span>{{ sidebarCounts.listing_requests }} new</span>
+              </span>
             </NuxtLink>
 
             <NuxtLink v-if="hasPermission('properties.verify_rajuk') || hasPermission('properties.edit') || isSuperAdmin" to="/admin/approvals" class="sidebar-link" active-class="active" title="Legal & Verification Queue">
@@ -288,10 +301,10 @@
           <!-- System Info Box in Sidebar -->
           <div class="sidebar-system-card">
             <div class="flex justify-between items-center" style="margin-bottom:6px;">
-              <span style="font-size:0.75rem; color:#CBD5E1; font-weight:700; text-transform:uppercase;">Admin Guide</span>
+              <span style="font-size:0.75rem; color:#C3CCB6; font-weight:700; text-transform:uppercase;">Admin Guide</span>
               <span style="font-size:0.75rem; color:#10B981; font-weight:800;">Support Ready</span>
             </div>
-            <div style="font-size:0.8rem; color:#94A3B8; line-height:1.4;">
+            <div style="font-size:0.8rem; color:#8E9B8F; line-height:1.4;">
               All property changes, prices, and user permissions update in real-time across the platform.
             </div>
           </div>
@@ -316,7 +329,7 @@
               <div class="admin-brand-icon" style="width:34px; height:34px; background:transparent; border:none;">
                 <img src="/img/logo-mark.png" alt="GBREL" style="width:28px; height:28px; object-fit:contain;" />
               </div>
-              <span class="admin-brand-name" style="font-size:1.15rem;">GBREL <span style="color:#D4AF37;">ADMIN</span></span>
+              <span class="admin-brand-name" style="font-size:1.15rem;">GBREL <span style="color:#E2651C;">ADMIN</span></span>
             </div>
             <button class="drawer-close-btn" @click="mobileNavOpen = false" aria-label="Close Navigation">✕</button>
           </div>
@@ -349,6 +362,11 @@
               </svg>
               <span>Property Inventory</span>
               <span class="smart-badge smart-badge-subtle">{{ displayPropertiesCount }} Listings</span>
+            </NuxtLink>
+
+            <NuxtLink v-if="hasPermission('listings.review') || hasPermission('properties.edit') || isSuperAdmin" to="/admin/listing-requests" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+              <span>Owner submissions</span>
+              <span v-if="sidebarCounts.listing_requests" class="drawer-badge">{{ sidebarCounts.listing_requests }}</span>
             </NuxtLink>
 
             <NuxtLink v-if="hasPermission('properties.verify_rajuk') || hasPermission('properties.edit') || isSuperAdmin" to="/admin/approvals" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
@@ -542,19 +560,20 @@ const { properties: liveProperties, fetchProperties } = useProperties()
 const mobileNavOpen = ref(false)
 const drawerRoot = ref<HTMLElement | null>(null)
 
-const adminTheme = ref<'dark' | 'light'>('dark')
+const adminTheme = ref<'dark' | 'light'>('light')
 const sidebarCollapsed = ref(false)
 
 const sidebarCounts = ref({
-  pending: 2,
-  tours: 4,
-  leads: 4,
-  categories: 8,
-  divisions: 12,
-  transaction_types: 4,
-  property_statuses: 5,
-  land_units: 6,
-  properties: 10
+  pending: 0,
+  listing_requests: 0,
+  tours: 0,
+  leads: 0,
+  categories: 0,
+  divisions: 0,
+  transaction_types: 0,
+  property_statuses: 0,
+  land_units: 0,
+  properties: 0
 })
 
 const displayPropertiesCount = computed(() => {
@@ -574,9 +593,6 @@ const fetchSidebarCounts = async () => {
     const json = await res.json()
     if (json && json.success && json.data) {
       const counts = { ...json.data }
-      if (!counts.properties || counts.properties === 0) {
-        counts.properties = liveProperties.value?.length || sidebarCounts.value.properties || 10
-      }
       sidebarCounts.value = { ...sidebarCounts.value, ...counts }
     }
   } catch {
@@ -727,12 +743,12 @@ const handleLogout = async () => {
   height: 38px;
   background: var(--color-gold);
   border-radius: 10px;
-  color: #0A1128;
+  color: #12261A;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
+  box-shadow: 0 4px 12px rgba(226, 101, 28, 0.25);
 }
 
 .admin-brand-name {
@@ -887,7 +903,7 @@ const handleLogout = async () => {
   padding: 5px 12px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #CBD5E1;
+  color: #C3CCB6;
   font-size: 0.8rem;
   font-weight: 600;
   border-radius: var(--radius-full);
@@ -934,7 +950,7 @@ const handleLogout = async () => {
 
 .sidebar-section-title {
   font-size: 0.72rem;
-  color: #64748B;
+  color: #5F6E63;
   text-transform: uppercase;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -954,7 +970,7 @@ const handleLogout = async () => {
   gap: 10px;
   padding: 10px 14px;
   background: transparent;
-  color: #CBD5E1;
+  color: #C3CCB6;
   border-radius: var(--radius-md);
   font-size: 0.88rem;
   font-weight: 600;
@@ -1098,12 +1114,12 @@ const handleLogout = async () => {
 .smart-badge-subtle {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #CBD5E1;
+  color: #C3CCB6;
 }
 .smart-badge-subtle:hover {
-  background: rgba(212, 175, 55, 0.15);
-  border-color: rgba(212, 175, 55, 0.35);
-  color: #D4AF37;
+  background: rgba(226, 101, 28, 0.15);
+  border-color: rgba(226, 101, 28, 0.35);
+  color: #E2651C;
 }
 
 .sidebar-section-divider {
@@ -1175,7 +1191,7 @@ const handleLogout = async () => {
   align-items: center;
   gap: 12px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(226, 101, 28, 0.2);
   padding: 12px;
   border-radius: var(--radius-lg);
   margin-bottom: 18px;
@@ -1205,7 +1221,7 @@ const handleLogout = async () => {
 
 .drawer-email {
   font-size: 0.74rem;
-  color: #94A3B8;
+  color: #8E9B8F;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1224,7 +1240,7 @@ const handleLogout = async () => {
   align-items: center;
   gap: 12px;
   padding: 11px 14px;
-  color: #CBD5E1;
+  color: #C3CCB6;
   font-size: 0.92rem;
   font-weight: 600;
   border-radius: var(--radius-md);
@@ -1260,47 +1276,47 @@ const handleLogout = async () => {
    ========================================== */
 .admin-theme-light .admin-topbar {
   background: #FFFFFF !important;
-  border-bottom: 1px solid #E2E8F0 !important;
+  border-bottom: 1px solid #D6DDCB !important;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
 }
 
 .admin-theme-light .admin-hamburger-btn {
-  background: #F1F5F9 !important;
-  border-color: #CBD5E1 !important;
-  color: #0F172A !important;
+  background: #EDF1E6 !important;
+  border-color: #C3CCB6 !important;
+  color: #132A1B !important;
 }
 
 .admin-theme-light .admin-hamburger-btn:hover {
-  background: #E2E8F0 !important;
+  background: #D6DDCB !important;
 }
 
 .admin-theme-light .admin-brand-name {
-  color: #0F172A !important;
+  color: #132A1B !important;
 }
 
 .admin-theme-light .admin-user-pill {
-  background: #F1F5F9 !important;
-  border-color: #E2E8F0 !important;
+  background: #EDF1E6 !important;
+  border-color: #D6DDCB !important;
 }
 
 .admin-theme-light .admin-user-name {
-  color: #0F172A !important;
+  color: #132A1B !important;
 }
 
 .admin-theme-light .mobile-quick-nav-bar {
   background: #FFFFFF !important;
-  border-bottom: 1px solid #E2E8F0 !important;
+  border-bottom: 1px solid #D6DDCB !important;
 }
 
 .admin-theme-light .quick-nav-chip {
-  background: #F1F5F9 !important;
-  border-color: #E2E8F0 !important;
-  color: #334155 !important;
+  background: #EDF1E6 !important;
+  border-color: #D6DDCB !important;
+  color: #34463A !important;
 }
 
 .admin-theme-light .quick-nav-chip:hover {
-  background: #E2E8F0 !important;
-  color: #0F172A !important;
+  background: #D6DDCB !important;
+  color: #132A1B !important;
 }
 
 .admin-theme-light .quick-nav-chip.active {
@@ -1311,21 +1327,21 @@ const handleLogout = async () => {
 
 .admin-theme-light .admin-sidebar {
   background: #FFFFFF !important;
-  border-color: #E2E8F0 !important;
+  border-color: #D6DDCB !important;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03) !important;
 }
 
 .admin-theme-light .sidebar-section-title {
-  color: #64748B !important;
+  color: #5F6E63 !important;
 }
 
 .admin-theme-light .sidebar-link {
-  color: #334155 !important;
+  color: #34463A !important;
 }
 
 .admin-theme-light .sidebar-link:hover {
-  background: #F1F5F9 !important;
-  color: #0F172A !important;
+  background: #EDF1E6 !important;
+  color: #132A1B !important;
 }
 
 .admin-theme-light .sidebar-link.active {
@@ -1345,7 +1361,7 @@ const handleLogout = async () => {
 .admin-theme-light .smart-badge-pending {
   background: rgba(245, 158, 11, 0.12) !important;
   border-color: rgba(217, 119, 6, 0.4) !important;
-  color: #B45309 !important;
+  color: #B34A0C !important;
   box-shadow: 0 1px 4px rgba(245, 158, 11, 0.15) !important;
 }
 .admin-theme-light .smart-badge-pending .smart-badge-dot {
@@ -1385,67 +1401,67 @@ const handleLogout = async () => {
 }
 
 .admin-theme-light .smart-badge-subtle {
-  background: #F1F5F9 !important;
-  border-color: #CBD5E1 !important;
-  color: #334155 !important;
+  background: #EDF1E6 !important;
+  border-color: #C3CCB6 !important;
+  color: #34463A !important;
 }
 .admin-theme-light .smart-badge-subtle:hover {
-  background: rgba(212, 175, 55, 0.15) !important;
+  background: rgba(226, 101, 28, 0.15) !important;
   border-color: rgba(180, 83, 9, 0.4) !important;
-  color: #B45309 !important;
+  color: #B34A0C !important;
 }
 
 .admin-theme-light .sidebar-section-divider {
-  background: #E2E8F0 !important;
+  background: #D6DDCB !important;
 }
 
 .admin-theme-light .sidebar-system-card {
-  background: #F8FAFC !important;
-  border-color: #CBD5E1 !important;
+  background: #F3F5EC !important;
+  border-color: #C3CCB6 !important;
 }
 
 /* Light Theme Mobile Drawer */
 .admin-theme-light .admin-drawer-panel {
   background: #FFFFFF !important;
-  border-right-color: #E2E8F0 !important;
-  color: #0F172A !important;
+  border-right-color: #D6DDCB !important;
+  color: #132A1B !important;
   box-shadow: 15px 0 35px rgba(0, 0, 0, 0.1) !important;
 }
 
 .admin-theme-light .drawer-header {
-  border-bottom-color: #E2E8F0 !important;
+  border-bottom-color: #D6DDCB !important;
 }
 
 .admin-theme-light .drawer-close-btn {
-  background: #F1F5F9 !important;
-  border-color: #CBD5E1 !important;
-  color: #0F172A !important;
+  background: #EDF1E6 !important;
+  border-color: #C3CCB6 !important;
+  color: #132A1B !important;
 }
 
 .admin-theme-light .drawer-close-btn:hover {
-  background: #E2E8F0 !important;
+  background: #D6DDCB !important;
 }
 
 .admin-theme-light .drawer-user-box {
-  background: #F8FAFC !important;
-  border-color: #E2E8F0 !important;
+  background: #F3F5EC !important;
+  border-color: #D6DDCB !important;
 }
 
 .admin-theme-light .drawer-name {
-  color: #0F172A !important;
+  color: #132A1B !important;
 }
 
 .admin-theme-light .drawer-email {
-  color: #64748B !important;
+  color: #5F6E63 !important;
 }
 
 .admin-theme-light .drawer-link {
-  color: #334155 !important;
+  color: #34463A !important;
 }
 
 .admin-theme-light .drawer-link:hover {
-  background: #F1F5F9 !important;
-  color: #0F172A !important;
+  background: #EDF1E6 !important;
+  color: #132A1B !important;
 }
 
 .admin-theme-light .drawer-link.active {
@@ -1454,7 +1470,7 @@ const handleLogout = async () => {
 }
 
 .admin-theme-light .drawer-footer {
-  border-top-color: #E2E8F0 !important;
+  border-top-color: #D6DDCB !important;
 }
 
 /* 5. Responsive Breakpoint Rules */

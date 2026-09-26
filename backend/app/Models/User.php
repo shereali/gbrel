@@ -47,20 +47,45 @@ class User extends Authenticatable
         }
 
         $custom = $this->custom_permissions ?? [];
+
         return array_values(array_unique(array_merge($rolePerms, $custom)));
     }
 
     public function hasPermission(string $slug): bool
     {
+        if ($this->role === 'admin') {
+            return true;
+        }
         $all = $this->getEffectivePermissions();
+
         return in_array('*', $all) || in_array($slug, $all);
     }
 
     public function isAdmin(): bool
     {
         $perms = $this->getEffectivePermissions();
-        if (in_array('*', $perms)) return true;
+        if (in_array('*', $perms)) {
+            return true;
+        }
+
         return in_array($this->role, ['admin', 'property_manager', 'legal_compliance', 'finance_auditor']);
+    }
+
+    /**
+     * Staff are every role except the public ones (buyers and property owners).
+     */
+    public function isStaff(): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        return ! in_array($this->role, [null, '', 'buyer', 'owner', 'guest'], true);
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->role === 'owner';
     }
 
     public function toAuthPayload(): array
@@ -77,13 +102,14 @@ class User extends Authenticatable
             'role' => $this->role ?? ($roleObj ? $roleObj->slug : 'buyer'),
             'role_id' => $roleObj ? $roleObj->id : $this->role_id,
             'role_name' => $roleObj ? $roleObj->name : ucfirst($this->role ?? 'Buyer'),
-            'phone' => $this->phone ?? '+880 1819-000000',
-            'region' => $this->region ?? 'Dhaka HQ',
+            'phone' => $this->phone,
+            'region' => $this->region,
             'status' => $this->status ?? 'Active',
-            'avatar' => $this->avatar ?? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
+            'avatar' => $this->avatar,
             'permissions' => $perms,
             'is_admin' => $isAdmin,
-            'is_super_admin' => $isSuperAdmin
+            'is_super_admin' => $isSuperAdmin,
+            'is_staff' => $this->isStaff(),
         ];
     }
 }

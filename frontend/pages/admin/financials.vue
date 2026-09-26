@@ -49,7 +49,7 @@
     <div class="panel-card" style="padding:0; overflow:hidden;">
       <div style="padding:16px 20px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:gap-3;">
         <div class="flex items-center gap-2">
-          <span style="font-size:0.85rem; color:#94A3B8;">Filter Partner Bank:</span>
+          <span style="font-size:0.85rem; color:#8E9B8F;">Filter Partner Bank:</span>
           <select v-model="selectedBank" class="status-inline-select">
             <option value="All">All Banks</option>
             <option value="BRAC Bank">BRAC Bank Escrow</option>
@@ -57,7 +57,7 @@
             <option value="City Bank">City Bank Private Banking</option>
           </select>
         </div>
-        <span style="font-size:0.82rem; color:#94A3B8;">{{ filteredDeals.length }} Deals</span>
+        <span style="font-size:0.82rem; color:#8E9B8F;">{{ filteredDeals.length }} Deals</span>
       </div>
 
       <div class="table-responsive">
@@ -76,11 +76,11 @@
           </thead>
           <tbody>
             <tr v-for="deal in filteredDeals" :key="deal.id">
-              <td style="font-weight:800; color:#D4AF37;">#{{ deal.id }}</td>
+              <td style="font-weight:800; color:#E2651C;">#{{ deal.id }}</td>
               <td><strong style="color:#FFF;">{{ deal.property }}</strong></td>
-              <td style="color:#CBD5E1;">{{ deal.buyer }}</td>
+              <td style="color:#C3CCB6;">{{ deal.buyer }}</td>
               <td style="font-weight:800; color:#10B981; font-family:var(--font-ui);">{{ formatBDT(deal.value) }}</td>
-              <td style="font-weight:700; color:#D4AF37; font-family:var(--font-ui);">{{ formatBDT(deal.commission) }}</td>
+              <td style="font-weight:700; color:#E2651C; font-family:var(--font-ui);">{{ formatBDT(deal.commission) }}</td>
               <td><span class="badge badge-status">{{ deal.bank }}</span></td>
               <td>
                 <span class="badge-admin" :class="deal.status === 'Settled' ? 'active' : 'pending'">

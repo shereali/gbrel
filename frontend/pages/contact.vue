@@ -62,7 +62,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { Mail, MapPin, MessageCircle, Phone } from 'lucide-vue-next'
 import { useSettings } from '~/composables/useSettings'
-import { normalizePhone } from '~/utils/propertyLabels'
+import { toApiPhone } from '~/utils/propertyLabels'
 
 const { settings, fetchSettings } = useSettings()
 onMounted(() => { fetchSettings() })
@@ -79,7 +79,7 @@ const errorField = ref('')
 const handleSubmit = async () => {
   error.value = ''; errorField.value = ''
   if (!form.name) { error.value = 'আপনার নাম লিখুন।'; errorField.value = 'name'; return }
-  const phone = normalizePhone(form.phone)
+  const phone = toApiPhone(form.phone)
   if (!phone) { error.value = 'সঠিক মোবাইল নম্বর দিন, যেমন 01712345678। বিদেশের নম্বর হলে দেশের কোডসহ লিখুন।'; errorField.value = 'phone'; return }
   sending.value = true
   try {

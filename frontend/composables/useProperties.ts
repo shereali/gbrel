@@ -52,6 +52,9 @@ export interface PropertyItem {
   hideMortgageCalculator?: boolean
   brochuresVault?: any[]
   agentId: number
+  ownerId?: number | null
+  reviewStatus?: string | null
+  publishedAt?: string | null
   history: Array<{
     id: number
     date: string
@@ -820,6 +823,9 @@ const mapDbItemToPropertyItem = (apiItem: any, strict = false): PropertyItem => 
     hideMortgageCalculator: Boolean(apiItem.hide_mortgage_calculator ?? apiItem.hideMortgageCalculator),
     brochuresVault: Array.isArray(apiItem.brochures_vault) ? apiItem.brochures_vault : [],
     agentId: Number(apiItem.agent_id) || Number(apiItem.agentId) || 0,
+    ownerId: apiItem.owner_id ? Number(apiItem.owner_id) : null,
+    reviewStatus: apiItem.review_status || null,
+    publishedAt: apiItem.published_at || null,
     history: Array.isArray(apiItem.history) && apiItem.history.length > 0 ? apiItem.history : [
       { id: 1, date: 'Recent', event: 'Listed on GBREL Portal', price: price, status: 'Active', notes: 'Database Synced' }
     ],

@@ -219,7 +219,7 @@
                     <span 
                       v-if="isSuperAdmin(user)" 
                       class="badge" 
-                      style="background: rgba(212,175,55,0.15); color: var(--color-gold); font-size: 0.74rem; border: 1px solid rgba(212,175,55,0.3); font-weight: 700;"
+                      style="background: rgba(226, 101, 28,0.15); color: var(--color-gold); font-size: 0.74rem; border: 1px solid rgba(226, 101, 28,0.3); font-weight: 700;"
                     >
                       ★ Full System Access
                     </span>
@@ -241,8 +241,8 @@
                     </template>
                   </div>
                 </td>
-                <td style="font-size: 0.86rem; color: #E2E8F0;">{{ user.phone || '—' }}</td>
-                <td style="font-size: 0.86rem; color: #E2E8F0;">{{ user.region || 'Dhaka HQ' }}</td>
+                <td style="font-size: 0.86rem; color: #D6DDCB;">{{ user.phone || '—' }}</td>
+                <td style="font-size: 0.86rem; color: #D6DDCB;">{{ user.region || 'Dhaka HQ' }}</td>
                 <td>
                   <button 
                     class="badge-admin" 
@@ -337,7 +337,7 @@
                   <span 
                     v-if="role.permissions && role.permissions.includes('*')" 
                     class="badge" 
-                    style="background:rgba(212,175,55,0.18); color:var(--color-gold); font-size:0.74rem; font-weight:700;"
+                    style="background:rgba(226, 101, 28,0.18); color:var(--color-gold); font-size:0.74rem; font-weight:700;"
                   >
                     ★ Full System Control
                   </span>
@@ -346,7 +346,7 @@
                     v-for="perm in (role.permissions || []).slice(0, 6)" 
                     :key="perm" 
                     class="badge" 
-                    style="background:rgba(255,255,255,0.06); color:#E2E8F0; font-size:0.72rem;"
+                    style="background:rgba(255,255,255,0.06); color:#D6DDCB; font-size:0.72rem;"
                   >
                     {{ formatPermissionSlug(perm) }}
                   </span>
@@ -479,7 +479,7 @@
                     </button>
                   </div>
                   <div class="grid grid-2" style="gap: 6px;">
-                    <label v-for="p in perms" :key="p.slug" class="flex items-center gap-2" style="font-size: 0.78rem; cursor: pointer; color: #CBD5E1;">
+                    <label v-for="p in perms" :key="p.slug" class="flex items-center gap-2" style="font-size: 0.78rem; cursor: pointer; color: #C3CCB6;">
                       <input 
                         type="checkbox" 
                         :value="p.slug" 
@@ -603,7 +603,7 @@
                     </button>
                   </div>
                   <div class="grid grid-2" style="gap: 6px;">
-                    <label v-for="p in perms" :key="p.slug" class="flex items-center gap-2" style="font-size: 0.78rem; cursor: pointer; color: #CBD5E1;">
+                    <label v-for="p in perms" :key="p.slug" class="flex items-center gap-2" style="font-size: 0.78rem; cursor: pointer; color: #C3CCB6;">
                       <input 
                         type="checkbox" 
                         :value="p.slug" 
@@ -682,7 +682,7 @@
                 <div v-for="(perms, moduleName) in permissionsGrouped" :key="moduleName" style="border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px;">
                   <strong style="display: block; font-size: 0.8rem; color: #60A5FA; margin-bottom: 4px;">{{ moduleName }}</strong>
                   <div class="grid grid-2" style="gap: 6px;">
-                    <label v-for="p in perms" :key="p.slug" class="flex items-center gap-2" style="font-size: 0.78rem; cursor: pointer; color: #CBD5E1;">
+                    <label v-for="p in perms" :key="p.slug" class="flex items-center gap-2" style="font-size: 0.78rem; cursor: pointer; color: #C3CCB6;">
                       <input 
                         type="checkbox" 
                         :value="p.slug" 
@@ -717,7 +717,7 @@
           <button class="admin-modal-close" @click="deleteUserTarget = null">✕</button>
         </div>
         <div class="admin-modal-body">
-          <p style="color: #E2E8F0; font-size: 0.94rem; line-height: 1.5; margin-bottom: 8px;">
+          <p style="color: #D6DDCB; font-size: 0.94rem; line-height: 1.5; margin-bottom: 8px;">
             Are you sure you want to remove the user account for:
           </p>
           <div style="background: rgba(0,0,0,0.25); padding: 12px; border-radius: 8px; border: 1px solid var(--admin-border-subtle); margin-bottom: 12px;">

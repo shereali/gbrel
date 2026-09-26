@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\ListingReviewController;
+use App\Http\Controllers\OwnerAccountController;
+use App\Http\Controllers\OwnerListingController;
+use App\Http\Controllers\PropertyDocumentController;
 use App\Http\Controllers\PropertyLeadController;
 use App\Models\Agent;
 use App\Models\Brochure;
@@ -20,7 +24,9 @@ use App\Models\Setting;
 use App\Models\TransactionType;
 use App\Models\User;
 use App\Models\Viewing;
+use App\Support\PhoneNumber;
 use App\Support\PropertyBuyerDetails;
+use App\Support\SiteSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
@@ -47,60 +53,26 @@ Route::post('/auth/login', function (Request $request) {
     $password = (string) ($input['password'] ?? '');
     $remember = ! empty($input['remember']);
 
-    // Log the attempt for debugging
-    @file_put_contents(
-        storage_path('logs/auth_attempts.log'),
-        date('Y-m-d H:i:s')." | LOGIN ATTEMPT: input='{$loginInput}', pwd_len=".strlen($password)."\n",
-        FILE_APPEND
-    );
-
     if (! $loginInput || ! $password) {
         return response()->json([
             'success' => false,
-            'message' => 'Email address (or username) and password are required.',
+            'message' => 'Email or phone number and password are required.',
         ], 422);
     }
 
-    // Flexible identifier lookup: exact email, username shorthand (e.g. 'admin' -> 'admin@gbrel.com'), or name/phone
+    // Sign in with email (or the part before @gbrel.com) or phone number.
+    $phoneInput = PhoneNumber::normalize($loginInput);
     $user = User::where('email', $loginInput)
         ->orWhere('email', $loginInput.'@gbrel.com')
-        ->orWhere('name', $loginInput)
-        ->orWhere('phone', $loginInput)
+        ->when(PhoneNumber::isValid($phoneInput), fn ($query) => $query->orWhere('phone', $phoneInput))
         ->first();
 
-    // Fallback: If 'admin', find the primary super admin
-    if (! $user && in_array($loginInput, ['admin', 'administrator', 'root', 'superadmin'])) {
-        $user = User::where('role', 'admin')->first();
-    }
-
-    // Check password: check hash OR fallback developer passwords for seed accounts
-    $passwordMatches = false;
-    if ($user) {
-        $passwordMatches = Hash::check($password, $user->password);
-
-        // Developer fallback: if standard test passwords are used for seeded accounts
-        if (! $passwordMatches) {
-            $allowedDefaults = [
-                'admin@gbrel.com' => ['admin123', 'password', 'admin', '12345678', '123456', 'admin@123', 'secret'],
-                'manager@gbrel.com' => ['manager123', 'password', 'admin123', 'manager', '12345678'],
-                'legal@gbrel.com' => ['legal123', 'password', 'admin123', 'legal', '12345678'],
-                'agent@gbrel.com' => ['agent123', 'password', 'admin123', 'agent', '12345678'],
-                'buyer@gbrel.com' => ['buyer123', 'password', 'admin123', 'buyer', '12345678'],
-            ];
-
-            if (isset($allowedDefaults[$user->email]) && in_array($password, $allowedDefaults[$user->email])) {
-                $passwordMatches = true;
-                // Synchronize password in DB
-                $user->password = Hash::make($password);
-                $user->save();
-            }
-        }
-    }
+    $passwordMatches = $user && Hash::check($password, $user->password);
 
     if (! $user || ! $passwordMatches) {
         return response()->json([
             'success' => false,
-            'message' => 'Invalid email address or password. Please verify your credentials.',
+            'message' => 'The email/phone or password is not correct.',
         ], 401);
     }
 
@@ -122,7 +94,7 @@ Route::post('/auth/login', function (Request $request) {
         'token' => $token,
         'user' => $user->toAuthPayload(),
     ]);
-});
+})->middleware('throttle:10,1');
 
 Route::get('/auth/me', function (Request $request) {
     $authHeader = $request->header('Authorization', '');
@@ -350,7 +322,11 @@ function normalizePropertyData(array $input, bool $isCreate = true, ?int $existi
 
 // 1. Properties API Endpoints (Realtime MySQL Operations)
 Route::get('/properties', function (Request $request) {
+    $isStaff = (bool) $request->user()?->isStaff();
     $query = Property::query();
+    if (! $isStaff) {
+        $query->visibleToPublic();
+    }
     $columns = Property::getTableColumns();
 
     // 1. Dynamic Keyword Search (q, search, keyword) across all text columns
@@ -442,6 +418,9 @@ Route::get('/properties', function (Request $request) {
     }
 
     $properties = $query->get();
+    if ($isStaff) {
+        $properties->each(fn (Property $property) => $property->withPrivateFields());
+    }
 
     return response()->json([
         'success' => true,
@@ -457,6 +436,14 @@ Route::get('/properties/{id}', function ($id) {
 
     if (! $property) {
         return response()->json(['success' => false, 'message' => 'Property not found in database'], 404);
+    }
+    $viewer = request()->user();
+    $canSeePrivate = $viewer && ($viewer->isStaff() || ($property->owner_id && $property->owner_id === $viewer->id));
+    if (! $property->isVisibleToPublic() && ! $canSeePrivate) {
+        return response()->json(['success' => false, 'message' => 'Property not found in database'], 404);
+    }
+    if ($viewer?->isStaff()) {
+        $property->withPrivateFields();
     }
 
     $property->load(['agent']);
@@ -482,7 +469,7 @@ Route::post('/properties', function (Request $request) {
         'message' => 'Property successfully created in MySQL database',
         'data' => $property,
     ], 201);
-});
+})->middleware('staff:properties.create');
 
 Route::put('/properties/{id}', function (Request $request, $id) {
     $property = Property::findOrFail($id);
@@ -490,13 +477,17 @@ Route::put('/properties/{id}', function (Request $request, $id) {
     $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
     $cleanData = normalizePropertyData($input, false, (int) $id);
     $property->update($cleanData);
+    if ($property->owner_id && $property->published_at === null && ! in_array($property->status, Property::HIDDEN_STATUSES, true)
+        && in_array($property->review_status, ['approved', 'update_submitted'], true)) {
+        $property->update(['published_at' => now()]);
+    }
 
     return response()->json([
         'success' => true,
         'message' => 'Property successfully updated in MySQL database',
         'data' => $property,
     ]);
-});
+})->middleware('staff:properties.edit');
 
 Route::patch('/properties/{id}/toggle-feature', function ($id) {
     $property = Property::findOrFail($id);
@@ -509,7 +500,7 @@ Route::patch('/properties/{id}/toggle-feature', function ($id) {
         'message' => 'Homepage showcase status updated',
         'data' => $property,
     ]);
-});
+})->middleware('staff:properties.feature,properties.edit');
 
 Route::patch('/properties/{id}/toggle-rajuk', function ($id) {
     $property = Property::findOrFail($id);
@@ -522,7 +513,7 @@ Route::patch('/properties/{id}/toggle-rajuk', function ($id) {
         'message' => 'RAJUK verification status updated',
         'data' => $property,
     ]);
-});
+})->middleware('staff:properties.verify_rajuk,properties.edit');
 
 Route::patch('/properties/{id}/status', function (Request $request, $id) {
     $property = Property::findOrFail($id);
@@ -537,7 +528,7 @@ Route::patch('/properties/{id}/status', function (Request $request, $id) {
         'message' => 'Property status updated',
         'data' => $property,
     ]);
-});
+})->middleware('staff:properties.edit,properties.verify_rajuk');
 
 Route::delete('/properties/{id}', function ($id) {
     $property = Property::findOrFail($id);
@@ -547,7 +538,7 @@ Route::delete('/properties/{id}', function ($id) {
         'success' => true,
         'message' => 'Property deleted from MySQL database',
     ]);
-});
+})->middleware('staff:properties.delete');
 
 // 2. Agents API Endpoints (Full CRUD)
 Route::get('/agents', function (Request $request) {
@@ -602,7 +593,7 @@ Route::post('/agents', function (Request $request) {
         'message' => 'Advisor successfully added to MySQL database',
         'data' => $agent,
     ], 201);
-});
+})->middleware('staff:agents.manage');
 
 Route::put('/agents/{id}', function (Request $request, $id) {
     $agent = Agent::findOrFail($id);
@@ -654,7 +645,7 @@ Route::put('/agents/{id}', function (Request $request, $id) {
         'message' => 'Advisor successfully updated in MySQL database',
         'data' => $agent,
     ]);
-});
+})->middleware('staff:agents.manage');
 
 Route::delete('/agents/{id}', function ($id) {
     $agent = Agent::findOrFail($id);
@@ -664,7 +655,7 @@ Route::delete('/agents/{id}', function ($id) {
         'success' => true,
         'message' => 'Advisor deleted from MySQL database',
     ]);
-});
+})->middleware('staff:agents.manage');
 
 // 3. VIP Viewing Appointments API (Full CRUD)
 Route::get('/viewings', function () {
@@ -672,7 +663,7 @@ Route::get('/viewings', function () {
         'success' => true,
         'data' => Viewing::orderBy('created_at', 'desc')->get(),
     ]);
-});
+})->middleware('staff:viewings.view,viewings.manage');
 
 Route::post('/schedule-viewing', function (Request $request) {
     $raw = json_decode($request->getContent(), true);
@@ -713,7 +704,7 @@ Route::patch('/viewings/{id}/status', function (Request $request, $id) {
         'message' => 'Viewing status updated in MySQL database',
         'data' => $viewing,
     ]);
-});
+})->middleware('staff:viewings.manage');
 
 Route::delete('/viewings/{id}', function ($id) {
     $viewing = Viewing::findOrFail($id);
@@ -723,7 +714,7 @@ Route::delete('/viewings/{id}', function ($id) {
         'success' => true,
         'message' => 'Viewing inspection deleted from MySQL database',
     ]);
-});
+})->middleware('staff:viewings.manage');
 
 // 4. Leads API (Full CRUD)
 Route::get('/leads', function (Request $request) {
@@ -770,7 +761,7 @@ Route::get('/financials', function () {
         'success' => true,
         'data' => FinancialTransaction::orderBy('created_at', 'desc')->get(),
     ]);
-});
+})->middleware('staff:financials.view,financials.manage');
 
 Route::post('/financials', function (Request $request) {
     $raw = json_decode($request->getContent(), true);
@@ -795,7 +786,7 @@ Route::post('/financials', function (Request $request) {
         'message' => 'Escrow transaction logged to MySQL database',
         'data' => $deal,
     ], 201);
-});
+})->middleware('staff:financials.manage');
 
 Route::patch('/financials/{id}/status', function (Request $request, $id) {
     $deal = FinancialTransaction::findOrFail($id);
@@ -809,7 +800,7 @@ Route::patch('/financials/{id}/status', function (Request $request, $id) {
         'message' => 'Escrow status updated in MySQL database',
         'data' => $deal,
     ]);
-});
+})->middleware('staff:financials.manage');
 
 Route::delete('/financials/{id}', function ($id) {
     $deal = FinancialTransaction::findOrFail($id);
@@ -819,7 +810,7 @@ Route::delete('/financials/{id}', function ($id) {
         'success' => true,
         'message' => 'Financial transaction deleted from MySQL database',
     ]);
-});
+})->middleware('staff:financials.manage');
 
 // 6. Users Accounts & RBAC API (Full CRUD with Roles & Permissions)
 Route::get('/permissions', function () {
@@ -832,7 +823,7 @@ Route::get('/permissions', function () {
         'data' => $permissions,
         'grouped' => $grouped,
     ]);
-});
+})->middleware('staff:users.view,roles.manage');
 
 Route::get('/roles', function () {
     $roles = Role::orderBy('id')->get()->map(function ($role) {
@@ -853,7 +844,7 @@ Route::get('/roles', function () {
         'count' => $roles->count(),
         'data' => $roles,
     ]);
-});
+})->middleware('staff:users.view,roles.manage');
 
 Route::post('/roles', function (Request $request) {
     $raw = json_decode($request->getContent(), true);
@@ -888,7 +879,7 @@ Route::post('/roles', function (Request $request) {
         'message' => 'Role successfully created',
         'data' => $role,
     ], 201);
-});
+})->middleware('staff:roles.manage');
 
 Route::put('/roles/{id}', function (Request $request, $id) {
     $role = Role::findOrFail($id);
@@ -916,7 +907,7 @@ Route::put('/roles/{id}', function (Request $request, $id) {
         'message' => 'Role capabilities updated',
         'data' => $role,
     ]);
-});
+})->middleware('staff:roles.manage');
 
 Route::delete('/roles/{id}', function ($id) {
     $role = Role::findOrFail($id);
@@ -929,7 +920,7 @@ Route::delete('/roles/{id}', function ($id) {
         'success' => true,
         'message' => 'Role deleted successfully',
     ]);
-});
+})->middleware('staff:roles.manage');
 
 Route::get('/users', function () {
     $users = User::orderBy('created_at', 'desc')->get()->map(function ($u) {
@@ -963,7 +954,7 @@ Route::get('/users', function () {
         'count' => $users->count(),
         'data' => $users,
     ]);
-});
+})->middleware('staff:users.view,users.manage');
 
 Route::post('/users', function (Request $request) {
     $raw = json_decode($request->getContent(), true);
@@ -1018,7 +1009,7 @@ Route::post('/users', function (Request $request) {
         'message' => 'User account created in database',
         'data' => $user,
     ], 201);
-});
+})->middleware('staff:users.manage');
 
 Route::put('/users/{id}', function (Request $request, $id) {
     $user = User::findOrFail($id);
@@ -1075,7 +1066,7 @@ Route::put('/users/{id}', function (Request $request, $id) {
         'message' => 'User account updated in database',
         'data' => $user,
     ]);
-});
+})->middleware('staff:users.manage');
 
 Route::delete('/users/{id}', function ($id) {
     if ((int) $id === 1) {
@@ -1088,11 +1079,14 @@ Route::delete('/users/{id}', function ($id) {
         'success' => true,
         'message' => 'User account deleted from database',
     ]);
-});
+})->middleware('staff:users.manage');
 
 // 7. Official Project Brochures & Marketing Collateral Vault API
 Route::get('/brochures', function (Request $request) {
     $query = Brochure::with('property')->orderBy('created_at', 'desc');
+    if (! $request->user()?->isStaff()) {
+        $query->where('is_public', true);
+    }
 
     if ($request->has('property_id')) {
         $query->where('property_id', $request->property_id);
@@ -1161,7 +1155,7 @@ Route::post('/brochures', function (Request $request) {
         'message' => 'Brochure successfully archived in vault',
         'data' => $brochure,
     ], 201);
-});
+})->middleware('staff:brochures.upload');
 
 Route::post('/brochures/{id}/download', function ($id) {
     $brochure = Brochure::findOrFail($id);
@@ -1182,7 +1176,7 @@ Route::delete('/brochures/{id}', function ($id) {
         'success' => true,
         'message' => 'Brochure removed from vault',
     ]);
-});
+})->middleware('staff:brochures.delete');
 
 // ==========================================
 // 6.4. PROPERTY MASTER DATA / TAXONOMY CRUD
@@ -1275,7 +1269,7 @@ Route::post('/categories', function (Request $request) {
         'message' => 'Category created successfully',
         'data' => $category,
     ], 201);
-});
+})->middleware('staff:settings.manage,properties.create');
 
 Route::get('/categories/{id}', function ($id) {
     $category = Category::findOrFail($id);
@@ -1321,7 +1315,7 @@ Route::put('/categories/{id}', function (Request $request, $id) {
     syncMasterDataSettings();
 
     return response()->json(['success' => true, 'message' => 'Category updated successfully', 'data' => $category]);
-});
+})->middleware('staff:settings.manage,properties.create');
 
 Route::delete('/categories/{id}', function ($id) {
     $category = Category::findOrFail($id);
@@ -1330,7 +1324,7 @@ Route::delete('/categories/{id}', function ($id) {
     syncMasterDataSettings();
 
     return response()->json(['success' => true, 'message' => 'Category deleted successfully']);
-});
+})->middleware('staff:settings.manage');
 
 // ------------------------------------------
 // 2. DIVISIONS / REGIONS CRUD
@@ -1382,7 +1376,7 @@ Route::post('/divisions', function (Request $request) {
         'message' => 'Division / Region created successfully',
         'data' => $division,
     ], 201);
-});
+})->middleware('staff:settings.manage,properties.create');
 
 Route::get('/divisions/{id}', function ($id) {
     $division = Division::findOrFail($id);
@@ -1419,7 +1413,7 @@ Route::put('/divisions/{id}', function (Request $request, $id) {
     syncMasterDataSettings();
 
     return response()->json(['success' => true, 'message' => 'Division updated successfully', 'data' => $division]);
-});
+})->middleware('staff:settings.manage,properties.create');
 
 Route::delete('/divisions/{id}', function ($id) {
     $division = Division::findOrFail($id);
@@ -1428,7 +1422,7 @@ Route::delete('/divisions/{id}', function ($id) {
     syncMasterDataSettings();
 
     return response()->json(['success' => true, 'message' => 'Division deleted successfully']);
-});
+})->middleware('staff:settings.manage');
 
 // ------------------------------------------
 // 3. TRANSACTION TYPES CRUD
@@ -1480,7 +1474,7 @@ Route::post('/transaction-types', function (Request $request) {
         'message' => 'Transaction type created successfully',
         'data' => $type,
     ], 201);
-});
+})->middleware('staff:settings.manage,properties.create');
 
 Route::get('/transaction-types/{id}', function ($id) {
     $type = TransactionType::findOrFail($id);
@@ -1517,7 +1511,7 @@ Route::put('/transaction-types/{id}', function (Request $request, $id) {
     syncMasterDataSettings();
 
     return response()->json(['success' => true, 'message' => 'Transaction type updated successfully', 'data' => $type]);
-});
+})->middleware('staff:settings.manage,properties.create');
 
 Route::delete('/transaction-types/{id}', function ($id) {
     $type = TransactionType::findOrFail($id);
@@ -1526,7 +1520,7 @@ Route::delete('/transaction-types/{id}', function ($id) {
     syncMasterDataSettings();
 
     return response()->json(['success' => true, 'message' => 'Transaction type deleted successfully']);
-});
+})->middleware('staff:settings.manage');
 
 // ------------------------------------------
 // 4. PROPERTY LIFECYCLE STATUSES CRUD
@@ -1578,7 +1572,7 @@ Route::post('/property-statuses', function (Request $request) {
         'message' => 'Property status created successfully',
         'data' => $status,
     ], 201);
-});
+})->middleware('staff:settings.manage,properties.create');
 
 Route::get('/property-statuses/{id}', function ($id) {
     $status = PropertyStatus::findOrFail($id);
@@ -1614,7 +1608,7 @@ Route::put('/property-statuses/{id}', function (Request $request, $id) {
     syncMasterDataSettings();
 
     return response()->json(['success' => true, 'message' => 'Property status updated successfully', 'data' => $status]);
-});
+})->middleware('staff:settings.manage,properties.create');
 
 Route::delete('/property-statuses/{id}', function ($id) {
     $status = PropertyStatus::findOrFail($id);
@@ -1622,7 +1616,7 @@ Route::delete('/property-statuses/{id}', function ($id) {
     syncMasterDataSettings();
 
     return response()->json(['success' => true, 'message' => 'Property status deleted successfully']);
-});
+})->middleware('staff:settings.manage');
 
 // ------------------------------------------
 // 5. LAND UNITS CRUD
@@ -1675,7 +1669,7 @@ Route::post('/land-units', function (Request $request) {
         'message' => 'Land unit created successfully',
         'data' => $unit,
     ], 201);
-});
+})->middleware('staff:settings.manage,properties.create');
 
 Route::get('/land-units/{id}', function ($id) {
     $unit = LandUnit::findOrFail($id);
@@ -1715,7 +1709,7 @@ Route::put('/land-units/{id}', function (Request $request, $id) {
     syncMasterDataSettings();
 
     return response()->json(['success' => true, 'message' => 'Land unit updated successfully', 'data' => $unit]);
-});
+})->middleware('staff:settings.manage,properties.create');
 
 Route::delete('/land-units/{id}', function ($id) {
     $unit = LandUnit::findOrFail($id);
@@ -1724,125 +1718,36 @@ Route::delete('/land-units/{id}', function ($id) {
     syncMasterDataSettings();
 
     return response()->json(['success' => true, 'message' => 'Land unit deleted successfully']);
-});
+})->middleware('staff:settings.manage');
 
 // ------------------------------------------
 // 6. SMART ADMIN SIDEBAR COUNTS API
 // ------------------------------------------
 Route::get('/admin/sidebar-counts', function () {
-    try {
-        $drafts = 0;
+    $count = function (callable $query): int {
         try {
-            $drafts = Property::where('status', 'Draft')->count();
+            return (int) $query();
         } catch (Throwable $e) {
+            return 0;
         }
+    };
 
-        $pendingApprovals = 0;
-        try {
-            if (Schema::hasColumn('properties', 'is_approved')) {
-                $pendingApprovals = Property::where('is_approved', false)->count();
-            }
-        } catch (Throwable $e) {
-        }
-
-        $pendingTotal = $drafts > 0 ? $drafts : ($pendingApprovals > 0 ? $pendingApprovals : 2);
-
-        $tours = 0;
-        try {
-            $tours = Viewing::whereNotIn('status', ['completed', 'cancelled'])->count();
-            if ($tours === 0) {
-                $tours = Viewing::count() ?: 4;
-            }
-        } catch (Throwable $e) {
-            $tours = 4;
-        }
-
-        $leads = 0;
-        try {
-            $leads = Lead::whereNotIn('status', ['converted', 'closed', 'lost'])->count();
-            if ($leads === 0) {
-                $leads = Lead::count() ?: 4;
-            }
-        } catch (Throwable $e) {
-            $leads = 4;
-        }
-
-        $propertiesCount = 0;
-        try {
-            $propertiesCount = Property::count();
-        } catch (Throwable $e) {
-        }
-        if ($propertiesCount === 0) {
-            $propertiesCount = 10;
-        }
-
-        $catCount = 8;
-        try {
-            $catCount = Category::count() ?: 8;
-        } catch (Throwable $e) {
-        }
-
-        $divCount = 12;
-        try {
-            $divCount = Division::count() ?: 12;
-        } catch (Throwable $e) {
-        }
-
-        $dealCount = 4;
-        try {
-            $dealCount = TransactionType::count() ?: 4;
-        } catch (Throwable $e) {
-        }
-
-        $statusCount = 5;
-        try {
-            $statusCount = PropertyStatus::count() ?: 5;
-        } catch (Throwable $e) {
-        }
-
-        $unitCount = 6;
-        try {
-            $unitCount = LandUnit::count() ?: 6;
-        } catch (Throwable $e) {
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'pending' => $pendingTotal,
-                'tours' => $tours,
-                'leads' => $leads,
-                'categories' => $catCount,
-                'divisions' => $divCount,
-                'transaction_types' => $dealCount,
-                'property_statuses' => $statusCount,
-                'land_units' => $unitCount,
-                'properties' => $propertiesCount,
-            ],
-        ]);
-    } catch (Throwable $e) {
-        $fallbackProps = 10;
-        try {
-            $fallbackProps = Property::count() ?: 10;
-        } catch (Throwable $e2) {
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'pending' => 2,
-                'tours' => 4,
-                'leads' => 4,
-                'categories' => 8,
-                'divisions' => 12,
-                'transaction_types' => 4,
-                'property_statuses' => 5,
-                'land_units' => 6,
-                'properties' => $fallbackProps,
-            ],
-        ]);
-    }
-});
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'pending' => $count(fn () => Property::where('status', 'Draft')->whereNull('owner_id')->count()),
+            'listing_requests' => $count(fn () => Property::whereIn('review_status', ['submitted', 'update_submitted'])->count()),
+            'tours' => $count(fn () => Viewing::whereNotIn('status', ['completed', 'cancelled'])->count()),
+            'leads' => $count(fn () => Lead::whereNotIn('status', ['converted', 'closed', 'lost', 'Converted', 'Closed', 'Lost'])->count()),
+            'categories' => $count(fn () => Category::count()),
+            'divisions' => $count(fn () => Division::count()),
+            'transaction_types' => $count(fn () => TransactionType::count()),
+            'property_statuses' => $count(fn () => PropertyStatus::count()),
+            'land_units' => $count(fn () => LandUnit::count()),
+            'properties' => $count(fn () => Property::count()),
+        ],
+    ]);
+})->middleware('staff');
 
 // 6.5. Dynamic Property Form Options API (Dedicated Tables + Realtime Persistence)
 Route::get('/property-options', function () {
@@ -1959,7 +1864,7 @@ Route::post('/property-options', function (Request $request) {
             'land_units' => PropertyLandUnit::where('is_active', true)->orderBy('sort_order')->pluck('name')->toArray(),
         ],
     ]);
-});
+})->middleware('staff:settings.manage,properties.create');
 
 Route::post('/property-options/add-item', function (Request $request) {
     $raw = json_decode($request->getContent(), true);
@@ -2007,59 +1912,23 @@ Route::post('/property-options/add-item', function (Request $request) {
         'message' => "Item '{$item}' added to database table for {$key}",
         'data' => $data,
     ]);
-});
+})->middleware('staff:settings.manage,properties.create');
 
 // 7. Platform Settings API (MySQL Persistence)
 Route::get('/settings', function () {
-    $defaultSettings = [
-        'dbh_rate' => Setting::getVal('dbh_rate', '9.25%'),
-        'idlc_rate' => Setting::getVal('idlc_rate', '9.50%'),
-        'brac_rate' => Setting::getVal('brac_rate', '9.40%'),
-        'whatsapp_number' => Setting::getVal('whatsapp_number', '+880 1819-987654'),
-        'chauffeur_base' => Setting::getVal('chauffeur_base', 'Gulshan-2 Diplomatic Enclave, Dhaka'),
-        'commission_rate' => Setting::getVal('commission_rate', '2.0%'),
-        'site_title' => Setting::getVal('site_title', 'GBREL | Luxury Real Estate & Land in Bangladesh'),
-    ];
-
-    return response()->json([
-        'success' => true,
-        'data' => $defaultSettings,
-    ]);
+    return response()->json(['success' => true, 'data' => SiteSettings::all()]);
 });
 
 Route::post('/settings', function (Request $request) {
-    $raw = json_decode($request->getContent(), true);
-    $input = is_array($raw) ? array_merge($request->all(), $raw) : $request->all();
-
-    $keys = [
-        'dbh_rate' => $input['dbh_rate'] ?? $input['dbhRate'] ?? null,
-        'idlc_rate' => $input['idlc_rate'] ?? $input['idlcRate'] ?? null,
-        'brac_rate' => $input['brac_rate'] ?? $input['bracRate'] ?? null,
-        'whatsapp_number' => $input['whatsapp_number'] ?? $input['whatsappNumber'] ?? null,
-        'chauffeur_base' => $input['chauffeur_base'] ?? $input['chauffeurBase'] ?? null,
-        'commission_rate' => $input['commission_rate'] ?? $input['commissionRate'] ?? null,
-        'site_title' => $input['site_title'] ?? $input['siteTitle'] ?? null,
-    ];
-
-    foreach ($keys as $k => $v) {
-        if ($v !== null) {
-            Setting::setVal($k, $v);
+    $validated = $request->validate(SiteSettings::validationRules());
+    foreach ($validated as $key => $value) {
+        if (array_key_exists($key, SiteSettings::definitions())) {
+            Setting::setVal($key, $value ?? '');
         }
     }
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Platform settings saved to MySQL database',
-        'data' => [
-            'dbh_rate' => Setting::getVal('dbh_rate', '9.25%'),
-            'idlc_rate' => Setting::getVal('idlc_rate', '9.50%'),
-            'brac_rate' => Setting::getVal('brac_rate', '9.40%'),
-            'whatsapp_number' => Setting::getVal('whatsapp_number', '+880 1819-987654'),
-            'chauffeur_base' => Setting::getVal('chauffeur_base', 'Gulshan-2 Diplomatic Enclave, Dhaka'),
-            'commission_rate' => Setting::getVal('commission_rate', '2.0%'),
-        ],
-    ]);
-});
+    return response()->json(['success' => true, 'message' => 'Settings saved.', 'data' => SiteSettings::all()]);
+})->middleware('staff:settings.manage');
 
 // 8. Executive KPI Analytics API (Realtime Aggregations)
 Route::get('/admin/stats', function () {
@@ -2131,14 +2000,23 @@ Route::get('/user/saved-properties', function () {
         'success' => true,
         'data' => $properties,
     ]);
-});
+})->middleware('signed.in');
 
 // Media & Brochure Upload Endpoint
 Route::post('/upload', function (Request $request) {
+    $request->validate([
+        'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+        'images' => ['nullable', 'array', 'max:20'],
+        'images.*' => ['file', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+        'brochure' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:25600'],
+        'file' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:25600'],
+        'document' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:25600'],
+    ]);
+
     // 1. Single image file upload
     if ($request->hasFile('image')) {
         $file = $request->file('image');
-        $ext = $file->getClientOriginalExtension() ?: 'jpg';
+        $ext = $file->guessExtension() ?: 'jpg';
         $filename = 'prop_'.time().'_'.rand(1000, 9999).'.'.$ext;
         $path = $file->storeAs('properties', $filename, 'public');
         $url = '/storage/'.$path;
@@ -2155,7 +2033,7 @@ Route::post('/upload', function (Request $request) {
     if ($request->hasFile('images')) {
         $urls = [];
         foreach ($request->file('images') as $file) {
-            $ext = $file->getClientOriginalExtension() ?: 'jpg';
+            $ext = $file->guessExtension() ?: 'jpg';
             $filename = 'prop_'.time().'_'.rand(1000, 9999).'.'.$ext;
             $path = $file->storeAs('properties', $filename, 'public');
             $urls[] = '/storage/'.$path;
@@ -2174,7 +2052,7 @@ Route::post('/upload', function (Request $request) {
         $file = $request->file('brochure') ?? $request->file('file') ?? $request->file('document');
         $originalName = $file->getClientOriginalName();
         $cleanName = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
-        $ext = $file->getClientOriginalExtension() ?: 'pdf';
+        $ext = $file->guessExtension() ?: 'pdf';
         $filename = 'brochure_'.time().'_'.$cleanName.'.'.$ext;
         $path = $file->storeAs('brochures', $filename, 'public');
         $url = '/storage/'.$path;
@@ -2192,7 +2070,7 @@ Route::post('/upload', function (Request $request) {
     // 4. Support Base64 image upload
     if ($request->has('base64') && ! empty($request->base64)) {
         $raw = $request->base64;
-        if (preg_match('/^data:image\/(\w+);base64,/', $raw, $type)) {
+        if (preg_match('/^data:image\/(png|jpe?g|webp);base64,/', $raw, $type)) {
             $raw = substr($raw, strpos($raw, ',') + 1);
             $type = strtolower($type[1]);
             $decoded = base64_decode($raw);
@@ -2213,15 +2091,45 @@ Route::post('/upload', function (Request $request) {
         'success' => false,
         'message' => 'No valid file provided. Please attach image, images[], or brochure.',
     ], 400);
-});
+})->middleware('signed.in');
 
 // Direct Storage Access Route
 Route::get('/storage/{path}', function ($path) {
-    $fullPath = storage_path('app/public/'.$path);
-    if (! file_exists($fullPath)) {
+    $root = realpath(storage_path('app/public'));
+    $fullPath = realpath(storage_path('app/public/'.$path));
+    if (! $root || ! $fullPath || ! str_starts_with($fullPath, $root.DIRECTORY_SEPARATOR) || ! is_file($fullPath)) {
         return response()->json(['error' => 'File not found'], 404);
     }
     $mime = mime_content_type($fullPath) ?: 'image/jpeg';
 
     return response()->file($fullPath, ['Content-Type' => $mime]);
 })->where('path', '.*');
+
+// ==========================================
+// PROPERTY OWNERS: sign-up, own listings, private documents
+// ==========================================
+Route::post('/auth/register', [OwnerAccountController::class, 'register'])->middleware('throttle:5,1');
+
+Route::middleware('signed.in')->prefix('owner')->group(function () {
+    Route::get('/listings', [OwnerListingController::class, 'index']);
+    Route::post('/listings', [OwnerListingController::class, 'store'])->middleware('throttle:30,1');
+    Route::get('/listings/{id}', [OwnerListingController::class, 'show'])->whereNumber('id');
+    Route::put('/listings/{id}', [OwnerListingController::class, 'update'])->whereNumber('id');
+    Route::post('/listings/{id}/submit', [OwnerListingController::class, 'submit'])->whereNumber('id');
+    Route::post('/listings/{id}/documents', [OwnerListingController::class, 'uploadDocument'])->whereNumber('id')->middleware('throttle:60,1');
+    Route::delete('/listings/{id}/documents/{documentId}', [OwnerListingController::class, 'deleteDocument'])->whereNumber(['id', 'documentId']);
+});
+
+Route::get('/listing-documents/{documentId}/file', [PropertyDocumentController::class, 'download'])
+    ->whereNumber('documentId')->middleware('signed.in');
+
+// ==========================================
+// STAFF: review owner submissions
+// ==========================================
+Route::middleware('staff:listings.review,properties.edit')->prefix('admin')->group(function () {
+    Route::get('/listing-requests', [ListingReviewController::class, 'index']);
+    Route::get('/listing-requests/{id}', [ListingReviewController::class, 'show'])->whereNumber('id');
+    Route::patch('/listing-requests/{id}/review', [ListingReviewController::class, 'review'])->whereNumber('id');
+    Route::post('/listing-requests/{id}/pending-changes', [ListingReviewController::class, 'applyChanges'])->whereNumber('id');
+    Route::patch('/listing-documents/{documentId}', [ListingReviewController::class, 'reviewDocument'])->whereNumber('documentId');
+});

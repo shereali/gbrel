@@ -107,6 +107,7 @@ class PropertyLeadTest extends TestCase
     public function test_admin_editor_fields_survive_property_update_and_clear(): void
     {
         $id = $this->inquiry()['property_id'];
+        $this->signInAs('admin');
         $this->putJson('/api/properties/'.$id, [
             'priceUnit' => 'Per apartment; registration extra',
             'facing' => 'East', 'completionStatus' => 'Under Construction',

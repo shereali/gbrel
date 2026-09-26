@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Middleware\ProtectLeadData;
+use App\Http\Middleware\RequireApiUser;
+use App\Http\Middleware\RequireStaff;
+use App\Http\Middleware\ResolveApiUser;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,7 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->api(append: [ProtectLeadData::class]);
+        $middleware->api(append: [ResolveApiUser::class, ProtectLeadData::class]);
+        $middleware->alias(['signed.in' => RequireApiUser::class, 'staff' => RequireStaff::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

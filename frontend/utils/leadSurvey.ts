@@ -11,8 +11,15 @@ export const purposeOptions: SurveyOption[] = [
   { value: 'Own use and investment', label: 'দুটোই ভাবছি', points: 1 }
 ]
 
-export const buildQuestions = (hidePrice: boolean): SurveyQuestion[] => [
-  { key: 'purpose', title: 'প্রপার্টিটি কী কাজে লাগাতে চান?', options: purposeOptions },
+// Plots and land are often bought to build on, so developers get their own answer there.
+const landTypes = ['Plot', 'Land', 'Commercial']
+export const purposeOptionsFor = (propertyType?: string): SurveyOption[] =>
+  propertyType && landTypes.includes(propertyType)
+    ? [...purposeOptions, { value: 'Development / construction', label: 'ভবন নির্মাণ বা ডেভেলপমেন্টের জন্য', points: 1 }]
+    : purposeOptions
+
+export const buildQuestions = (hidePrice: boolean, propertyType?: string): SurveyQuestion[] => [
+  { key: 'purpose', title: 'প্রপার্টিটি কী কাজে লাগাতে চান?', options: purposeOptionsFor(propertyType) },
   {
     key: 'timeline',
     title: 'কবে নাগাদ কিনতে চান?',

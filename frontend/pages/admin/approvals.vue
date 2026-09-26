@@ -24,13 +24,13 @@
           <div>
             <span class="badge-admin pending" style="margin-bottom:8px;">Awaiting Legal Vetting</span>
             <h3 style="font-size:1.3rem; font-weight:800; color:#FFF; margin-top:4px;">{{ item.title }}</h3>
-            <div style="font-size:0.85rem; color:#CBD5E1; margin-top:2px;">Seller: <strong>{{ item.seller }}</strong> (Phone: {{ item.phone }})</div>
+            <div style="font-size:0.85rem; color:#C3CCB6; margin-top:2px;">Seller: <strong>{{ item.seller }}</strong> (Phone: {{ item.phone }})</div>
           </div>
           <div style="text-align:right;">
             <div style="font-family:var(--font-ui); font-size:1.45rem; font-weight:800; color:#10B981; font-variant-numeric:tabular-nums;">
               {{ formatBDT(item.price) }}
             </div>
-            <div style="font-size:0.8rem; color:#94A3B8;">{{ item.location }}</div>
+            <div style="font-size:0.8rem; color:#8E9B8F;">{{ item.location }}</div>
           </div>
         </div>
 
@@ -38,7 +38,7 @@
         <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:var(--radius-md); padding:16px; margin-bottom:20px;">
           <div class="flex justify-between items-center" style="margin-bottom:10px;">
             <strong style="color:#FFF; font-size:0.88rem;">Uploaded Document Dossier:</strong>
-            <span style="font-size:0.75rem; color:#D4AF37;">Click file to preview dossier records</span>
+            <span style="font-size:0.75rem; color:#E2651C;">Click file to preview dossier records</span>
           </div>
           <div class="grid grid-3" style="gap:10px;">
             <div 

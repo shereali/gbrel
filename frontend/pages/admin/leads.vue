@@ -30,7 +30,7 @@
             {{ cat }}
           </button>
         </div>
-        <div style="font-size:0.85rem; color:#94A3B8; font-weight:600;">
+        <div style="font-size:0.85rem; color:#8E9B8F; font-weight:600;">
           {{ filteredLeads.length }} Inquiries · readiness is self-reported
         </div>
       </div>
@@ -74,7 +74,7 @@
             <div style="font-size:0.88rem; margin-top:4px;" class="text-subtle">
               <p v-if="lead.budget_range" style="margin-bottom: 8px;">Budget fit: <strong>{{ lead.budget_range }}</strong></p>
               Target Property: <strong style="color:#10B981;">{{ lead.property }}</strong>
-              <span v-if="lead.preferred_contact" style="margin-left: 10px; color: #94A3B8; font-size: 0.8rem;">
+              <span v-if="lead.preferred_contact" style="margin-left: 10px; color: #8E9B8F; font-size: 0.8rem;">
                 • Preferred: <strong style="color:#FFF;">{{ lead.preferred_contact }}</strong>
               </span>
             </div>

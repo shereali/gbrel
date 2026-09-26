@@ -1,111 +1,112 @@
 import { ref } from 'vue'
+import { toBn } from '~/utils/propertyLabels'
+
+// Mirrors App\Support\SiteSettings on the backend. Every value is editable in Admin → Settings.
+export interface DocumentType {
+  key: string
+  label: string
+  hint?: string
+  required: boolean
+}
 
 export interface SiteSettings {
   site_name: string
-  site_tagline: string
-  contact_email: string
+  site_title: string
   contact_phone: string
   whatsapp_number: string
-  emergency_hotline: string
+  contact_email: string
   office_address: string
   working_hours: string
-  bank_financing_rate: number
-  service_fee_pct: number
-  vat_tax_pct: number
-  currency: string
-  currency_symbol: string
-  maintenance_mode: boolean
+  home_headline: string
+  home_subtitle: string
+  owner_commission_percent: number
+  owner_terms: string
+  owner_terms_version: string
+  listing_document_types: DocumentType[]
+  commission_rate?: string
   [key: string]: any
 }
 
 const defaultSettings: SiteSettings = {
-  site_name: 'Gram Bangla Real Estate Ltd',
-  site_tagline: 'Bangladesh’s Premier Real Estate Marketplace',
-  contact_email: 'info@gbrel.com',
-  contact_phone: '+880 1711 000000',
-  whatsapp_number: '+880 1711 000000',
-  emergency_hotline: '+880 1911 222333',
-  office_address: 'Plot 12, Road 4, Gulshan-1, Dhaka 1212, Bangladesh',
-  working_hours: 'Saturday – Thursday: 9:00 AM – 7:00 PM',
-  bank_financing_rate: 8.5,
-  service_fee_pct: 1.5,
-  vat_tax_pct: 7.5,
-  currency: 'BDT',
-  currency_symbol: '৳',
-  maintenance_mode: false
+  site_name: 'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড',
+  site_title: 'গ্রাম বাংলা রিয়েল এস্টেট | জমি, প্লট ও ফ্ল্যাট — GBREL',
+  contact_phone: '',
+  whatsapp_number: '',
+  contact_email: '',
+  office_address: '',
+  working_hours: '',
+  home_headline: 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন।',
+  home_subtitle: '',
+  owner_commission_percent: 2,
+  owner_terms: '',
+  owner_terms_version: '',
+  listing_document_types: []
 }
 
 const settings = ref<SiteSettings>({ ...defaultSettings })
 const isLoading = ref(false)
 const isSaving = ref(false)
 const hasLoaded = ref(false)
+let pending: Promise<SiteSettings> | null = null
+
+const normalize = (data: Record<string, any>): SiteSettings => ({
+  ...defaultSettings,
+  ...data,
+  owner_commission_percent: Number(data.owner_commission_percent ?? defaultSettings.owner_commission_percent),
+  listing_document_types: Array.isArray(data.listing_document_types) ? data.listing_document_types : []
+})
 
 export const useSettings = () => {
-  const fetchSettings = async (force = false) => {
+  const fetchSettings = async (force = false): Promise<SiteSettings> => {
     if (hasLoaded.value && !force) return settings.value
+    if (pending && !force) return pending
     isLoading.value = true
-    try {
-      const res = await fetch(useApiUrl('/settings'))
-      if (res.ok) {
-        const data = await res.json()
-        if (data && typeof data === 'object') {
-          // Merge with defaults
-          settings.value = {
-            ...defaultSettings,
-            ...data,
-            bank_financing_rate: Number(data.bank_financing_rate ?? defaultSettings.bank_financing_rate),
-            service_fee_pct: Number(data.service_fee_pct ?? defaultSettings.service_fee_pct),
-            vat_tax_pct: Number(data.vat_tax_pct ?? defaultSettings.vat_tax_pct),
-            maintenance_mode: Boolean(data.maintenance_mode === true || data.maintenance_mode === '1' || data.maintenance_mode === 'true')
-          }
+    pending = (async () => {
+      try {
+        const res = await fetch(useApiUrl('/settings'))
+        const body = await res.json().catch(() => null)
+        if (res.ok && body?.data && typeof body.data === 'object') {
+          settings.value = normalize(body.data)
           hasLoaded.value = true
         }
+      } catch (err) {
+        console.warn('Settings could not be loaded:', err)
+      } finally {
+        isLoading.value = false
+        pending = null
       }
-    } catch (err) {
-      console.error('Failed to load settings:', err)
-    } finally {
-      isLoading.value = false
-    }
-    return settings.value
+      return settings.value
+    })()
+    return pending
   }
 
-  const updateSettings = async (newSettings: Partial<SiteSettings>) => {
+  const updateSettings = async (changes: Partial<SiteSettings>) => {
     isSaving.value = true
     try {
       const res = await fetch(useApiUrl('/settings'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newSettings)
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(changes)
       })
-      if (!res.ok) {
-        throw new Error(`Failed to save settings: ${res.statusText}`)
+      const body = await res.json().catch(() => null)
+      if (!res.ok || !body?.success) {
+        const first = body?.errors ? Object.values(body.errors).flat()[0] : null
+        throw new Error(String(first || body?.message || 'সেটিংস সংরক্ষণ করা যায়নি।'))
       }
-      const data = await res.json()
-      if (data && data.settings) {
-        settings.value = {
-          ...settings.value,
-          ...data.settings,
-          bank_financing_rate: Number(data.settings.bank_financing_rate ?? settings.value.bank_financing_rate),
-          service_fee_pct: Number(data.settings.service_fee_pct ?? settings.value.service_fee_pct),
-          vat_tax_pct: Number(data.settings.vat_tax_pct ?? settings.value.vat_tax_pct)
-        }
-      } else {
-        settings.value = { ...settings.value, ...newSettings }
-      }
-      return true
-    } catch (err) {
-      console.error('Failed to update settings:', err)
-      throw err
+      settings.value = normalize(body.data)
+      hasLoaded.value = true
+      return settings.value
     } finally {
       isSaving.value = false
     }
   }
 
-  return {
-    settings,
-    isLoading,
-    isSaving,
-    fetchSettings,
-    updateSettings
-  }
+  // Owner terms are stored one rule per line; {commission} is replaced with the current percentage.
+  const ownerTermsList = () => settings.value.owner_terms
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => line.replaceAll('{commission}', toBn(settings.value.owner_commission_percent)))
+
+  return { settings, isLoading, isSaving, fetchSettings, updateSettings, ownerTermsList }
 }

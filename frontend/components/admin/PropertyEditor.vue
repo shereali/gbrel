@@ -48,7 +48,7 @@
         <button 
           type="button" 
           class="btn btn-sm btn-emerald" 
-          :disabled="isSaving" 
+          :disabled="isSaving || ownerNotApproved" 
           @click="saveProperty('Active')"
           style="display:inline-flex; align-items:center; gap:6px;"
           title="Publish listing live to the public portal"
@@ -57,6 +57,15 @@
           <span>{{ isSaving ? 'Saving...' : (isEditing ? 'Save & Publish Live' : '🚀 Publish Property') }}</span>
         </button>
       </div>
+    </div>
+
+    <div v-if="ownerSource" class="owner-source-banner" role="note">
+      <div>
+        <strong>Submitted by a property owner</strong>
+        <span v-if="ownerNotApproved">Approve it on the review page before publishing. Saving here keeps it hidden from the website.</span>
+        <span v-else>Approved. Edit the public details here; publish or take it down from the review page.</span>
+      </div>
+      <NuxtLink :to="`/admin/listing-requests/${propId}`">Open review page</NuxtLink>
     </div>
 
     <!-- MAIN TWO-COLUMN FORM LAYOUT -->
@@ -334,7 +343,7 @@
             <div class="property-card-title">
               <span class="property-card-icon">6</span>
               <span>Photos & Media Showcase</span>
-              <span class="badge" style="background:rgba(212,175,55,0.15); color:var(--color-gold); font-size:0.75rem; margin-left:8px;">
+              <span class="badge" style="background:rgba(226, 101, 28,0.15); color:var(--color-gold); font-size:0.75rem; margin-left:8px;">
                 {{ (propForm.featureImage ? 1 : 0) + propForm.gallery.length }} Photos Attached
               </span>
             </div>
@@ -447,7 +456,7 @@
               <span>RAJUK / CDA Approved Building Plan Verified</span>
             </label>
             <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.9rem; color:var(--admin-text-primary);">
-              <input v-model="propForm.isFeatured" type="checkbox" style="width:18px; height:18px; accent-color:#D4AF37;" />
+              <input v-model="propForm.isFeatured" type="checkbox" style="width:18px; height:18px; accent-color:#E2651C;" />
               <span>Feature on Live Homepage Showcase (Star Badge)</span>
             </label>
           </div>
@@ -464,7 +473,7 @@
           <p style="color:var(--admin-text-muted);font-size:13px;margin-top:8px;">Manage the advisor's public phone and WhatsApp in Agents &amp; Advisors. Personal owner contact details do not belong in the public description.</p>
           <p v-if="advisorError" role="status">Advisor list could not be loaded. The existing selection is preserved.</p>
         </div>
-        <div id="sec-privacy" class="property-editor-card" style="border-color:rgba(212,175,55,0.25);">
+        <div id="sec-privacy" class="property-editor-card" style="border-color:rgba(226, 101, 28,0.25);">
           <div class="property-card-header">
             <div class="property-card-title">
               <span class="property-card-icon">9</span>
@@ -479,7 +488,7 @@
 
           <div class="grid grid-2" style="gap:12px;">
             <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; color:var(--admin-text-primary);">
-              <input v-model="propForm.hideAgentPhoto" type="checkbox" style="width:16px; height:16px; accent-color:#D4AF37;" />
+              <input v-model="propForm.hideAgentPhoto" type="checkbox" style="width:16px; height:16px; accent-color:#E2651C;" />
               <span>🛡️ Hide Advisor Photo (Display Official GBREL Crest)</span>
             </label>
             <label class="flex items-center gap-2" style="cursor:pointer; font-size:0.85rem; color:var(--admin-text-primary);">
@@ -505,9 +514,9 @@
           <div class="guide-floating-badge-row">
             <div class="guide-floating-badge">
               <span class="guide-pulse-dot"></span>
-              <span>COMPLETION GUIDE</span>
+              <span>Completion guide</span>
             </div>
-            <span class="badge" style="background:rgba(212,175,55,0.15); color:var(--color-gold); font-size:0.75rem; font-weight:700;">
+            <span class="badge" style="background:rgba(226, 101, 28,0.15); color:var(--color-gold); font-size:0.75rem; font-weight:700;">
               {{ completedStepsCount }}/{{ totalStepsCount }} Done
             </span>
           </div>
@@ -522,7 +531,7 @@
               <div 
                 :style="{ 
                   width: completionPercentage + '%', 
-                  background: completionPercentage === 100 ? '#10B981' : 'linear-gradient(90deg, #D4AF37, #10B981)',
+                  background: completionPercentage === 100 ? '#10B981' : 'linear-gradient(90deg, #E2651C, #10B981)',
                   height: '100%',
                   transition: 'width 0.3s ease'
                 }"
@@ -562,7 +571,7 @@
           </div>
 
           <!-- Dynamic Recommendation Tip Box -->
-          <div style="background:rgba(212,175,55,0.08); border:1px solid rgba(212,175,55,0.25); border-radius:8px; padding:12px;">
+          <div style="background:rgba(226, 101, 28,0.08); border:1px solid rgba(226, 101, 28,0.25); border-radius:8px; padding:12px;">
             <div style="font-size:0.76rem; font-weight:700; color:var(--color-gold); margin-bottom:4px; display:flex; align-items:center; gap:4px;">
               <span>💡 Recommendation:</span>
             </div>
@@ -615,7 +624,7 @@
         <div class="flex items-center justify-between pb-3 mb-3" style="border-bottom:1px solid var(--admin-border-subtle);">
           <div class="guide-floating-badge">
             <span class="guide-pulse-dot"></span>
-            <span>COMPLETION GUIDE</span>
+            <span>Completion guide</span>
           </div>
           <button class="btn btn-sm btn-outline-white" @click="mobileGuideOpen = false">✕ Close</button>
         </div>
@@ -629,7 +638,7 @@
             <div 
               :style="{ 
                 width: completionPercentage + '%', 
-                background: completionPercentage === 100 ? '#10B981' : 'linear-gradient(90deg, #D4AF37, #10B981)',
+                background: completionPercentage === 100 ? '#10B981' : 'linear-gradient(90deg, #E2651C, #10B981)',
                 height: '100%',
                 transition: 'width 0.3s ease'
               }"
@@ -750,6 +759,9 @@ const galleryFileInput = ref<HTMLInputElement | null>(null)
 const brochureFileInput = ref<HTMLInputElement | null>(null)
 
 const route = useRoute()
+// Set when this listing was submitted by a property owner: publishing then goes through the review page.
+const ownerSource = ref<{ ownerId: number; reviewStatus: string; live: boolean } | null>(null)
+const ownerNotApproved = computed(() => !!ownerSource.value && !['approved', 'update_submitted'].includes(ownerSource.value.reviewStatus))
 const isEditing = computed(() => Boolean(props.propertyId || route.params.id || route.query.id))
 const propId = computed(() => Number(props.propertyId || route.params.id || route.query.id) || null)
 const isLoading = ref(isEditing.value)
@@ -845,7 +857,7 @@ const statusBadgeStyle = computed(() => {
     case 'Active':
       return { background: 'rgba(16,185,129,0.15)', color: '#10B981', border: '1px solid rgba(16,185,129,0.3)' }
     case 'Draft':
-      return { background: 'rgba(212,175,55,0.15)', color: 'var(--color-gold)', border: '1px solid rgba(212,175,55,0.3)' }
+      return { background: 'rgba(226, 101, 28,0.15)', color: 'var(--color-gold)', border: '1px solid rgba(226, 101, 28,0.3)' }
     case 'Under Offer':
       return { background: 'rgba(56,189,248,0.15)', color: '#38BDF8', border: '1px solid rgba(56,189,248,0.3)' }
     case 'Sold':
@@ -1081,6 +1093,7 @@ onMounted(async () => {
     try {
       const item = await fetchPropertyById(propId.value, { strict: true })
       if (item) {
+        ownerSource.value = item.ownerId ? { ownerId: item.ownerId, reviewStatus: item.reviewStatus || '', live: !!item.publishedAt } : null
         propForm.title = item.title
         propForm.tagline = item.tagline || ''
         propForm.description = item.description || ''

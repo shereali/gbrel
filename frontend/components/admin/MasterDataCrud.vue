@@ -97,7 +97,7 @@
           <span class="stat-title">Realtime Sync</span>
           <span class="stat-badge stat-badge-gold">Auto-Synced</span>
         </div>
-        <div class="stat-val" style="color: #D4AF37; font-size: 1.25rem; font-weight: 700; margin-top: 6px;">
+        <div class="stat-val" style="color: #E2651C; font-size: 1.25rem; font-weight: 700; margin-top: 6px;">
           100% ONLINE
         </div>
         <div class="stat-sub">Dual-synced with Platform Settings</div>
@@ -797,10 +797,10 @@ onMounted(() => {
 }
 
 .master-tab-item.active {
-  background: rgba(212, 175, 55, 0.14);
+  background: rgba(226, 101, 28, 0.14);
   border-color: var(--color-gold);
   color: var(--admin-text-primary);
-  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 4px 14px rgba(226, 101, 28, 0.15);
 }
 
 .tab-icon {
@@ -873,8 +873,8 @@ onMounted(() => {
 }
 
 .stat-badge-gold {
-  background: rgba(212, 175, 55, 0.18);
-  color: #D4AF37;
+  background: rgba(226, 101, 28, 0.18);
+  color: #E2651C;
 }
 
 .stat-val {
@@ -946,7 +946,7 @@ onMounted(() => {
 
 .filter-search-input:focus {
   border-color: var(--color-gold);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 0 0 3px rgba(226, 101, 28, 0.15);
 }
 
 .search-clear-btn {
@@ -1075,8 +1075,8 @@ onMounted(() => {
 
 .symbol-pill {
   padding: 2px 8px;
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(226, 101, 28, 0.15);
+  border: 1px solid rgba(226, 101, 28, 0.3);
   color: var(--color-gold);
   border-radius: var(--radius-md);
   font-size: 0.76rem;
@@ -1119,14 +1119,14 @@ onMounted(() => {
 .toggle-status-btn.is-inactive {
   background: rgba(148, 163, 184, 0.12);
   border-color: rgba(148, 163, 184, 0.25);
-  color: #94A3B8;
+  color: #8E9B8F;
 }
 
 .toggle-status-btn.is-inactive .toggle-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #64748B;
+  background: #5F6E63;
 }
 
 .toggle-status-btn:hover {
@@ -1272,7 +1272,7 @@ onMounted(() => {
 
 .form-input:focus, .form-textarea:focus {
   border-color: var(--color-gold);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 0 0 3px rgba(226, 101, 28, 0.15);
 }
 
 .color-picker-wrap {
@@ -1362,7 +1362,7 @@ onMounted(() => {
 .spinner-ring {
   width: 36px;
   height: 36px;
-  border: 3px solid rgba(212, 175, 55, 0.2);
+  border: 3px solid rgba(226, 101, 28, 0.2);
   border-top-color: var(--color-gold);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;

@@ -178,7 +178,7 @@
                     />
                     <span 
                       v-if="prop.images && prop.images.length > 1" 
-                      style="position:absolute; bottom:2px; right:2px; background:rgba(10,17,40,0.85); color:#F1F5F9; font-size:0.68rem; font-weight:700; padding:1px 4px; border-radius:3px; border:1px solid rgba(255,255,255,0.2);"
+                      style="position:absolute; bottom:2px; right:2px; background:rgba(18, 38, 26,0.85); color:#EDF1E6; font-size:0.68rem; font-weight:700; padding:1px 4px; border-radius:3px; border:1px solid rgba(255,255,255,0.2);"
                       title="Gallery photos attached"
                     >
                       📷 {{ prop.images.length }}

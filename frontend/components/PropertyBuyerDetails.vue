@@ -2,7 +2,7 @@
   <section v-if="groups.length" id="property-buyer-details" class="public-buyer-details" lang="bn">
     <p class="kicker">সিদ্ধান্তের প্রয়োজনীয় তথ্য</p><h2>মূল্য, মালিকানা ও ক্রয়ের শর্ত</h2>
     <p class="source-note">বিক্রেতা / প্রতিনিধির দেওয়া তথ্য। মূল নথির সঙ্গে মিলিয়ে নিশ্চিত করুন। ফাঁকা তথ্য এখানে দেখানো হয়নি।</p>
-    <div v-if="!property.hidePrice && total" class="total-price"><span>সম্পূর্ণ প্রপার্টির চাওয়া মূল্য</span><strong>{{ formatBDT(total) }}</strong><span v-if="property.buyerDetails?.priceBasis === 'Per land unit'">{{ property.landSize }} {{ property.landUnit }} × {{ formatBDT(property.price) }}</span><span v-else-if="property.buyerDetails?.priceBasis === 'Per sqft'">{{ property.squareFootage }} বর্গফুট × {{ formatBDT(property.price) }}</span><small v-if="property.priceUnit">{{ property.priceUnit }}</small><small>অতিরিক্ত খরচ আলাদা। কোনো খরচ উল্লেখ না থাকলে তা মূল্যের অন্তর্ভুক্ত ধরে নেবেন না।</small></div>
+    <div v-if="!property.hidePrice && total" class="total-price"><span>সম্পূর্ণ প্রপার্টির চাওয়া মূল্য</span><strong>{{ priceBn(total) }}</strong><span v-if="property.buyerDetails?.priceBasis === 'Per land unit'">{{ toBn(property.landSize) }} {{ unitLabels[property.landUnit] || property.landUnit }} × {{ priceBn(property.price) }}</span><span v-else-if="property.buyerDetails?.priceBasis === 'Per sqft'">{{ toBn(property.squareFootage) }} বর্গফুট × {{ priceBn(property.price) }}</span><small v-if="property.priceUnit">{{ property.priceUnit }}</small><small>অতিরিক্ত খরচ আলাদা। কোনো খরচ উল্লেখ না থাকলে তা মূল্যের অন্তর্ভুক্ত ধরে নেবেন না।</small></div>
     <details v-for="group in groups" :key="group.key" :open="group.key === 'terms' || group.key === 'building'">
       <summary>{{ group.bn }}</summary>
       <dl><div v-for="field in group.fields" :key="field.key"><dt>{{ field.bn }}</dt><dd>{{ field.value }}</dd></div></dl>
@@ -12,7 +12,7 @@
 </template>
 <script setup lang="ts">
 import { detailGroups, totalAskingPrice } from '~/utils/buyerDetails.mjs'
-import { formatBDT } from '~/composables/useCurrency'
+import { priceBn, toBn, unitLabels } from '~/utils/propertyLabels'
 const props = defineProps<{ property: any }>()
 defineEmits(['inquire'])
 const groups = computed(() => detailGroups(props.property))

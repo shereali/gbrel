@@ -46,7 +46,7 @@ export const priceBn = (amount?: number | null) => {
 
 // Normalise a phone number to the format the leads API accepts:
 // +8801XXXXXXXXX for Bangladesh, or +<country><number> for abroad.
-export const normalizePhone = (raw: string): string | null => {
+export const toApiPhone = (raw: string): string | null => {
   const bn = '০১২৩৪৫৬৭৮৯'
   let v = raw.replace(/[০-৯]/g, d => String(bn.indexOf(d))).replace(/[\s\-().]/g, '')
   if (v.startsWith('00')) v = '+' + v.slice(2)

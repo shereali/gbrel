@@ -53,7 +53,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { PhoneCall, X } from 'lucide-vue-next'
 import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
 import { useSettings } from '~/composables/useSettings'
-import { normalizePhone } from '~/utils/propertyLabels'
+import { toApiPhone } from '~/utils/propertyLabels'
 
 const { settings, fetchSettings } = useSettings()
 onMounted(() => { fetchSettings() })
@@ -76,7 +76,7 @@ useOverlayBehavior(open, close, root)
 const submit = async () => {
   error.value = ''
   if (!form.name) { error.value = 'আপনার নাম লিখুন।'; return }
-  const phone = normalizePhone(form.phone)
+  const phone = toApiPhone(form.phone)
   if (!phone) { error.value = 'সঠিক মোবাইল নম্বর দিন, যেমন 01712345678। বিদেশের নম্বর হলে দেশের কোডসহ (+44…) লিখুন।'; return }
   sending.value = true
   try {

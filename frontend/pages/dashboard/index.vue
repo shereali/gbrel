@@ -15,25 +15,6 @@
             </div>
           </div>
 
-          <!-- Quick Role Switcher -->
-          <div class="flex items-center gap-2">
-            <span style="font-size: 0.85rem; color: #CBD5E1;">Test Role:</span>
-            <button 
-              class="btn btn-sm" 
-              :class="user.role === 'buyer' ? 'btn-gold' : 'btn-outline-white'"
-              @click="switchRole('buyer')"
-            >Buyer</button>
-            <button 
-              class="btn btn-sm" 
-              :class="user.role === 'agent' ? 'btn-gold' : 'btn-outline-white'"
-              @click="switchRole('agent')"
-            >Agent</button>
-            <button 
-              class="btn btn-sm" 
-              :class="user.role === 'admin' ? 'btn-gold' : 'btn-outline-white'"
-              @click="switchRole('admin')"
-            >Admin</button>
-          </div>
         </div>
       </div>
 
@@ -277,7 +258,8 @@ import { useApiUrl } from '~/composables/useApi'
 import PropertyCard from '~/components/PropertyCard.vue'
 
 const route = useRoute()
-const { user, switchRole, token, hasPermission, isSuperAdmin } = useAuth()
+const { user, token, hasPermission, isSuperAdmin, isOwner } = useAuth()
+if (isOwner.value) navigateTo('/my-listings')
 const { properties, getPropertyById, fetchProperties } = useProperties()
 
 const activeTab = ref('overview')

@@ -109,7 +109,7 @@ import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
 import { askingPriceSummary } from '~/utils/buyerDetails.mjs'
 import { normalizePhone, validPhone, savePropertyInquiry } from '~/utils/propertyInquiry.mjs'
 import { buildQuestions, labelFor, scoreLead, type Answers } from '~/utils/leadSurvey'
-import { toBn } from '~/utils/propertyLabels'
+import { priceBn, toBn } from '~/utils/propertyLabels'
 import { trackPixel } from '~/utils/metaPixel'
 
 const props = defineProps<{ open: boolean; property: PropertyItem; source: string; startPurpose?: string; whatsapp?: string }>()
@@ -118,7 +118,7 @@ const route = useRoute()
 const dialogRoot = ref<HTMLElement | null>(null)
 useOverlayBehavior(computed(() => props.open), () => emit('close'), dialogRoot)
 
-const questions = computed(() => buildQuestions(!!props.property.hidePrice))
+const questions = computed(() => buildQuestions(!!props.property.hidePrice, props.property.propertyType))
 const totalSteps = computed(() => questions.value.length + 1)
 const bandColors = ['#B9D08F', '#9DBE73', '#7FA85A', '#5C924A', '#3A7234', '#1D4A2A']
 const channels = [{ value: 'WhatsApp', label: 'WhatsApp-এ মেসেজ' }, { value: 'Phone Call', label: 'ফোন কল' }]
@@ -137,7 +137,7 @@ const started = ref(false)
 const current = computed(() => questions.value[step.value])
 const score = computed(() => scoreLead(questions.value, answers))
 const tier = computed(() => score.value.tier)
-const priceText = computed(() => props.property.hidePrice ? (props.property.priceDisplayText || 'দাম জানতে অনুরোধ করুন') : formatBDT(askingPriceSummary(props.property).amount ?? 0))
+const priceText = computed(() => props.property.hidePrice ? (props.property.priceDisplayText || 'দাম জানতে অনুরোধ করুন') : priceBn(askingPriceSummary(props.property).amount ?? 0))
 
 const track = (event: string, extra: Record<string, unknown> = {}, eventID?: string) =>
   trackPixel(event, { content_ids: [String(props.property.id)], content_type: 'product', content_name: props.property.title, ...extra }, eventID)

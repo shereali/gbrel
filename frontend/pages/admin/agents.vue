@@ -122,10 +122,10 @@
           <button class="admin-modal-close" @click="deleteAgentTarget = null">✕</button>
         </div>
         <div class="admin-modal-body">
-          <p style="color:#E2E8F0; font-size:0.92rem; line-height:1.5;">
+          <p style="color:#D6DDCB; font-size:0.92rem; line-height:1.5;">
             Are you sure you want to remove advisor <strong>"{{ deleteAgentTarget.name }}"</strong>?
           </p>
-          <p style="color:#94A3B8; font-size:0.82rem; margin-top:8px;">
+          <p style="color:#8E9B8F; font-size:0.82rem; margin-top:8px;">
             Their assigned properties will be reassigned to the Dhaka HQ team.
           </p>
         </div>

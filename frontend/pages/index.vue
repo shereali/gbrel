@@ -4,8 +4,8 @@
     <section class="hero" aria-labelledby="hero-title">
       <div class="gb-wrap hero-top">
         <div class="hero-copy">
-          <h1 id="hero-title" class="hero-title">জমি দেখে,<br />কাগজ বুঝে,<br />তারপর কিনুন।</h1>
-          <p class="hero-lead">প্লট, জমি শেয়ার আর ফ্ল্যাটের তালিকা — প্রতিটির দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য এক জায়গায়। পছন্দ হলে আমাদের টিমের সঙ্গে সরাসরি কথা বলুন।</p>
+          <h1 id="hero-title" class="hero-title"><template v-for="(line, i) in headlineLines" :key="i"><br v-if="i" />{{ line }}</template></h1>
+          <p class="hero-lead">{{ settings.home_subtitle || defaultSubtitle }}</p>
 
           <form class="hero-search" role="search" @submit.prevent="runSearch">
             <label class="sr-only" for="hero-type">প্রপার্টির ধরন</label>
@@ -216,6 +216,9 @@ const runSearch = () => {
   router.push({ path: '/properties', query })
 }
 
+const defaultSubtitle = 'প্লট, জমি শেয়ার আর ফ্ল্যাটের তালিকা — প্রতিটির দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য এক জায়গায়। পছন্দ হলে আমাদের টিমের সঙ্গে সরাসরি কথা বলুন।'
+// The headline breaks after each comma, the way it is set on the page.
+const headlineLines = computed(() => (settings.value.home_headline || 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন।').split(/(?<=,)\s*/).filter(Boolean))
 const phone = computed(() => settings.value.contact_phone || '')
 const phoneHref = computed(() => phone.value.replace(/[^\d+]/g, ''))
 const whatsapp = computed(() => (settings.value.whatsapp_number || '').replace(/\D/g, ''))

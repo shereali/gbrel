@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Schema;
 
 class Property extends Model
@@ -11,6 +14,23 @@ class Property extends Model
     use HasFactory;
 
     protected $guarded = ['id'];
+
+    /**
+     * Statuses that are never shown on the public site.
+     *
+     * @var list<string>
+     */
+    public const HIDDEN_STATUSES = ['Draft', 'Delisted', 'Pending Review', 'Rejected'];
+
+    /**
+     * Owner and review data. Only staff and the owner see these (see withPrivateFields()).
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'owner_id', 'review_status', 'review_note', 'owner_details', 'owner_pending_changes', 'owner_agreement',
+        'submitted_at', 'reviewed_at', 'reviewed_by', 'published_at',
+    ];
 
     protected $casts = [
         'buyer_details' => 'array',
@@ -40,6 +60,12 @@ class Property extends Model
         'images' => 'array',
         'amenities' => 'array',
         'documents_verified' => 'array',
+        'owner_details' => 'array',
+        'owner_pending_changes' => 'array',
+        'owner_agreement' => 'array',
+        'submitted_at' => 'datetime',
+        'reviewed_at' => 'datetime',
+        'published_at' => 'datetime',
     ];
 
     protected $appends = ['feature_image', 'gallery'];
@@ -81,5 +107,37 @@ class Property extends Model
     public function agent()
     {
         return $this->belongsTo(Agent::class);
+    }
+
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(PropertyDocument::class);
+    }
+
+    /**
+     * Listings the public may see: not hidden by status, and owner submissions only once GBREL has published them.
+     */
+    public function scopeVisibleToPublic(Builder $query): Builder
+    {
+        return $query->whereNotIn('status', self::HIDDEN_STATUSES)
+            ->where(function (Builder $inner) {
+                $inner->whereNull('owner_id')->orWhereNotNull('published_at');
+            });
+    }
+
+    public function isVisibleToPublic(): bool
+    {
+        return ! in_array($this->status, self::HIDDEN_STATUSES, true)
+            && ($this->owner_id === null || $this->published_at !== null);
+    }
+
+    public function withPrivateFields(): static
+    {
+        return $this->makeVisible($this->hidden);
     }
 }

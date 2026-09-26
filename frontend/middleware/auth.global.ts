@@ -56,6 +56,10 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       if (!hasPermission('leads.view') && !hasPermission('leads.manage') && !isSuperAdmin.value) {
         return navigateTo('/admin?forbidden=leads')
       }
+    } else if (to.path.startsWith('/admin/listing-requests')) {
+      if (!hasPermission('listings.review') && !hasPermission('properties.edit') && !isSuperAdmin.value) {
+        return navigateTo('/admin?forbidden=listing-requests')
+      }
     } else if (to.path.startsWith('/admin/agents')) {
       if (!hasPermission('agents.manage') && !isSuperAdmin.value) {
         return navigateTo('/admin?forbidden=agents')
@@ -63,8 +67,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     }
   }
 
-  // 3. Handling /dashboard
-  if (to.path.startsWith('/dashboard')) {
+  // 3. Handling /dashboard and the owner's own listings
+  if (to.path.startsWith('/dashboard') || to.path.startsWith('/my-listings')) {
     if (!isAuthenticated.value) {
       return navigateTo(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
     }

@@ -12,7 +12,7 @@
     <ComparisonDrawer />
 
     <!-- Floating WhatsApp Pulse & VIP Instant Callback Hunter Widget -->
-    <LeadHunterWidget v-if="!isPropertyDetail" />
+    <LeadHunterWidget v-if="showLeadWidget" />
 
     <!-- Luxury Footer -->
     <footer v-if="isPropertyDetail" class="property-footer">
@@ -56,6 +56,8 @@ import { useToast } from '~/composables/useToast'
 const { toasts, remove: removeToast } = useToast()
 const route = useRoute()
 const isPropertyDetail = computed(() => /^\/properties\/[^/]+\/?$/.test(route.path))
+// The buyer call-back button is not useful on the property page (it has its own form) or on owner/account pages.
+const showLeadWidget = computed(() => !isPropertyDetail.value && !/^\/(my-listings|login|signup|dashboard)/.test(route.path))
 </script>
 
 <style scoped>
