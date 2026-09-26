@@ -1,10 +1,10 @@
 <template>
-  <div class="site-layout">
+  <div class="site-layout gb">
     <!-- Public Website Navigation Header -->
     <AppHeader />
 
     <!-- Main Website Viewport -->
-    <main class="site-main-content">
+    <main id="main" class="site-main-content">
       <slot />
     </main>
 
@@ -16,9 +16,9 @@
 
     <!-- Luxury Footer -->
     <footer v-if="isPropertyDetail" class="property-footer">
-      <strong>GBREL · Gram Bangla Real Estate</strong>
+      <strong>গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড</strong>
       <span>প্রপার্টি সম্পর্কে জানুন। বুঝে সিদ্ধান্ত নিন।</span>
-      <NuxtLink to="/properties">সব প্রপার্টি দেখুন →</NuxtLink>
+      <NuxtLink to="/properties">সব প্রপার্টি দেখুন</NuxtLink>
     </footer>
     <AppFooter v-else />
 

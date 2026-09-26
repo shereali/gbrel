@@ -1,779 +1,409 @@
 <template>
-  <div class="homepage-root">
-    <!-- ======================================================================
-         1. LUXURY HERO SECTION
-         ====================================================================== -->
-    <section class="hero-section">
-      <div class="hero-bg-overlay"></div>
-      <div class="container hero-content">
-        <!-- Hero Trust Pill -->
-        <div class="hero-tag animate-fade-in">
-          <span class="hero-tag-dot" aria-hidden="true"></span>
-          <span>RAJUK & CDA Verified Bangladesh Brokerage</span>
-        </div>
-        
-        <h1 class="hero-title animate-fade-in-up">
-          Verified Penthouses, <span>Freehold Plots</span> & Beachfront Assets
-        </h1>
-        
-        <p class="hero-subtitle animate-fade-in-up">
-          RAJUK & CDA approved apartments, corner plots in Katha/Bigha, and beachfront hotel suites across Dhaka, Chittagong, Sylhet, and Cox's Bazar.
-        </p>
+  <div class="home">
+    <!-- Hero: headline + search, sun rising over the field bands -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="gb-wrap hero-top">
+        <div class="hero-copy">
+          <h1 id="hero-title" class="hero-title">জমি দেখে,<br />কাগজ বুঝে,<br />তারপর কিনুন।</h1>
+          <p class="hero-lead">প্লট, জমি শেয়ার আর ফ্ল্যাটের তালিকা — প্রতিটির দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য এক জায়গায়। পছন্দ হলে আমাদের টিমের সঙ্গে সরাসরি কথা বলুন।</p>
 
-        <!-- Multi-Intent Real Estate Search Engine -->
-        <div class="hero-search-wrapper animate-fade-in-up">
-          <HeroSearch />
+          <form class="hero-search" role="search" @submit.prevent="runSearch">
+            <label class="sr-only" for="hero-type">প্রপার্টির ধরন</label>
+            <select id="hero-type" v-model="search.type" class="hero-select">
+              <option value="">সব ধরন</option>
+              <option v-for="band in bands" :key="band.key" :value="band.key">{{ band.name }}</option>
+            </select>
+            <label class="sr-only" for="hero-q">এলাকা বা প্রকল্পের নাম</label>
+            <input id="hero-q" v-model="search.q" class="hero-input" type="search" placeholder="এলাকা বা প্রকল্প, যেমন পূর্বাচল" autocomplete="off" />
+            <button type="submit" class="gb-btn gb-btn--sun hero-go">
+              <Search :size="18" aria-hidden="true" />
+              <span>খুঁজুন</span>
+            </button>
+          </form>
         </div>
+      </div>
+
+      <div class="fields">
+        <div class="sun" aria-hidden="true">
+          <span v-for="n in 9" :key="n" class="ray" :style="{ '--i': n }"></span>
+          <span class="disc"></span>
+        </div>
+        <nav class="bands" aria-label="ধরন অনুযায়ী প্রপার্টি">
+          <NuxtLink
+            v-for="(band, i) in bands"
+            :key="band.key"
+            :to="`/properties?type=${encodeURIComponent(band.key)}`"
+            class="band"
+            :style="{ '--i': i }"
+          >
+            <span class="gb-wrap band-row">
+              <span class="band-name">{{ band.name }}</span>
+              <span class="band-note">{{ band.note }}</span>
+              <span class="band-count">{{ countLabel(band) }}</span>
+            </span>
+          </NuxtLink>
+        </nav>
       </div>
     </section>
 
-    <!-- ======================================================================
-         2. DUE DILIGENCE & MARKET IMPACT TRUST BAR
-         ====================================================================== -->
-    <section class="trust-bar-section">
-      <div class="container">
-        <div class="grid grid-4 trust-grid">
-          <div class="trust-item">
-            <div class="trust-value">৳ 650+ Cr</div>
-            <div class="trust-title">Prime Assets Managed</div>
-            <div class="trust-desc">Across Dhaka, Chittagong & Cox's Bazar</div>
-          </div>
-
-          <div class="trust-item">
-            <div class="trust-value">100% Verified</div>
-            <div class="trust-title">RAJUK & CDA Compliance</div>
-            <div class="trust-desc">CS, RS, BS Khatians & Mutation cleared</div>
-          </div>
-
-          <div class="trust-item">
-            <div class="trust-value">15 Minutes</div>
-            <div class="trust-title">Direct Advisor SLA</div>
-            <div class="trust-desc">Instant WhatsApp & phone callback</div>
-          </div>
-
-          <div class="trust-item">
-            <div class="trust-value">0% Encumbrance</div>
-            <div class="trust-title">Bank Escrow Security</div>
-            <div class="trust-desc">Settlement via DBH, IDLC & BRAC Bank</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ======================================================================
-         3. PROPERTY ASSET CATEGORIES (BANGLADESH SPECIALIZED)
-         ====================================================================== -->
-    <section class="section-padded" style="background: #FFFFFF;">
-      <div class="container">
-        <div class="section-header">
-          <div class="section-tag">Asset Classes</div>
-          <h2 class="section-title">Specialized Real Estate Portfolios</h2>
-          <p class="section-subtitle">
-            Whether securing family residential roots or deploying commercial capital, explore targeted asset classes tailored to the Bangladeshi market.
-          </p>
-        </div>
-
-        <div class="category-grid">
-          <!-- 1. Flats & Penthouses - LEAD CARD -->
-          <NuxtLink to="/properties?type=Flat" class="category-card category-card-lead">
-            <div class="category-img-wrap">
-              <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600&auto=format&fit=crop" alt="Flats & Penthouses" />
-              <span class="category-badge">Ready Flats</span>
-            </div>
-            <div class="category-body">
-              <h3>Flats & Luxury Penthouses</h3>
-              <p>Gulshan, Banani, Dhanmondi, and Uttara with lake views & rooftop amenities.</p>
-              <div class="category-link">Browse Flats ({{ flatsCount }}) →</div>
-            </div>
-          </NuxtLink>
-
-          <!-- 2. Plots & Lands -->
-          <NuxtLink to="/properties?type=Plot" class="category-card">
-            <div class="category-img-wrap">
-              <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=600&auto=format&fit=crop" alt="Plots & Lands" />
-              <span class="category-badge">Katha / Bigha</span>
-            </div>
-            <div class="category-body">
-              <h3>Residential Plots & Lands</h3>
-              <p>Purbachal Smart City, Jalshiri, and Bashundhara freehold land with clear boundary demarcation.</p>
-              <div class="category-link">Browse Plots ({{ plotsCount }}) →</div>
-            </div>
-          </NuxtLink>
-
-          <!-- 3. Land Share Projects (NEW) -->
-          <NuxtLink to="/properties?type=Land+Share" class="category-card" style="border-color: #DDD6FE;">
-            <div class="category-img-wrap">
-              <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=600&auto=format&fit=crop" alt="Land Share Projects" />
-              <span class="category-badge" style="background:#7C3AED; color:#FFF;">Cost-Basis Co-Ownership</span>
-            </div>
-            <div class="category-body">
-              <h3 style="color: #6D28D9;">Land Share Projects (জমি শেয়ার)</h3>
-              <p>Direct proportional land deed sub-registry with transparent actual-cost construction in Purbachal & Dhaka.</p>
-              <div class="category-link" style="color: #7C3AED;">Explore Land Shares ({{ landShareCount }}) →</div>
-            </div>
-          </NuxtLink>
-
-          <!-- 4. Beach Resorts & Suites -->
-          <NuxtLink to="/properties?type=Hotel" class="category-card">
-            <div class="category-img-wrap">
-              <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=600&auto=format&fit=crop" alt="Resorts & Suites" />
-              <span class="category-badge">14% Annual Yield</span>
-            </div>
-            <div class="category-body">
-              <h3>Beach Resorts & Hotel Suites</h3>
-              <p>Cox's Bazar Marine Drive and Inani Beach hospitality fractional suites with passive revenue.</p>
-              <div class="category-link">Browse Resorts ({{ hotelCount }}) →</div>
-            </div>
-          </NuxtLink>
-
-          <!-- 5. Commercial & Duplexes -->
-          <NuxtLink to="/properties?type=Duplex" class="category-card">
-            <div class="category-img-wrap">
-              <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=600&auto=format&fit=crop" alt="Duplexes" />
-              <span class="category-badge">Private Villas</span>
-            </div>
-            <div class="category-body">
-              <h3>Exclusive Duplex Villas</h3>
-              <p>Gated compounds in Baridhara, Bashundhara Block-I, and Sylhet tea-valley estates.</p>
-              <div class="category-link">Browse Duplexes ({{ duplexCount }}) →</div>
-            </div>
-          </NuxtLink>
-        </div>
-      </div>
-    </section>
-
-    <!-- ======================================================================
-         4. FEATURED EXCLUSIVE MANDATES & RESIDENCES
-         ====================================================================== -->
-    <section class="section-padded" style="background: #F8FAFC; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border);">
-      <div class="container">
-        <div class="flex justify-between items-end flex-wrap gap-4" style="margin-bottom: 40px;">
+    <!-- Current listings -->
+    <section class="gb-section listings" aria-labelledby="listings-title">
+      <div class="gb-wrap">
+        <div class="sec-head">
           <div>
-            <div class="section-tag">Handpicked Collection</div>
-            <h2 class="section-title" style="margin-bottom: 0;">Featured Verified Properties</h2>
-            <p class="section-subtitle" style="margin-top: 6px;">
-              Ready for immediate handover with title deeds examined by our Supreme Court legal panel.
-            </p>
+            <h2 id="listings-title" class="gb-h2">এখন তালিকায় আছে</h2>
+            <p class="gb-lead">দাম, আয়তন আর লোকেশন দেখে পছন্দের প্রপার্টি খুলুন। প্রতিটি পেজে মূল্যের শর্ত ও কাগজপত্রের তথ্য দেওয়া আছে।</p>
           </div>
-          <NuxtLink to="/properties" class="btn btn-outline">
-            <span>Explore All {{ properties.length }} Mandates →</span>
-          </NuxtLink>
+          <NuxtLink to="/properties" class="gb-btn gb-btn--line">সব প্রপার্টি দেখুন<template v-if="publicProps.length"> ({{ toBn(publicProps.length) }})</template></NuxtLink>
         </div>
 
-        <div class="grid grid-3">
-          <PropertyCard 
-            v-for="property in featuredProperties" 
-            :key="property.id" 
-            :property="property" 
-          />
+        <div v-if="featured.length" class="list-grid">
+          <PropertyCard :property="featured[0]" wide class="list-lead" />
+          <PropertyCard v-for="p in featured.slice(1)" :key="p.id" :property="p" />
+        </div>
+        <div v-else-if="isPropertiesLoading" class="list-grid" aria-busy="true">
+          <div v-for="n in 4" :key="n" class="skeleton" :class="{ 'list-lead': n === 1 }"></div>
+        </div>
+        <div v-else class="empty">
+          <p>এই মুহূর্তে কোনো প্রপার্টি প্রকাশিত নেই। কী খুঁজছেন জানালে নতুন তালিকা এলে আমরা যোগাযোগ করব।</p>
+          <NuxtLink to="/contact" class="gb-btn gb-btn--paddy">কী খুঁজছেন জানান</NuxtLink>
         </div>
       </div>
     </section>
 
-    <!-- ======================================================================
-         5. INTERACTIVE GEOLOCATION MAP EXPLORER
-         ====================================================================== -->
-    <section class="section-padded" style="background: #FFFFFF;">
-      <div class="container">
-        <div class="section-header">
-          <div class="section-tag">Interactive Map</div>
-          <h2 class="section-title">Explore Verified Locations Across Bangladesh</h2>
-          <p class="section-subtitle">
-            Browse verified listings pinpointed across prime Dhaka enclaves, Purbachal Express corridors, and Cox's Bazar coastline.
-          </p>
+    <!-- Document ledger: what to check before buying -->
+    <section class="gb-section ledger-sec" aria-labelledby="ledger-title">
+      <div class="gb-wrap ledger-layout">
+        <div class="ledger-intro">
+          <h2 id="ledger-title" class="gb-h2">কেনার আগে যে কাগজগুলো মিলিয়ে দেখবেন</h2>
+          <p class="gb-lead">জমি বা ফ্ল্যাট কেনার সবচেয়ে বড় ঝুঁকি থাকে কাগজে। আমাদের তালিকার যেকোনো প্রপার্টির জন্য এই কাগজগুলো দেখতে চাইতে পারেন — আমরা দেখাতে ও বুঝিয়ে দিতে সাহায্য করব।</p>
+          <NuxtLink to="/contact" class="gb-btn gb-btn--paddy">কাগজপত্র নিয়ে প্রশ্ন করুন</NuxtLink>
+          <p class="ledger-note">এটি সাধারণ নির্দেশনা। চূড়ান্ত সিদ্ধান্তের আগে নিজের আইনজীবীর পরামর্শ নিন।</p>
         </div>
 
-        <ClientOnly>
-          <InteractiveMap :properties="properties" />
-          <template #fallback>
-            <div class="map-skeleton-placeholder">
-              <div class="map-skeleton-pulse"></div>
-              <p>Loading Interactive Property Map...</p>
-            </div>
-          </template>
-        </ClientOnly>
+        <div class="ledger" role="table" aria-label="যাচাই করার কাগজপত্র">
+          <div class="ledger-head" role="row">
+            <span role="columnheader">কাগজ</span>
+            <span role="columnheader">কী জানা যায়</span>
+            <span role="columnheader">কোথায় মেলাবেন</span>
+          </div>
+          <div v-for="doc in documents" :key="doc.name" class="ledger-row" role="row">
+            <span role="cell" class="ledger-doc">{{ doc.name }}</span>
+            <span role="cell">{{ doc.proves }}</span>
+            <span role="cell" class="ledger-where">{{ doc.where }}</span>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- ======================================================================
-         6. NON-RESIDENT BANGLADESHI (NRB) CONCIERGE DESK
-         ====================================================================== -->
-    <section class="nrb-section">
-      <div class="container">
-        <div class="nrb-grid">
-          <div>
-            <span class="badge badge-rajuk" style="margin-bottom: 14px;">GLOBAL BANGLADESHI INVESTORS</span>
-            <h2 class="nrb-title">
-              NRI & NRB Real Estate Concierge
-            </h2>
-            <p class="nrb-desc">
-              Tailored advisory for expatriate Bangladeshis in the <strong>UK, USA, Canada, UAE, and Saudi Arabia</strong>. We handle foreign currency remittances, Power of Attorney legal vetting, live video walkthroughs, and airport-to-site chauffeur tours.
-            </p>
+    <!-- How buying works: a true sequence -->
+    <section class="gb-section steps-sec" aria-labelledby="steps-title">
+      <div class="gb-wrap">
+        <h2 id="steps-title" class="gb-h2">আমাদের মাধ্যমে কেনা যেভাবে এগোয়</h2>
+        <ol class="steps">
+          <li v-for="(step, i) in steps" :key="step.title">
+            <span class="step-n" aria-hidden="true">{{ toBn(i + 1) }}</span>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.text }}</p>
+          </li>
+        </ol>
+      </div>
+    </section>
 
-            <div class="nrb-features">
-              <div class="nrb-feat-item">
-                <span class="nrb-check">✔</span>
-                <span>Direct Bank Remittance Escrow (Bangladesh Bank Compliant)</span>
-              </div>
-              <div class="nrb-feat-item">
-                <span class="nrb-check">✔</span>
-                <span>Power of Attorney (PoA) Attestation Assistance</span>
-              </div>
-              <div class="nrb-feat-item">
-                <span class="nrb-check">✔</span>
-                <span>Airport VIP Chauffeur Pickup from Hazrat Shahjalal (DAC)</span>
-              </div>
-              <div class="nrb-feat-item">
-                <span class="nrb-check">✔</span>
-                <span>HD 4K Video Tour & Drone Boundary Survey</span>
-              </div>
-            </div>
-
-            <div class="flex gap-3 flex-wrap" style="margin-top: 28px;">
-              <a :href="`https://wa.me/${cleanWhatsapp}?text=Hi%20GBREL,%20I%20am%20an%20NRB%20investor%20interested%20in%20property%20acquisitions.`" target="_blank" class="btn btn-emerald btn-lg" style="background: #25D366;">
-                <span>WhatsApp Expat Advisory Desk</span>
-              </a>
-              <NuxtLink to="/contact" class="btn btn-outline-white btn-lg">
-                <span>Schedule Video Call</span>
-              </NuxtLink>
-            </div>
-          </div>
-
-          <div class="nrb-card">
-            <h3 style="font-size: 1.25rem; font-weight: 800; color: #FFFFFF; margin-bottom: 16px;">
-              Home Loan & Bank Financing Rates
-            </h3>
-            <p style="font-size: 0.85rem; color: #CBD5E1; margin-bottom: 20px;">
-              Benchmark home loan rates from our certified banking partners:
-            </p>
-
-            <div class="bank-rate-item">
-              <div class="flex justify-between items-center">
-                <strong>DBH Finance</strong>
-                <span class="rate-badge">{{ settings.dbhRate || '9.25%' }} p.a.</span>
-              </div>
-              <div class="bank-sub">Up to 85% Property Valuation • 25 Yr Tenure</div>
-            </div>
-
-            <div class="bank-rate-item">
-              <div class="flex justify-between items-center">
-                <strong>IDLC Finance</strong>
-                <span class="rate-badge">{{ settings.idlcRate || '9.50%' }} p.a.</span>
-              </div>
-              <div class="bank-sub">Fast 5-day NRI Approval SLA • Zero Hidden Fee</div>
-            </div>
-
-            <div class="bank-rate-item">
-              <div class="flex justify-between items-center">
-                <strong>BRAC Bank</strong>
-                <span class="rate-badge">{{ settings.bracRate || '9.40%' }} p.a.</span>
-              </div>
-              <div class="bank-sub">Special Expatriate Remittance Rebates</div>
-            </div>
-
-            <NuxtLink to="/properties" class="btn btn-sm btn-gold" style="width: 100%; margin-top: 16px;">
-              Calculate EMI on Any Listing →
+    <!-- Browse by area, built from live listings -->
+    <section v-if="areas.length" class="gb-section areas-sec" aria-labelledby="areas-title">
+      <div class="gb-wrap"><div class="areas-layout">
+        <h2 id="areas-title" class="gb-h2">এলাকা অনুযায়ী খুঁজুন</h2>
+        <ul class="areas">
+          <li v-for="a in areas" :key="a.name">
+            <NuxtLink :to="`/properties?area=${encodeURIComponent(a.name)}`">
+              <span>{{ a.name }}</span>
+              <small>{{ toBn(a.count) }}টি</small>
             </NuxtLink>
+          </li>
+        </ul>
+      </div></div>
+    </section>
+
+    <!-- Buyers living abroad -->
+    <section class="abroad" aria-labelledby="abroad-title">
+      <div class="gb-wrap abroad-grid">
+        <div>
+          <h2 id="abroad-title" class="abroad-title">বিদেশে থেকে দেশে জমি কিনছেন?</h2>
+          <p class="abroad-lead">দূরে থেকেও যেন সব নিজের চোখে দেখে সিদ্ধান্ত নিতে পারেন, সেভাবে কাজ করি।</p>
+          <div class="abroad-cta">
+            <a v-if="whatsapp" :href="`https://wa.me/${whatsapp}?text=${encodeURIComponent('আসসালামু আলাইকুম, আমি বিদেশ থেকে প্রপার্টি কেনার বিষয়ে জানতে চাই।')}`" target="_blank" rel="noopener noreferrer" class="gb-btn gb-btn--sun">
+              <MessageCircle :size="18" aria-hidden="true" /> WhatsApp-এ কথা বলুন
+            </a>
+            <NuxtLink to="/contact" class="gb-btn gb-btn--ghost-light">ভিডিও কলের সময় ঠিক করুন</NuxtLink>
           </div>
         </div>
+        <ul class="abroad-list">
+          <li><Video :size="22" aria-hidden="true" /><span><strong>ভিডিও কলে সাইট দেখা</strong>জমি বা ফ্ল্যাটে দাঁড়িয়ে লাইভ ঘুরিয়ে দেখানো হয়।</span></li>
+          <li><FileText :size="22" aria-hidden="true" /><span><strong>কাগজের কপি আগে হাতে</strong>খতিয়ান, দলিল, নকশার কপি পাঠিয়ে দিই, যাতে আপনার আইনজীবী দেখে নিতে পারেন।</span></li>
+          <li><Clock :size="22" aria-hidden="true" /><span><strong>আপনার সময়ে কল</strong>যে দেশেই থাকুন, আপনার সুবিধামতো সময়ে কথা বলা যায়।</span></li>
+          <li><Users :size="22" aria-hidden="true" /><span><strong>দেশে থাকা পরিবারের সঙ্গে সমন্বয়</strong>আপনার প্রতিনিধি সাইটে গেলে আমরা সঙ্গে থাকি।</span></li>
+        </ul>
       </div>
     </section>
 
-    <!-- ======================================================================
-         7. SELLER & LANDOWNER ONBOARDING CALL TO ACTION
-         ====================================================================== -->
-    <section class="seller-cta-section">
-      <div class="container">
-        <div class="seller-cta-box">
-          <div class="seller-cta-content">
-            <span class="badge badge-featured" style="margin-bottom: 12px;">DIRECT PROPERTY OWNERS & BUILDERS</span>
-            <h2 class="seller-cta-title">
-              Ready to Sell Your Plot, Land or Luxury Flat?
-            </h2>
-            <p class="seller-cta-desc">
-              List your property with Bangladesh’s most reputable brokerage. We connect you with 50,000+ pre-vetted buyers and provide legal title certification.
-            </p>
-            <div class="flex gap-3 flex-wrap" style="margin-top: 24px;">
-              <NuxtLink to="/signup" class="btn btn-gold btn-lg">
-                <span>Create Seller Account & List Property →</span>
-              </NuxtLink>
-              <NuxtLink to="/list-property" class="btn btn-outline-white btn-lg">
-                <span>Direct Listing Form</span>
-              </NuxtLink>
-            </div>
-          </div>
-          <div class="seller-cta-stats">
-            <div class="stat-bubble">
-              <div class="stat-label">Average deal closing time</div>
-              <div class="stat-number">28 Days</div>
-            </div>
-            <div class="stat-bubble">
-              <div class="stat-label">Success commission, no upfront fee</div>
-              <div class="stat-number">2% Only</div>
-            </div>
-          </div>
+    <!-- Sellers -->
+    <section class="gb-section sell" aria-labelledby="sell-title">
+      <div class="gb-wrap"><div class="sell-box">
+        <div>
+          <h2 id="sell-title" class="gb-h2">জমি, প্লট বা ফ্ল্যাট বিক্রি করবেন?</h2>
+          <p class="gb-lead">প্রপার্টির তথ্য আর ছবি দিন। আমাদের টিম কাগজপত্র দেখে যোগাযোগ করবে, তারপর তালিকায় তোলা হবে।</p>
         </div>
-      </div>
+        <div class="sell-actions">
+          <NuxtLink to="/list-property" class="gb-btn gb-btn--sun">প্রপার্টির তথ্য দিন</NuxtLink>
+          <a v-if="phone" :href="`tel:${phoneHref}`" class="gb-link">অথবা কল করুন {{ phone }}</a>
+        </div>
+      </div></div>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, reactive } from 'vue'
+import { Clock, FileText, MessageCircle, Search, Users, Video } from 'lucide-vue-next'
 import { useProperties } from '~/composables/useProperties'
 import { useSettings } from '~/composables/useSettings'
-import HeroSearch from '~/components/HeroSearch.vue'
 import PropertyCard from '~/components/PropertyCard.vue'
-import InteractiveMap from '~/components/InteractiveMap.vue'
+import { toBn } from '~/utils/propertyLabels'
 
-definePageMeta({
-  layout: 'default'
-})
+definePageMeta({ layout: 'default' })
 
-const { properties, fetchProperties } = useProperties()
+const router = useRouter()
+const { properties, fetchProperties, isLoading: isPropertiesLoading } = useProperties()
 const { settings, fetchSettings } = useSettings()
 
-onMounted(async () => {
-  await Promise.all([
-    fetchProperties(),
-    fetchSettings()
-  ])
+onMounted(() => { fetchProperties(); fetchSettings() })
+
+const bands = [
+  { key: 'Plot,Land', name: 'জমি ও প্লট', note: 'কাঠা, শতক ও বিঘায়', types: ['Plot', 'Land'] },
+  { key: 'Land Share', name: 'জমি শেয়ার', note: 'অংশীদারিতে জমির মালিকানা', types: ['Land Share'] },
+  { key: 'Flat', name: 'ফ্ল্যাট', note: 'রেডি ও নির্মাণাধীন', types: ['Flat'] },
+  { key: 'Duplex,Penthouse', name: 'ডুপ্লেক্স ও পেন্টহাউস', note: 'পরিবারের জন্য বড় পরিসর', types: ['Duplex', 'Penthouse'] },
+  { key: 'Hotel,Commercial', name: 'রিসোর্ট ও বাণিজ্যিক', note: 'ব্যবসা ও বিনিয়োগের জন্য', types: ['Hotel', 'Commercial'] }
+]
+
+const publicProps = computed(() => properties.value.filter(p => p.status !== 'Draft' && p.status !== 'Delisted'))
+const countLabel = (band: typeof bands[number]) => {
+  const n = publicProps.value.filter(p => band.types.includes(p.propertyType)).length
+  return n ? `${toBn(n)}টি তালিকা` : 'দেখুন'
+}
+
+const featured = computed(() => {
+  const list = publicProps.value.filter(p => p.status !== 'Sold')
+  const picked = list.filter(p => p.isFeatured)
+  const pool = (picked.length >= 4 ? picked : [...picked, ...list.filter(p => !p.isFeatured)]).slice(0, 7)
+  // One wide lead card, then full rows of three
+  const rest = pool.length - 1
+  return rest >= 3 ? pool.slice(0, 1 + Math.floor(rest / 3) * 3) : pool
 })
 
-const cleanWhatsapp = computed(() => {
-  const num = settings.value.whatsapp_number || '8801819987654'
-  return num.replace(/[^0-9]/g, '')
+const areas = computed(() => {
+  const counts = new Map<string, number>()
+  publicProps.value.forEach(p => { if (p.areaName) counts.set(p.areaName, (counts.get(p.areaName) || 0) + 1) })
+  return [...counts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 12)
 })
 
-const featuredProperties = computed(() => {
-  const publicProps = properties.value.filter(p => p.status !== 'Draft' && p.status !== 'Delisted')
-  const featured = publicProps.filter(p => p.isFeatured)
-  return featured.length > 0 ? featured.slice(0, 6) : publicProps.slice(0, 6)
-})
+const search = reactive({ type: '', q: '' })
+const runSearch = () => {
+  const query: Record<string, string> = {}
+  if (search.type) query.type = search.type
+  if (search.q.trim()) query.q = search.q.trim()
+  router.push({ path: '/properties', query })
+}
 
-const flatsCount = computed(() => properties.value.filter(p => p.status !== 'Draft' && p.propertyType === 'Flat').length)
-const plotsCount = computed(() => properties.value.filter(p => p.status !== 'Draft' && (p.propertyType === 'Plot' || p.propertyType === 'Land')).length)
-const landShareCount = computed(() => properties.value.filter(p => p.status !== 'Draft' && p.propertyType === 'Land Share').length)
-const hotelCount = computed(() => properties.value.filter(p => p.status !== 'Draft' && p.propertyType === 'Hotel').length)
-const duplexCount = computed(() => properties.value.filter(p => p.status !== 'Draft' && (p.propertyType === 'Duplex' || p.propertyType === 'Penthouse')).length)
+const phone = computed(() => settings.value.contact_phone || '')
+const phoneHref = computed(() => phone.value.replace(/[^\d+]/g, ''))
+const whatsapp = computed(() => (settings.value.whatsapp_number || '').replace(/\D/g, ''))
+
+const documents = [
+  { name: 'খতিয়ান (সিএস, এসএ, আরএস, বিএস)', proves: 'জমির মালিকানা কোন জরিপে কার নামে ছিল — মালিকানার ধারাবাহিকতা।', where: 'জেলা রেকর্ড রুম, ভূমি অফিস বা অনলাইনে ই-পর্চা' },
+  { name: 'দলিল ও বায়া দলিল', proves: 'বর্তমান বিক্রেতা কীভাবে জমির মালিক হয়েছেন, আগের হস্তান্তরগুলো কী ছিল।', where: 'সংশ্লিষ্ট সাব-রেজিস্ট্রি অফিস' },
+  { name: 'নামজারি খতিয়ান ও ডিসিআর', proves: 'সরকারি রেকর্ডে বর্তমান মালিকের নাম হালনাগাদ আছে কি না।', where: 'উপজেলা/সার্কেল ভূমি অফিস (এসি ল্যান্ড)' },
+  { name: 'খাজনার দাখিলা', proves: 'ভূমি উন্নয়ন কর পরিশোধিত ও হালনাগাদ কি না।', where: 'ইউনিয়ন বা পৌর ভূমি অফিস' },
+  { name: 'মৌজা ম্যাপ ও দাগ নম্বর', proves: 'কাগজের জমি আর মাঠের জমি একই কি না, সীমানা ও রাস্তা কোথায়।', where: 'জেলা প্রশাসকের কার্যালয় / সরেজমিন মাপ' },
+  { name: 'তল্লাশি (নির্দায় যাচাই)', proves: 'জমি ব্যাংকে বন্ধক, অন্য কারও কাছে বিক্রি বা মামলায় আটকে আছে কি না।', where: 'সাব-রেজিস্ট্রি অফিসে তল্লাশি' },
+  { name: 'ফ্ল্যাটের নকশা অনুমোদন ও ডেভেলপার চুক্তি', proves: 'ভবন অনুমোদিত নকশায় হচ্ছে কি না, ডেভেলপার বিক্রির অধিকার রাখে কি না।', where: 'রাজউক/সিডিএ ও জমির মালিক–ডেভেলপার চুক্তিপত্র' }
+]
+
+const steps = [
+  { title: 'পছন্দ জানান', text: 'তালিকা থেকে প্রপার্টি বেছে নিন, অথবা বাজেট আর এলাকা জানালে আমরা মিলিয়ে দেখাই।' },
+  { title: 'দাম ও কাগজ বুঝে নিন', text: 'মোট খরচ, পেমেন্টের শর্ত আর কাগজপত্রের কপি নিয়ে খোলামেলা আলোচনা।' },
+  { title: 'সরেজমিনে দেখুন', text: 'নিজে বা প্রতিনিধি পাঠিয়ে সাইট ভিজিট। দূরে থাকলে ভিডিও কলে।' },
+  { title: 'চুক্তি ও রেজিস্ট্রি', text: 'বায়নানামা থেকে দলিল রেজিস্ট্রি ও নামজারি পর্যন্ত প্রতিটি ধাপে পাশে থাকি।' }
+]
+
+useSeoMeta({
+  title: 'গ্রাম বাংলা রিয়েল এস্টেট | জমি, প্লট ও ফ্ল্যাট — GBREL',
+  ogTitle: 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন — গ্রাম বাংলা রিয়েল এস্টেট',
+  description: 'প্লট, জমি শেয়ার ও ফ্ল্যাটের তালিকা। দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য দেখে গ্রাম বাংলা রিয়েল এস্টেট টিমের সঙ্গে কথা বলুন।'
+})
 </script>
 
 <style scoped>
-.homepage-root {
-  overflow-x: hidden;
-}
-
-/* 1. Hero Section */
-.hero-section {
-  position: relative;
-  background: #0A1128;
-  background-image: radial-gradient(rgba(212, 175, 55, 0.08) 1px, transparent 0);
-  background-size: 28px 28px;
-  padding: 100px 0 80px;
-  color: #FFFFFF;
-  text-align: center;
-}
-
-.hero-content {
-  max-width: 1140px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 2;
-}
-
-.hero-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(212, 175, 55, 0.12);
-  border: 1px solid rgba(212, 175, 55, 0.35);
-  color: var(--color-gold-bright);
-  padding: 8px 18px;
-  border-radius: var(--radius-full);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  margin-bottom: 24px;
-}
-
-.hero-tag-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-gold-bright);
-  flex-shrink: 0;
-}
-
+/* ---------- Hero ---------- */
+.hero { position: relative; overflow: hidden; }
+.hero-top { padding-top: clamp(40px, 7vw, 88px); padding-bottom: clamp(36px, 5vw, 56px); position: relative; z-index: 2; }
+.hero-copy { max-width: 760px; }
 .hero-title {
-  font-family: var(--font-display);
-  font-size: var(--text-display);
+  font-size: var(--gb-t-hero);
   font-weight: 800;
-  line-height: 1.1;
-  color: #FFFFFF;
-  letter-spacing: -0.02em;
-  margin-bottom: 20px;
-  text-wrap: balance;
-}
-
-.hero-title span {
-  color: var(--color-gold-bright);
-}
-
-.hero-subtitle {
-  font-size: 1.15rem;
-  color: #CBD5E1;
-  max-width: 760px;
-  margin: 0 auto 36px;
-  line-height: 1.6;
-}
-
-.hero-search-wrapper {
-  max-width: 1080px;
-  margin: 0 auto 28px;
-  width: 100%;
-}
-
-/* 2. Trust Bar */
-.trust-bar-section {
-  background: #0F172A;
-  color: #FFFFFF;
-  padding: 36px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.trust-item {
-  padding: 12px 16px;
-  text-align: left;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.trust-item:last-child {
-  border-right: none;
-}
-
-.trust-value {
-  font-family: var(--font-ui);
-  font-size: 1.6rem;
-  font-weight: 800;
-  line-height: 1.15;
-  color: var(--color-gold-bright);
-  font-variant-numeric: tabular-nums;
-}
-
-.trust-title {
-  font-weight: 700;
-  font-size: 0.92rem;
-  color: #FFFFFF;
-  margin-top: 6px;
-}
-
-.trust-desc {
-  font-size: 0.8rem;
-  color: #CBD5E1;
-  margin-top: 2px;
-}
-
-/* 3. Specialized Asset Classes */
-.section-padded {
-  padding: 80px 0;
-}
-
-.category-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 24px;
-}
-
-.category-card {
-  background: #FFFFFF;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  text-decoration: none;
-  display: flex;
-  flex-direction: column;
-  transition: all var(--transition-normal);
-  box-shadow: var(--shadow-sm);
-}
-
-.category-card-lead {
-  border-color: var(--color-gold);
-  box-shadow: var(--shadow-md);
-}
-
-.category-img-wrap {
-  position: relative;
-  height: 170px;
-}
-
-.category-img-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.category-badge {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: rgba(10, 17, 40, 0.9);
-  color: var(--color-gold-bright);
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 4px;
-  text-transform: uppercase;
-}
-
-.category-body {
-  padding: 20px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.category-body h3 {
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #0A1128;
-  line-height: 1.25;
-  margin-bottom: 8px;
-}
-
-.category-body p {
-  font-size: 0.85rem;
-  color: #64748B;
-  line-height: 1.5;
-  margin-bottom: 14px;
-  flex: 1;
-}
-
-.category-link {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #059669;
-}
-
-/* 6. NRB Concierge Section */
-.nrb-section {
-  background: #0A1128;
-  color: #FFFFFF;
-  padding: 80px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.nrb-grid {
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 48px;
-  align-items: center;
-}
-
-.nrb-title {
-  font-family: var(--font-display);
-  font-size: var(--text-headline);
-  font-weight: 800;
-  color: #FFFFFF;
-  line-height: 1.2;
-  margin-bottom: 16px;
-}
-
-.nrb-desc {
-  font-size: 1.02rem;
-  color: #CBD5E1;
-  line-height: 1.7;
+  font-stretch: 116%;
+  line-height: 1.08;
+  color: var(--gb-paddy);
   margin-bottom: 24px;
 }
+.hero-lead { font-size: var(--gb-t-lead); color: var(--gb-ink-soft); max-width: 58ch; margin-bottom: 30px; }
 
-.nrb-features {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.hero-search { display: flex; background: var(--gb-sheet); border: 1.5px solid var(--gb-silt); border-radius: 999px; padding: 6px; max-width: 640px; box-shadow: 0 14px 30px -22px rgba(29, 74, 42, .5); }
+.hero-select, .hero-input { background: transparent; color: var(--gb-ink); font-family: var(--gb-body); font-size: 1rem; min-height: 48px; padding: 0 16px; }
+.hero-select { border-right: 1px solid var(--gb-silt); max-width: 190px; cursor: pointer; appearance: none; padding-right: 30px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231D4A2A' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+.hero-input { flex: 1; min-width: 0; }
+.hero-input::placeholder { color: #7D8B80; }
+.hero-go { flex-shrink: 0; }
+
+/* Field bands: the categories, drawn as terraced paddy rows */
+.fields { position: relative; }
+.sun { position: absolute; right: max(24px, calc((100vw - var(--gb-wrap)) / 2 + 60px)); bottom: calc(100% - 84px); width: 270px; height: 270px; z-index: 0; animation: sunrise 1.4s cubic-bezier(.2,.8,.2,1) both; }
+.sun .disc { position: absolute; inset: 56px; border-radius: 50%; background: var(--gb-sun); }
+.sun .ray { position: absolute; left: 50%; top: 50%; width: 12px; height: 44px; margin: -22px 0 0 -6px; border-radius: 7px; background: var(--gb-sun); transform: rotate(calc((var(--i) - 5) * 20deg)) translateY(-118px); }
+
+.bands { position: relative; z-index: 1; display: flex; flex-direction: column; }
+.band {
+  --h: 30px;
+  position: relative;
+  display: block;
+  color: var(--ink);
+  background: var(--c);
+  text-decoration: none;
+  animation: bandrise .9s cubic-bezier(.2,.8,.2,1) both;
+  animation-delay: calc(.25s + var(--i) * .08s);
 }
-
-.nrb-feat-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.92rem;
-  color: #E2E8F0;
+.band::before {
+  content: '';
+  position: absolute; left: 0; right: 0; top: 0; height: var(--h);
+  background: var(--c);
+  -webkit-mask: var(--wave) top / 100% 100% no-repeat;
+          mask: var(--wave) top / 100% 100% no-repeat;
+  transform: translateY(calc(-100% + 1px));
 }
+.band:nth-child(1) { --c: #B9D08F; --ink: var(--gb-paddy); --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 30' preserveAspectRatio='none'%3E%3Cpath d='M0 30 C 300 0 700 4 1000 18 S 1350 26 1440 10 V30Z'/%3E%3C/svg%3E"); }
+.band:nth-child(2) { --c: #8FB366; --ink: var(--gb-paddy-deep); --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 30' preserveAspectRatio='none'%3E%3Cpath d='M0 12 C 260 30 560 26 860 10 S 1260 2 1440 22 V30 H0Z'/%3E%3C/svg%3E"); }
+.band:nth-child(3) { --c: #5C924A; --ink: #fff; --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 30' preserveAspectRatio='none'%3E%3Cpath d='M0 24 C 380 2 760 0 1080 16 S 1380 28 1440 20 V30 H0Z'/%3E%3C/svg%3E"); }
+.band:nth-child(4) { --c: #3A7234; --ink: #fff; --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 30' preserveAspectRatio='none'%3E%3Cpath d='M0 8 C 320 26 640 30 960 14 S 1320 0 1440 8 V30 H0Z'/%3E%3C/svg%3E"); }
+.band:nth-child(5) { --c: var(--gb-paddy); --ink: #fff; --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 30' preserveAspectRatio='none'%3E%3Cpath d='M0 20 C 420 0 820 6 1120 20 S 1400 22 1440 12 V30 H0Z'/%3E%3C/svg%3E"); }
 
-.nrb-check {
-  color: #10B981;
-  font-weight: 900;
-  font-size: 1.1rem;
+.band-row { display: grid; grid-template-columns: minmax(0, auto) 1fr auto; align-items: baseline; gap: 20px; padding-top: 10px; padding-bottom: calc(var(--h) + 12px); }
+.band-name { font-family: var(--gb-display); font-size: clamp(1.45rem, 2.6vw, 2.2rem); font-weight: 700; font-stretch: 112%; line-height: 1.15; }
+.band-note { font-size: .95rem; opacity: .85; }
+.band-count { font-family: var(--gb-display); font-size: 1.05rem; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; }
+.band-count::after { content: ''; width: 28px; height: 2px; background: currentColor; transition: width .25s ease; }
+.band:hover .band-count::after, .band:focus-visible .band-count::after { width: 48px; }
+.band:hover .band-name { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
+.band:focus-visible { outline: 3px solid var(--gb-sun); outline-offset: -6px; }
+
+@keyframes sunrise { from { transform: translateY(80px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes bandrise { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ---------- Section heads ---------- */
+.sec-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; margin-bottom: 36px; }
+
+/* ---------- Listings ---------- */
+.listings { background: var(--gb-paper); }
+.list-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.list-lead { grid-column: 1 / -1; }
+.skeleton { min-height: 360px; border-radius: var(--gb-r-lg); background: linear-gradient(90deg, #E6EBDD, #EFF2E8, #E6EBDD); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.empty { background: var(--gb-sheet); border: 1.5px dashed var(--gb-silt); border-radius: var(--gb-r-lg); padding: 40px; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
+
+/* ---------- Ledger ---------- */
+.ledger-sec { background: var(--gb-sheet); border-top: 1px solid var(--gb-silt); border-bottom: 1px solid var(--gb-silt); }
+.ledger-layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 8fr); gap: clamp(32px, 5vw, 72px); align-items: start; }
+.ledger-intro { position: sticky; top: 110px; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
+.ledger-intro .gb-h2 { margin-bottom: 0; }
+.ledger-note { font-size: .85rem; color: var(--gb-ink-soft); border-left: 3px solid var(--gb-shoot); padding-left: 12px; }
+.ledger { border: 1.5px solid var(--gb-paddy); border-radius: var(--gb-r-sm); overflow: hidden; background: #fff; }
+.ledger-head, .ledger-row { display: grid; grid-template-columns: 1.1fr 1.5fr 1fr; }
+.ledger-head span { background: var(--gb-paddy); color: #fff; font-family: var(--gb-display); font-weight: 600; padding: 12px 16px; }
+.ledger-row span { padding: 16px; font-size: .95rem; line-height: 1.65; border-top: 1px solid var(--gb-silt); }
+.ledger-row span + span, .ledger-head span + span { border-left: 1px solid var(--gb-silt); }
+.ledger-head span + span { border-left-color: rgba(255,255,255,.18); }
+.ledger-row:nth-child(odd) { background: #F7F9F1; }
+.ledger-doc { font-family: var(--gb-display); font-weight: 600; font-size: 1.05rem !important; color: var(--gb-paddy); }
+.ledger-where { color: var(--gb-ink-soft); font-size: .9rem !important; }
+
+/* ---------- Steps ---------- */
+.steps { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 36px; counter-reset: s; }
+.steps li { position: relative; padding: 0 28px 0 0; }
+.steps li::before { content: ''; position: absolute; left: 64px; right: 16px; top: 30px; border-top: 2px dashed var(--gb-shoot); }
+.steps li:last-child::before { display: none; }
+.step-n { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--gb-paddy); font-family: var(--gb-display); font-size: 1.7rem; font-weight: 700; color: var(--gb-paddy); background: var(--gb-paper); margin-bottom: 18px; }
+.steps li:last-child .step-n { background: var(--gb-paddy); color: #fff; }
+.steps h3 { font-size: var(--gb-t-h3); font-weight: 700; margin-bottom: 6px; }
+.steps p { font-size: .97rem; color: var(--gb-ink-soft); }
+
+/* ---------- Areas ---------- */
+.areas-sec { padding-top: 0; }
+.areas-layout { border-top: 1px solid var(--gb-silt); padding-top: clamp(48px, 6vw, 80px); }
+.areas { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.areas a { display: inline-flex; align-items: baseline; gap: 10px; padding: 10px 18px; border-radius: 999px; background: var(--gb-sheet); border: 1.5px solid var(--gb-silt); font-family: var(--gb-display); font-size: 1.08rem; font-weight: 600; color: var(--gb-paddy); }
+.areas a:hover { border-color: var(--gb-leaf); background: rgba(168, 197, 123, .22); }
+.areas small { font-family: var(--gb-body); font-size: .8rem; font-weight: 500; color: var(--gb-ink-soft); }
+
+/* ---------- Abroad ---------- */
+.abroad { background: var(--gb-paddy-deep); color: #E3EBDA; padding: clamp(56px, 8vw, 96px) 0; }
+.abroad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 6vw, 88px); align-items: center; }
+.abroad-title { font-size: var(--gb-t-h1); font-weight: 800; font-stretch: 112%; color: #fff; margin-bottom: 16px; }
+.abroad-lead { font-size: var(--gb-t-lead); color: #C6D5BB; margin-bottom: 28px; }
+.abroad-cta { display: flex; flex-wrap: wrap; gap: 12px; }
+.abroad-list { list-style: none; display: flex; flex-direction: column; }
+.abroad-list li { display: flex; gap: 16px; padding: 18px 0; border-top: 1px solid rgba(255,255,255,.14); }
+.abroad-list li:last-child { border-bottom: 1px solid rgba(255,255,255,.14); }
+.abroad-list svg { color: var(--gb-shoot); flex-shrink: 0; margin-top: 4px; }
+.abroad-list strong { display: block; font-family: var(--gb-display); font-size: 1.15rem; font-weight: 600; color: #fff; }
+.abroad-list span { font-size: .95rem; }
+
+/* ---------- Sell ---------- */
+.sell-box { display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; align-items: center; padding: clamp(28px, 4vw, 48px); border-radius: var(--gb-r-lg); background: #F8E6D8; border: 1.5px solid #EFC9AC; }
+.sell-box .gb-h2 { color: var(--gb-ink); }
+.sell-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; justify-self: end; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  .list-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ledger-layout { grid-template-columns: 1fr; }
+  .ledger-intro { position: static; }
+  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 36px; }
+  .steps li:nth-child(2)::before { display: none; }
+  .abroad-grid, .sell-box { grid-template-columns: 1fr; }
+  .sell-actions { justify-self: start; }
 }
-
-.nrb-card {
-  background: #0F172A;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-2xl);
-  padding: 32px;
-}
-
-.bank-rate-item {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-md);
-  padding: 12px 16px;
-  margin-bottom: 10px;
-}
-
-.rate-badge {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: #34D399;
-  font-weight: 800;
-  font-size: 0.85rem;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.bank-sub {
-  font-size: 0.78rem;
-  color: #CBD5E1;
-  margin-top: 4px;
-}
-
-/* 7. Seller CTA */
-.seller-cta-section {
-  padding: 80px 0;
-  background: #F8FAFC;
-}
-
-.seller-cta-box {
-  background: #0A1128;
-  border: 1px solid rgba(212, 175, 55, 0.25);
-  border-radius: var(--radius-2xl);
-  padding: 48px;
-  color: #FFFFFF;
-  display: grid;
-  grid-template-columns: 1.3fr 0.7fr;
-  gap: 36px;
-  align-items: center;
-}
-
-.seller-cta-title {
-  font-family: var(--font-display);
-  font-size: var(--text-headline);
-  font-weight: 800;
-  color: #FFFFFF;
-  line-height: 1.2;
-  margin-bottom: 12px;
-}
-
-.seller-cta-desc {
-  font-size: 1.02rem;
-  color: #CBD5E1;
-  line-height: 1.7;
-}
-
-.seller-cta-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.stat-bubble {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-xl);
-  padding: 20px;
-}
-
-.stat-label {
-  font-size: 0.8rem;
-  color: #CBD5E1;
-  margin-bottom: 6px;
-}
-
-.stat-number {
-  font-family: var(--font-ui);
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: var(--color-gold-bright);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Responsive Media Queries */
-@media (max-width: 992px) {
-  .hero-title {
-    font-size: 2.4rem;
-  }
-  .trust-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 16px;
-  }
-  .trust-item {
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  }
-  .category-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-  .nrb-grid {
-    grid-template-columns: 1fr;
-  }
-  .seller-cta-box {
-    grid-template-columns: 1fr;
-    padding: 32px 24px;
-  }
-}
-
-@media (max-width: 640px) {
-  .hero-section {
-    padding: 64px 0 56px;
-  }
-  .hero-title {
-    font-size: 1.85rem;
-  }
-  .hero-subtitle {
-    font-size: 0.98rem;
-  }
-  .trust-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .category-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .nrb-title {
-    font-size: 1.7rem;
-  }
-  .seller-cta-box {
-    padding: 28px 20px;
-    gap: 24px;
-  }
-  .seller-cta-title {
-    font-size: 1.6rem;
-  }
-}
-
-.map-skeleton-placeholder {
-  width: 100%;
-  height: 520px;
-  background: #0A1128;
-  border-radius: var(--radius-xl);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  color: #CBD5E1;
-  font-size: 0.95rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.map-skeleton-pulse {
-  width: 44px;
-  height: 44px;
-  border: 3px solid rgba(212, 175, 55, 0.2);
-  border-top-color: var(--color-gold);
-  border-radius: 50%;
-  animation: mapSpin 1s linear infinite;
-}
-
-@keyframes mapSpin {
-  to { transform: rotate(360deg); }
+@media (max-width: 720px) {
+  .sun { width: 120px; height: 120px; right: 16px; bottom: calc(100% - 70px); }
+  .sun .disc { inset: 24px; }
+  .sun .ray { height: 22px; margin-top: -11px; width: 7px; transform: rotate(calc((var(--i) - 5) * 20deg)) translateY(-54px); }
+  .hero-top { padding-bottom: 72px; }
+  .hero-search { flex-wrap: wrap; border-radius: var(--gb-r); gap: 4px; }
+  .hero-select { max-width: none; width: 100%; border-right: 0; border-bottom: 1px solid var(--gb-silt); }
+  .hero-input { width: 100%; flex-basis: 100%; }
+  .hero-go { width: 100%; border-radius: var(--gb-r-sm); }
+  .band-row { grid-template-columns: 1fr auto; gap: 4px 12px; }
+  .band-note { grid-column: 1; grid-row: 2; font-size: .85rem; }
+  .band-count { grid-row: 1 / 3; grid-column: 2; align-self: center; font-size: .95rem; }
+  .band-count::after { width: 16px; }
+  .list-grid { grid-template-columns: 1fr; }
+  .ledger { border-radius: var(--gb-r); }
+  .ledger-head { display: none; }
+  .ledger-row { grid-template-columns: 1fr; padding: 16px; }
+  .ledger-row span { padding: 0; border: 0 !important; }
+  .ledger-row .ledger-doc { margin-bottom: 4px; }
+  .ledger-row .ledger-where { margin-top: 8px; }
+  .ledger-row .ledger-where::before { content: 'কোথায়: '; font-weight: 600; }
+  .steps { grid-template-columns: 1fr; }
+  .steps li::before { display: none; }
 }
 </style>

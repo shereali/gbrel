@@ -8,6 +8,7 @@ services:
     environment:
       NUXT_PUBLIC_API_BASE: /api
       NUXT_API_BASE_SERVER: http://backend:8000/api
+      NUXT_PUBLIC_META_PIXEL_ID: ${META_PIXEL_ID:-}
     depends_on:
       backend:
         condition: service_started

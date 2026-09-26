@@ -1,0 +1,96 @@
+/* ==========================================================================
+   GBREL public site — "Gram Bangla" field system
+   Scoped to the public layout (.gb) so the admin panel keeps its own styles.
+   Palette comes straight from the logo: paddy greens + the rising-sun orange.
+   ========================================================================== */
+
+:root {
+  --gb-paddy: #1D4A2A;      /* deep field green — primary ink on light, dark surfaces */
+  --gb-paddy-deep: #133520;
+  --gb-leaf: #3F7A35;       /* mid green — links, secondary bands */
+  --gb-shoot: #A8C57B;      /* young rice — light band, highlights on dark */
+  --gb-sun: #E2651C;        /* logo sun — primary call to action only */
+  --gb-sun-deep: #C2530F;
+  --gb-paper: #F3F5EC;      /* page background, faint green paper */
+  --gb-sheet: #FBFCF7;      /* raised surfaces */
+  --gb-ink: #16241A;
+  --gb-ink-soft: #4A5A4E;
+  --gb-silt: #D6DDCB;       /* rules and borders */
+
+  --gb-display: 'Anek Bangla', 'Noto Sans Bengali', system-ui, sans-serif;
+  --gb-body: 'Noto Sans Bengali', 'Anek Bangla', system-ui, sans-serif;
+
+  /* Type scale (1.25 minor third-ish, tuned for Bangla glyph height) */
+  --gb-t-hero: clamp(2.6rem, 6.4vw, 5.6rem);
+  --gb-t-h1: clamp(2rem, 4vw, 3.2rem);
+  --gb-t-h2: clamp(1.6rem, 2.8vw, 2.4rem);
+  --gb-t-h3: 1.3rem;
+  --gb-t-lead: 1.15rem;
+  --gb-t-body: 1rem;
+  --gb-t-small: 0.9rem;
+
+  --gb-r-sm: 6px;
+  --gb-r: 12px;
+  --gb-r-lg: 22px;
+  --gb-wrap: 1240px;
+}
+
+.gb {
+  font-family: var(--gb-body);
+  color: var(--gb-ink);
+  background: var(--gb-paper);
+  line-height: 1.75;
+}
+.gb h1, .gb h2, .gb h3, .gb h4 {
+  font-family: var(--gb-display);
+  color: var(--gb-paddy);
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+.gb p { max-width: 64ch; }
+.gb :focus-visible { outline: 3px solid var(--gb-sun); outline-offset: 3px; box-shadow: none; }
+
+.gb-wrap { width: 100%; max-width: var(--gb-wrap); margin: 0 auto; padding: 0 20px; }
+@media (min-width: 768px) { .gb-wrap { padding: 0 32px; } }
+
+.gb-section { padding: clamp(56px, 8vw, 104px) 0; }
+
+.gb-h2 { font-size: var(--gb-t-h2); font-weight: 700; font-stretch: 108%; margin-bottom: 14px; }
+.gb-lead { font-size: var(--gb-t-lead); color: var(--gb-ink-soft); }
+
+/* Buttons */
+.gb-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 48px; padding: 12px 24px; border-radius: 999px;
+  font-family: var(--gb-display); font-size: 1.05rem; font-weight: 600;
+  border: 1.5px solid transparent; cursor: pointer; text-decoration: none;
+  transition: background-color .18s ease, color .18s ease, border-color .18s ease;
+}
+.gb-btn--sun { background: var(--gb-sun); color: #fff; }
+.gb-btn--sun:hover { background: var(--gb-sun-deep); }
+.gb-btn--paddy { background: var(--gb-paddy); color: #fff; }
+.gb-btn--paddy:hover { background: var(--gb-paddy-deep); }
+.gb-btn--line { border-color: var(--gb-paddy); color: var(--gb-paddy); background: transparent; }
+.gb-btn--line:hover { background: var(--gb-paddy); color: #fff; }
+.gb-btn--ghost-light { border-color: rgba(255,255,255,.5); color: #fff; }
+.gb-btn--ghost-light:hover { background: #fff; color: var(--gb-paddy); }
+.gb-btn--sm { min-height: 40px; padding: 8px 18px; font-size: .95rem; }
+
+.gb-link { color: var(--gb-leaf); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1.5px; }
+.gb-link:hover { color: var(--gb-paddy); }
+
+/* Form fields */
+.gb-field { display: flex; flex-direction: column; gap: 6px; }
+.gb-field > span { font-size: var(--gb-t-small); font-weight: 600; color: var(--gb-paddy); }
+.gb-input, .gb-select, .gb-textarea {
+  width: 100%; min-height: 48px; padding: 10px 14px;
+  background: #fff; color: var(--gb-ink);
+  border: 1.5px solid var(--gb-silt); border-radius: var(--gb-r-sm);
+  font-family: var(--gb-body); font-size: 1rem;
+}
+.gb-textarea { min-height: 120px; resize: vertical; }
+.gb-input:focus, .gb-select:focus, .gb-textarea:focus { border-color: var(--gb-leaf); outline: none; box-shadow: 0 0 0 3px rgba(63,122,53,.18); }
+
+@media (prefers-reduced-motion: reduce) {
+  .gb *, .gb *::before, .gb *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

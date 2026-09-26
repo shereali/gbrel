@@ -10,5 +10,6 @@ vendor/
 .DS_Store
 thumbs.db
 scratch/
+Claude outputs/
 *.sqlite
 backend/database/*.sqlite

@@ -1,133 +1,122 @@
 <template>
-  <div style="background: #F8FAFC; min-height: 100vh; padding: 40px 0 80px;">
-    <div class="container">
-      <div style="text-align:center; max-width:640px; margin:0 auto 48px;">
-        <span class="section-tag">Corporate Headquarters</span>
-        <h1 style="font-size: 2.4rem; font-weight: 800; color: #0A1128; margin-bottom: 12px;">Get in Touch with GBREL</h1>
-        <p style="color: #64748B; font-size: 1rem;">
-          Whether acquiring a luxury residence in Gulshan, securing high-value plots in Purbachal, or exploring hospitality suites in Cox's Bazar, our senior advisory desk is at your service.
-        </p>
+  <div class="ct">
+    <div class="gb-wrap ct-grid">
+      <div class="ct-intro">
+        <h1>কথা বলুন আমাদের সঙ্গে</h1>
+        <p class="gb-lead">কোনো প্রপার্টির দাম, কাগজপত্র বা সাইট ভিজিট নিয়ে প্রশ্ন থাকলে লিখুন। বাজেট আর পছন্দের এলাকা জানালে মিলিয়ে প্রপার্টি দেখাতে পারি।</p>
+
+        <ul class="ct-ways">
+          <li v-if="settings.contact_phone">
+            <Phone :size="22" aria-hidden="true" />
+            <div><span>ফোন</span><a :href="`tel:${tel(settings.contact_phone)}`" class="ct-big">{{ settings.contact_phone }}</a></div>
+          </li>
+          <li v-if="whatsapp">
+            <MessageCircle :size="22" aria-hidden="true" />
+            <div><span>WhatsApp</span><a :href="`https://wa.me/${whatsapp}`" target="_blank" rel="noopener noreferrer" class="gb-link">WhatsApp-এ লিখুন</a></div>
+          </li>
+          <li v-if="settings.contact_email">
+            <Mail :size="22" aria-hidden="true" />
+            <div><span>ইমেইল</span><a :href="`mailto:${settings.contact_email}`" class="gb-link">{{ settings.contact_email }}</a></div>
+          </li>
+          <li v-if="settings.office_address">
+            <MapPin :size="22" aria-hidden="true" />
+            <div><span>অফিস</span><p>{{ settings.office_address }}</p><small v-if="settings.working_hours">{{ settings.working_hours }}</small></div>
+          </li>
+        </ul>
       </div>
 
-      <div class="grid grid-2" style="gap: 36px; margin-bottom: 48px;">
-        <!-- Contact Form -->
-        <div style="background: #FFFFFF; border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: 36px; box-shadow: var(--shadow-md);">
-          <h3 style="font-size: 1.35rem; font-weight: 800; color: #0A1128; margin-bottom: 16px;">Send Us a Message</h3>
-          
-          <div v-if="sent" class="alert alert-success" style="background:#ECFDF5; border:1px solid #10B981; color:#065F46; padding:14px; border-radius:8px; margin-bottom:18px;">
-            Thank you! Your inquiry has been sent to our Executive Desk. We will call you back within 15 minutes.
-          </div>
-
-          <form @submit.prevent="handleSubmit">
-            <div class="form-group" style="margin-bottom: 14px;">
-              <label class="form-label">Full Name</label>
-              <input v-model="form.name" type="text" placeholder="e.g. Shere Ali" required class="form-input" />
-            </div>
-            <div class="form-group" style="margin-bottom: 14px;">
-              <label class="form-label">Email Address</label>
-              <input v-model="form.email" type="email" placeholder="you@example.com" required class="form-input" />
-            </div>
-            <div class="form-group" style="margin-bottom: 14px;">
-              <label class="form-label">Phone (WhatsApp)</label>
-              <input v-model="form.phone" type="tel" placeholder="+880 17XX-XXXXXX" required class="form-input" />
-            </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-              <label class="form-label">Inquiry Details</label>
-              <textarea v-model="form.message" rows="4" class="form-textarea" placeholder="Tell us what type of land or property you are seeking..."></textarea>
-            </div>
-            <button type="submit" class="btn btn-emerald btn-lg" style="width: 100%;">
-              <span>{{ sent ? 'Message Dispatched' : 'Send Message to Executive Desk' }}</span>
-            </button>
-          </form>
+      <div class="ct-card">
+        <div v-if="sent" class="ct-done" role="status">
+          <h2>বার্তা পৌঁছেছে</h2>
+          <p>ধন্যবাদ, {{ form.name }}। আমাদের টিম {{ sentPhone }} নম্বরে যোগাযোগ করবে।</p>
+          <NuxtLink to="/properties" class="gb-btn gb-btn--paddy">এর মধ্যে প্রপার্টি দেখুন</NuxtLink>
         </div>
 
-        <!-- Office Locations & Hotline -->
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-          <div style="background: #FFFFFF; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 24px;">
-            <div class="flex items-center gap-3" style="margin-bottom: 8px;">
-              <span style="width: 40px; height: 40px; border-radius: 10px; background: rgba(10,17,40,0.06); display: flex; align-items: center; justify-content: center; color: #0A1128;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>
-                </svg>
-              </span>
-              <div>
-                <strong style="color: #0A1128; font-size: 1.1rem;">Dhaka Headquarters (Diplomatic Zone)</strong>
-                <div style="font-size: 0.85rem; color: #64748B;">Level 14, GBREL Tower, Kemal Ataturk Avenue, Gulshan-2, Dhaka-1212</div>
-              </div>
-            </div>
-            <div style="font-size: 0.9rem; color: #059669; font-weight: 700; margin-top: 8px;">
-              Direct Desk: +880 1819-987654 / +880 2 988-1234
-            </div>
-          </div>
-
-          <div style="background: #FFFFFF; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 24px;">
-            <div class="flex items-center gap-3" style="margin-bottom: 8px;">
-              <span style="width: 40px; height: 40px; border-radius: 10px; background: rgba(10,17,40,0.06); display: flex; align-items: center; justify-content: center; color: #0A1128;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/>
-                  <circle cx="12" cy="10" r="3"/>
-                </svg>
-              </span>
-              <div>
-                <strong style="color: #0A1128; font-size: 1.1rem;">Chittagong & Coastal Division Desk</strong>
-                <div style="font-size: 0.85rem; color: #64748B;">Agrabad Commercial Area, Chittagong & Kolatoli Marine Drive, Cox's Bazar</div>
-              </div>
-            </div>
-            <div style="font-size: 0.9rem; color: #059669; font-weight: 700; margin-top: 8px;">
-              Direct Desk: +880 1711-889900
-            </div>
-          </div>
-
-          <div style="background: #FFFFFF; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 24px;">
-            <div class="flex items-center gap-3" style="margin-bottom: 8px;">
-              <span style="width: 40px; height: 40px; border-radius: 10px; background: rgba(10,17,40,0.06); display: flex; align-items: center; justify-content: center; color: #0A1128;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path d="M7 2v8M17 2v8M3 8h18M5 8v12a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-5h4v5a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1V8"/>
-                </svg>
-              </span>
-              <div>
-                <strong style="color: #0A1128; font-size: 1.1rem;">Sylhet Tea Valley & Expatriate Desk</strong>
-                <div style="font-size: 0.85rem; color: #64748B;">Shahjalal Uposhahar, Sylhet & Bhanugach Road, Sreemangal</div>
-              </div>
-            </div>
-            <div style="font-size: 0.9rem; color: #059669; font-weight: 700; margin-top: 8px;">
-              Direct Desk: +880 1912-778899
-            </div>
-          </div>
-        </div>
+        <form v-else novalidate @submit.prevent="handleSubmit">
+          <h2>বার্তা পাঠান</h2>
+          <label class="gb-field">
+            <span>আপনার নাম</span>
+            <input v-model.trim="form.name" type="text" autocomplete="name" required class="gb-input" />
+          </label>
+          <label class="gb-field">
+            <span>মোবাইল নম্বর</span>
+            <input v-model="form.phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="01XXXXXXXXX বা +44…" required class="gb-input" :aria-invalid="errorField === 'phone'" />
+          </label>
+          <label class="gb-field">
+            <span>ইমেইল <small>(ঐচ্ছিক)</small></span>
+            <input v-model.trim="form.email" type="email" autocomplete="email" class="gb-input" />
+          </label>
+          <label class="gb-field">
+            <span>কী জানতে চান?</span>
+            <textarea v-model="form.message" rows="4" class="gb-textarea" placeholder="যেমন: পূর্বাচলে ৫ কাঠার প্লট খুঁজছি, বাজেট ৫০ লাখের মধ্যে।"></textarea>
+          </label>
+          <p v-if="error" class="ct-err" role="alert">{{ error }}</p>
+          <button type="submit" class="gb-btn gb-btn--sun" :disabled="sending">{{ sending ? 'পাঠানো হচ্ছে…' : 'বার্তা পাঠান' }}</button>
+        </form>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { Mail, MapPin, MessageCircle, Phone } from 'lucide-vue-next'
+import { useSettings } from '~/composables/useSettings'
+import { normalizePhone } from '~/utils/propertyLabels'
 
+const { settings, fetchSettings } = useSettings()
+onMounted(() => { fetchSettings() })
+const tel = (v: string) => v.replace(/[^\d+]/g, '')
+const whatsapp = computed(() => (settings.value.whatsapp_number || '').replace(/\D/g, ''))
+
+const form = reactive({ name: '', email: '', phone: '', message: '' })
 const sent = ref(false)
-const form = reactive({
-  name: '',
-  email: '',
-  phone: '',
-  message: ''
-})
+const sending = ref(false)
+const sentPhone = ref('')
+const error = ref('')
+const errorField = ref('')
 
 const handleSubmit = async () => {
-  sent.value = true
+  error.value = ''; errorField.value = ''
+  if (!form.name) { error.value = 'আপনার নাম লিখুন।'; errorField.value = 'name'; return }
+  const phone = normalizePhone(form.phone)
+  if (!phone) { error.value = 'সঠিক মোবাইল নম্বর দিন, যেমন 01712345678। বিদেশের নম্বর হলে দেশের কোডসহ লিখুন।'; errorField.value = 'phone'; return }
+  sending.value = true
   try {
-    await fetch(useApiUrl('/leads'), {
+    const res = await fetch(useApiUrl('/leads'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        property_title: 'Contact Form Inquiry',
-        lead_type: 'Direct Contact Form',
-        message: form.message
-      })
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ name: form.name, email: form.email || null, phone, property_title: 'Contact Form Inquiry', lead_type: 'Direct Contact Form', message: form.message })
     })
+    if (!res.ok) throw new Error(String(res.status))
+    sentPhone.value = phone
+    sent.value = true
   } catch {
-    //
+    error.value = 'বার্তা পাঠানো যায়নি। একটু পরে আবার চেষ্টা করুন, অথবা সরাসরি ফোন করুন।'
+  } finally {
+    sending.value = false
   }
 }
+
+useSeoMeta({ title: 'যোগাযোগ | গ্রাম বাংলা রিয়েল এস্টেট', description: 'প্রপার্টির দাম, কাগজপত্র বা সাইট ভিজিট নিয়ে গ্রাম বাংলা রিয়েল এস্টেট টিমের সঙ্গে কথা বলুন।' })
 </script>
+
+<style scoped>
+.ct { padding: clamp(40px, 7vw, 88px) 0 96px; }
+.ct-grid { display: grid; grid-template-columns: 1fr minmax(0, 480px); gap: clamp(32px, 6vw, 88px); align-items: start; }
+.ct-intro h1 { font-size: var(--gb-t-h1); font-weight: 800; font-stretch: 112%; margin-bottom: 16px; }
+.ct-ways { list-style: none; margin-top: 36px; display: flex; flex-direction: column; }
+.ct-ways li { display: flex; gap: 16px; padding: 18px 0; border-top: 1px solid var(--gb-silt); }
+.ct-ways svg { color: var(--gb-leaf); flex-shrink: 0; margin-top: 4px; }
+.ct-ways span { display: block; font-size: .85rem; color: var(--gb-ink-soft); }
+.ct-ways small { color: var(--gb-ink-soft); }
+.ct-big { font-family: var(--gb-display); font-size: 1.6rem; font-weight: 700; color: var(--gb-paddy); font-variant-numeric: tabular-nums; }
+.ct-card { background: var(--gb-sheet); border: 1px solid var(--gb-silt); border-radius: var(--gb-r-lg); padding: clamp(24px, 4vw, 36px); }
+.ct-card form { display: flex; flex-direction: column; gap: 16px; }
+.ct-card h2 { font-size: 1.6rem; font-weight: 700; }
+.ct-card .gb-field small { font-weight: 400; color: var(--gb-ink-soft); }
+.ct-card .gb-btn:disabled { opacity: .7; cursor: wait; }
+.ct-err { color: #A23B16; background: #FBE9DF; border-radius: 8px; padding: 10px 12px; font-size: .92rem; }
+.ct-done { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+@media (max-width: 900px) { .ct-grid { grid-template-columns: 1fr; } }
+</style>

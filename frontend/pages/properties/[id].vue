@@ -25,7 +25,7 @@
         <div><Compass :size="20" /><span>{{ property.bedrooms ? 'বেডরুম' : 'অভিমুখ' }}<strong>{{ property.bedrooms || property.facing || 'জেনে নিন' }}</strong></span></div>
         <div><CircleCheck :size="20" /><span>অবস্থা<strong>{{ property.status }}</strong></span></div>
       </div>
-      <section class="interest-banner"><div><span class="eyebrow">আপনার পরিকল্পনার সঙ্গে মেলে?</span><h2>আগে বিস্তারিত জানুন, তারপর সিদ্ধান্ত নিন।</h2><p>দাম, পেমেন্ট ও সাইট ভিজিট নিয়ে কথা বলতে আপনার পছন্দ জানান।</p></div><button class="primary" @click="openInquiry('hero')">বিস্তারিত জানতে চাই <ArrowRight :size="18" /></button></section>
+      <div ref="inlineStart"><PropertySurveyStart @choose="purpose => openInquiry('inline_first_question', purpose)" /></div>
       <div class="property-body">
         <div class="property-information">
           <nav class="section-nav" aria-label="প্রপার্টির বিভাগ"><a href="#property-overview">বিস্তারিত</a><a v-if="hasBuyerDetails" href="#property-buyer-details">মূল্য ও শর্ত</a><a href="#property-documents">কাগজপত্র</a><a href="#property-location">লোকেশন</a><a href="#property-questions">আপনার প্রশ্ন</a></nav>
@@ -41,17 +41,17 @@
           <section id="property-location" class="detail-section"><p class="eyebrow">নিজে দেখে সিদ্ধান্ত নিন</p><h2>লোকেশন ও সাইট ভিজিট</h2><p class="property-location"><MapPin :size="20" />{{ location }}</p><p>সাইট ভিজিটের আগে সঠিক লোকেশন, যাতায়াতের পথ ও সময় টিমের সঙ্গে মিলিয়ে নিন।</p><a v-if="!property.hideExactAddress && property.lat && property.lng" class="text-action" :href="`https://www.google.com/maps/search/?api=1&query=${property.lat},${property.lng}`" target="_blank" rel="noopener noreferrer">ম্যাপে লোকেশন দেখুন <ArrowUpRight :size="16" /></a><button class="secondary" @click="openInquiry('site_visit')">সাইট ভিজিট নিয়ে কথা বলি <ArrowRight :size="16" /></button></section>
           <section id="property-questions" class="detail-section faq-section"><p class="eyebrow">সহজ উত্তর</p><h2>আপনার মনে হতে পারে</h2><details><summary>ফর্ম পূরণ করলে কি বুকিং হয়ে যাবে?</summary><p>না। এটি শুধু এই প্রপার্টি সম্পর্কে তথ্য ও যোগাযোগের অনুরোধ। কোনো টাকা বা বুকিংয়ের অঙ্গীকার প্রয়োজন নেই।</p></details><details><summary>তালিকাভুক্ত দামের বাইরে খরচ আছে?</summary><p>রেজিস্ট্রেশন, কর, সার্ভিস চার্জ এবং প্রযোজ্য হলে নির্মাণ খরচ মূল্যের মধ্যে আছে কি না, টিমের কাছে পূর্ণ হিসাব চেয়ে নিন। প্রকাশিত খরচের বিবরণ দেখুন; কোনো খরচ উল্লেখ না থাকলে তা অন্তর্ভুক্ত ধরে নেবেন না।</p></details><details><summary>এখনই কিনব না, তবু কথা বলা যাবে?</summary><p>অবশ্যই। ফর্মে আপনার আসল সময়সীমা বেছে নিন। আপনার প্রস্তুতি অনুযায়ী আলোচনা করা যাবে।</p></details><details><summary>ফর্ম জমা দেওয়ার পর কী হবে?</summary><p>GBREL টিম আপনার দেওয়া নম্বরে, পছন্দের মাধ্যমে যোগাযোগ করবে। ঐচ্ছিকভাবে সময় বা আগে জানতে চাওয়া বিষয়ও জানাতে পারবেন।</p></details></section>
         </div>
-        <aside class="inquiry-sidebar"><div class="advisor-card"><span class="advisor-symbol"><MessagesSquare :size="25" /></span><p class="eyebrow">আপনার জন্য পরবর্তী ধাপ</p><h2>এই প্রপার্টি নিয়ে<br>কথা বলি?</h2><p>আপনার পরিকল্পনা জানালে প্রয়োজনীয় বিষয়গুলো নিয়ে আলোচনা সহজ হবে।</p><ul><li><Check :size="17" /> মোট খরচ ও পেমেন্টের শর্ত</li><li><Check :size="17" /> উপলব্ধ কাগজপত্রের তথ্য</li><li><Check :size="17" /> সাইট ভিজিটের সম্ভাব্য সময়</li></ul><button class="primary" @click="openInquiry('sidebar')">বিস্তারিত জানতে চাই <ArrowRight :size="18" /></button><small>২টি ছোট ধাপ · কোনো বুকিং প্রয়োজন নেই</small><div v-if="agent && !property.hideAgentContact" class="advisor-direct"><span>সরাসরি যোগাযোগ করতে চান?</span><div><a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" @click="track('Contact', { method: 'WhatsApp' })">WhatsApp <ArrowUpRight :size="15" /></a><a :href="`tel:${agent.phone}`" @click="track('Contact', { method: 'Phone' })"><Phone :size="15" /> কল করুন</a></div></div></div></aside>
+        <aside class="inquiry-sidebar"><PropertySurveyStart v-show="!inlineVisible" side class="side-start" @choose="purpose => openInquiry('sidebar_first_question', purpose)" /><div v-if="agent && !property.hideAgentContact" class="advisor-direct"><span>প্রশ্ন ছাড়াই সরাসরি কথা বলতে চান?</span><div><a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" @click="track('Contact', { method: 'WhatsApp' })">WhatsApp <ArrowUpRight :size="15" /></a><a :href="`tel:${agent.phone}`" @click="track('Contact', { method: 'Phone' })"><Phone :size="15" /> কল করুন</a></div></div></aside>
       </div>
-      <aside v-if="!inquiryOpen && !lightboxOpen" class="mobile-inquiry-bar" aria-label="প্রপার্টি সম্পর্কে যোগাযোগ"><div><strong>{{ priceLabel }}</strong><small>{{ property.hidePrice ? 'বিস্তারিত জেনে নিন' : priceSummary.label }}</small></div><button class="primary" @click="openInquiry('mobile_sticky')">বিস্তারিত চাই <ArrowRight :size="17" /></button></aside>
-      <PropertyInquiry :key="property.id" :open="inquiryOpen" :property="property" :source="inquirySource" @close="inquiryOpen = false" @saved="leadSaved" />
+      <aside v-if="!inquiryOpen && !lightboxOpen" class="mobile-inquiry-bar" aria-label="প্রপার্টি সম্পর্কে যোগাযোগ"><div><strong>{{ priceLabel }}</strong><small>{{ property.hidePrice ? 'বিস্তারিত জেনে নিন' : priceSummary.label }}</small></div><button class="primary" @click="openInquiry('mobile_sticky')">দাম ও শর্ত জানুন <ArrowRight :size="17" /></button></aside>
+      <PropertyInquiry :key="property.id" :open="inquiryOpen" :property="property" :source="inquirySource" :start-purpose="startPurpose" :whatsapp="leadWhatsapp" @close="inquiryOpen = false" @saved="leadSaved" />
     </div>
     <Teleport to="body"><div v-if="lightboxOpen && images.length" ref="lightboxRoot" class="photo-overlay" role="dialog" aria-modal="true" aria-label="প্রপার্টির ছবি" @click.self="lightboxOpen = false" @keydown.left="previousPhoto" @keydown.right="nextPhoto"><button class="photo-close" aria-label="ছবি বন্ধ করুন" @click="lightboxOpen = false"><X :size="25" /></button><img :src="images[photoIndex]" :alt="`${property?.title} — ছবি ${photoIndex + 1}`" /><div class="photo-controls"><button :disabled="images.length < 2" aria-label="আগের ছবি" @click="previousPhoto"><ChevronLeft /></button><span aria-live="polite">{{ photoIndex + 1 }} / {{ images.length }}</span><button :disabled="images.length < 2" aria-label="পরের ছবি" @click="nextPhoto"><ChevronRight /></button></div></div></Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { ArrowRight, ArrowUpRight, Building2, Check, ChevronLeft, ChevronRight, CircleCheck, Compass, Copy, Expand, FileDown, FileText, Heart, Image as ImageIcon, MapPin, MessagesSquare, Phone, Ruler, Share2, X } from 'lucide-vue-next'
 import { useProperties, type PropertyItem } from '~/composables/useProperties'
 import { formatBDT, formatArea } from '~/composables/useCurrency'
@@ -60,6 +60,9 @@ import { useCompare } from '~/composables/useCompare'
 import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
 import { askingPriceSummary, detailGroups } from '~/utils/buyerDetails.mjs'
 import { safeBrochureUrl } from '~/utils/propertyInquiry.mjs'
+import { trackPixel } from '~/utils/metaPixel'
+import { useSettings } from '~/composables/useSettings'
+import PropertySurveyStart from '~/components/PropertySurveyStart.vue'
 const route = useRoute()
 const { fetchPropertyById, fetchAgents, agents } = useProperties()
 const { isPropertySaved, toggleSaveProperty } = useAuth()
@@ -74,6 +77,9 @@ const lightboxRoot = ref<HTMLElement | null>(null)
 const photoIndex = ref(0)
 useOverlayBehavior(lightboxOpen, () => { lightboxOpen.value = false }, lightboxRoot)
 const agent = computed(() => agents.value.find(item => item.id === property.value?.agentId))
+const { settings, fetchSettings } = useSettings()
+fetchSettings()
+const leadWhatsapp = computed(() => (!property.value?.hideAgentContact && agent.value?.whatsapp) || settings.value.whatsapp_number || '')
 const images = computed(() => [...new Set((property.value?.images || []).filter(Boolean))])
 const priceSummary = computed(() => askingPriceSummary(property.value || {}))
 const hasBuyerDetails = computed(() => property.value && detailGroups(property.value).length > 0)
@@ -93,9 +99,22 @@ const specifications = computed(() => {
   return [{ label: 'আয়তন', value: formatArea(p.squareFootage, p.landSize, p.landUnit) }, { label: 'প্রপার্টির ধরন', value: p.propertyType }, { label: 'নির্মাণের অবস্থা', value: p.completionStatus }, { label: 'অভিমুখ', value: p.facing }, { label: 'পার্কিং', value: p.parking }, { label: 'মোট তলা', value: p.totalFloors }, { label: 'বেডরুম', value: p.bedrooms }, { label: 'বাথরুম', value: p.bathrooms }, { label: 'তালিকায় দেওয়া হস্তান্তর / নির্মাণ বছর', value: p.yearBuilt }].filter(item => item.value)
 })
 const whatsappUrl = computed(() => `https://wa.me/${(agent.value?.whatsapp || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hello GBREL, I would like details about ${property.value?.title} (GBR-${property.value?.id}).`)}`)
-const track = (event: string, extra: Record<string, unknown> = {}) => { try { (window as any).fbq?.('track', event, { content_ids: [String(property.value?.id)], content_type: 'product', ...extra }) } catch { /* Analytics must not interrupt the inquiry. */ } }
-const openInquiry = (source: string) => { inquirySource.value = source; inquiryOpen.value = true }
-const leadSaved = (id: number) => { track('Lead', { lead_id: String(id) }) }
+const track = (event: string, extra: Record<string, unknown> = {}) => trackPixel(event, { content_ids: [String(property.value?.id)], content_type: 'product', content_name: property.value?.title, ...extra })
+const startPurpose = ref('')
+// The sidebar repeats the first question only once the inline one has scrolled away, so both are never on screen together.
+const inlineStart = ref<HTMLElement | null>(null)
+const inlineVisible = ref(false)
+let startObserver: IntersectionObserver | null = null
+watch(inlineStart, el => {
+  startObserver?.disconnect()
+  if (!el || typeof IntersectionObserver === 'undefined') return
+  startObserver = new IntersectionObserver(([entry]) => { inlineVisible.value = entry.isIntersecting || entry.boundingClientRect.top > 0 })
+  startObserver.observe(el)
+})
+onBeforeUnmount(() => startObserver?.disconnect())
+const openInquiry = (source: string, purpose = '') => { inquirySource.value = source; if (purpose) startPurpose.value = purpose; inquiryOpen.value = true }
+// The survey sends the Lead pixel event itself (with a dedup event ID).
+const leadSaved = (_id: number) => {}
 const openPhoto = (index: number) => { photoIndex.value = index; lightboxOpen.value = true }
 const nextPhoto = () => { photoIndex.value = (photoIndex.value + 1) % images.value.length }
 const previousPhoto = () => { photoIndex.value = (photoIndex.value + images.value.length - 1) % images.value.length }
@@ -149,7 +168,7 @@ const shareProperty = async () => {
 .brochure-list a { display:flex; gap:12px; align-items:center; border:1px solid #d9e3d8; padding:15px; border-radius:9px; margin-top:10px; color:#1b6346; font-size:14px; }.brochure-list span { flex:1; }.detail-section .muted-note { font-size:12px; color:#6f7b70; }
 .faq-section details { border-bottom:1px solid #e0e7dc; padding:8px 0; }.faq-section summary { cursor:pointer; padding:14px 0; font-size:14px; font-weight:600; min-height:48px; }.faq-section details p { padding:0 12px 0 0; }
 .inquiry-sidebar { position:sticky; top:105px; }.advisor-card { padding:28px; border:1px solid #dbe4d7; border-radius:17px; background:#fff; box-shadow:0 8px 24px #203b2810; }.advisor-symbol { display:inline-flex; padding:12px; background:#eaf2e8; border-radius:13px; margin-bottom:22px; color:#336947; }.advisor-card h2 { font-size:26px; line-height:1.6; margin-bottom:12px; }.advisor-card > p:not(.eyebrow) { font-size:13px; line-height:1.9; color:#687967; }.advisor-card ul { padding:0; list-style:none; display:grid; gap:12px; margin:24px 0; }.advisor-card li { display:flex; gap:9px; font-size:12px; align-items:center; }.advisor-card li svg { flex-shrink:0; color:#548459; }.advisor-card .primary { width:100%; padding:14px 10px; }.advisor-card > small { display:block; text-align:center; font-size:10px; margin-top:12px; color:#71836b; }
-.advisor-direct { border-top:1px solid #e4e9df; padding-top:20px; margin-top:24px; }.advisor-direct > span { display:block; font-size:11px; color:#71836b; margin-bottom:8px; }.advisor-direct > div { display:flex; justify-content:space-between; }.advisor-direct a { display:inline-flex; align-items:center; gap:5px; min-height:44px; font-size:13px; color:#386b45; }
+.advisor-direct { border:1px solid #dbe4d7; border-radius:14px; background:#fff; padding:14px 18px 6px; margin-top:14px; }.advisor-direct > span { display:block; font-size:11px; color:#71836b; margin-bottom:8px; }.advisor-direct > div { display:flex; justify-content:space-between; }.advisor-direct a { display:inline-flex; align-items:center; gap:5px; min-height:44px; font-size:13px; color:#386b45; }
 .mobile-inquiry-bar { display:none; }.property-state { max-width:650px; margin:auto; padding:80px 24px; text-align:center; }.property-state h1 { font-size:24px; }.property-state p { margin:20px 0; }.property-state a { display:block; margin-top:24px; }.loading-block { height:180px; background:#e9efe6; border-radius:20px; margin-bottom:24px; }
 .photo-overlay { position:fixed; inset:0; z-index:11000; background:#07130ef5; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:60px 20px 25px; }.photo-overlay > img { max-width:100%; max-height:calc(100dvh - 155px); object-fit:contain; }.photo-overlay button { background:#fff2; border:1px solid #ffffff40; color:white; width:48px; height:48px; display:grid; place-items:center; border-radius:50%; cursor:pointer; }.photo-overlay button:focus-visible { outline:3px solid #e0bc68; }.photo-close { position:absolute; top:14px; right:18px; }.photo-controls { display:flex; align-items:center; gap:24px; color:white; margin-top:16px; }.photo-controls button:disabled { opacity:.3; }
 @media (max-width:1024px) { .property-body { grid-template-columns:minmax(0,1fr) 300px; gap:24px; }.advisor-card { padding:22px; }.property-heading { gap:24px; grid-template-columns:minmax(0,1fr) 250px; }.asking-price { padding-left:20px; }.property-specs { grid-template-columns:1fr; } }
