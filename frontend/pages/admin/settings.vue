@@ -35,6 +35,16 @@
       <label class="st-field"><span>Browser tab title</span><input v-model="form.site_title" maxlength="200" /></label>
     </section>
 
+    <section id="property-page" class="st-card" aria-labelledby="st-property">
+      <h2 id="st-property">Property page button</h2>
+      <p class="st-help">The orange button on every property page and at the end of the buyer form. Promise something the team really sends, so buyers who click get what the button said.</p>
+      <div class="st-grid">
+        <label class="st-field"><span>Button text (price shown)</span><input v-model="form.property_cta_label" maxlength="30" /></label>
+        <label class="st-field"><span>Button text (price hidden)</span><input v-model="form.property_cta_label_hidden_price" maxlength="30" /></label>
+      </div>
+      <label class="st-field"><span>Line under the button</span><textarea v-model="form.property_cta_note" rows="2" maxlength="160" /></label>
+    </section>
+
     <section id="owners" class="st-card" aria-labelledby="st-owners">
       <h2 id="st-owners">Owner terms & service charge</h2>
       <p class="st-help">Owners must accept these terms before submitting a property. Write one rule per line. Use <code>{commission}</code> where the percentage should appear. Changing the terms asks owners with unsubmitted drafts to read them again.</p>
@@ -97,10 +107,10 @@ definePageMeta({ layout: 'admin' })
 
 const toast = useToast()
 const { settings, isSaving, fetchSettings, updateSettings } = useSettings()
-const editable = ['site_name', 'site_title', 'contact_phone', 'whatsapp_number', 'contact_email', 'office_address', 'working_hours', 'home_headline', 'home_subtitle', 'owner_commission_percent', 'owner_terms', 'listing_document_types'] as const
+const editable = ['site_name', 'site_title', 'contact_phone', 'whatsapp_number', 'contact_email', 'office_address', 'working_hours', 'home_headline', 'home_subtitle', 'property_cta_label', 'property_cta_label_hidden_price', 'property_cta_note', 'owner_commission_percent', 'owner_terms', 'listing_document_types'] as const
 
 const sections = [
-  { id: 'contact', label: 'Contact' }, { id: 'homepage', label: 'Homepage' }, { id: 'owners', label: 'Owner terms' },
+  { id: 'contact', label: 'Contact' }, { id: 'homepage', label: 'Homepage' }, { id: 'property-page', label: 'Property button' }, { id: 'owners', label: 'Owner terms' },
   { id: 'documents', label: 'Owner papers' }, { id: 'options', label: 'Form options' }
 ]
 const form = reactive<Record<string, any>>({ listing_document_types: [] as DocumentType[] })

@@ -19,6 +19,9 @@ export interface SiteSettings {
   working_hours: string
   home_headline: string
   home_subtitle: string
+  property_cta_label: string
+  property_cta_label_hidden_price: string
+  property_cta_note: string
   owner_commission_percent: number
   owner_terms: string
   owner_terms_version: string
@@ -37,6 +40,9 @@ const defaultSettings: SiteSettings = {
   working_hours: '',
   home_headline: 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন।',
   home_subtitle: '',
+  property_cta_label: 'মোট খরচের হিসাব নিন',
+  property_cta_label_hidden_price: 'দাম ও মোট খরচ জানুন',
+  property_cta_note: 'রেজিস্ট্রেশন, নামজারিসহ সব খরচ মিলিয়ে হিসাব WhatsApp-এ পাঠাব। কোনো টাকা লাগবে না।',
   owner_commission_percent: 2,
   owner_terms: '',
   owner_terms_version: '',

@@ -54,7 +54,7 @@
         <!-- Contact screen -->
         <form v-else class="sv-contact" novalidate :aria-busy="sending" @submit.prevent="submit">
           <h2 id="sv-title" class="sv-title">কোন নম্বরে যোগাযোগ করব?</h2>
-          <p class="sv-help">আপনার উত্তর অনুযায়ী দাম, কিস্তি আর সাইট ভিজিট নিয়ে কথা বলব।</p>
+          <p class="sv-help">{{ settings.property_cta_note || 'আপনার উত্তর অনুযায়ী দাম, কিস্তি আর সাইট ভিজিট নিয়ে কথা বলব।' }}</p>
           <fieldset :disabled="sending">
             <label class="sv-field">
               <span>আপনার নাম</span>
@@ -87,7 +87,7 @@
             </label>
           </fieldset>
           <p v-if="phoneError || error" class="sv-error" role="alert">{{ phoneError || error }}</p>
-          <button type="submit" class="sv-btn sv-btn--go" :disabled="sending">{{ sending ? 'পাঠানো হচ্ছে…' : 'যোগাযোগের অনুরোধ পাঠান' }}</button>
+          <button type="submit" class="sv-btn sv-btn--go" :disabled="sending">{{ sending ? 'পাঠানো হচ্ছে…' : ctaLabel }}</button>
           <div class="sv-nav">
             <button type="button" class="sv-back" :disabled="sending" @click="back"><ChevronLeft :size="18" aria-hidden="true" /> আগের প্রশ্ন</button>
             <span class="sv-count">{{ toBn(totalSteps) }} / {{ toBn(totalSteps) }}</span>
@@ -118,6 +118,8 @@ const route = useRoute()
 const dialogRoot = ref<HTMLElement | null>(null)
 useOverlayBehavior(computed(() => props.open), () => emit('close'), dialogRoot)
 
+const { settings } = useSettings()
+const ctaLabel = computed(() => props.property.hidePrice ? settings.value.property_cta_label_hidden_price : settings.value.property_cta_label)
 const questions = computed(() => buildQuestions(!!props.property.hidePrice, props.property.propertyType))
 const totalSteps = computed(() => questions.value.length + 1)
 const bandColors = ['#B9D08F', '#9DBE73', '#7FA85A', '#5C924A', '#3A7234', '#1D4A2A']
