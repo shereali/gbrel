@@ -14,7 +14,17 @@ export default defineNuxtConfig({
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         { name: 'description', content: 'জমি, প্লট, জমি শেয়ার ও ফ্ল্যাট খুঁজুন। দাম, কাগজপত্র ও লোকেশন দেখে নিন, তারপর গ্রাম বাংলা রিয়েল এস্টেট টিমের সঙ্গে কথা বলুন।' },
-        { name: 'theme-color', content: '#1D4A2A' }
+        { name: 'theme-color', content: '#1D4A2A' },
+        // Site-wide share preview. Property pages get their own from server/plugins/share-meta.ts.
+        { property: 'og:type', content: 'website' },
+        { property: 'og:site_name', content: 'গ্রাম বাংলা রিয়েল এস্টেট' },
+        { property: 'og:locale', content: 'bn_BD' },
+        { property: 'og:title', content: 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন — গ্রাম বাংলা রিয়েল এস্টেট' },
+        { property: 'og:description', content: 'জমি, প্লট, জমি শেয়ার ও ফ্ল্যাট খুঁজুন। দাম, কাগজপত্র ও লোকেশন দেখে নিন, তারপর গ্রাম বাংলা রিয়েল এস্টেট টিমের সঙ্গে কথা বলুন।' },
+        { property: 'og:image', content: 'https://gbrel.com/og-default.jpg' },
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
+        { name: 'twitter:card', content: 'summary_large_image' }
       ],
       link: [
         { rel: 'icon', type: 'image/png', href: '/favicon.png' },
@@ -33,6 +43,8 @@ export default defineNuxtConfig({
     '~/assets/css/site.css'
   ],
   runtimeConfig: {
+    // Server-only: where the Nitro server reaches the Laravel API (docker-compose sets NUXT_API_BASE_SERVER).
+    apiBaseServer: process.env.NUXT_API_BASE_SERVER || 'http://127.0.0.1:8000/api',
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000/api',
       metaPixelId: process.env.NUXT_PUBLIC_META_PIXEL_ID || ''

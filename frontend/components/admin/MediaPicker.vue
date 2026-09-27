@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div v-if="open" class="mpk" role="dialog" aria-modal="true" :aria-label="title" @keydown.esc="$emit('close')">
+    <div v-if="open" class="mpk" role="dialog" aria-modal="true" :aria-label="title">
       <div class="mpk-backdrop" @click="$emit('close')"></div>
       <div ref="panel" class="mpk-panel" tabindex="-1">
         <div class="mpk-head">
@@ -14,18 +14,17 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { X } from 'lucide-vue-next'
 import type { MediaItem } from '~/composables/useMediaLibrary'
+import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
 
 const props = withDefaults(defineProps<{ open: boolean; accept?: 'image' | 'video' | 'any'; multiple?: boolean; title?: string; pickLabel?: string }>(), { accept: 'image', multiple: false, title: 'Choose from media library', pickLabel: 'Use selected' })
-defineEmits<{ close: []; pick: [items: MediaItem[]] }>()
+const emit = defineEmits<{ close: []; pick: [items: MediaItem[]] }>()
 const panel = ref<HTMLElement | null>(null)
-watch(() => props.open, open => {
-  if (!process.client) return
-  document.documentElement.style.overflow = open ? 'hidden' : ''
-  if (open) nextTick(() => panel.value?.focus())
-})
+// Shared dialog behaviour: Escape closes, Tab stays inside the picker, the page stops scrolling while it is open,
+// focus returns to the button that opened it, and scrolling is restored even if the editor unmounts while open.
+useOverlayBehavior(computed(() => props.open), () => emit('close'), panel)
 </script>
 
 <style scoped>

@@ -65,6 +65,7 @@
 </template>
 
 <script setup lang="ts">
+import { whatsappNumber } from '~/utils/contact'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { Mail, MapPin, MessageCircle, Phone, ShieldCheck } from 'lucide-vue-next'
 import { useSettings } from '~/composables/useSettings'
@@ -74,7 +75,7 @@ import { trackPixel } from '~/utils/metaPixel'
 const { settings, fetchSettings } = useSettings()
 onMounted(() => { fetchSettings() })
 const tel = (v: string) => v.replace(/[^\d+]/g, '')
-const whatsapp = computed(() => (settings.value.whatsapp_number || '').replace(/\D/g, ''))
+const whatsapp = computed(() => whatsappNumber(settings.value.whatsapp_number))
 
 const form = reactive({ name: '', email: '', phone: '', message: '' })
 const sent = ref(false)

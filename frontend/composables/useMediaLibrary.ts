@@ -1,7 +1,8 @@
 // Staff media library: photos and videos reused across listings (Admin → Media library).
 import { useApiUrl } from '~/composables/useApi'
 
-export interface MediaUsage { id: number; title: string; as: 'photo' | 'video' | 'video cover' }
+// kind 'property': a listing (id is the property). kind 'media': another library item uses it as its cover.
+export interface MediaUsage { id: number; title: string; as: string; kind?: 'property' | 'media' }
 export interface MediaItem {
   id: number
   type: 'image' | 'video'
@@ -40,9 +41,9 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 export const useMediaLibrary = () => {
-  const list = (params: { type?: string; q?: string } = {}) => {
-    const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v) as [string, string][]).toString()
-    return request<{ data: MediaItem[]; counts: MediaCounts; limits: { image_mb: number; video_mb: number } }>(`/admin/media${qs ? `?${qs}` : ''}`)
+  const list = (params: { type?: string; q?: string; page?: number } = {}) => {
+    const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v).map(([k, v]) => [k, String(v)])).toString()
+    return request<{ data: MediaItem[]; meta: { page: number; last_page: number; total: number }; counts: MediaCounts; limits: { image_mb: number; video_mb: number } }>(`/admin/media${qs ? `?${qs}` : ''}`)
   }
 
   // XHR so the library can show upload progress for large videos.

@@ -70,7 +70,7 @@
           <section id="property-location" class="detail-section"><p class="eyebrow">নিজে দেখে সিদ্ধান্ত নিন</p><h2>লোকেশন ও সাইট ভিজিট</h2><p class="property-location"><MapPin :size="20" />{{ location }}</p><p>সাইট ভিজিটের আগে সঠিক লোকেশন, যাতায়াতের পথ ও সময় টিমের সঙ্গে মিলিয়ে নিন।</p><a v-if="!property.hideExactAddress && property.lat && property.lng" class="text-action" :href="`https://www.google.com/maps/search/?api=1&query=${property.lat},${property.lng}`" target="_blank" rel="noopener noreferrer">ম্যাপে লোকেশন দেখুন <ArrowUpRight :size="16" /></a><button class="secondary" @click="openInquiry('site_visit')">{{ ctaLabel }} <ArrowRight :size="16" /></button></section>
           <section id="property-questions" class="detail-section faq-section"><p class="eyebrow">সহজ উত্তর</p><h2>আপনার মনে হতে পারে</h2><details><summary>ফর্ম পূরণ করলে কি বুকিং হয়ে যাবে?</summary><p>না। এটি শুধু এই প্রপার্টি সম্পর্কে তথ্য ও যোগাযোগের অনুরোধ। কোনো টাকা বা বুকিংয়ের অঙ্গীকার প্রয়োজন নেই।</p></details><details><summary>তালিকাভুক্ত দামের বাইরে খরচ আছে?</summary><p>রেজিস্ট্রেশন, কর, সার্ভিস চার্জ{{ buildCostApplies ? ' এবং নির্মাণ খরচ' : '' }} মূল্যের মধ্যে আছে কি না, টিমের কাছে পূর্ণ হিসাব চেয়ে নিন। প্রকাশিত খরচের বিবরণ দেখুন; কোনো খরচ উল্লেখ না থাকলে তা অন্তর্ভুক্ত ধরে নেবেন না।</p></details><details><summary>এখনই কিনব না, তবু কথা বলা যাবে?</summary><p>অবশ্যই। ফর্মে আপনার আসল সময়সীমা বেছে নিন। আপনার প্রস্তুতি অনুযায়ী আলোচনা করা যাবে।</p></details><details><summary>ফর্ম জমা দেওয়ার পর কী হবে?</summary><p>GBREL টিম আপনার দেওয়া নম্বরে, পছন্দের মাধ্যমে যোগাযোগ করবে। ঐচ্ছিকভাবে সময় বা আগে জানতে চাওয়া বিষয়ও জানাতে পারবেন।</p></details></section>
         </div>
-        <aside class="inquiry-sidebar" :class="{ 'is-resting': bottomCtaVisible }" :aria-hidden="bottomCtaVisible || undefined">
+        <aside class="inquiry-sidebar" :class="{ 'is-resting': bottomCtaVisible }" :aria-hidden="(bottomCtaVisible && isDesktop) || undefined">
           <div v-if="inlineVisible" class="sidebar-sticky-cta">
             <div class="sidebar-sticky-price">
               <span>{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span>
@@ -82,11 +82,11 @@
             </button>
           </div>
           <PropertySurveyStart v-show="!inlineVisible" side :property-type="property.propertyType" class="side-start" @choose="purpose => openInquiry('sidebar_first_question', purpose)" />
-          <div v-if="agent && !property.hideAgentContact" class="advisor-direct">
+          <div v-if="waLink || agentTel" class="advisor-direct">
             <span>প্রশ্ন ছাড়াই সরাসরি কথা বলতে চান?</span>
             <div>
-              <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" @click="track('Contact', { method: 'WhatsApp' })">WhatsApp <ArrowUpRight :size="15" /></a>
-              <a :href="`tel:${agent.phone}`" @click="track('Contact', { method: 'Phone' })"><Phone :size="15" /> কল করুন</a>
+              <a v-if="waLink" :href="waLink" target="_blank" rel="noopener noreferrer" @click="track('Contact', { method: 'WhatsApp', placement: 'sidebar' })">WhatsApp <ArrowUpRight :size="15" /></a>
+              <a v-if="agentTel" :href="agentTel" @click="track('Contact', { method: 'Phone', placement: 'sidebar' })"><Phone :size="15" /> কল করুন</a>
             </div>
           </div>
         </aside>
@@ -120,7 +120,7 @@
               <MessageCircle :size="19" aria-hidden="true" />
               WhatsApp-এ কথা বলুন
             </a>
-            <a v-if="agent?.phone && !property.hideAgentContact" class="bottom-phone-pill" :href="`tel:${agent.phone}`" @click="track('Contact', { method: 'Phone', placement: 'bottom_banner' })">
+            <a v-if="agentTel" class="bottom-phone-pill" :href="agentTel" @click="track('Contact', { method: 'Phone', placement: 'bottom_banner' })">
               <Phone :size="15" aria-hidden="true" />
               সরাসরি কথা বলুন: <span>{{ agent.phone }}</span>
             </a>
@@ -136,7 +136,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ArrowRight, ArrowUpRight, Building2, Check, ChevronLeft, ChevronRight, CircleCheck, Compass, Copy, Expand, FileDown, FileText, Heart, Image as ImageIcon, MapPin, MessageCircle, MessagesSquare, Phone, Play, ShieldCheck, Volume2, Ruler, Share2, X } from 'lucide-vue-next'
 import { useProperties, type PropertyItem } from '~/composables/useProperties'
 import { formatBDT, formatArea } from '~/composables/useCurrency'
@@ -148,6 +148,8 @@ import { priceDisplay } from '~/utils/priceDisplay'
 import { parseVideo, unmuteEmbed } from '~/utils/videoEmbed'
 import { safeBrochureUrl } from '~/utils/propertyInquiry.mjs'
 import { trackPixel } from '~/utils/metaPixel'
+import { telHref, whatsappLink } from '~/utils/contact'
+import { absoluteImage, propertyShareDescription } from '~/utils/shareMeta'
 import { useSettings } from '~/composables/useSettings'
 import PropertySurveyStart from '~/components/PropertySurveyStart.vue'
 import PropertyPlotSheet from '~/components/PropertyPlotSheet.vue'
@@ -219,14 +221,8 @@ const glanceThird = computed(() => {
   return null
 })
 const buildCostApplies = computed(() => property.value?.propertyType === 'Land Share' || ['Under Construction', 'Upcoming Project'].includes(property.value?.completionStatus || ''))
-// Link previews (Facebook, Google) get a sentence written for them, not the first 160 characters of the seller's text.
-const metaDescription = computed(() => {
-  const p = property.value
-  if (!p) return 'প্রপার্টির তথ্য, মূল্য ও যোগাযোগ।'
-  const pr = price.value
-  const priceText = pr.hidden ? '' : `${pr.per} ${pr.amount}${p.buyerDetails?.negotiable === 'Yes' ? ' (আলোচনা সাপেক্ষ)' : ''}।`
-  return [`${p.title}।`, priceText, 'কাগজপত্র দেখে, সাইট ভিজিট করে সিদ্ধান্ত নিন: GBREL।'].filter(Boolean).join(' ')
-})
+// Same sentence the server puts in link previews (server/plugins/share-meta.ts), so the tab and the preview agree.
+const metaDescription = computed(() => propertyShareDescription(property.value))
 const hasBuyerDetails = computed(() => property.value && detailGroups(property.value).length > 0)
 // Button text and the promise under it are edited in Admin → Settings → Property page.
 const ctaLabel = computed(() => property.value?.hidePrice ? (settings.value.property_cta_label_hidden_price || 'সর্বশেষ দাম ও সাইট ভিজিট') : (settings.value.property_cta_label || 'ক্রয় তথ্য ও সাইট ভিজিট'))
@@ -244,7 +240,8 @@ const specifications = computed(() => {
   if (!p) return []
   return [{ label: 'আয়তন', value: areaLabel(p.squareFootage, p.landSize, p.landUnit) }, { label: 'প্রপার্টির ধরন', value: typeLabel(p.propertyType) }, { label: 'নির্মাণের অবস্থা', value: completionLabels[p.completionStatus] || p.completionStatus }, { label: 'অভিমুখ', value: facingLabel(p.facing) }, { label: 'পার্কিং', value: p.parking ? `${toBn(p.parking)}টি` : '' }, { label: 'মোট তলা', value: p.totalFloors ? toBn(p.totalFloors) : '' }, { label: 'বেডরুম', value: p.bedrooms ? toBn(p.bedrooms) : '' }, { label: 'বাথরুম', value: p.bathrooms ? toBn(p.bathrooms) : '' }, { label: 'তালিকায় দেওয়া হস্তান্তর / নির্মাণ বছর', value: p.yearBuilt ? toBn(p.yearBuilt) : '' }].filter(item => item.value)
 })
-const whatsappUrl = computed(() => `https://wa.me/${(agent.value?.whatsapp || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hello GBREL, I would like details about ${property.value?.title} (GBR-${property.value?.id}).`)}`)
+// Direct call link: the listing's agent unless their contact is hidden, otherwise the office number.
+const agentTel = computed(() => telHref((!property.value?.hideAgentContact && agent.value?.phone) || settings.value.contact_phone))
 const track = (event: string, extra: Record<string, unknown> = {}) => trackPixel(event, { content_ids: [String(property.value?.id)], content_type: 'product', content_name: property.value?.title, ...extra })
 const startPurpose = ref('')
 // The sidebar repeats the first question only once the inline one has scrolled away, so both are never on screen together.
@@ -270,6 +267,12 @@ watch(heroCta, el => {
 })
 // The sidebar stays on screen while reading (price + button first, then the first-question box once the inline
 // one has scrolled away) and steps aside when the closing CTA at the bottom scrolls into view.
+// On phones the sidebar is not sticky (it sits in the page flow), so it only steps aside on desktop.
+const isDesktop = ref(false)
+let desktopQuery: MediaQueryList | null = null
+const syncDesktop = () => { isDesktop.value = !!desktopQuery?.matches }
+onMounted(() => { desktopQuery = window.matchMedia('(min-width:768px)'); syncDesktop(); desktopQuery.addEventListener('change', syncDesktop) })
+onBeforeUnmount(() => desktopQuery?.removeEventListener('change', syncDesktop))
 const bottomCta = ref<HTMLElement | null>(null)
 const bottomCtaVisible = ref(false)
 let bottomObserver: IntersectionObserver | null = null
@@ -279,6 +282,12 @@ watch(bottomCta, el => {
   bottomObserver = new IntersectionObserver(([entry]) => { bottomCtaVisible.value = entry.isIntersecting }, { rootMargin: '0px 0px -15% 0px' })
   bottomObserver.observe(el)
 })
+// "খাজনা পরিশোধিত" alone would read as up to date even for an old year, so the fact names the year it covers.
+// Free text without a year (e.g. "হালনাগাদ") stays in the details table only.
+const taxPaidFact = (value: unknown) => {
+  const year = /([0-9০-৯]{4})/.exec(String(value || ''))?.[1]
+  return year ? `খাজনা পরিশোধ ${toBn(year)} সাল পর্যন্ত` : ''
+}
 // Up to three facts from the seller's details, shown next to the price. Only what was actually declared.
 const trustFacts = computed(() => {
   const d: Record<string, any> = property.value?.buyerDetails || {}
@@ -287,16 +296,12 @@ const trustFacts = computed(() => {
     d.mutationStatus === 'Available' && 'নামজারি সম্পন্ন',
     d.possession === 'Owner' && 'মালিকের দখলে',
     d.existingAgreement === 'None declared' && 'অন্য কারও সঙ্গে বায়না নেই',
-    d.taxPaidThrough && 'খাজনা পরিশোধিত',
+    taxPaidFact(d.taxPaidThrough),
     d.negotiable === 'Yes' && 'দাম আলোচনা সাপেক্ষ'
   ].filter(Boolean) as string[]
   return facts.slice(0, 3)
 })
-const waLink = computed(() => {
-  const n = String(leadWhatsapp.value || '').replace(/\D/g, '')
-  if (!n || /^8801711000000$/.test(n)) return ''
-  return `https://wa.me/${n}?text=${encodeURIComponent(`আসসালামু আলাইকুম, "${property.value?.title}" (GBR-${property.value?.id}) নিয়ে জানতে চাই।`)}`
-})
+const waLink = computed(() => whatsappLink(leadWhatsapp.value, `আসসালামু আলাইকুম, "${property.value?.title}" (GBR-${property.value?.id}) নিয়ে জানতে চাই।`))
 const openInquiry = (source: string, purpose = '') => { inquirySource.value = source; if (purpose) startPurpose.value = purpose; inquiryOpen.value = true }
 // The survey sends the Lead pixel event itself (with a dedup event ID).
 const leadSaved = (_id: number) => {}
@@ -315,7 +320,7 @@ const loadProperty = async () => {
   await fetchAgents()
 }
 watch(() => route.params.id, loadProperty, { immediate: true })
-useSeoMeta({ title: () => property.value ? `${property.value.title} | GBREL` : 'Property | GBREL', description: () => metaDescription.value, ogDescription: () => metaDescription.value, ogTitle: () => property.value?.title || 'GBREL', ogImage: () => images.value[0] || videoPoster.value })
+useSeoMeta({ title: () => property.value ? `${property.value.title} | GBREL` : 'Property | GBREL', description: () => metaDescription.value, ogDescription: () => metaDescription.value, ogTitle: () => property.value?.title || 'GBREL', ogImage: () => absoluteImage(images.value[0] || videoPoster.value) })
 const shareProperty = async () => {
   const url = `${window.location.origin}${route.path}`
   try { if (navigator.share) { await navigator.share({ title: property.value?.title, url }); return }; await navigator.clipboard.writeText(url); toast.success('লিংক কপি হয়েছে', 'পছন্দের মাধ্যমে শেয়ার করুন।') }
@@ -353,7 +358,7 @@ const shareProperty = async () => {
 .brochure-list a { display:flex; gap:12px; align-items:center; border:1px solid #d9e3d8; padding:15px; border-radius:9px; margin-top:10px; color:#1b6346; font-size:14px; }.brochure-list span { flex:1; }.detail-section .muted-note { font-size:12px; color:#6f7b70; }
 .faq-section details { border-bottom:1px solid #e0e7dc; padding:8px 0; }.faq-section summary { cursor:pointer; padding:14px 0; font-size:14px; font-weight:600; min-height:48px; }.faq-section details p { padding:0 12px 0 0; }
 .inquiry-sidebar { position:sticky; top:105px; transition:opacity .25s ease, transform .25s ease; }
-.inquiry-sidebar.is-resting { opacity:0; transform:translateY(-8px); pointer-events:none; }
+@media (min-width:768px) { .inquiry-sidebar.is-resting { opacity:0; transform:translateY(-8px); pointer-events:none; } }
 @media (prefers-reduced-motion:reduce) { .inquiry-sidebar { transition:none; } }
 .sidebar-sticky-cta { background:#fff; border:1px solid #dbe4d7; border-radius:16px; padding:20px 22px; box-shadow:0 8px 24px rgba(32,59,40,.08); display:flex; flex-direction:column; gap:12px; margin-bottom:14px; }
 .sidebar-sticky-price { display:flex; flex-direction:column; gap:2px; }

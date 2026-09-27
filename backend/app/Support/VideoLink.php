@@ -17,7 +17,7 @@ class VideoLink
         if ($url === '') {
             return null;
         }
-        if (preg_match('~^/storage/media/[\w\-./]+\.(mp4|webm|mov|m4v)$~i', $url)) {
+        if (preg_match('~^/storage/media/(?:[\w-]+/)*[\w-]+\.(mp4|webm|mov|m4v)\z~i', $url)) {
             return ['source' => 'upload', 'id' => null, 'thumbnail' => null];
         }
         if (! preg_match('~^https://~i', $url)) {
@@ -39,6 +39,10 @@ class VideoLink
     public static function isPoster(?string $url): bool
     {
         $url = trim((string) $url);
+
+        if (str_contains($url, '..')) {
+            return false;
+        }
 
         return $url === '' || str_starts_with($url, '/storage/') || str_starts_with($url, '/img/') || (bool) preg_match('~^https://~i', $url);
     }

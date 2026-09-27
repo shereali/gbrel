@@ -49,6 +49,7 @@
 </template>
 
 <script setup lang="ts">
+import { whatsappNumber } from '~/utils/contact'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { PhoneCall, X } from 'lucide-vue-next'
 import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
@@ -58,7 +59,7 @@ import { toApiPhone } from '~/utils/propertyLabels'
 const { settings, fetchSettings } = useSettings()
 onMounted(() => { fetchSettings() })
 
-const whatsapp = computed(() => (settings.value.whatsapp_number || '').replace(/\D/g, ''))
+const whatsapp = computed(() => whatsappNumber(settings.value.whatsapp_number))
 const whatsappUrl = computed(() => `https://wa.me/${whatsapp.value}?text=${encodeURIComponent('আসসালামু আলাইকুম, আমি প্রপার্টি নিয়ে জানতে চাই।')}`)
 
 const interests = ['জমি বা প্লট কিনতে চাই', 'জমি শেয়ার সম্পর্কে জানতে চাই', 'ফ্ল্যাট কিনতে চাই', 'বাণিজ্যিক বা রিসোর্ট প্রপার্টি', 'আমার প্রপার্টি বিক্রি করতে চাই']

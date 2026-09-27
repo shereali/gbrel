@@ -49,13 +49,20 @@ const BN_DIGITS = '০১২৩৪৫৬৭৮৯'
 export const bnDigits = value => String(value).replace(/\d/g, d => BN_DIGITS[Number(d)])
 const BN_MONTHS = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর']
 export function bnDate(value) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || ''))
-  if (!m || Number(m[2]) < 1 || Number(m[2]) > 12) return value ? bnDigits(value) : ''
-  return `${bnDigits(Number(m[3]))} ${BN_MONTHS[Number(m[2]) - 1]} ${bnDigits(m[1])}`
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?:$|[T ])/.exec(String(value || ''))
+  if (!m) return value ? bnDigits(value) : ''
+  const [year, month, day] = [Number(m[1]), Number(m[2]), Number(m[3])]
+  // Round-trip check rejects impossible dates such as 2026-02-31 instead of printing them.
+  const check = new Date(Date.UTC(year, month - 1, day))
+  if (check.getUTCFullYear() !== year || check.getUTCMonth() !== month - 1 || check.getUTCDate() !== day) return ''
+  return `${bnDigits(day)} ${BN_MONTHS[month - 1]} ${bnDigits(year)}`
 }
+// Plain decimal numbers only: "30", "1.5", "-2" — not "Infinity", "0x10" or "1e5".
+const isPlainNumber = value => typeof value === 'number' ? Number.isFinite(value) : /^-?\d+(\.\d+)?$/.test(String(value).trim())
 function displayValue(f, value) {
   if (f.type === 'date') return bnDate(value)
-  if (f.type === 'number' && value !== '' && !Number.isNaN(Number(value))) {
+  if (f.type === 'number') {
+    if (!isPlainNumber(value)) return ''
     const n = f.grouped ? Number(value).toLocaleString('en-IN') : String(Number(value))
     return `${f.prefix || ''}${bnDigits(n)}${f.suffix || ''}`
   }
@@ -91,5 +98,6 @@ export function detailGroups(property) {
       const value = f.options?.find(option => option[0] === data[f.key])?.[1] ?? data[f.key]
       return { ...f, value, display: displayValue(f, value) }
     })
+    .filter(f => f.display !== '')
   })).filter(group => group.fields.length)
 }

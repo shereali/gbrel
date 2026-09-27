@@ -27,3 +27,12 @@ test('public facts are shown with Bangla digits, units and dates', () => {
   assert.equal(shown.updatedOn, '১৫ সেপ্টেম্বর ২০২৬')
   assert.equal(shown.paymentMethod, 'ব্যাংক ড্রাফট')
 })
+test('impossible dates and non-numbers are left out instead of shown wrong', () => {
+  const property = { buyerDetails: { updatedOn: '2026-02-31', sourceDate: '2026-09-15T10:00:00Z', ownerCount: 'Infinity', roadWidth: '0x10', depositPercent: '12.5' } }
+  const shown = Object.fromEntries(detailGroups(property).flatMap(g => g.fields).map(f => [f.key, f.display]))
+  assert.equal(shown.updatedOn, undefined)
+  assert.equal(shown.sourceDate, '১৫ সেপ্টেম্বর ২০২৬')
+  assert.equal(shown.ownerCount, undefined)
+  assert.equal(shown.roadWidth, undefined)
+  assert.equal(shown.depositPercent, '১২.৫%')
+})

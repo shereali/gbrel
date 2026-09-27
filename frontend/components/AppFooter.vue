@@ -56,6 +56,7 @@
 </template>
 
 <script setup lang="ts">
+import { whatsappNumber } from '~/utils/contact'
 import { computed, onMounted } from 'vue'
 import { useSettings } from '~/composables/useSettings'
 import { mapOpenUrl } from '~/utils/officeMap'
@@ -63,7 +64,7 @@ import { mapOpenUrl } from '~/utils/officeMap'
 const { settings, fetchSettings } = useSettings()
 const year = new Date().getFullYear()
 const tel = (v: string) => v.replace(/[^\d+]/g, '')
-const whatsapp = computed(() => (settings.value.whatsapp_number || '').replace(/\D/g, ''))
+const whatsapp = computed(() => whatsappNumber(settings.value.whatsapp_number))
 onMounted(() => { fetchSettings() })
 </script>
 

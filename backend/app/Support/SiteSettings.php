@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Setting;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Every setting the admin panel can edit, with its default. Public settings are returned by GET /api/settings.
@@ -31,9 +32,9 @@ class SiteSettings
             'trade_license_valid_until' => ['default' => '2027-06-30', 'rules' => ['nullable', 'date_format:Y-m-d']],
             'working_hours' => ['default' => '', 'rules' => ['string', 'max:150']],
             // Tracking: loaded only on public pages. Empty = off.
-            'meta_pixel_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^\d{10,20}$/']],
-            'gtm_container_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^GTM-[A-Z0-9]{4,12}$/']],
-            'ga4_measurement_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^G-[A-Z0-9]{4,15}$/']],
+            'meta_pixel_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^\d{10,20}\z/']],
+            'gtm_container_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^GTM-[A-Z0-9]{4,12}\z/']],
+            'ga4_measurement_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^G-[A-Z0-9]{4,15}\z/']],
             'home_headline' => ['default' => 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন।', 'rules' => ['string', 'max:120']],
             'home_subtitle' => ['default' => 'প্লট, জমি শেয়ার আর ফ্ল্যাটের তালিকা — প্রতিটির দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য এক জায়গায়। পছন্দ হলে আমাদের টিমের সঙ্গে সরাসরি কথা বলুন।', 'rules' => ['string', 'max:400']],
             'property_cta_label' => ['default' => 'ক্রয় তথ্য ও সাইট ভিজিট', 'rules' => ['string', 'min:2', 'max:50']],
@@ -50,17 +51,33 @@ class SiteSettings
         ];
     }
 
+    /** Cache key for the stored settings rows; cleared whenever a Setting is saved or deleted. */
+    public const CACHE_KEY = 'site_settings.rows';
+
     /**
      * @return array<string, mixed>
      */
     public static function all(): array
     {
+        $definitions = self::definitions();
+        // One query for every key, cached briefly: GET /api/settings is called on every public page load.
+        $stored = Cache::remember(self::CACHE_KEY, 60, fn () => Setting::query()
+            ->whereIn('key', array_keys($definitions))
+            ->pluck('value', 'key')
+            ->all());
+
         $values = [];
-        foreach (self::definitions() as $key => $definition) {
+        foreach ($definitions as $key => $definition) {
+            $raw = $stored[$key] ?? null;
             // Text settings are read as stored, so numeric-looking IDs (Meta Pixel) stay exact strings.
-            $value = is_string($definition['default'])
-                ? (Setting::where('key', $key)->value('value') ?? $definition['default'])
-                : Setting::getVal($key, $definition['default']);
+            if (is_string($definition['default'])) {
+                $value = $raw ?? $definition['default'];
+            } elseif ($raw === null) {
+                $value = $definition['default'];
+            } else {
+                $decoded = json_decode($raw, true);
+                $value = json_last_error() === JSON_ERROR_NONE ? $decoded : $raw;
+            }
             $values[$key] = ($value === null || $value === '') && $definition['default'] !== '' ? $definition['default'] : $value;
         }
         $values['owner_terms_version'] = substr(sha1($values['owner_terms'].'|'.$values['owner_commission_percent']), 0, 12);

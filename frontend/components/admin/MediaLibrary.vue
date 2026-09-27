@@ -61,6 +61,9 @@
             </button>
           </li>
         </ul>
+        <div v-if="hasMore" class="ml-more">
+          <button type="button" class="ml-btn ml-btn--ghost" :disabled="loadingMore" @click="loadMore">{{ loadingMore ? 'Loading…' : `Show more (${toShow} more)` }}</button>
+        </div>
       </div>
 
       <aside v-if="mode === 'manage' && active" class="ml-detail" aria-label="Selected media">
@@ -75,7 +78,7 @@
         </div>
         <label class="ml-field">
           <span>Name</span>
-          <input v-model="titleDraft" maxlength="200" @keydown.enter.prevent="saveTitle" @blur="saveTitle" />
+          <input v-model="titleDraft" maxlength="200" @keydown.enter.prevent="($event.target as HTMLInputElement).blur()" @blur="saveTitle" />
         </label>
         <div class="ml-field">
           <span>Link</span>
@@ -89,14 +92,21 @@
         <div class="ml-usage">
           <span>Used in</span>
           <ul v-if="active.used_in.length">
-            <li v-for="u in active.used_in" :key="u.id + u.as"><NuxtLink :to="`/admin/properties/${u.id}/edit`">{{ u.title }}</NuxtLink><small>as {{ u.as }}</small></li>
+            <li v-for="u in active.used_in" :key="`${u.kind || 'property'}-${u.id}-${u.as}`"><NuxtLink v-if="u.kind !== 'media'" :to="`/admin/properties/${u.id}/edit`">{{ u.title }}</NuxtLink><span v-else>{{ u.title || 'Library video' }}</span><small>as {{ u.as }}</small></li>
           </ul>
-          <p v-else>Not used by any listing yet.</p>
+          <p v-else>Not used anywhere yet.</p>
         </div>
-        <button type="button" class="ml-btn ml-btn--danger" :disabled="active.used_in.length > 0 || deleting" @click="deleteActive">
-          <Trash2 :size="16" aria-hidden="true" /> {{ deleting ? 'Deleting…' : 'Delete' }}
+        <div v-if="confirmDelete" class="ml-confirm" role="alert">
+          <p>Delete “{{ active.title || 'this file' }}” for good? {{ active.source === 'upload' ? 'The file is removed from the server.' : 'The link is removed from the library.' }}</p>
+          <div>
+            <button type="button" class="ml-btn ml-btn--danger" :disabled="deleting" @click="deleteActive"><Trash2 :size="16" aria-hidden="true" /> {{ deleting ? 'Deleting…' : 'Yes, delete' }}</button>
+            <button ref="cancelDeleteBtn" type="button" class="ml-btn ml-btn--ghost" :disabled="deleting" @click="confirmDelete = false">Keep it</button>
+          </div>
+        </div>
+        <button v-else type="button" class="ml-btn ml-btn--danger" :disabled="active.used_in.length > 0" @click="askDelete">
+          <Trash2 :size="16" aria-hidden="true" /> Delete
         </button>
-        <p v-if="active.used_in.length" class="ml-hint">Remove it from the listings above before deleting.</p>
+        <p v-if="active.used_in.length" class="ml-hint">Remove it from the places above before deleting.</p>
       </aside>
     </div>
 
@@ -110,7 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Check, Film, ImagePlus, Play, Search, Trash2, Upload, X, Youtube } from 'lucide-vue-next'
 import { formatBytes, useMediaLibrary, type MediaCounts, type MediaItem } from '~/composables/useMediaLibrary'
 import { parseVideo, videoProviderLabel } from '~/utils/videoEmbed'
@@ -132,6 +142,12 @@ const items = ref<MediaItem[]>([])
 const counts = ref<MediaCounts>({ all: 0, image: 0, video: 0 })
 const limits = ref({ image_mb: 10, video_mb: 100 })
 const loading = ref(false)
+const loadingMore = ref(false)
+const page = ref(1)
+const lastPage = ref(1)
+const total = ref(0)
+const confirmDelete = ref(false)
+const cancelDeleteBtn = ref<HTMLButtonElement | null>(null)
 const error = ref('')
 const selection = ref<MediaItem[]>([])
 const activeId = ref<number | null>(null)
@@ -155,27 +171,56 @@ const active = computed(() => items.value.find(i => i.id === activeId.value) || 
 const emptyTitle = computed(() => filter.value === 'video' ? 'No videos yet.' : filter.value === 'image' ? 'No photos yet.' : 'The library is empty.')
 const pickHint = computed(() => props.accept === 'video' ? 'Choose one video' : props.multiple ? 'Choose one or more photos' : 'Choose a photo')
 
-watch(active, item => { titleDraft.value = item?.title || ''; copied.value = false })
+watch(active, item => { titleDraft.value = item?.title || ''; copied.value = false; confirmDelete.value = false })
 watch(filter, () => load())
 
 let timer: ReturnType<typeof setTimeout> | undefined
 const scheduleLoad = () => { clearTimeout(timer); timer = setTimeout(load, 250) }
+// Each request gets a number; a slower, older response (e.g. from the previous search) is ignored.
+let requestSeq = 0
+const hasMore = computed(() => page.value < lastPage.value)
+const toShow = computed(() => Math.max(0, total.value - items.value.length))
+const params = (p: number) => ({ type: filter.value === 'all' ? '' : filter.value, q: query.value, page: p })
 
 async function load() {
+  const seq = ++requestSeq
   loading.value = true
   error.value = ''
   try {
-    const res = await list({ type: filter.value === 'all' ? '' : filter.value, q: query.value })
+    const res = await list(params(1))
+    if (seq !== requestSeq) return
     items.value = res.data
+    page.value = res.meta?.page || 1
+    lastPage.value = res.meta?.last_page || 1
+    total.value = res.meta?.total ?? res.data.length
     counts.value = res.counts
     limits.value = res.limits
   } catch (e: any) {
-    error.value = e.message || 'The media library could not be loaded.'
+    if (seq === requestSeq) error.value = e.message || 'The media library could not be loaded.'
   } finally {
-    loading.value = false
+    if (seq === requestSeq) loading.value = false
+  }
+}
+async function loadMore() {
+  const seq = requestSeq
+  loadingMore.value = true
+  try {
+    const res = await list(params(page.value + 1))
+    if (seq !== requestSeq) return
+    const seen = new Set(items.value.map(i => i.id))
+    items.value = [...items.value, ...res.data.filter(i => !seen.has(i.id))]
+    page.value = res.meta?.page || page.value + 1
+    lastPage.value = res.meta?.last_page || page.value
+  } catch (e: any) {
+    error.value = e.message || 'More items could not be loaded.'
+  } finally {
+    loadingMore.value = false
   }
 }
 onMounted(load)
+// Stop pending work when the library closes (e.g. the picker dialog): no late search, no late auto-select.
+let unmounted = false
+onBeforeUnmount(() => { unmounted = true; clearTimeout(timer); requestSeq++ })
 
 const thumbOf = (item: MediaItem) => item.type === 'image' ? item.url : (item.thumbnail_url || parseVideo(item.url)?.thumbnail || null)
 const sourceLabel = (item: MediaItem) => item.source === 'upload' ? (item.type === 'video' ? 'Uploaded video' : 'Uploaded photo') : item.source === 'link' ? 'Web link' : videoProviderLabel[item.source as 'youtube']
@@ -192,9 +237,15 @@ function onTile(item: MediaItem) {
   else selection.value = props.multiple ? [...selection.value, item] : [item]
 }
 
+// Some systems report no type for .mov files, so the extension is checked too.
+const kindOf = (file: File): 'image' | 'video' | '' => {
+  if (file.type.startsWith('video/') || /\.(mp4|webm|mov|m4v)$/i.test(file.name)) return 'video'
+  if (file.type.startsWith('image/') || /\.(jpe?g|png|webp)$/i.test(file.name)) return 'image'
+  return ''
+}
 function accepts(file: File) {
-  const isVideo = file.type.startsWith('video/')
-  const isImage = file.type.startsWith('image/')
+  const isVideo = kindOf(file) === 'video'
+  const isImage = kindOf(file) === 'image'
   if (props.accept === 'image') return isImage
   if (props.accept === 'video') return isVideo
   return isImage || isVideo
@@ -206,7 +257,7 @@ async function uploadFiles(files: File[]) {
   error.value = ''
   for (const file of chosen) {
     const key = `${file.name}-${file.size}-${Date.now()}`
-    const limitMb = file.type.startsWith('video/') ? limits.value.video_mb : limits.value.image_mb
+    const limitMb = kindOf(file) === 'video' ? limits.value.video_mb : limits.value.image_mb
     uploads.value.push({ key, name: file.name, progress: 0, error: '' })
     const entry = () => uploads.value.find(u => u.key === key)!
     if (file.size > limitMb * 1048576) { entry().error = `Larger than ${limitMb} MB`; continue }
@@ -216,7 +267,8 @@ async function uploadFiles(files: File[]) {
       items.value = [item, ...items.value.filter(i => i.id !== item.id)]
       counts.value = { ...counts.value, all: counts.value.all + 1, [item.type]: counts.value[item.type] + 1 }
       uploads.value = uploads.value.filter(u => u.key !== key)
-      if (props.mode === 'pick' && (props.accept === 'any' || props.accept === item.type)) onTile(item)
+      total.value += 1
+      if (!unmounted && props.mode === 'pick' && (props.accept === 'any' || props.accept === item.type)) onTile(item)
     } catch (e: any) {
       entry().error = e.message || 'Upload failed'
     }
@@ -228,7 +280,7 @@ async function captureFrame(file: File): Promise<File | null> {
   return new Promise(resolve => {
     const url = URL.createObjectURL(file)
     const v = document.createElement('video')
-    const done = (result: File | null) => { URL.revokeObjectURL(url); resolve(result) }
+    const done = (result: File | null) => { v.removeAttribute('src'); v.load(); URL.revokeObjectURL(url); resolve(result) }
     const timer = setTimeout(() => done(null), 8000)
     v.muted = true
     v.playsInline = true
@@ -254,7 +306,7 @@ async function attachVideoCover(item: MediaItem, file: File): Promise<MediaItem>
     if (!frame) return item
     const cover = await upload(frame)
     counts.value = { ...counts.value, all: counts.value.all + 1, image: counts.value.image + 1 }
-    if (filter.value !== 'video') items.value = [cover, ...items.value]
+    if (filter.value !== 'video') { items.value = [cover, ...items.value]; total.value += 1 }
     return await update(item.id, { thumbnail_url: cover.url })
   } catch {
     return item
@@ -302,6 +354,10 @@ async function copyUrl() {
   const full = active.value.url.startsWith('/') ? window.location.origin + active.value.url : active.value.url
   try { await navigator.clipboard.writeText(full); copied.value = true } catch { copied.value = false }
 }
+function askDelete() {
+  confirmDelete.value = true
+  nextTick(() => cancelDeleteBtn.value?.focus())
+}
 async function deleteActive() {
   if (!active.value) return
   deleting.value = true
@@ -311,6 +367,8 @@ async function deleteActive() {
     await remove(id)
     items.value = items.value.filter(i => i.id !== id)
     counts.value = { ...counts.value, all: counts.value.all - 1, [type]: counts.value[type] - 1 }
+    total.value = Math.max(0, total.value - 1)
+    confirmDelete.value = false
     activeId.value = null
   } catch (e: any) {
     error.value = e.message
@@ -323,6 +381,10 @@ defineExpose({ reload: load })
 </script>
 
 <style scoped>
+.ml-more { display: flex; justify-content: center; padding: 16px 0 4px; }
+.ml-confirm { border: 1.5px solid #E5B4A6; background: #FDF1EE; border-radius: 10px; padding: 12px; display: grid; gap: 10px; }
+.ml-confirm p { margin: 0; font-size: .88rem; line-height: 1.5; }
+.ml-confirm div { display: flex; gap: 8px; flex-wrap: wrap; }
 .ml { position: relative; display: flex; flex-direction: column; gap: 14px; min-height: 0; color: var(--admin-text-primary); }
 .ml-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .ml-tabs { display: inline-flex; background: var(--admin-bg-surface-alt, #EEF2E9); border-radius: 999px; padding: 4px; }

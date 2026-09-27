@@ -55,7 +55,7 @@ const defaultSettings: SiteSettings = {
   trade_license_valid_until: '2027-06-30',
   working_hours: '',
   home_headline: 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন।',
-  home_subtitle: '',
+  home_subtitle: 'প্লট, জমি শেয়ার আর ফ্ল্যাটের তালিকা — প্রতিটির দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য এক জায়গায়। পছন্দ হলে আমাদের টিমের সঙ্গে সরাসরি কথা বলুন।',
   property_cta_label: 'ক্রয় তথ্য ও সাইট ভিজিট',
   property_cta_label_hidden_price: 'সর্বশেষ দাম ও সাইট ভিজিট',
   property_cta_note: 'কাগজপত্রের তথ্য, মোট খরচের হিসাব আর সাইট ভিজিটের সময়, সব জানাবে GBREL টিম। কোনো অগ্রিম ফি নেই।',

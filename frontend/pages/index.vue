@@ -5,7 +5,7 @@
       <div class="gb-wrap hero-top">
         <div class="hero-copy">
           <h1 id="hero-title" class="hero-title"><template v-for="(line, i) in headlineLines" :key="i"><br v-if="i" />{{ line }}</template></h1>
-          <p class="hero-lead">{{ settings.home_subtitle || defaultSubtitle }}</p>
+          <p class="hero-lead">{{ settings.home_subtitle }}</p>
 
           <form class="hero-search" role="search" @submit.prevent="runSearch">
             <label class="sr-only" for="hero-type">প্রপার্টির ধরন</label>
@@ -54,7 +54,7 @@
             <h2 id="listings-title" class="gb-h2">এখন তালিকায় আছে</h2>
             <p class="gb-lead">দাম, আয়তন আর লোকেশন দেখে পছন্দের প্রপার্টি খুলুন। প্রতিটি পেজে মূল্যের শর্ত ও কাগজপত্রের তথ্য দেওয়া আছে।</p>
           </div>
-          <NuxtLink to="/properties" class="gb-btn gb-btn--line">সব প্রপার্টি দেখুন<template v-if="publicProps.length"> ({{ toBn(publicProps.length) }})</template></NuxtLink>
+          <NuxtLink to="/properties" class="gb-btn gb-btn--line">সব প্রপার্টি দেখুন<template v-if="availableProps.length"> ({{ toBn(availableProps.length) }})</template></NuxtLink>
         </div>
 
         <div v-if="featured.length" class="list-grid">
@@ -117,7 +117,7 @@
         <ul class="areas">
           <li v-for="a in areas" :key="a.name">
             <NuxtLink :to="`/properties?area=${encodeURIComponent(a.name)}`">
-              <span>{{ a.name }}</span>
+              <span>{{ areaNameBn(a.name) }}</span>
               <small>{{ toBn(a.count) }}টি</small>
             </NuxtLink>
           </li>
@@ -132,7 +132,7 @@
           <h2 id="abroad-title" class="abroad-title">বিদেশে থেকে দেশে জমি কিনছেন?</h2>
           <p class="abroad-lead">দূরে থেকেও যেন সব নিজের চোখে দেখে সিদ্ধান্ত নিতে পারেন, সেভাবে কাজ করি।</p>
           <div class="abroad-cta">
-            <a v-if="whatsapp" :href="`https://wa.me/${whatsapp}?text=${encodeURIComponent('আসসালামু আলাইকুম, আমি বিদেশ থেকে প্রপার্টি কেনার বিষয়ে জানতে চাই।')}`" target="_blank" rel="noopener noreferrer" class="gb-btn gb-btn--sun">
+            <a v-if="abroadWhatsapp" :href="abroadWhatsapp" target="_blank" rel="noopener noreferrer" class="gb-btn gb-btn--sun">
               <MessageCircle :size="18" aria-hidden="true" /> WhatsApp-এ কথা বলুন
             </a>
             <NuxtLink to="/contact" class="gb-btn gb-btn--ghost-light">ভিডিও কলের সময় ঠিক করুন</NuxtLink>
@@ -156,7 +156,7 @@
         </div>
         <div class="sell-actions">
           <NuxtLink to="/list-property" class="gb-btn gb-btn--sun">প্রপার্টির তথ্য দিন</NuxtLink>
-          <a v-if="phone" :href="`tel:${phoneHref}`" class="gb-link">অথবা কল করুন {{ phone }}</a>
+          <a v-if="phoneLink" :href="phoneLink" class="gb-link">অথবা কল করুন {{ phone }}</a>
         </div>
       </div></div>
     </section>
@@ -170,6 +170,8 @@ import { useProperties } from '~/composables/useProperties'
 import { useSettings } from '~/composables/useSettings'
 import PropertyCard from '~/components/PropertyCard.vue'
 import { toBn } from '~/utils/propertyLabels'
+import { areaNameBn } from '~/utils/areaNames'
+import { telHref, whatsappLink } from '~/utils/contact'
 
 definePageMeta({ layout: 'default' })
 
@@ -188,23 +190,26 @@ const bands = [
 ]
 
 const publicProps = computed(() => properties.value.filter(p => p.status !== 'Draft' && p.status !== 'Delisted'))
+// Counts promise what a buyer can still get, so sold listings are left out of them (their pages stay reachable).
+const availableProps = computed(() => publicProps.value.filter(p => p.status !== 'Sold'))
 const countLabel = (band: typeof bands[number]) => {
-  const n = publicProps.value.filter(p => band.types.includes(p.propertyType)).length
+  const n = availableProps.value.filter(p => band.types.includes(p.propertyType)).length
   return n ? `${toBn(n)}টি তালিকা` : 'দেখুন'
 }
 
 const featured = computed(() => {
-  const list = publicProps.value.filter(p => p.status !== 'Sold')
+  const list = availableProps.value
   const picked = list.filter(p => p.isFeatured)
   const pool = (picked.length >= 4 ? picked : [...picked, ...list.filter(p => !p.isFeatured)]).slice(0, 7)
-  // One wide lead card, then full rows of three
+  // One wide lead card, then rows of three. With 4+ cards the tail is trimmed to whole rows;
+  // with 2–3 there is only one short row, which is better than hiding listings.
   const rest = pool.length - 1
   return rest >= 3 ? pool.slice(0, 1 + Math.floor(rest / 3) * 3) : pool
 })
 
 const areas = computed(() => {
   const counts = new Map<string, number>()
-  publicProps.value.forEach(p => { if (p.areaName) counts.set(p.areaName, (counts.get(p.areaName) || 0) + 1) })
+  availableProps.value.forEach(p => { if (p.areaName) counts.set(p.areaName, (counts.get(p.areaName) || 0) + 1) })
   return [...counts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 12)
 })
 
@@ -216,12 +221,11 @@ const runSearch = () => {
   router.push({ path: '/properties', query })
 }
 
-const defaultSubtitle = 'প্লট, জমি শেয়ার আর ফ্ল্যাটের তালিকা — প্রতিটির দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য এক জায়গায়। পছন্দ হলে আমাদের টিমের সঙ্গে সরাসরি কথা বলুন।'
-// The headline breaks after each comma, the way it is set on the page.
-const headlineLines = computed(() => (settings.value.home_headline || 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন।').split(/(?<=,)\s*/).filter(Boolean))
+// The headline breaks after each comma, the way it is set on the page. Defaults live in useSettings.
+const headlineLines = computed(() => (settings.value.home_headline || '').split(/(?<=,)\s*/).filter(Boolean))
 const phone = computed(() => settings.value.contact_phone || '')
-const phoneHref = computed(() => phone.value.replace(/[^\d+]/g, ''))
-const whatsapp = computed(() => (settings.value.whatsapp_number || '').replace(/\D/g, ''))
+const phoneLink = computed(() => telHref(phone.value))
+const abroadWhatsapp = computed(() => whatsappLink(settings.value.whatsapp_number, 'আসসালামু আলাইকুম, আমি বিদেশ থেকে প্রপার্টি কেনার বিষয়ে জানতে চাই।'))
 
 const documents = [
   { name: 'খতিয়ান (সিএস, এসএ, আরএস, বিএস)', proves: 'জমির মালিকানা কোন জরিপে কার নামে ছিল — মালিকানার ধারাবাহিকতা।', where: 'জেলা রেকর্ড রুম, ভূমি অফিস বা অনলাইনে ই-পর্চা' },
@@ -240,10 +244,14 @@ const steps = [
   { title: 'চুক্তি ও রেজিস্ট্রি', text: 'বায়নানামা থেকে দলিল রেজিস্ট্রি ও নামজারি পর্যন্ত প্রতিটি ধাপে পাশে থাকি।' }
 ]
 
+const homeDescription = 'প্লট, জমি শেয়ার ও ফ্ল্যাটের তালিকা। দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য দেখে গ্রাম বাংলা রিয়েল এস্টেট টিমের সঙ্গে কথা বলুন।'
 useSeoMeta({
   title: 'গ্রাম বাংলা রিয়েল এস্টেট | জমি, প্লট ও ফ্ল্যাট — GBREL',
+  description: homeDescription,
   ogTitle: 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন — গ্রাম বাংলা রিয়েল এস্টেট',
-  description: 'প্লট, জমি শেয়ার ও ফ্ল্যাটের তালিকা। দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য দেখে গ্রাম বাংলা রিয়েল এস্টেট টিমের সঙ্গে কথা বলুন।'
+  ogDescription: homeDescription,
+  ogImage: 'https://gbrel.com/og-default.jpg',
+  ogUrl: 'https://gbrel.com/'
 })
 </script>
 
@@ -296,13 +304,15 @@ useSeoMeta({
 }
 .band:nth-child(1) { --c: #B9D08F; --ink: var(--gb-paddy); --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 30' preserveAspectRatio='none'%3E%3Cpath d='M0 30 C 300 0 700 4 1000 18 S 1350 26 1440 10 V30Z'/%3E%3C/svg%3E"); }
 .band:nth-child(2) { --c: #8FB366; --ink: var(--gb-paddy-deep); --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 30' preserveAspectRatio='none'%3E%3Cpath d='M0 12 C 260 30 560 26 860 10 S 1260 2 1440 22 V30 H0Z'/%3E%3C/svg%3E"); }
-.band:nth-child(3) { --c: #5C924A; --ink: #fff; --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 30' preserveAspectRatio='none'%3E%3Cpath d='M0 24 C 380 2 760 0 1080 16 S 1380 28 1440 20 V30 H0Z'/%3E%3C/svg%3E"); }
+.band:nth-child(3) { --c: #4E823F; --ink: #fff; --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 30' preserveAspectRatio='none'%3E%3Cpath d='M0 24 C 380 2 760 0 1080 16 S 1380 28 1440 20 V30 H0Z'/%3E%3C/svg%3E"); }
 .band:nth-child(4) { --c: #3A7234; --ink: #fff; --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 30' preserveAspectRatio='none'%3E%3Cpath d='M0 8 C 320 26 640 30 960 14 S 1320 0 1440 8 V30 H0Z'/%3E%3C/svg%3E"); }
 .band:nth-child(5) { --c: var(--gb-paddy); --ink: #fff; --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 30' preserveAspectRatio='none'%3E%3Cpath d='M0 20 C 420 0 820 6 1120 20 S 1400 22 1440 12 V30 H0Z'/%3E%3C/svg%3E"); }
 
 .band-row { display: grid; grid-template-columns: minmax(0, auto) 1fr auto; align-items: baseline; gap: 20px; padding-top: 10px; padding-bottom: calc(var(--h) + 12px); }
 .band-name { font-family: var(--gb-display); font-size: clamp(1.45rem, 2.6vw, 2.2rem); font-weight: 700; font-stretch: 112%; line-height: 1.15; }
 .band-note { font-size: .95rem; opacity: .85; }
+/* White text on the darker terraces stays at full strength to keep 4.5:1 contrast. */
+.band:nth-child(n+3) .band-note { opacity: 1; }
 .band-count { font-family: var(--gb-display); font-size: 1.05rem; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; }
 .band-count::after { content: ''; width: 28px; height: 2px; background: currentColor; transition: width .25s ease; }
 .band:hover .band-count::after, .band:focus-visible .band-count::after { width: 48px; }
@@ -400,7 +410,7 @@ useSeoMeta({
   .band-count::after { width: 16px; }
   .list-grid { grid-template-columns: 1fr; }
   .ledger { border-radius: var(--gb-r); }
-  .ledger-head { display: none; }
+  .ledger-head { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
   .ledger-row { grid-template-columns: 1fr; padding: 16px; }
   .ledger-row span { padding: 0; border: 0 !important; }
   .ledger-row .ledger-doc { margin-bottom: 4px; }

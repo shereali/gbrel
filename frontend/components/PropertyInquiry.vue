@@ -100,6 +100,7 @@
 </template>
 
 <script setup lang="ts">
+import { whatsappNumber } from '~/utils/contact'
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { Check, ChevronLeft, X } from 'lucide-vue-next'
 import type { PropertyItem } from '~/composables/useProperties'
@@ -229,7 +230,7 @@ const submit = async () => {
 }
 
 const whatsappLink = computed(() => {
-  const n = (props.whatsapp || '').replace(/\D/g, '')
+  const n = whatsappNumber(props.whatsapp)
   if (!n) return ''
   const text = [
     `আসসালামু আলাইকুম, আমি ${form.name}।`,

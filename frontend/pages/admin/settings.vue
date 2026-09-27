@@ -108,7 +108,7 @@
       <table class="st-docs">
         <thead><tr><th>Paper (Bangla)</th><th>Hint</th><th>Required</th><th>Key</th><th><span class="sr-only">Order and remove</span></th></tr></thead>
         <tbody>
-          <tr v-for="(doc, i) in form.listing_document_types" :key="i">
+          <tr v-for="(doc, i) in form.listing_document_types" :key="doc._uid">
             <td><input v-model="doc.label" class="st-bn" :aria-label="`Paper ${i + 1} name`" /></td>
             <td><input v-model="doc.hint" class="st-bn" :aria-label="`Paper ${i + 1} hint`" /></td>
             <td class="st-center"><input v-model="doc.required" type="checkbox" :aria-label="`Paper ${i + 1} required`" /></td>
@@ -136,7 +136,7 @@
       </div>
     </section>
 
-    <div class="st-savebar" :class="{ show: dirty }" role="region" aria-label="Unsaved changes">
+    <div class="st-savebar" :class="{ show: dirty }" role="region" aria-label="Unsaved changes" :inert="!dirty || undefined">
       <span>You have unsaved changes.</span>
       <button type="button" class="st-btn" @click="reset">Undo</button>
       <button type="button" class="st-btn st-btn--go" :disabled="isSaving" @click="save">{{ isSaving ? 'Saving…' : 'Save changes' }}</button>
@@ -145,7 +145,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useSettings, type DocumentType } from '~/composables/useSettings'
 import { useToast } from '~/composables/useToast'
 
@@ -172,16 +172,24 @@ const toolState = (tool: { key: string; pattern: RegExp }) => {
   return tool.pattern.test(tool.key === 'meta_pixel_id' ? value : value.toUpperCase()) ? 'on' : 'bad'
 }
 const snapshot = ref('')
+// Stable row ids so focus follows a paper when it is moved up or down. Never sent to the server.
+let uidCounter = 0
+const nextUid = () => ++uidCounter
 const error = ref('')
 
-const current = () => JSON.stringify(Object.fromEntries(editable.map(k => [k, form[k]])))
+const current = () => JSON.stringify(Object.fromEntries(editable.map(k => [k, k === 'listing_document_types' ? (form[k] || []).map(({ _uid, ...d }: any) => d) : form[k]])))
 const dirty = computed(() => snapshot.value !== '' && current() !== snapshot.value)
+// Leaving with unsaved changes asks first: inside the admin (route change) and when closing or reloading the tab.
+onBeforeRouteLeave(() => (dirty.value ? window.confirm('You have unsaved settings. Leave without saving?') : true))
+const warnBeforeUnload = (e: BeforeUnloadEvent) => { if (dirty.value) { e.preventDefault(); e.returnValue = '' } }
+onMounted(() => window.addEventListener('beforeunload', warnBeforeUnload))
+onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeUnload))
 const termsPreview = computed(() => String(form.owner_terms || '').split('\n').map(l => l.trim()).filter(Boolean).map(l => l.replaceAll('{commission}', String(form.owner_commission_percent ?? ''))))
 
 const reset = () => {
   editable.forEach(k => { form[k] = JSON.parse(JSON.stringify(settings.value[k] ?? '')) })
   if (!Array.isArray(form.listing_document_types)) form.listing_document_types = []
-  form.listing_document_types = form.listing_document_types.map((d: DocumentType) => ({ key: d.key, label: d.label, hint: d.hint || '', required: !!d.required }))
+  form.listing_document_types = form.listing_document_types.map((d: DocumentType) => ({ _uid: nextUid(), key: d.key, label: d.label || '', hint: d.hint || '', required: !!d.required }))
   snapshot.value = current()
 }
 const move = (i: number, dir: number) => {
@@ -189,12 +197,12 @@ const move = (i: number, dir: number) => {
   const [item] = list.splice(i, 1)
   list.splice(i + dir, 0, item)
 }
-const addDoc = () => form.listing_document_types.push({ key: `paper_${form.listing_document_types.length + 1}`, label: '', hint: '', required: false })
+const addDoc = () => form.listing_document_types.push({ _uid: nextUid(), key: `paper_${form.listing_document_types.length + 1}`, label: '', hint: '', required: false })
 
 const save = async () => {
   error.value = ''
   const docs = form.listing_document_types as DocumentType[]
-  if (docs.some(d => !d.label.trim() || !/^[a-z0-9_]+$/.test(d.key))) {
+  if (docs.some(d => !String(d.label || '').trim() || !/^[a-z0-9_]+$/.test(d.key))) {
     error.value = 'Every paper needs a name, and keys may only use lowercase letters, numbers and _.'
     return
   }
@@ -205,7 +213,7 @@ const save = async () => {
   }
   trackingTools.forEach(t => { if (t.key !== 'meta_pixel_id' && form[t.key]) form[t.key] = String(form[t.key]).trim().toUpperCase() })
   try {
-    const payload = Object.fromEntries(editable.map(k => [k, form[k]]))
+    const payload = JSON.parse(current()) // same values the page compares against, without the row ids
     await updateSettings(payload as any)
     reset()
     toast.success('Settings saved', 'The website now shows the new values.')
@@ -259,6 +267,7 @@ useSeoMeta({ title: 'Settings | GBREL Admin' })
 .st-btn--go { background: #1D4A2A; border-color: #1D4A2A; color: #fff; }
 .st-btn:disabled { opacity: .55; cursor: not-allowed; }
 .st-error { color: #9B2C2C; background: #F9E6E6; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+.st-savebar:not(.show) { visibility: hidden; transition: transform .25s ease, visibility 0s .25s; }
 .st-savebar { position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 140%); display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 20px; background: #132A1B; color: #fff; border-radius: 999px; box-shadow: 0 16px 40px -16px rgba(0, 0, 0, .5); transition: transform .25s ease; z-index: 50; }
 .st-savebar.show { transform: translate(-50%, 0); }
 .st-savebar .st-btn { min-height: 36px; background: transparent; color: #fff; border-color: rgba(255, 255, 255, .4); }

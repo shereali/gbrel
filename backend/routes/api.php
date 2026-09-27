@@ -2035,7 +2035,10 @@ Route::post('/upload', function (Request $request) {
         $filename = 'prop_'.time().'_'.rand(1000, 9999).'.'.$ext;
         $path = $file->storeAs('properties', $filename, 'public');
         $url = '/storage/'.$path;
-        Media::firstOrCreate(['url' => $url], ['type' => 'image', 'source' => 'upload', 'path' => $path, 'title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), 'mime_type' => $file->getMimeType(), 'size' => $file->getSize(), 'uploaded_by' => $request->user()?->id]);
+        // Only staff uploads join the shared library; owners' photos stay with their own submission until reviewed.
+        if ($request->user()?->isStaff()) {
+            Media::firstOrCreate(['url' => $url], ['type' => 'image', 'source' => 'upload', 'path' => $path, 'title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), 'mime_type' => $file->getMimeType(), 'size' => $file->getSize(), 'uploaded_by' => $request->user()?->id]);
+        }
 
         return response()->json([
             'success' => true,
@@ -2053,7 +2056,10 @@ Route::post('/upload', function (Request $request) {
             $filename = 'prop_'.time().'_'.rand(1000, 9999).'.'.$ext;
             $path = $file->storeAs('properties', $filename, 'public');
             $urls[] = '/storage/'.$path;
-            Media::firstOrCreate(['url' => '/storage/'.$path], ['type' => 'image', 'source' => 'upload', 'path' => $path, 'title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), 'mime_type' => $file->getMimeType(), 'size' => $file->getSize(), 'uploaded_by' => $request->user()?->id]);
+            // Only staff uploads join the shared library; owners' photos stay with their own submission until reviewed.
+            if ($request->user()?->isStaff()) {
+                Media::firstOrCreate(['url' => '/storage/'.$path], ['type' => 'image', 'source' => 'upload', 'path' => $path, 'title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), 'mime_type' => $file->getMimeType(), 'size' => $file->getSize(), 'uploaded_by' => $request->user()?->id]);
+            }
         }
 
         return response()->json([
@@ -2156,7 +2162,7 @@ Route::middleware('staff:listings.review,properties.edit')->prefix('admin')->gro
 // ==========================================
 Route::middleware('staff:properties.edit,properties.create')->prefix('admin/media')->group(function () {
     Route::get('/', [MediaLibraryController::class, 'index']);
-    Route::post('/', [MediaLibraryController::class, 'upload'])->middleware('throttle:120,1');
+    Route::post('/', [MediaLibraryController::class, 'upload'])->middleware('throttle:30,1');
     Route::post('/link', [MediaLibraryController::class, 'addLink']);
     Route::patch('/{id}', [MediaLibraryController::class, 'update'])->whereNumber('id');
     Route::delete('/{id}', [MediaLibraryController::class, 'destroy'])->whereNumber('id');

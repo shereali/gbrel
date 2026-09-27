@@ -30,7 +30,8 @@ export function youtubeId(url?: string | null): string | null {
 export function parseVideo(url?: string | null, options: EmbedOptions = {}): VideoSource | null {
   const value = (url || '').trim()
   if (!value) return null
-  if (/^\/storage\/media\/[\w\-./]+\.(mp4|webm|mov|m4v)$/i.test(value)) return { kind: 'file', src: value }
+  // Our own uploads only: /storage/media/2026/09/<name>.mp4, no ".." or other folders.
+  if (/^\/storage\/media\/(?:[\w-]+\/)*[\w-]+\.(mp4|webm|mov|m4v)$/i.test(value)) return { kind: 'file', src: value }
   if (!/^https:\/\//i.test(value)) return null
   const yt = youtubeId(value)
   if (yt) return { kind: 'youtube', id: yt, src: youtubeSrc(yt, options), thumbnail: `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` }
@@ -46,13 +47,16 @@ export function parseVideo(url?: string | null, options: EmbedOptions = {}): Vid
 export function unmuteEmbed(frame: HTMLIFrameElement | null, kind: VideoSource['kind']) {
   const target = frame?.contentWindow
   if (!target) return
+  // Messages go only to the player's own origin, never to whatever page the frame might have navigated to.
   if (kind === 'youtube') {
-    target.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), '*')
-    target.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [100] }), '*')
-    target.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*')
+    const origin = 'https://www.youtube-nocookie.com'
+    target.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), origin)
+    target.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [100] }), origin)
+    target.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), origin)
   } else if (kind === 'vimeo') {
-    target.postMessage(JSON.stringify({ method: 'setVolume', value: 1 }), '*')
-    target.postMessage(JSON.stringify({ method: 'setMuted', value: false }), '*')
+    const origin = 'https://player.vimeo.com'
+    target.postMessage(JSON.stringify({ method: 'setVolume', value: 1 }), origin)
+    target.postMessage(JSON.stringify({ method: 'setMuted', value: false }), origin)
   }
 }
 
