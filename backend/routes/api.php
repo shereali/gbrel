@@ -191,6 +191,7 @@ Route::post('/auth/check-permission', function (Request $request) {
 });
 
 // Helper: Dynamically Normalize incoming Property data (supports any camelCase or snake_case, schema-aware)
+if (! function_exists('normalizePropertyData')) {
 function normalizePropertyData(array $input, bool $isCreate = true, ?int $existingId = null): array
 {
     // 1. Dynamic Key Case Mapping (automatically maps any camelCase to snake_case)
@@ -333,6 +334,7 @@ function normalizePropertyData(array $input, bool $isCreate = true, ?int $existi
     $allowed = array_diff($columns, $readOnly);
 
     return array_intersect_key($data, array_flip($allowed));
+}
 }
 
 // 1. Properties API Endpoints (Realtime MySQL Operations)
