@@ -19,9 +19,31 @@
           <small v-if="settings.property_cta_note" class="cta-note">{{ settings.property_cta_note }}</small>
         </div>
       </header>
-      <section class="property-gallery" aria-label="প্রপার্টির ছবি" :class="{ single: images.length < 2 }">
+      <section class="property-gallery" aria-label="প্রপার্টির ছবি" :class="{ single: slides.length < 2 }">
         <div class="gallery-tools"><button :aria-label="'শেয়ার করুন'" @click="shareProperty"><Share2 :size="18" /></button><button :aria-pressed="isPropertySaved(property.id)" aria-label="সেভ করুন" @click="toggleSaveProperty(property.id)"><Heart :size="18" :fill="isPropertySaved(property.id) ? 'currentColor' : 'none'" /></button></div>
-        <template v-if="images.length"><button class="gallery-primary" aria-label="বড় করে ছবি দেখুন" @click="openPhoto(0)"><img :src="images[0]" :alt="property.title" fetchpriority="high" decoding="async" @error="imageFailed" /><span class="gallery-caption"><Expand :size="16" /> {{ images.length }}টি ছবি দেখুন</span></button><button v-if="images[1]" class="gallery-secondary" aria-label="দ্বিতীয় ছবি বড় করে দেখুন" @click="openPhoto(1)"><img :src="images[1]" :alt="`${property.title} — ছবি ২`" loading="lazy" @error="imageFailed" /></button></template>
+        <template v-if="slides.length">
+          <template v-if="slides[0].kind === 'video' && video">
+            <div v-if="heroPlaying" class="gallery-primary gallery-player">
+              <video v-if="video.kind === 'file'" :src="video.src" :poster="videoPoster || undefined" autoplay controls playsinline></video>
+              <iframe v-else :src="video.src" title="প্রপার্টির ভিডিও" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
+            </div>
+            <button v-else class="gallery-primary gallery-video" aria-label="প্রপার্টির ভিডিও চালু করুন" @click="playHeroVideo">
+              <img v-if="videoPoster" :src="videoPoster" :alt="property.title" fetchpriority="high" decoding="async" @error="imageFailed" />
+              <video v-else-if="video.kind === 'file'" :src="video.src + '#t=0.5'" preload="metadata" muted playsinline aria-hidden="true"></video>
+              <span class="play-disc" aria-hidden="true"><Play :size="30" fill="currentColor" /></span>
+              <span class="gallery-caption"><Play :size="16" /> ভিডিও দেখুন</span>
+            </button>
+          </template>
+          <button v-else-if="slides[0].kind === 'image'" class="gallery-primary" aria-label="বড় করে ছবি দেখুন" @click="openPhoto(0)"><img :src="slides[0].src" :alt="property.title" fetchpriority="high" decoding="async" @error="imageFailed" /><span class="gallery-caption"><Expand :size="16" /> {{ images.length }}টি ছবি দেখুন</span></button>
+          <template v-if="slides[1]">
+            <button v-if="slides[1].kind === 'video'" class="gallery-secondary gallery-video" aria-label="প্রপার্টির ভিডিও দেখুন" @click="openPhoto(1)"><img v-if="videoPoster" :src="videoPoster" alt="" loading="lazy" @error="imageFailed" /><span class="play-disc" aria-hidden="true"><Play :size="26" fill="currentColor" /></span></button>
+            <button v-else class="gallery-secondary" aria-label="দ্বিতীয় ছবি বড় করে দেখুন" @click="openPhoto(1)"><img :src="slides[1].src" :alt="`${property.title} — ছবি ২`" loading="lazy" @error="imageFailed" /></button>
+          </template>
+          <div v-if="!heroPlaying && (videoIndex > 0 || (videoIndex === 0 && images.length))" class="gallery-chips">
+            <button v-if="videoIndex > 0" type="button" class="gallery-chip gallery-chip--video" @click="openPhoto(videoIndex)"><Play :size="15" fill="currentColor" /> ভিডিও দেখুন</button>
+            <button v-else type="button" class="gallery-chip" @click="openPhoto(1)"><Expand :size="15" /> {{ images.length }}টি ছবি</button>
+          </div>
+        </template>
         <PropertyPlotSheet v-else :property="property" />
       </section>
       <div class="property-at-a-glance">
@@ -88,13 +110,13 @@
       <aside v-if="!inquiryOpen && !lightboxOpen" class="mobile-inquiry-bar" :class="{ shown: !heroCtaVisible }" aria-label="প্রপার্টি সম্পর্কে যোগাযোগ"><div><strong>{{ price.amount }}</strong><small>{{ price.hidden ? 'বিস্তারিত জেনে নিন' : price.per }}</small></div><a v-if="waLink" class="bar-wa" :href="waLink" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp-এ জিজ্ঞেস করুন" @click="track('Contact', { method: 'WhatsApp', placement: 'sticky' })"><MessageCircle :size="22" /></a><button class="cta-sun" @click="openInquiry('mobile_sticky')">{{ ctaLabel }}</button></aside>
       <PropertyInquiry :key="property.id" :open="inquiryOpen" :property="property" :source="inquirySource" :start-purpose="startPurpose" :whatsapp="leadWhatsapp" @close="inquiryOpen = false" @saved="leadSaved" />
     </div>
-    <Teleport to="body"><div v-if="lightboxOpen && images.length" ref="lightboxRoot" class="photo-overlay" role="dialog" aria-modal="true" aria-label="প্রপার্টির ছবি" @click.self="lightboxOpen = false" @keydown.left="previousPhoto" @keydown.right="nextPhoto"><button class="photo-close" aria-label="ছবি বন্ধ করুন" @click="lightboxOpen = false"><X :size="25" /></button><img :src="images[photoIndex]" :alt="`${property?.title} — ছবি ${photoIndex + 1}`" /><div class="photo-controls"><button :disabled="images.length < 2" aria-label="আগের ছবি" @click="previousPhoto"><ChevronLeft /></button><span aria-live="polite">{{ photoIndex + 1 }} / {{ images.length }}</span><button :disabled="images.length < 2" aria-label="পরের ছবি" @click="nextPhoto"><ChevronRight /></button></div></div></Teleport>
+    <Teleport to="body"><div v-if="lightboxOpen && currentSlide" ref="lightboxRoot" class="photo-overlay" role="dialog" aria-modal="true" aria-label="প্রপার্টির ছবি ও ভিডিও" @click.self="lightboxOpen = false" @keydown.left="previousPhoto" @keydown.right="nextPhoto"><button class="photo-close" aria-label="বন্ধ করুন" @click="lightboxOpen = false"><X :size="25" /></button><img v-if="currentSlide.kind === 'image'" :src="currentSlide.src" :alt="`${property?.title} — ছবি ${photoIndex + 1}`" /><div v-else-if="video" class="photo-video"><video v-if="video.kind === 'file'" :key="video.src" :src="video.src" :poster="videoPoster || undefined" autoplay controls playsinline></video><iframe v-else :key="video.src" :src="video.src" title="প্রপার্টির ভিডিও" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div><div class="photo-controls"><button :disabled="slides.length < 2" aria-label="আগেরটি" @click="previousPhoto"><ChevronLeft /></button><span aria-live="polite">{{ photoIndex + 1 }} / {{ slides.length }}</span><button :disabled="slides.length < 2" aria-label="পরেরটি" @click="nextPhoto"><ChevronRight /></button></div></div></Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { ArrowRight, ArrowUpRight, Building2, Check, ChevronLeft, ChevronRight, CircleCheck, Compass, Copy, Expand, FileDown, FileText, Heart, Image as ImageIcon, MapPin, MessageCircle, MessagesSquare, Phone, Ruler, Share2, X } from 'lucide-vue-next'
+import { ArrowRight, ArrowUpRight, Building2, Check, ChevronLeft, ChevronRight, CircleCheck, Compass, Copy, Expand, FileDown, FileText, Heart, Image as ImageIcon, MapPin, MessageCircle, MessagesSquare, Phone, Play, Ruler, Share2, X } from 'lucide-vue-next'
 import { useProperties, type PropertyItem } from '~/composables/useProperties'
 import { formatBDT, formatArea } from '~/composables/useCurrency'
 import { useAuth } from '~/composables/useAuth'
@@ -102,6 +124,7 @@ import { useCompare } from '~/composables/useCompare'
 import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
 import { detailGroups } from '~/utils/buyerDetails.mjs'
 import { priceDisplay } from '~/utils/priceDisplay'
+import { parseVideo } from '~/utils/videoEmbed'
 import { safeBrochureUrl } from '~/utils/propertyInquiry.mjs'
 import { trackPixel } from '~/utils/metaPixel'
 import { useSettings } from '~/composables/useSettings'
@@ -126,6 +149,20 @@ const { settings, fetchSettings } = useSettings()
 fetchSettings()
 const leadWhatsapp = computed(() => (!property.value?.hideAgentContact && agent.value?.whatsapp) || settings.value.whatsapp_number || '')
 const images = computed(() => [...new Set((property.value?.images || []).filter(Boolean))])
+// Video: the listing chooses whether buyers land on the video or the main photo. Nothing autoplays; a tap plays it.
+const video = computed(() => parseVideo(property.value?.videoUrl))
+const videoPoster = computed(() => property.value?.videoPoster || video.value?.thumbnail || images.value[0] || '')
+type Slide = { kind: 'image'; src: string } | { kind: 'video' }
+const slides = computed<Slide[]>(() => {
+  const photos: Slide[] = images.value.map(src => ({ kind: 'image', src }))
+  if (!video.value) return photos
+  const clip: Slide = { kind: 'video' }
+  return property.value?.coverMedia === 'video' || !photos.length ? [clip, ...photos] : [photos[0], clip, ...photos.slice(1)]
+})
+const videoIndex = computed(() => slides.value.findIndex(slide => slide.kind === 'video'))
+const currentSlide = computed(() => slides.value[photoIndex.value])
+const heroPlaying = ref(false)
+const playHeroVideo = () => { heroPlaying.value = true; track('ViewContent', { content_category: 'video' }) }
 const price = computed(() => priceDisplay(property.value))
 const hasBuyerDetails = computed(() => property.value && detailGroups(property.value).length > 0)
 // Button text and the promise under it are edited in Admin → Settings → Property page.
@@ -190,13 +227,13 @@ const openInquiry = (source: string, purpose = '') => { inquirySource.value = so
 // The survey sends the Lead pixel event itself (with a dedup event ID).
 const leadSaved = (_id: number) => {}
 const openPhoto = (index: number) => { photoIndex.value = index; lightboxOpen.value = true }
-const nextPhoto = () => { photoIndex.value = (photoIndex.value + 1) % images.value.length }
-const previousPhoto = () => { photoIndex.value = (photoIndex.value + images.value.length - 1) % images.value.length }
+const nextPhoto = () => { photoIndex.value = (photoIndex.value + 1) % slides.value.length }
+const previousPhoto = () => { photoIndex.value = (photoIndex.value + slides.value.length - 1) % slides.value.length }
 const imageFailed = (event: Event) => { (event.target as HTMLImageElement).alt = 'ছবি লোড হয়নি — অন্য ছবি দেখুন'; }
 let loadVersion = 0
 const loadProperty = async () => {
   const version = ++loadVersion
-  loading.value = true; property.value = null; inquiryOpen.value = false; lightboxOpen.value = false
+  loading.value = true; property.value = null; inquiryOpen.value = false; lightboxOpen.value = false; heroPlaying.value = false
   const result = await fetchPropertyById(String(route.params.id), { strict: true })
   if (version !== loadVersion) return
   property.value = result; loading.value = false
@@ -204,7 +241,7 @@ const loadProperty = async () => {
   await fetchAgents()
 }
 watch(() => route.params.id, loadProperty, { immediate: true })
-useSeoMeta({ title: () => property.value ? `${property.value.title} | GBREL` : 'Property | GBREL', description: () => property.value?.description?.slice(0, 160) || 'প্রপার্টির তথ্য, মূল্য ও যোগাযোগ।', ogTitle: () => property.value?.title || 'GBREL', ogImage: () => images.value[0] })
+useSeoMeta({ title: () => property.value ? `${property.value.title} | GBREL` : 'Property | GBREL', description: () => property.value?.description?.slice(0, 160) || 'প্রপার্টির তথ্য, মূল্য ও যোগাযোগ।', ogTitle: () => property.value?.title || 'GBREL', ogImage: () => images.value[0] || videoPoster.value })
 const shareProperty = async () => {
   const url = `${window.location.origin}${route.path}`
   try { if (navigator.share) { await navigator.share({ title: property.value?.title, url }); return }; await navigator.clipboard.writeText(url); toast.success('লিংক কপি হয়েছে', 'পছন্দের মাধ্যমে শেয়ার করুন।') }
@@ -302,4 +339,20 @@ const shareProperty = async () => {
 @media (prefers-reduced-motion:reduce) { .mobile-inquiry-bar { transition:none; } }
 @media (max-width:360px) { .property-shell { padding:0 14px; }.property-topline { gap:7px; }.property-tools button { padding:8px; }.property-heading h1 { font-size:26px; }.mobile-inquiry-bar { padding-left:12px; padding-right:12px; }.mobile-inquiry-bar strong { font-size:16px; }.mobile-inquiry-bar .primary { padding:11px; }.property-gallery { height:210px; } }
 @media (prefers-reduced-motion:reduce) { .property-gallery img { transition:none; } }
+
+/* Video in the gallery: a poster with one clear play control; it only loads when tapped. */
+.property-gallery .gallery-video { background:#16241A; }
+.gallery-video img, .gallery-video video { opacity:.88; }
+.play-disc { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:78px; height:78px; border-radius:50%; display:grid; place-items:center; padding-left:5px; background:#E2651C; color:#fff; box-shadow:0 10px 30px rgba(0,0,0,.35), 0 0 0 10px rgba(226,101,28,.25); transition:transform .2s; }
+.gallery-secondary .play-disc { width:60px; height:60px; box-shadow:0 8px 22px rgba(0,0,0,.35), 0 0 0 7px rgba(226,101,28,.25); }
+.gallery-video:hover .play-disc { transform:translate(-50%,-50%) scale(1.06); }
+.gallery-player { position:relative; background:#000; }
+.gallery-player video, .gallery-player iframe { position:absolute; inset:0; width:100%; height:100%; border:0; object-fit:contain; background:#000; }
+.gallery-chips { position:absolute; right:16px; bottom:16px; z-index:2; display:flex; gap:8px; }
+.property-gallery .gallery-chip { display:inline-flex; overflow:visible; align-items:center; gap:7px; min-height:40px; padding:0 14px; border:0; border-radius:999px; background:#fff; color:#1D4A2A; font:inherit; font-size:13px; font-weight:700; box-shadow:0 3px 15px rgba(0,0,0,.15); cursor:pointer; }
+.property-gallery .gallery-chip--video { background:#E2651C; color:#fff; }
+.photo-video { width:min(1100px,100%); aspect-ratio:16/9; max-height:calc(100dvh - 155px); background:#000; border-radius:10px; overflow:hidden; }
+.photo-video video, .photo-video iframe { width:100%; height:100%; border:0; display:block; }
+@media (max-width:768px) { .gallery-chips { right:12px; bottom:12px; } .play-disc { width:64px; height:64px; } }
+@media (prefers-reduced-motion:reduce) { .play-disc { transition:none; } }
 </style>

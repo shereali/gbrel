@@ -343,82 +343,116 @@
           </div>
         </div>
 
-        <!-- SECTION 6: PHOTOS & MEDIA SHOWCASE -->
+        <!-- SECTION 6: PHOTOS & VIDEO -->
         <div id="sec-media" class="property-editor-card">
           <div class="property-card-header">
             <div class="property-card-title">
               <span class="property-card-icon">6</span>
-              <span>Photos & Media Showcase</span>
-              <span class="badge" style="background:rgba(226, 101, 28,0.15); color:var(--color-gold); font-size:0.75rem; margin-left:8px;">
-                {{ (propForm.featureImage ? 1 : 0) + propForm.gallery.length }} Photos Attached
-              </span>
+              <span>Photos &amp; video</span>
             </div>
-            <span v-if="propForm.featureImage" style="color:#10B981; font-size:0.8rem; font-weight:700;">✔ Cover Set</span>
+            <span class="pm-count">{{ photoCount }} photo{{ photoCount === 1 ? '' : 's' }}<template v-if="videoSource"> · 1 video</template></span>
           </div>
 
-          <!-- Primary Hero Cover Image -->
-          <div style="background:rgba(255,255,255,0.02); padding:16px; border-radius:var(--radius-md); border:1px solid var(--admin-border-subtle); margin-bottom:16px;">
-            <div class="flex items-center justify-between" style="margin-bottom:10px;">
-              <span style="font-weight:700; color:#10B981; font-size:0.9rem;">★ Primary Featured Cover Image</span>
+          <fieldset class="pm-first">
+            <legend>What buyers see first</legend>
+            <div class="pm-seg" role="radiogroup" aria-label="What buyers see first">
+              <button type="button" role="radio" :aria-checked="propForm.coverMedia !== 'video'" :class="{ on: propForm.coverMedia !== 'video' }" @click="propForm.coverMedia = 'image'">
+                <ImageIcon :size="16" aria-hidden="true" /> Main photo
+              </button>
+              <button type="button" role="radio" :aria-checked="propForm.coverMedia === 'video'" :class="{ on: propForm.coverMedia === 'video' }" :disabled="!videoSource" @click="propForm.coverMedia = 'video'">
+                <Play :size="16" aria-hidden="true" /> Video
+              </button>
             </div>
+            <p>{{ firstViewHint }}</p>
+          </fieldset>
 
-            <div class="grid grid-2" style="gap:16px; align-items:center;">
-              <div class="feature-img-preview-box">
-                <img v-if="propForm.featureImage" :src="propForm.featureImage" alt="Cover Preview" /><p v-else class="empty-cover">Add a real property photo</p>
-                <div class="feature-img-badge">
-                  <span>★ Featured Hero Cover</span>
-                </div>
+          <div class="pm-block">
+            <div class="pm-block-head">
+              <h3>Main photo</h3>
+              <div class="pm-btns">
+                <button type="button" class="pm-btn pm-btn--solid" @click="openPicker('cover')"><Images :size="15" aria-hidden="true" /> Choose from library</button>
+                <input ref="featureFileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden @change="onFeatureFileSelected" />
+                <button type="button" class="pm-btn" :disabled="isUploadingFeature" @click="triggerFeatureUpload"><Upload :size="15" aria-hidden="true" /> {{ isUploadingFeature ? 'Uploading…' : 'Upload' }}</button>
               </div>
-
-              <div class="flex flex-col gap-3">
-                <input v-model="propForm.featureImage" type="url" placeholder="Paste image URL (https://...)" class="form-input" style="font-size:0.85rem;" />
-                <input ref="featureFileInput" type="file" accept="image/*" style="display:none;" @change="onFeatureFileSelected" />
-                <div class="flex items-center gap-2">
-                  <button type="button" class="btn btn-sm btn-emerald flex-1" :disabled="isUploadingFeature" @click="triggerFeatureUpload">
-                    <span v-if="isUploadingFeature" class="animate-spin mr-1">◌</span>
-                    <span>{{ isUploadingFeature ? 'Uploading...' : '📁 Upload Local Cover Photo' }}</span>
-                  </button>
-                  <button v-if="propForm.featureImage" type="button" class="btn btn-sm btn-outline-white" @click="propForm.featureImage = ''">
-                    Clear
-                  </button>
-                </div>
-              </div>
+            </div>
+            <div class="pm-cover">
+              <img v-if="propForm.featureImage" :src="propForm.featureImage" alt="Main photo preview" />
+              <p v-else class="empty-cover">Add a recent photo of the property. It is also the image Facebook shows when the page is shared.</p>
+              <button v-if="propForm.featureImage" type="button" class="pm-remove" aria-label="Remove main photo" @click="propForm.featureImage = ''"><X :size="16" /></button>
             </div>
           </div>
 
-          <!-- Gallery Photos -->
-          <div style="background:rgba(255,255,255,0.02); padding:16px; border-radius:var(--radius-md); border:1px solid var(--admin-border-subtle);">
-            <div class="flex items-center justify-between flex-wrap gap-2" style="margin-bottom:12px;">
-              <label class="form-label" style="font-weight:700; color:var(--color-gold); margin-bottom:0;">
-                🖼 Gallery Photos ({{ propForm.gallery.length }} shots)
-              </label>
-              <input ref="galleryFileInput" type="file" multiple accept="image/*" style="display:none;" @change="onGalleryFilesSelected" />
-              <div class="flex items-center gap-2">
-                <button type="button" class="btn btn-sm btn-emerald" :disabled="isUploadingGallery" @click="triggerGalleryUpload" style="font-size:0.75rem; padding:4px 12px;">
-                  <span v-if="isUploadingGallery" class="animate-spin mr-1">◌</span>
-                  <span>Upload Photos</span>
-                </button>
+          <div class="pm-block">
+            <div class="pm-block-head">
+              <h3>More photos <span>{{ propForm.gallery.length }}</span></h3>
+              <div class="pm-btns">
+                <button type="button" class="pm-btn pm-btn--solid" @click="openPicker('gallery')"><Images :size="15" aria-hidden="true" /> Choose from library</button>
+                <input ref="galleryFileInput" type="file" multiple accept="image/jpeg,image/png,image/webp" hidden @change="onGalleryFilesSelected" />
+                <button type="button" class="pm-btn" :disabled="isUploadingGallery" @click="triggerGalleryUpload"><Upload :size="15" aria-hidden="true" /> {{ isUploadingGallery ? 'Uploading…' : 'Upload' }}</button>
               </div>
             </div>
-
-            <div class="flex gap-2" style="margin-bottom:12px;">
-              <input v-model="newGalleryUrl" type="url" placeholder="Paste gallery image URL and hit Enter..." class="form-input" style="flex:1; font-size:0.85rem;" @keydown.enter.prevent="addGalleryUrl" />
-              <button type="button" class="btn btn-sm btn-outline-white" @click="addGalleryUrl">Add URL</button>
-            </div>
-
             <div v-if="propForm.gallery.length > 0" class="gallery-grid">
-              <div v-for="(imgUrl, idx) in propForm.gallery" :key="idx" class="gallery-item-card">
-                <img :src="imgUrl" :alt="'Gallery ' + (idx + 1)" loading="lazy" />
+              <div v-for="(imgUrl, idx) in propForm.gallery" :key="imgUrl + idx" class="gallery-item-card">
+                <img :src="imgUrl" :alt="'Photo ' + (idx + 2)" loading="lazy" />
                 <div class="gallery-item-overlay">
                   <div class="flex justify-between items-center">
-                    <span style="font-size:0.7rem; color:#FFF; font-weight:700; background:rgba(0,0,0,0.6); padding:2px 6px; border-radius:3px;">#{{ idx + 1 }}</span>
-                    <button type="button" class="gallery-btn-action danger" @click="removeGalleryItem(idx)" title="Remove photo">✕</button>
+                    <span class="pm-num">{{ idx + 2 }}</span>
+                    <button type="button" class="gallery-btn-action danger" title="Remove photo" @click="removeGalleryItem(idx)">✕</button>
                   </div>
-                  <button type="button" class="gallery-btn-action star" @click="makeCover(idx)" title="Set as primary featured cover">★ Set as Cover</button>
+                  <button type="button" class="gallery-btn-action star" title="Make this the main photo" @click="makeCover(idx)">Make main photo</button>
                 </div>
               </div>
             </div>
+            <details class="pm-paste">
+              <summary>Paste a photo link instead</summary>
+              <div class="flex gap-2">
+                <input v-model="newGalleryUrl" type="url" placeholder="https://…" class="form-input" style="flex:1;" @keydown.enter.prevent="addGalleryUrl" />
+                <button type="button" class="pm-btn" @click="addGalleryUrl">Add</button>
+              </div>
+            </details>
           </div>
+
+          <div class="pm-block pm-video">
+            <div class="pm-block-head">
+              <h3>Video</h3>
+              <div class="pm-btns">
+                <button type="button" class="pm-btn pm-btn--solid" @click="openPicker('video')"><Film :size="15" aria-hidden="true" /> {{ videoSource ? 'Change video' : 'Choose video' }}</button>
+                <button v-if="videoSource" type="button" class="pm-btn" @click="clearVideo">Remove</button>
+              </div>
+            </div>
+            <div v-if="videoSource" class="pm-video-row">
+              <div class="pm-video-frame">
+                <video v-if="videoSource.kind === 'file'" :src="videoSource.src" :poster="videoPosterPreview || undefined" controls preload="metadata" playsinline></video>
+                <template v-else>
+                  <img v-if="videoPosterPreview" :src="videoPosterPreview" alt="Video cover preview" />
+                  <span v-else class="pm-video-blank"><Film :size="28" aria-hidden="true" /></span>
+                  <span class="pm-play" aria-hidden="true"><Play :size="20" /></span>
+                </template>
+              </div>
+              <div class="pm-video-info">
+                <strong>{{ videoProviderLabel[videoSource.kind] }}</strong>
+                <code>{{ propForm.videoUrl }}</code>
+                <div class="pm-poster">
+                  <span>Cover image before the video plays</span>
+                  <div class="pm-btns">
+                    <button type="button" class="pm-btn" @click="openPicker('poster')">Choose cover photo</button>
+                    <button v-if="propForm.featureImage && propForm.videoPoster !== propForm.featureImage" type="button" class="pm-btn" @click="propForm.videoPoster = propForm.featureImage">Use main photo</button>
+                    <button v-if="propForm.videoPoster" type="button" class="pm-btn" @click="propForm.videoPoster = ''">Clear</button>
+                  </div>
+                  <small>{{ propForm.videoPoster ? 'Custom cover set.' : videoSource.thumbnail ? 'Using the YouTube thumbnail.' : 'Without a cover, buyers see the first frame or the main photo.' }}</small>
+                </div>
+              </div>
+            </div>
+            <div v-else class="pm-video-empty">
+              <p>Upload a walkthrough or add a YouTube, Facebook or Vimeo link. Buyers tap to play, so the page stays fast on mobile data.</p>
+              <form class="flex gap-2" @submit.prevent="useVideoLink">
+                <input v-model.trim="videoLinkDraft" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" class="form-input" style="flex:1;" />
+                <button type="submit" class="pm-btn">Add link</button>
+              </form>
+            </div>
+          </div>
+
+          <AdminMediaPicker :open="picker.open" :accept="picker.accept" :multiple="picker.multiple" :title="picker.title" :pick-label="picker.label" @close="picker.open = false" @pick="onPicked" />
         </div>
 
         <!-- SECTION 7: PROJECT BROCHURE & DOCUMENTS -->
@@ -720,6 +754,9 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import PropertyBuyerDetailsEditor from './PropertyBuyerDetailsEditor.vue'
 import { priceDisplay } from '~/utils/priceDisplay'
+import { Film, Image as ImageIcon, Images, Play, Upload, X } from 'lucide-vue-next'
+import { parseVideo, videoProviderLabel } from '~/utils/videoEmbed'
+import type { MediaItem } from '~/composables/useMediaLibrary'
 import { useRouter, useRoute } from 'vue-router'
 import { useProperties, type PropertyItem } from '~/composables/useProperties'
 import { usePropertyOptions } from '~/composables/usePropertyOptions'
@@ -803,6 +840,9 @@ const propForm = reactive({
   isFeatured: false,
   featureImage: '',
   gallery: [] as string[],
+  videoUrl: '',
+  videoPoster: '',
+  coverMedia: 'image' as 'image' | 'video',
   brochureUrl: '',
   hidePrice: false,
   priceDisplayText: 'Price on Application',
@@ -814,6 +854,56 @@ const propForm = reactive({
   agentId: 0
 })
 const publicPrice = computed(() => priceDisplay(propForm))
+
+// Photos & video
+const videoSource = computed(() => parseVideo(propForm.videoUrl))
+const videoPosterPreview = computed(() => propForm.videoPoster || videoSource.value?.thumbnail || propForm.featureImage || '')
+const photoCount = computed(() => (propForm.featureImage ? 1 : 0) + propForm.gallery.length)
+const firstViewHint = computed(() => {
+  if (!videoSource.value) return 'Add a video below to be able to show it first.'
+  return propForm.coverMedia === 'video'
+    ? 'The page opens on the video cover with a play button. Photos follow in the gallery.'
+    : 'The page opens on the main photo. The video sits in the gallery with a play button.'
+})
+const videoLinkDraft = ref('')
+type PickerTarget = 'cover' | 'gallery' | 'video' | 'poster'
+const picker = reactive({ open: false, target: 'cover' as PickerTarget, accept: 'image' as 'image' | 'video', multiple: false, title: '', label: '' })
+function openPicker(target: PickerTarget) {
+  const config = {
+    cover: { accept: 'image', multiple: false, title: 'Choose the main photo', label: 'Use as main photo' },
+    gallery: { accept: 'image', multiple: true, title: 'Add photos', label: 'Add photos' },
+    video: { accept: 'video', multiple: false, title: 'Choose a video', label: 'Use this video' },
+    poster: { accept: 'image', multiple: false, title: 'Choose the video cover', label: 'Use as cover' }
+  }[target] as { accept: 'image' | 'video'; multiple: boolean; title: string; label: string }
+  Object.assign(picker, config, { target, open: true })
+}
+function onPicked(items: MediaItem[]) {
+  if (!items.length) return
+  if (picker.target === 'cover') propForm.featureImage = items[0].url
+  if (picker.target === 'poster') propForm.videoPoster = items[0].url
+  if (picker.target === 'gallery') {
+    const added = items.map(i => i.url).filter(url => url !== propForm.featureImage && !propForm.gallery.includes(url))
+    if (!propForm.featureImage && added.length) propForm.featureImage = added.shift()!
+    propForm.gallery.push(...added)
+  }
+  if (picker.target === 'video') {
+    propForm.videoUrl = items[0].url
+    if (!propForm.videoPoster && items[0].thumbnail_url) propForm.videoPoster = items[0].thumbnail_url
+  }
+}
+function useVideoLink() {
+  if (!parseVideo(videoLinkDraft.value)) {
+    toast.warning('Link not recognised', 'Paste a YouTube, Facebook or Vimeo link that starts with https://.')
+    return
+  }
+  propForm.videoUrl = videoLinkDraft.value
+  videoLinkDraft.value = ''
+}
+function clearVideo() {
+  propForm.videoUrl = ''
+  propForm.videoPoster = ''
+  propForm.coverMedia = 'image'
+}
 const advisorOptions = ref<Array<{ id: number, name: string }>>([])
 const advisorError = ref(false)
 const amenitiesText = ref('')
@@ -915,7 +1005,7 @@ const guideItems = computed(() => [
   },
   {
     id: 'sec-media',
-    title: 'Photos & Media Showcase',
+    title: 'Photos & video',
     sub: propForm.featureImage ? `${(propForm.featureImage ? 1 : 0) + propForm.gallery.length} visual asset(s)` : 'Hero cover photo required',
     isCompleted: Boolean(propForm.featureImage?.trim())
   },
@@ -1135,6 +1225,9 @@ onMounted(async () => {
         propForm.featureImage = item.featureImage || item.images?.[0] || ''
         propForm.gallery = item.gallery && item.gallery.length > 0 ? [...item.gallery] : (item.images?.slice(1) || [])
         propForm.brochureUrl = item.brochureUrl || ''
+        propForm.videoUrl = item.videoUrl || ''
+        propForm.videoPoster = item.videoPoster || ''
+        propForm.coverMedia = item.coverMedia === 'video' && item.videoUrl ? 'video' : 'image'
         propForm.hidePrice = Boolean(item.hidePrice)
         propForm.priceDisplayText = item.priceDisplayText || 'Price on Application'
         propForm.hideAgentPhoto = Boolean(item.hideAgentPhoto)
@@ -1245,6 +1338,9 @@ const saveProperty = async (targetStatus?: 'Draft' | 'Active') => {
         gallery: validGallery,
         images: allImages,
         brochureUrl: propForm.brochureUrl.trim(),
+        videoUrl: propForm.videoUrl.trim() || null,
+        videoPoster: propForm.videoPoster.trim() || null,
+        coverMedia: propForm.videoUrl.trim() ? propForm.coverMedia : 'image',
         hidePrice: propForm.hidePrice,
         priceDisplayText: propForm.priceDisplayText,
         hideAgentPhoto: propForm.hideAgentPhoto,
@@ -1272,7 +1368,10 @@ const saveProperty = async (targetStatus?: 'Draft' | 'Active') => {
         featureImage: featureCover,
         gallery: validGallery,
         images: allImages,
-        brochureUrl: propForm.brochureUrl.trim() || undefined
+        brochureUrl: propForm.brochureUrl.trim() || undefined,
+        videoUrl: propForm.videoUrl.trim() || null,
+        videoPoster: propForm.videoPoster.trim() || null,
+        coverMedia: propForm.videoUrl.trim() ? propForm.coverMedia : 'image'
       })
 
       if (propForm.status === 'Draft') {

@@ -6,6 +6,7 @@
         <svg viewBox="0 0 120 60"><path d="M0 60 C30 30 60 36 120 20 V60Z" /><path d="M0 60 C40 44 80 48 120 38 V60Z" /></svg>
       </div>
       <span class="pc-type">{{ typeLabel(property.propertyType) }}</span>
+      <span v-if="hasVideo" class="pc-video"><Play :size="12" fill="currentColor" aria-hidden="true" /> ভিডিও</span>
       <div class="pc-tools">
         <button type="button" :aria-pressed="isInCompare(property.id)" :aria-label="isInCompare(property.id) ? 'তুলনা থেকে সরান' : 'তুলনায় যোগ করুন'" :title="isInCompare(property.id) ? 'তুলনা থেকে সরান' : 'তুলনায় যোগ করুন'" @click.stop="toggleCompare(property.id)">
           <ArrowLeftRight :size="16" aria-hidden="true" />
@@ -42,11 +43,12 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ArrowLeftRight, Heart, MapPin } from 'lucide-vue-next'
+import { ArrowLeftRight, Play, Heart, MapPin } from 'lucide-vue-next'
 import type { PropertyItem } from '~/composables/useProperties'
 import { useAuth } from '~/composables/useAuth'
 import { useCompare } from '~/composables/useCompare'
 import { priceDisplay } from '~/utils/priceDisplay'
+import { parseVideo } from '~/utils/videoEmbed'
 import { areaLabel, completionLabels, priceBn, statusLabel, toBn, typeLabel } from '~/utils/propertyLabels'
 
 const props = defineProps<{ property: PropertyItem; wide?: boolean }>()
@@ -55,6 +57,7 @@ const { isInCompare, toggleCompare } = useCompare()
 
 const imageBroken = ref(false)
 const image = computed(() => props.property.featureImage || props.property.images?.[0] || '')
+const hasVideo = computed(() => Boolean(parseVideo(props.property.videoUrl)))
 const price = computed(() => priceDisplay(props.property))
 const area = computed(() => areaLabel(props.property.squareFootage, props.property.landSize, props.property.landUnit))
 // Prefer the Bangla address (last two parts); area/city fields are often in English.
@@ -76,6 +79,7 @@ const place = computed(() => {
 .pc-noimg svg { width: 100%; height: 60%; }
 .pc-noimg path:first-child { fill: var(--gb-shoot); }
 .pc-noimg path:last-child { fill: var(--gb-leaf); }
+.pc-video { position: absolute; left: 14px; bottom: 14px; display: inline-flex; align-items: center; gap: 5px; background: #E2651C; color: #fff; font-weight: 700; font-size: .78rem; padding: 4px 10px; border-radius: 999px; }
 .pc-type { position: absolute; left: 14px; top: 14px; background: var(--gb-paper); color: var(--gb-paddy); font-family: var(--gb-display); font-weight: 600; font-size: .9rem; padding: 3px 12px; border-radius: 999px; }
 .pc-tools { position: absolute; right: 12px; top: 12px; display: flex; gap: 6px; z-index: 2; }
 .pc-tools button { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: rgba(251, 252, 247, .92); color: var(--gb-paddy); cursor: pointer; }

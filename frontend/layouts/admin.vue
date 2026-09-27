@@ -169,6 +169,15 @@
               </span>
             </NuxtLink>
 
+            <NuxtLink v-if="hasPermission('properties.edit') || hasPermission('properties.create') || isSuperAdmin" to="/admin/media" class="sidebar-link" active-class="active" title="Photos and videos for listings">
+              <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="2"/>
+                <circle cx="8.5" cy="10" r="1.5"/>
+                <path d="M21 16l-5-5-8 8"/>
+              </svg>
+              <span>Media library</span>
+            </NuxtLink>
+
             <NuxtLink v-if="hasPermission('properties.verify_rajuk') || hasPermission('properties.edit') || isSuperAdmin" to="/admin/approvals" class="sidebar-link" active-class="active" title="Legal & Verification Queue">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M9 12l2 2 4-4"/>
@@ -367,6 +376,10 @@
             <NuxtLink v-if="hasPermission('listings.review') || hasPermission('properties.edit') || isSuperAdmin" to="/admin/listing-requests" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
               <span>Owner submissions</span>
               <span v-if="sidebarCounts.listing_requests" class="drawer-badge">{{ sidebarCounts.listing_requests }}</span>
+            </NuxtLink>
+
+            <NuxtLink v-if="hasPermission('properties.edit') || hasPermission('properties.create') || isSuperAdmin" to="/admin/media" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+              <span>Media library</span>
             </NuxtLink>
 
             <NuxtLink v-if="hasPermission('properties.verify_rajuk') || hasPermission('properties.edit') || isSuperAdmin" to="/admin/approvals" class="drawer-link" active-class="active" @click="mobileNavOpen = false">

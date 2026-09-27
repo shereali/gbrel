@@ -27,6 +27,7 @@ RUN mkdir -p storage/framework/sessions storage/framework/views storage/framewor
     && chmod -R 775 storage bootstrap/cache
 
 COPY docker/nginx-backend.conf /etc/nginx/http.d/default.conf
+COPY docker/php-uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh \
     && mkdir -p /run/nginx /var/log/nginx /var/cache/nginx

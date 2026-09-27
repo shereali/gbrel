@@ -43,6 +43,9 @@ export interface PropertyItem {
   amenities: string[]
   documentsVerified: string[]
   brochureUrl?: string
+  videoUrl?: string
+  videoPoster?: string
+  coverMedia?: 'image' | 'video'
   hidePrice?: boolean
   priceDisplayText?: string
   hideAgentPhoto?: boolean
@@ -755,6 +758,9 @@ const mapDbItemToPropertyItem = (apiItem: any, strict = false): PropertyItem => 
       ? apiItem.documents_verified 
       : (strict ? [] : ['Clear Freehold Title Deed', 'Mutation Cleared', 'RAJUK Allotment']),
     brochureUrl: apiItem.brochure_url || apiItem.brochureUrl || undefined,
+    videoUrl: apiItem.video_url || apiItem.videoUrl || undefined,
+    videoPoster: apiItem.video_poster || apiItem.videoPoster || undefined,
+    coverMedia: (apiItem.cover_media || apiItem.coverMedia) === 'video' ? 'video' : 'image',
     hidePrice: Boolean(apiItem.hide_price ?? apiItem.hidePrice),
     priceDisplayText: apiItem.price_display_text || apiItem.priceDisplayText || 'Price on Application',
     hideAgentPhoto: Boolean(apiItem.hide_agent_photo ?? apiItem.hideAgentPhoto),

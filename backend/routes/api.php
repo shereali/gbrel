@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ListingReviewController;
+use App\Http\Controllers\MediaLibraryController;
 use App\Http\Controllers\OwnerAccountController;
 use App\Http\Controllers\OwnerListingController;
 use App\Http\Controllers\PropertyDocumentController;
@@ -12,6 +13,7 @@ use App\Models\Division;
 use App\Models\FinancialTransaction;
 use App\Models\LandUnit;
 use App\Models\Lead;
+use App\Models\Media;
 use App\Models\Permission;
 use App\Models\Property;
 use App\Models\PropertyCategory;
@@ -27,6 +29,7 @@ use App\Models\Viewing;
 use App\Support\PhoneNumber;
 use App\Support\PropertyBuyerDetails;
 use App\Support\SiteSettings;
+use App\Support\VideoLink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
@@ -211,6 +214,18 @@ function normalizePropertyData(array $input, bool $isCreate = true, ?int $existi
 
     if (array_key_exists('buyer_details', $data)) {
         $data['buyer_details'] = PropertyBuyerDetails::validate($data['buyer_details']);
+    }
+
+    // Video: only our own uploads or YouTube / Facebook / Vimeo links; the cover choice falls back to photos.
+    if (array_key_exists('video_url', $data)) {
+        $data['video_url'] = VideoLink::parse(is_string($data['video_url']) ? $data['video_url'] : null) ? trim($data['video_url']) : null;
+    }
+    if (array_key_exists('video_poster', $data)) {
+        $poster = is_string($data['video_poster']) ? trim($data['video_poster']) : '';
+        $data['video_poster'] = $poster !== '' && VideoLink::isPoster($poster) ? $poster : null;
+    }
+    if (array_key_exists('cover_media', $data)) {
+        $data['cover_media'] = $data['cover_media'] === 'video' ? 'video' : 'image';
     }
 
     // 2. Dynamic Image Pipeline (Feature image & Gallery aggregation)
@@ -2020,6 +2035,7 @@ Route::post('/upload', function (Request $request) {
         $filename = 'prop_'.time().'_'.rand(1000, 9999).'.'.$ext;
         $path = $file->storeAs('properties', $filename, 'public');
         $url = '/storage/'.$path;
+        Media::firstOrCreate(['url' => $url], ['type' => 'image', 'source' => 'upload', 'path' => $path, 'title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), 'mime_type' => $file->getMimeType(), 'size' => $file->getSize(), 'uploaded_by' => $request->user()?->id]);
 
         return response()->json([
             'success' => true,
@@ -2037,6 +2053,7 @@ Route::post('/upload', function (Request $request) {
             $filename = 'prop_'.time().'_'.rand(1000, 9999).'.'.$ext;
             $path = $file->storeAs('properties', $filename, 'public');
             $urls[] = '/storage/'.$path;
+            Media::firstOrCreate(['url' => '/storage/'.$path], ['type' => 'image', 'source' => 'upload', 'path' => $path, 'title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), 'mime_type' => $file->getMimeType(), 'size' => $file->getSize(), 'uploaded_by' => $request->user()?->id]);
         }
 
         return response()->json([
@@ -2132,4 +2149,15 @@ Route::middleware('staff:listings.review,properties.edit')->prefix('admin')->gro
     Route::patch('/listing-requests/{id}/review', [ListingReviewController::class, 'review'])->whereNumber('id');
     Route::post('/listing-requests/{id}/pending-changes', [ListingReviewController::class, 'applyChanges'])->whereNumber('id');
     Route::patch('/listing-documents/{documentId}', [ListingReviewController::class, 'reviewDocument'])->whereNumber('documentId');
+});
+
+// ==========================================
+// STAFF: media library (photos and videos reused across listings)
+// ==========================================
+Route::middleware('staff:properties.edit,properties.create')->prefix('admin/media')->group(function () {
+    Route::get('/', [MediaLibraryController::class, 'index']);
+    Route::post('/', [MediaLibraryController::class, 'upload'])->middleware('throttle:120,1');
+    Route::post('/link', [MediaLibraryController::class, 'addLink']);
+    Route::patch('/{id}', [MediaLibraryController::class, 'update'])->whereNumber('id');
+    Route::delete('/{id}', [MediaLibraryController::class, 'destroy'])->whereNumber('id');
 });
