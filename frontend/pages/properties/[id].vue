@@ -48,6 +48,43 @@
         </div>
         <aside class="inquiry-sidebar"><PropertySurveyStart v-show="!inlineVisible" side :property-type="property.propertyType" class="side-start" @choose="purpose => openInquiry('sidebar_first_question', purpose)" /><div v-if="agent && !property.hideAgentContact" class="advisor-direct"><span>প্রশ্ন ছাড়াই সরাসরি কথা বলতে চান?</span><div><a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" @click="track('Contact', { method: 'WhatsApp' })">WhatsApp <ArrowUpRight :size="15" /></a><a :href="`tel:${agent.phone}`" @click="track('Contact', { method: 'Phone' })"><Phone :size="15" /> কল করুন</a></div></div></aside>
       </div>
+
+      <!-- Bottom Closing CTA Section for Desktop & Wide Devices -->
+      <section class="property-bottom-cta" aria-labelledby="bottom-cta-heading">
+        <div class="bottom-cta-card">
+          <div class="bottom-cta-content">
+            <span class="bottom-cta-badge">সরাসরি পরামর্শ ও সাইট ভিজিট</span>
+            <h2 id="bottom-cta-heading">প্রপার্টিটি নিজের চোখে দেখতে চান বা কোনো প্রশ্ন আছে?</h2>
+            <p class="bottom-cta-desc">
+              কাগজপত্র যাচাই, সরেজমিনে সাইট পরিদর্শন এবং সরাসরি মালিকপক্ষের সাথে গঠনমূলক আলোচনার জন্য আমরা প্রস্তুত। কোনো ধরনের হিডেন চার্জ বা অগ্রিম বুকিং ফি নেই।
+            </p>
+            <ul class="bottom-cta-highlights">
+              <li><Check :size="16" aria-hidden="true" /> ১০০% নিষ্কণ্টক ও মূল দলিল যাচাইকৃত</li>
+              <li><Check :size="16" aria-hidden="true" /> অনুমোদিত প্রতিনিধির সাথে সরাসরি সাইট পরিদর্শন</li>
+              <li><Check :size="16" aria-hidden="true" /> ব্যাংক লেনদেন নিরাপত্তা ও লিগ্যাল সাপোর্ট</li>
+            </ul>
+          </div>
+          <div class="bottom-cta-actions">
+            <div class="bottom-price-tag">
+              <span class="price-caption">তালিকাভুক্ত মূল্য</span>
+              <strong class="price-val">{{ priceLabel }}</strong>
+              <small v-if="!property.hidePrice">{{ priceSummary.label }}</small>
+            </div>
+            <button class="cta-sun bottom-cta-btn" @click="openInquiry('bottom_section_cta')">
+              {{ ctaLabel }}
+            </button>
+            <a v-if="waLink" class="cta-wa bottom-wa-btn" :href="waLink" target="_blank" rel="noopener noreferrer" @click="track('Contact', { method: 'WhatsApp', placement: 'bottom_banner' })">
+              <MessageCircle :size="19" aria-hidden="true" />
+              WhatsApp-এ কথা বলুন
+            </a>
+            <a v-if="agent?.phone && !property.hideAgentContact" class="bottom-phone-pill" :href="`tel:${agent.phone}`" @click="track('Contact', { method: 'Phone', placement: 'bottom_banner' })">
+              <Phone :size="15" aria-hidden="true" />
+              সরাসরি কথা বলুন: <span>{{ agent.phone }}</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
       <aside v-if="!inquiryOpen && !lightboxOpen" class="mobile-inquiry-bar" :class="{ shown: !heroCtaVisible }" aria-label="প্রপার্টি সম্পর্কে যোগাযোগ"><div><strong>{{ priceLabel }}</strong><small>{{ property.hidePrice ? 'বিস্তারিত জেনে নিন' : priceSummary.label }}</small></div><a v-if="waLink" class="bar-wa" :href="waLink" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp-এ জিজ্ঞেস করুন" @click="track('Contact', { method: 'WhatsApp', placement: 'sticky' })"><MessageCircle :size="22" /></a><button class="cta-sun" @click="openInquiry('mobile_sticky')">{{ ctaLabel }}</button></aside>
       <PropertyInquiry :key="property.id" :open="inquiryOpen" :property="property" :source="inquirySource" :start-purpose="startPurpose" :whatsapp="leadWhatsapp" @close="inquiryOpen = false" @saved="leadSaved" />
     </div>
@@ -212,6 +249,25 @@ const shareProperty = async () => {
 .cta-sun { display:inline-flex; align-items:center; justify-content:center; min-height:54px; padding:12px 22px; border:0; border-radius:999px; background:#E2651C; color:#fff; font-family:'Anek Bangla','Noto Sans Bengali',sans-serif; font-size:18px; font-weight:700; cursor:pointer; box-shadow:0 10px 22px -12px rgba(194,83,15,.9); }.cta-sun:hover { background:#C2530F; }
 .cta-wa { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px; border:1.5px solid #1FA855; border-radius:999px; color:#137A3D; font-size:14px; font-weight:600; text-decoration:none; background:#fff; }.cta-wa:hover { background:#EAF7EF; }
 .cta-note { display:block; text-align:center; font-size:11px; color:#647269; margin-top:6px; }
+.property-bottom-cta { margin:48px 0 28px; }
+.bottom-cta-card { background:linear-gradient(135deg, #0e2a1e 0%, #153e2c 60%, #1a4a35 100%); border-radius:20px; padding:38px 44px; color:#fff; display:grid; grid-template-columns:1.35fr 1fr; gap:36px; align-items:center; box-shadow:0 18px 42px -12px rgba(14,42,30,.4); border:1px solid rgba(226,101,28,.3); position:relative; overflow:hidden; }
+.bottom-cta-card::after { content:''; position:absolute; top:-50%; right:-20%; width:380px; height:380px; background:radial-gradient(circle, rgba(226,101,28,.14) 0%, transparent 70%); pointer-events:none; }
+.bottom-cta-badge { display:inline-block; background:rgba(226,101,28,.22); color:#f7a26d; border:1px solid rgba(226,101,28,.4); padding:5px 14px; border-radius:999px; font-size:12px; font-weight:700; letter-spacing:.04em; margin-bottom:12px; }
+.bottom-cta-content h2 { font-family:'Outfit','Noto Sans Bengali',sans-serif; font-size:clamp(22px,2.2vw,28px); color:#fff; line-height:1.35; margin-bottom:12px; font-weight:700; }
+.bottom-cta-desc { font-size:14px; color:#c9dbd1; line-height:1.75; margin-bottom:18px; }
+.bottom-cta-highlights { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:9px; }
+.bottom-cta-highlights li { display:flex; align-items:center; gap:10px; font-size:13px; color:#e2ede7; }
+.bottom-cta-highlights svg { color:#38c172; flex-shrink:0; }
+.bottom-cta-actions { display:flex; flex-direction:column; gap:12px; background:rgba(255,255,255,.07); padding:24px 26px; border-radius:16px; border:1px solid rgba(255,255,255,.14); backdrop-filter:blur(8px); }
+.bottom-price-tag { display:flex; flex-direction:column; margin-bottom:4px; border-bottom:1px solid rgba(255,255,255,.14); padding-bottom:10px; }
+.bottom-price-tag .price-caption { font-size:11px; color:#a4c4b5; }
+.bottom-price-tag .price-val { font-family:'Outfit','Noto Sans Bengali',sans-serif; font-size:24px; color:#fff; font-weight:700; }
+.bottom-price-tag small { font-size:11px; color:#a4c4b5; }
+.bottom-cta-btn { width:100%; font-size:17px; }
+.bottom-wa-btn { width:100%; }
+.bottom-phone-pill { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-size:12px; color:#b9d7cb; text-decoration:none; padding:6px 0; transition:color .2s; }
+.bottom-phone-pill span { color:#fff; font-weight:700; }
+.bottom-phone-pill:hover { color:#38c172; }
 .gallery-tools { display:none; }.property-gallery { position:relative; }.property-state { max-width:650px; margin:auto; padding:80px 24px; text-align:center; }.property-state h1 { font-size:24px; }.property-state p { margin:20px 0; }.property-state a { display:block; margin-top:24px; }.loading-block { height:180px; background:#e9efe6; border-radius:20px; margin-bottom:24px; }
 .photo-overlay { position:fixed; inset:0; z-index:11000; background:#07130ef5; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:60px 20px 25px; }.photo-overlay > img { max-width:100%; max-height:calc(100dvh - 155px); object-fit:contain; }.photo-overlay button { background:#fff2; border:1px solid #ffffff40; color:white; width:48px; height:48px; display:grid; place-items:center; border-radius:50%; cursor:pointer; }.photo-overlay button:focus-visible { outline:3px solid #e0bc68; }.photo-close { position:absolute; top:14px; right:18px; }.photo-controls { display:flex; align-items:center; gap:24px; color:white; margin-top:16px; }.photo-controls button:disabled { opacity:.3; }
 @media (max-width:1024px) { .property-body { grid-template-columns:minmax(0,1fr) 300px; gap:24px; }.advisor-card { padding:22px; }.property-heading { gap:24px; grid-template-columns:minmax(0,1fr) 250px; }.asking-price { padding-left:20px; }.property-specs { grid-template-columns:1fr; } }
@@ -240,6 +296,8 @@ const shareProperty = async () => {
   .mobile-inquiry-bar.shown { transform:none; }
   .mobile-inquiry-bar .cta-sun { min-height:48px; font-size:16px; padding:10px 18px; flex-shrink:0; }
   .bar-wa { width:48px; height:48px; border-radius:50%; display:grid; place-items:center; background:#1FA855; color:#fff; flex-shrink:0; }
+  .bottom-cta-card { grid-template-columns:1fr; padding:28px 20px; gap:24px; border-radius:16px; }
+  .property-bottom-cta { margin:32px 0 20px; }
 }
 @media (prefers-reduced-motion:reduce) { .mobile-inquiry-bar { transition:none; } }
 @media (max-width:360px) { .property-shell { padding:0 14px; }.property-topline { gap:7px; }.property-tools button { padding:8px; }.property-heading h1 { font-size:26px; }.mobile-inquiry-bar { padding-left:12px; padding-right:12px; }.mobile-inquiry-bar strong { font-size:16px; }.mobile-inquiry-bar .primary { padding:11px; }.property-gallery { height:210px; } }

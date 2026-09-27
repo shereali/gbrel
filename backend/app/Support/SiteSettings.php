@@ -24,7 +24,7 @@ class SiteSettings
             'working_hours' => ['default' => '', 'rules' => ['string', 'max:150']],
             'home_headline' => ['default' => 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন।', 'rules' => ['string', 'max:120']],
             'home_subtitle' => ['default' => 'প্লট, জমি শেয়ার আর ফ্ল্যাটের তালিকা — প্রতিটির দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য এক জায়গায়। পছন্দ হলে আমাদের টিমের সঙ্গে সরাসরি কথা বলুন।', 'rules' => ['string', 'max:400']],
-            'property_cta_label' => ['default' => 'সাইট ভিজিট ও অফার দিন', 'rules' => ['string', 'min:2', 'max:50']],
+            'property_cta_label' => ['default' => 'বিস্তারিত জানুন ও সাইট ভিজিট', 'rules' => ['string', 'min:2', 'max:50']],
             'property_cta_label_hidden_price' => ['default' => 'সর্বশেষ দাম ও সাইট ভিজিট', 'rules' => ['string', 'min:2', 'max:50']],
             'property_cta_note' => ['default' => 'কাগজপত্র যাচাই, সাইট ভিজিট এবং সরাসরি মালিকপক্ষের সাথে আলোচনার সুযোগ। কোনো অগ্রিম ফি নেই।', 'rules' => ['string', 'max:250']],
             'owner_commission_percent' => ['default' => 2, 'rules' => ['numeric', 'min:0', 'max:20']],
