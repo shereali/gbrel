@@ -5,7 +5,7 @@ export const buyerDetailGroups = [
   { key: 'building', title: 'Land & existing building', bn: 'জমি ও স্থাপনার বিবরণ', fields: [
     choice('landUse', 'Declared land use', 'তালিকায় উল্লেখিত ব্যবহার', [['Residential', 'আবাসিক'], ['Commercial', 'বাণিজ্যিক'], ['Mixed', 'মিশ্র ব্যবহার']]),
     choice('cornerPlot', 'Corner plot', 'কর্নার প্লট', [['Yes', 'হ্যাঁ'], ['No', 'না']]),
-    field('roadWidth', 'Access road width (feet)', 'সামনের রাস্তার প্রস্থ (ফুট)', 'number', { max: 1000 }),
+    field('roadWidth', 'Access road width (feet)', 'সামনের রাস্তার প্রস্থ', 'number', { max: 1000, suffix: ' ফুট' }),
     field('buildingDescription', 'Existing building / condition', 'বর্তমান স্থাপনা ও অবস্থা', 'textarea'),
     field('utilities', 'Utility connections and status', 'ইউটিলিটি সংযোগ', 'textarea'),
   ] },
@@ -14,21 +14,21 @@ export const buyerDetailGroups = [
     field('shareLandSize', 'Land per share (in the listing land unit)', 'প্রতি শেয়ারে জমির পরিমাণ', 'number', { max: 100000 }),
     choice('negotiable', 'Negotiable price', 'দাম আলোচনা সাপেক্ষ', [['Yes', 'হ্যাঁ'], ['No', 'না']]),
     field('priceIncludes', 'What does the price include?', 'মূল্যের মধ্যে যা আছে', 'textarea'),
-    field('depositPercent', 'Proposed advance / bayna (%)', 'প্রস্তাবিত বায়না (%)', 'number', { max: 100 }),
+    field('depositPercent', 'Proposed advance / bayna (%)', 'প্রস্তাবিত বায়না', 'number', { max: 100, suffix: '%' }),
     field('agreementDuration', 'Bayna agreement duration', 'বায়না চুক্তির মেয়াদ'),
     field('paymentSchedule', 'Payment schedule', 'পেমেন্টের সময়সূচি', 'textarea'),
     field('paymentMethod', 'Payment method', 'লেনদেনের মাধ্যম'),
-    field('buyerCommission', 'Buyer commission (%)', 'ক্রেতার কমিশন (%)', 'number', { max: 100 }),
-    field('sellerCommission', 'Seller commission (%)', 'বিক্রেতার কমিশন (%)', 'number', { max: 100 }),
+    field('buyerCommission', 'Buyer commission (%)', 'ক্রেতার সার্ভিস চার্জ', 'number', { max: 100, suffix: '%' }),
+    field('sellerCommission', 'Seller commission (%)', 'বিক্রেতার সার্ভিস চার্জ', 'number', { max: 100, suffix: '%' }),
     field('registrationCost', 'Registration cost / basis (do not guess)', 'রেজিস্ট্রেশন খরচের বিবরণ'),
-    field('registrationValue', 'Proposed deed value (BDT, if supplied)', 'প্রস্তাবিত দলিল মূল্য (টাকা)', 'number', { max: 1000000000000 }),
+    field('registrationValue', 'Proposed deed value (BDT, if supplied)', 'প্রস্তাবিত দলিল মূল্য', 'number', { max: 1000000000000, prefix: '৳ ', grouped: true }),
     field('buyerCosts', 'Other costs paid by buyer', 'ক্রেতার অন্যান্য খরচ', 'textarea'),
     field('sellerCosts', 'Costs paid by seller', 'বিক্রেতার বহনযোগ্য খরচ', 'textarea'),
     field('transferTimeline', 'Proposed transfer time', 'প্রস্তাবিত হস্তান্তরের সময়'),
     field('transferTrigger', 'When does that period start?', 'সময়সীমা শুরুর শর্ত', 'textarea'),
   ] },
   { key: 'ownership', title: 'Ownership & possession', bn: 'মালিকানা ও দখল', fields: [
-    field('ownerCount', 'Number of owners', 'মালিকের সংখ্যা', 'number', { max: 10000, integer: true }),
+    field('ownerCount', 'Number of owners', 'মালিকের সংখ্যা', 'number', { max: 10000, integer: true, suffix: ' জন' }),
     choice('ownershipSource', 'Ownership acquired through', 'মালিকানার সূত্র', [['Purchase', 'ক্রয়সূত্রে'], ['Inheritance', 'ওয়ারিশসূত্রে'], ['Allotment', 'বরাদ্দসূত্রে'], ['Other', 'অন্যান্য']]),
     choice('possession', 'Current possession', 'বর্তমান দখল', [['Owner', 'মালিকের দখলে'], ['Tenant', 'ভাড়াটিয়ার দখলে'], ['Vacant', 'খালি'], ['Other', 'অন্যান্য']]),
     choice('bankLoan', 'Existing bank loan / mortgage', 'ঋণ বা বন্ধকের অবস্থা', [['None declared', 'নেই বলে জানানো হয়েছে'], ['Exists', 'আছে']]),
@@ -46,6 +46,23 @@ export const buyerDetailGroups = [
     field('updatedOn', 'Listing information updated on', 'তথ্য হালনাগাদের তারিখ', 'date'),
   ] },
 ]
+// The public page is in Bangla, so numbers and dates are shown in Bangla too: "৩০%", "২ জন", "১৫ সেপ্টেম্বর ২০২৬".
+const BN_DIGITS = '০১২৩৪৫৬৭৮৯'
+export const bnDigits = value => String(value).replace(/\d/g, d => BN_DIGITS[Number(d)])
+const BN_MONTHS = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর']
+export function bnDate(value) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || ''))
+  if (!m || Number(m[2]) < 1 || Number(m[2]) > 12) return value ? bnDigits(value) : ''
+  return `${bnDigits(Number(m[3]))} ${BN_MONTHS[Number(m[2]) - 1]} ${bnDigits(m[1])}`
+}
+function displayValue(f, value) {
+  if (f.type === 'date') return bnDate(value)
+  if (f.type === 'number' && value !== '' && !Number.isNaN(Number(value))) {
+    const n = f.grouped ? Number(value).toLocaleString('en-IN') : String(Number(value))
+    return `${f.prefix || ''}${bnDigits(n)}${f.suffix || ''}`
+  }
+  return typeof value === 'string' ? value : bnDigits(value)
+}
 export const hasDetail = value => value !== undefined && value !== null && String(value).trim() !== ''
 // `price` is quoted on the basis chosen in priceBasis: the whole property, one land unit, one sqft or one share.
 export function totalAskingPrice(property) {
@@ -72,6 +89,9 @@ export function detailGroups(property) {
   const data = property.buyerDetails || {}
   return buyerDetailGroups.map(group => ({ ...group, fields: group.fields
     .filter(f => hasDetail(data[f.key]) && !(property.hidePrice && group.key === 'terms'))
-    .map(f => ({ ...f, value: f.options?.find(option => option[0] === data[f.key])?.[1] ?? data[f.key] }))
+    .map(f => {
+      const value = f.options?.find(option => option[0] === data[f.key])?.[1] ?? data[f.key]
+      return { ...f, value, display: displayValue(f, value) }
+    })
   })).filter(group => group.fields.length)
 }

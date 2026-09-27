@@ -32,6 +32,7 @@
           <small class="auth-hint">পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।</small>
           <p v-if="error" class="auth-error" role="alert">{{ error }}</p>
           <button type="submit" class="gb-btn gb-btn--sun auth-submit" :disabled="loading">{{ loading ? 'অ্যাকাউন্ট খোলা হচ্ছে…' : 'অ্যাকাউন্ট খুলুন' }}</button>
+          <p class="auth-policy">অ্যাকাউন্ট খুলে আপনি আমাদের <NuxtLink to="/terms" class="gb-link">শর্তাবলি</NuxtLink> ও <NuxtLink to="/privacy-policy" class="gb-link">গোপনীয়তা নীতি</NuxtLink>তে সম্মত হচ্ছেন।</p>
         </form>
 
         <p class="auth-switch">আগেই অ্যাকাউন্ট আছে? <NuxtLink :to="{ path: '/login', query: route.query }" class="gb-link">সাইন ইন করুন</NuxtLink></p>
@@ -101,6 +102,7 @@ useSeoMeta({ title: 'অ্যাকাউন্ট খুলুন | গ্র�
 .auth-submit { width: 100%; margin-top: 4px; }
 .auth-submit:disabled { opacity: .7; cursor: wait; }
 .auth-error { color: #8A3A0F; background: #FBE9DF; border-radius: 8px; padding: 10px 12px; font-size: .92rem; }
+.auth-policy { font-size: .85rem; color: var(--gb-ink-soft); text-align: center; line-height: 1.6; }
 .auth-switch { margin-top: 20px; font-size: .95rem; color: var(--gb-ink-soft); }
 .auth-aside { padding-top: 12px; }
 .auth-aside h2 { font-size: var(--gb-t-h2); font-weight: 700; margin-bottom: 14px; }

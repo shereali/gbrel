@@ -13,9 +13,9 @@
       </div>
       <header class="property-heading">
         <div><div class="property-badges"><span>{{ typeLabel(property.propertyType) }}</span><span>{{ listingLabels[property.listingType] || property.listingType }}</span><span v-if="property.completionStatus">{{ completionLabels[property.completionStatus] || property.completionStatus }}</span></div><h1>{{ property.title }}</h1><p class="property-location"><MapPin :size="17" /> {{ location }}</p></div>
-        <div class="asking-price"><span>{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span><strong>{{ price.amount }}</strong><small v-if="price.note">{{ price.note }}</small>
-          <ul v-if="trustFacts.length" class="trust-facts" aria-label="বিক্রেতার দেওয়া তথ্য"><li v-for="fact in trustFacts" :key="fact"><Check :size="15" aria-hidden="true" />{{ fact }}</li></ul>
-          <div ref="heroCta" class="hero-cta"><button class="cta-sun" @click="openInquiry('hero_button')">{{ ctaLabel }}</button><a v-if="waLink" class="cta-wa" :href="waLink" target="_blank" rel="noopener noreferrer" @click="track('Contact', { method: 'WhatsApp', placement: 'hero' })"><MessageCircle :size="18" aria-hidden="true" /> WhatsApp-এ জিজ্ঞেস করুন</a></div>
+        <div class="asking-price"><span>{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span><strong>{{ price.amount }}</strong><small v-if="price.note">{{ price.note }}</small><small v-if="price.fee" class="price-fee">{{ price.fee }}</small>
+          <ul v-if="trustFacts.length" class="trust-facts" aria-label="বিক্রেতার দেওয়া তথ্য"><li v-for="fact in trustFacts" :key="fact"><Check :size="15" aria-hidden="true" />{{ fact }}</li></ul><small v-if="trustFacts.length" class="trust-source">বিক্রেতার দেওয়া তথ্য · কাগজ দেখে মিলিয়ে নিন</small>
+          <div ref="heroCta" class="hero-cta"><button class="cta-sun" @click="openInquiry('hero_button')">{{ ctaLabel }}</button><a v-if="waLink" class="cta-wa" :href="waLink" target="_blank" rel="noopener noreferrer" @click="track('Contact', { method: 'WhatsApp', placement: 'hero' })"><MessageCircle :size="18" aria-hidden="true" /> WhatsApp-এ কথা বলুন</a></div>
           <small v-if="settings.property_cta_note" class="cta-note">{{ settings.property_cta_note }}</small>
           <NuxtLink to="/legal" class="trust-line"><ShieldCheck :size="15" aria-hidden="true" /> সরকারি নিবন্ধিত কোম্পানি · লাইসেন্স দেখুন</NuxtLink>
         </div>
@@ -51,37 +51,38 @@
       <div class="property-at-a-glance">
         <div><Ruler :size="20" /><span>আয়তন<strong>{{ areaLabel(property.squareFootage, property.landSize, property.landUnit) || 'জেনে নিন' }}</strong></span></div>
         <div><Building2 :size="20" /><span>ধরন<strong>{{ typeLabel(property.propertyType) }}</strong></span></div>
-        <div><Compass :size="20" /><span>{{ property.bedrooms ? 'বেডরুম' : 'অভিমুখ' }}<strong>{{ property.bedrooms ? toBn(property.bedrooms) : (facingLabel(property.facing) || 'জেনে নিন') }}</strong></span></div>
+        <div v-if="glanceThird"><Compass :size="20" /><span>{{ glanceThird.label }}<strong>{{ glanceThird.value }}</strong></span></div>
         <div><CircleCheck :size="20" /><span>অবস্থা<strong>{{ statusLabel(property.status) }}</strong></span></div>
       </div>
-      <div ref="inlineStart"><PropertySurveyStart :property-type="property.propertyType" :cta-label="ctaLabel" @choose="purpose => openInquiry('inline_first_question', purpose)" @direct="openInquiry('inline_cta')" /></div>
+      <div ref="inlineStart"><PropertySurveyStart :property-type="property.propertyType" @choose="purpose => openInquiry('inline_first_question', purpose)" /></div>
       <div class="property-body">
         <div class="property-information">
           <nav class="section-nav" aria-label="প্রপার্টির বিভাগ"><a href="#property-overview">বিস্তারিত</a><a v-if="hasBuyerDetails" href="#property-buyer-details">মূল্য ও শর্ত</a><a href="#property-documents">কাগজপত্র</a><a href="#property-location">লোকেশন</a><a href="#property-questions">আপনার প্রশ্ন</a></nav>
           <section id="property-overview" class="detail-section"><p class="eyebrow">এক নজরে প্রপার্টি</p><h2>এখানে কী পাচ্ছেন?</h2><p v-if="property.tagline" class="property-tagline">{{ property.tagline }}</p><p class="description">{{ property.description }}</p><dl class="property-specs"><div v-for="item in specifications" :key="item.label"><dt>{{ item.label }}</dt><dd>{{ item.value }}</dd></div></dl><template v-if="property.amenities?.length"><h3>সুবিধাসমূহ</h3><ul class="amenity-list"><li v-for="amenity in property.amenities" :key="amenity"><Check :size="16" />{{ amenity }}</li></ul></template></section>
-          <PropertyBuyerDetails :property="property" @inquire="openInquiry('sale_terms')" />
+          <PropertyBuyerDetails :property="property" :cta-label="ctaLabel" @inquire="openInquiry('sale_terms')" />
           <section id="property-documents" class="detail-section">
             <p class="eyebrow">সিদ্ধান্তের আগে পরিষ্কার ধারণা</p><h2>কাগজপত্র ও খরচ বুঝে নিন</h2><p>মালিকানা, অনুমোদন, রেজিস্ট্রেশন ও প্রযোজ্য খরচ নিয়ে প্রশ্ন করুন। তালিকায় থাকা তথ্যের সঙ্গে মূল নথি মিলিয়ে দেখুন।</p>
             <ul v-if="property.documentsVerified?.length" class="document-list"><li v-for="document in property.documentsVerified" :key="document"><FileText :size="18" /><span>{{ document }} <small>তালিকায় উল্লেখিত</small></span></li></ul>
             <div v-if="property.propertyType === 'Land Share'" class="land-share-note"><strong>জমির শেয়ার কিনছেন?</strong><p>এই মূল্যে জমির কতটুকু অংশ পাবেন, নির্মাণ খরচ আলাদা কি না, এবং হস্তান্তরের শর্ত—সবগুলো আলাদা করে নিশ্চিত করুন।</p></div>
             <div v-if="brochures.length" class="brochure-list"><a v-for="doc in brochures" :key="doc.url" :href="doc.url" target="_blank" rel="noopener noreferrer"><FileDown :size="20" /><span>{{ doc.title }}</span><ArrowUpRight :size="18" /></a></div>
-            <p v-else class="muted-note">এই পেজে ব্রোশিওর প্রকাশ করা হয়নি। উপলব্ধ কাগজপত্র সম্পর্কে টিমকে জিজ্ঞেস করতে পারেন।</p><button class="text-action" @click="openInquiry('documents')">কাগজপত্র ও খরচ নিয়ে কথা বলতে চাই <ArrowRight :size="16" /></button>
+            <p v-else class="muted-note">এই পেজে ব্রোশিওর প্রকাশ করা হয়নি। উপলব্ধ কাগজপত্র সম্পর্কে টিমকে জিজ্ঞেস করতে পারেন।</p><button class="text-action" @click="openInquiry('documents')">{{ ctaLabel }} <ArrowRight :size="16" /></button>
           </section>
-          <section id="property-location" class="detail-section"><p class="eyebrow">নিজে দেখে সিদ্ধান্ত নিন</p><h2>লোকেশন ও সাইট ভিজিট</h2><p class="property-location"><MapPin :size="20" />{{ location }}</p><p>সাইট ভিজিটের আগে সঠিক লোকেশন, যাতায়াতের পথ ও সময় টিমের সঙ্গে মিলিয়ে নিন।</p><a v-if="!property.hideExactAddress && property.lat && property.lng" class="text-action" :href="`https://www.google.com/maps/search/?api=1&query=${property.lat},${property.lng}`" target="_blank" rel="noopener noreferrer">ম্যাপে লোকেশন দেখুন <ArrowUpRight :size="16" /></a><button class="secondary" @click="openInquiry('site_visit')">সাইট ভিজিট নিয়ে কথা বলি <ArrowRight :size="16" /></button></section>
-          <section id="property-questions" class="detail-section faq-section"><p class="eyebrow">সহজ উত্তর</p><h2>আপনার মনে হতে পারে</h2><details><summary>ফর্ম পূরণ করলে কি বুকিং হয়ে যাবে?</summary><p>না। এটি শুধু এই প্রপার্টি সম্পর্কে তথ্য ও যোগাযোগের অনুরোধ। কোনো টাকা বা বুকিংয়ের অঙ্গীকার প্রয়োজন নেই।</p></details><details><summary>তালিকাভুক্ত দামের বাইরে খরচ আছে?</summary><p>রেজিস্ট্রেশন, কর, সার্ভিস চার্জ এবং প্রযোজ্য হলে নির্মাণ খরচ মূল্যের মধ্যে আছে কি না, টিমের কাছে পূর্ণ হিসাব চেয়ে নিন। প্রকাশিত খরচের বিবরণ দেখুন; কোনো খরচ উল্লেখ না থাকলে তা অন্তর্ভুক্ত ধরে নেবেন না।</p></details><details><summary>এখনই কিনব না, তবু কথা বলা যাবে?</summary><p>অবশ্যই। ফর্মে আপনার আসল সময়সীমা বেছে নিন। আপনার প্রস্তুতি অনুযায়ী আলোচনা করা যাবে।</p></details><details><summary>ফর্ম জমা দেওয়ার পর কী হবে?</summary><p>GBREL টিম আপনার দেওয়া নম্বরে, পছন্দের মাধ্যমে যোগাযোগ করবে। ঐচ্ছিকভাবে সময় বা আগে জানতে চাওয়া বিষয়ও জানাতে পারবেন।</p></details></section>
+          <section id="property-location" class="detail-section"><p class="eyebrow">নিজে দেখে সিদ্ধান্ত নিন</p><h2>লোকেশন ও সাইট ভিজিট</h2><p class="property-location"><MapPin :size="20" />{{ location }}</p><p>সাইট ভিজিটের আগে সঠিক লোকেশন, যাতায়াতের পথ ও সময় টিমের সঙ্গে মিলিয়ে নিন।</p><a v-if="!property.hideExactAddress && property.lat && property.lng" class="text-action" :href="`https://www.google.com/maps/search/?api=1&query=${property.lat},${property.lng}`" target="_blank" rel="noopener noreferrer">ম্যাপে লোকেশন দেখুন <ArrowUpRight :size="16" /></a><button class="secondary" @click="openInquiry('site_visit')">{{ ctaLabel }} <ArrowRight :size="16" /></button></section>
+          <section id="property-questions" class="detail-section faq-section"><p class="eyebrow">সহজ উত্তর</p><h2>আপনার মনে হতে পারে</h2><details><summary>ফর্ম পূরণ করলে কি বুকিং হয়ে যাবে?</summary><p>না। এটি শুধু এই প্রপার্টি সম্পর্কে তথ্য ও যোগাযোগের অনুরোধ। কোনো টাকা বা বুকিংয়ের অঙ্গীকার প্রয়োজন নেই।</p></details><details><summary>তালিকাভুক্ত দামের বাইরে খরচ আছে?</summary><p>রেজিস্ট্রেশন, কর, সার্ভিস চার্জ{{ buildCostApplies ? ' এবং নির্মাণ খরচ' : '' }} মূল্যের মধ্যে আছে কি না, টিমের কাছে পূর্ণ হিসাব চেয়ে নিন। প্রকাশিত খরচের বিবরণ দেখুন; কোনো খরচ উল্লেখ না থাকলে তা অন্তর্ভুক্ত ধরে নেবেন না।</p></details><details><summary>এখনই কিনব না, তবু কথা বলা যাবে?</summary><p>অবশ্যই। ফর্মে আপনার আসল সময়সীমা বেছে নিন। আপনার প্রস্তুতি অনুযায়ী আলোচনা করা যাবে।</p></details><details><summary>ফর্ম জমা দেওয়ার পর কী হবে?</summary><p>GBREL টিম আপনার দেওয়া নম্বরে, পছন্দের মাধ্যমে যোগাযোগ করবে। ঐচ্ছিকভাবে সময় বা আগে জানতে চাওয়া বিষয়ও জানাতে পারবেন।</p></details></section>
         </div>
         <aside class="inquiry-sidebar" :class="{ 'is-resting': bottomCtaVisible }" :aria-hidden="bottomCtaVisible || undefined">
-          <div class="sidebar-sticky-cta">
+          <div v-if="inlineVisible" class="sidebar-sticky-cta">
             <div class="sidebar-sticky-price">
               <span>{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span>
               <strong>{{ price.amount }}</strong>
               <small v-if="price.note">{{ price.note }}</small>
+              <small v-if="price.fee" class="price-fee">{{ price.fee }}</small>
             </div>
             <button class="cta-sun sidebar-cta-btn" @click="openInquiry('sidebar_sticky_cta')">
               {{ ctaLabel }}
             </button>
           </div>
-          <PropertySurveyStart v-show="!inlineVisible" side :property-type="property.propertyType" :cta-label="ctaLabel" class="side-start side-start--extra" @choose="purpose => openInquiry('sidebar_first_question', purpose)" @direct="openInquiry('sidebar_cta')" />
+          <PropertySurveyStart v-show="!inlineVisible" side :property-type="property.propertyType" class="side-start" @choose="purpose => openInquiry('sidebar_first_question', purpose)" />
           <div v-if="agent && !property.hideAgentContact" class="advisor-direct">
             <span>প্রশ্ন ছাড়াই সরাসরি কথা বলতে চান?</span>
             <div>
@@ -99,7 +100,7 @@
             <span class="bottom-cta-badge">সাইট ভিজিট ও কাগজপত্র</span>
             <h2 id="bottom-cta-heading">প্রপার্টিটি নিজের চোখে দেখতে চান বা কোনো প্রশ্ন আছে?</h2>
             <p class="bottom-cta-desc">
-              দাম, কাগজপত্র আর সাইট ভিজিট নিয়ে আপনার সব প্রশ্নের উত্তর দেবে GBREL টিম। বিক্রির পুরো প্রক্রিয়া আমরাই পরিচালনা করি। কোনো অগ্রিম বা লুকানো ফি নেই।
+              {{ bottomPromise }}
             </p>
             <ul class="bottom-cta-highlights">
               <li><Check :size="16" aria-hidden="true" /> কেনার আগে মূল কাগজপত্র নিজে দেখে নেওয়ার সুযোগ</li>
@@ -112,6 +113,7 @@
               <span class="price-caption">{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span>
               <strong class="price-val">{{ price.amount }}</strong>
               <small v-if="price.note">{{ price.note }}</small>
+              <small v-if="price.fee" class="price-fee">{{ price.fee }}</small>
             </div>
             <button class="cta-sun bottom-cta-btn" @click="openInquiry('bottom_section_cta')">
               {{ ctaLabel }}
@@ -206,6 +208,27 @@ const startHeroAutoplay = () => {
   heroPlaying.value = true
 }
 const price = computed(() => priceDisplay(property.value))
+// "No advance fee" is always true; "no hidden fee" is only honest because the buyer's charge sits next to the price.
+const bottomPromise = computed(() => `দাম, কাগজপত্র আর সাইট ভিজিট নিয়ে আপনার সব প্রশ্নের উত্তর দেবে GBREL টিম। বিক্রির পুরো প্রক্রিয়া আমরাই পরিচালনা করি। কোনো অগ্রিম ফি নেই।${price.value.fee && !price.value.fee.includes('নেই') ? ` ${price.value.fee}, দামের পাশেই লেখা।` : ''}`)
+// Third fact in the strip under the photos: the most useful thing this listing actually has, never a blank "find out".
+const glanceThird = computed(() => {
+  const p = property.value
+  if (!p) return null
+  if (p.bedrooms) return { label: 'বেডরুম', value: toBn(p.bedrooms) }
+  if (p.facing) return { label: 'অভিমুখ', value: facingLabel(p.facing) }
+  if (p.totalFloors) return { label: 'ভবন', value: `${toBn(p.totalFloors)} তলা` }
+  if (p.parking) return { label: 'পার্কিং', value: `${toBn(p.parking)}টি` }
+  return null
+})
+const buildCostApplies = computed(() => property.value?.propertyType === 'Land Share' || ['Under Construction', 'Upcoming Project'].includes(property.value?.completionStatus || ''))
+// Link previews (Facebook, Google) get a sentence written for them, not the first 160 characters of the seller's text.
+const metaDescription = computed(() => {
+  const p = property.value
+  if (!p) return 'প্রপার্টির তথ্য, মূল্য ও যোগাযোগ।'
+  const pr = price.value
+  const priceText = pr.hidden ? '' : `${pr.per} ${pr.amount}${p.buyerDetails?.negotiable === 'Yes' ? ' (আলোচনা সাপেক্ষ)' : ''}।`
+  return [`${p.title}।`, priceText, 'কাগজপত্র দেখে, সাইট ভিজিট করে সিদ্ধান্ত নিন: GBREL।'].filter(Boolean).join(' ')
+})
 const hasBuyerDetails = computed(() => property.value && detailGroups(property.value).length > 0)
 // Button text and the promise under it are edited in Admin → Settings → Property page.
 const ctaLabel = computed(() => property.value?.hidePrice ? (settings.value.property_cta_label_hidden_price || 'সর্বশেষ দাম ও সাইট ভিজিট') : (settings.value.property_cta_label || 'ক্রয় তথ্য ও সাইট ভিজিট'))
@@ -247,8 +270,8 @@ watch(heroCta, el => {
   ctaObserver = new IntersectionObserver(([entry]) => { heroCtaVisible.value = entry.intersectionRatio > 0.95 }, { threshold: [0, 0.95, 1] })
   ctaObserver.observe(el)
 })
-// The sidebar price + button stays on screen while reading, and steps aside once the closing CTA at the bottom
-// scrolls into view, so the page never shows two identical buttons side by side.
+// The sidebar stays on screen while reading (price + button first, then the first-question box once the inline
+// one has scrolled away) and steps aside when the closing CTA at the bottom scrolls into view.
 const bottomCta = ref<HTMLElement | null>(null)
 const bottomCtaVisible = ref(false)
 let bottomObserver: IntersectionObserver | null = null
@@ -294,7 +317,7 @@ const loadProperty = async () => {
   await fetchAgents()
 }
 watch(() => route.params.id, loadProperty, { immediate: true })
-useSeoMeta({ title: () => property.value ? `${property.value.title} | GBREL` : 'Property | GBREL', description: () => property.value?.description?.slice(0, 160) || 'প্রপার্টির তথ্য, মূল্য ও যোগাযোগ।', ogTitle: () => property.value?.title || 'GBREL', ogImage: () => images.value[0] || videoPoster.value })
+useSeoMeta({ title: () => property.value ? `${property.value.title} | GBREL` : 'Property | GBREL', description: () => metaDescription.value, ogDescription: () => metaDescription.value, ogTitle: () => property.value?.title || 'GBREL', ogImage: () => images.value[0] || videoPoster.value })
 const shareProperty = async () => {
   const url = `${window.location.origin}${route.path}`
   try { if (navigator.share) { await navigator.share({ title: property.value?.title, url }); return }; await navigator.clipboard.writeText(url); toast.success('লিংক কপি হয়েছে', 'পছন্দের মাধ্যমে শেয়ার করুন।') }
@@ -320,7 +343,7 @@ const shareProperty = async () => {
 .text-action { display:inline-flex; align-items:center; gap:7px; background:transparent; border:0; color:#16684b; font-size:13px; padding:12px 0; min-height:44px; text-align:left; text-decoration:none; line-height:1.6; }
 .property-gallery { display:grid; grid-template-columns:1.65fr 1fr; gap:10px; height:360px; border-radius:18px; overflow:hidden; background:#e5ebe3; }.property-gallery.single { grid-template-columns:1fr; }.property-gallery button { border:0; padding:0; position:relative; overflow:hidden; background:#dfe7dc; min-width:0; }.property-gallery img { display:block; width:100%; height:100%; object-fit:cover; transition:transform .25s; }.property-gallery button:hover img { transform:scale(1.025); }
 .gallery-caption { position:absolute; bottom:16px; left:16px; display:flex; gap:8px; align-items:center; background:#fff; border-radius:8px; padding:11px 14px; color:#264c3d; font-size:12px; box-shadow:0 3px 15px #0001; }.gallery-empty { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; font-size:14px; }
-.property-at-a-glance { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border-bottom:1px solid #dee5dc; padding:24px 0; margin-bottom:28px; }.property-at-a-glance > div { display:flex; align-items:center; justify-content:center; gap:13px; padding:0 15px; border-right:1px solid #dee5dc; }.property-at-a-glance > div:last-child { border:0; }.property-at-a-glance svg { color:#76917c; flex-shrink:0; }.property-at-a-glance span { font-size:11px; color:#6a786c; }.property-at-a-glance strong { display:block; font-size:15px; color:#254a3c; font-family:'Outfit',sans-serif; font-weight:500; margin-top:4px; }
+.property-at-a-glance { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); border-bottom:1px solid #dee5dc; padding:24px 0; margin-bottom:28px; }.property-at-a-glance > div { display:flex; align-items:center; justify-content:center; gap:13px; padding:0 15px; border-right:1px solid #dee5dc; }.property-at-a-glance > div:last-child { border:0; }.property-at-a-glance svg { color:#76917c; flex-shrink:0; }.property-at-a-glance span { font-size:11px; color:#6a786c; }.property-at-a-glance strong { display:block; font-size:15px; color:#254a3c; font-family:'Outfit',sans-serif; font-weight:500; margin-top:4px; }
 .interest-banner { display:flex; align-items:center; justify-content:space-between; gap:26px; padding:25px 30px; background:#eaf1e7; border:1px solid #dbe6d5; border-radius:14px; margin-bottom:32px; }.eyebrow { display:block; font-size:11px; color:#597954; font-weight:600; margin-bottom:9px; }.interest-banner h2 { font-size:21px; line-height:1.65; margin-bottom:6px; }.interest-banner p { font-size:13px; color:#5b6f5c; line-height:1.7; }
 .primary,.secondary { display:inline-flex; align-items:center; justify-content:center; gap:12px; min-height:52px; padding:13px 22px; border-radius:10px; font-size:14px; line-height:1.6; font-weight:600; border:1px solid #165c43; background:#165c43; color:#fff; text-decoration:none; }.primary:hover { background:#0d4531; }.interest-banner .primary { flex-shrink:0; }.secondary { background:#fff; color:#165c43; margin-top:12px; }
 .property-body { display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:40px; align-items:start; }.property-information { min-width:0; }.section-nav { display:flex; overflow-x:auto; gap:22px; border-bottom:1px solid #dce4dc; }.section-nav a { padding:15px 0; color:#456454; font-size:13px; white-space:nowrap; min-height:48px; }
@@ -333,9 +356,6 @@ const shareProperty = async () => {
 .faq-section details { border-bottom:1px solid #e0e7dc; padding:8px 0; }.faq-section summary { cursor:pointer; padding:14px 0; font-size:14px; font-weight:600; min-height:48px; }.faq-section details p { padding:0 12px 0 0; }
 .inquiry-sidebar { position:sticky; top:105px; transition:opacity .25s ease, transform .25s ease; }
 .inquiry-sidebar.is-resting { opacity:0; transform:translateY(-8px); pointer-events:none; }
-/* The first question repeats under the button only when the inline one has scrolled away and the screen is tall enough for both. */
-.side-start--extra { margin-bottom:14px; }
-@media (max-height:1000px) { .side-start--extra { display:none !important; } }
 @media (prefers-reduced-motion:reduce) { .inquiry-sidebar { transition:none; } }
 .sidebar-sticky-cta { background:#fff; border:1px solid #dbe4d7; border-radius:16px; padding:20px 22px; box-shadow:0 8px 24px rgba(32,59,40,.08); display:flex; flex-direction:column; gap:12px; margin-bottom:14px; }
 .sidebar-sticky-price { display:flex; flex-direction:column; gap:2px; }
@@ -378,7 +398,7 @@ const shareProperty = async () => {
   .property-heading { grid-template-columns:1fr; gap:17px; }.property-heading h1 { font-size:29px; letter-spacing:-.5px; margin-bottom:10px; }.property-badges { margin-bottom:11px; }.property-badges span { font-size:10px; }.property-location { font-size:12px; }
   .asking-price { border-left:0; padding:14px 17px; background:#eef2e9; border-radius:12px; gap:3px; }.asking-price strong { font-size:29px; }.asking-price .text-action { padding:7px 0 0; min-height:36px; font-size:12px; }
   .property-gallery { height:240px; grid-template-columns:1fr; border-radius:13px; }.gallery-secondary { display:none; }.gallery-caption { bottom:12px; left:12px; }
-  .property-at-a-glance { grid-template-columns:1fr 1fr; gap:22px 0; padding:23px 0; margin-bottom:22px; }.property-at-a-glance > div { justify-content:flex-start; padding:0 12px; gap:12px; }.property-at-a-glance > div:nth-child(2) { border:0; }.property-at-a-glance strong { font-size:15px; }
+  .property-at-a-glance { grid-auto-flow:row; grid-template-columns:1fr 1fr; gap:22px 0; padding:23px 0; margin-bottom:22px; }.property-at-a-glance > div { justify-content:flex-start; padding:0 12px; gap:12px; }.property-at-a-glance > div:nth-child(2) { border:0; }.property-at-a-glance strong { font-size:15px; }
   .interest-banner { flex-direction:column; align-items:stretch; padding:22px; gap:15px; margin-bottom:24px; }.interest-banner h2 { font-size:21px; }.interest-banner p { font-size:12px; }.interest-banner .primary { width:100%; }
   .property-body { grid-template-columns:minmax(0,1fr); gap:24px; }.section-nav { gap:23px; }.section-nav a { font-size:12px; }.detail-section { padding:28px 0; }.detail-section h2 { font-size:22px; }.detail-section p { font-size:14px; }.property-specs { grid-template-columns:1fr; }.amenity-list { grid-template-columns:1fr; }.inquiry-sidebar { position:static; }.advisor-card h2 br { display:none; }.advisor-card { padding:24px; }.advisor-symbol { margin-bottom:16px; }
   .mobile-inquiry-bar { position:fixed; bottom:0; left:0; right:0; z-index:900; display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; border-top:1px solid #d9e2d3; padding:12px 18px max(12px,env(safe-area-inset-bottom)); box-shadow:0 -5px 30px #1a332216; }.mobile-inquiry-bar > div { min-width:0; flex:1; }.mobile-inquiry-bar strong { font-size:18px; line-height:1.4; display:block; white-space:nowrap; }.mobile-inquiry-bar small { font-size:10px; display:block; color:#667562; line-height:1.5; }.mobile-inquiry-bar .primary { padding:12px 16px; font-size:13px; min-height:48px; flex-shrink:0; }
@@ -423,5 +443,9 @@ const shareProperty = async () => {
 .unmute-btn { position:absolute; left:16px; bottom:16px; z-index:3; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 16px; border:0; border-radius:999px; background:#E2651C; color:#fff; font:inherit; font-size:14px; font-weight:700; box-shadow:0 4px 16px rgba(0,0,0,.3); cursor:pointer; }
 .property-gallery .unmute-btn { position:absolute; left:16px; bottom:16px; padding:0 16px; background:#E2651C; overflow:visible; }
 .gallery-player video { object-fit:cover; }
+.price-fee { display:block; font-size:12px; font-weight:600; color:#8A4B12; }
+.sidebar-sticky-price .price-fee { font-size:11px; }
+.bottom-price-tag .price-fee { color:#f7c9a4; }
+.trust-source { display:block; font-size:11px; color:#647269; margin-top:2px; }
 .trust-line { display:flex; align-items:center; justify-content:center; gap:6px; margin-top:10px; font-size:12px; font-weight:600; color:#3F7A35; text-decoration:underline; text-underline-offset:3px; }
 </style>

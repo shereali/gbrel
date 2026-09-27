@@ -52,6 +52,7 @@
           </label>
           <p v-if="error" class="ct-err" role="alert">{{ error }}</p>
           <button type="submit" class="gb-btn gb-btn--sun" :disabled="sending">{{ sending ? 'পাঠানো হচ্ছে…' : 'বার্তা পাঠান' }}</button>
+          <p class="ct-policy">আপনার তথ্য কীভাবে রাখা হয়, তা <NuxtLink to="/privacy-policy" class="gb-link">গোপনীয়তা নীতি</NuxtLink>তে দেখুন।</p>
         </form>
       </div>
     </div>
@@ -124,6 +125,7 @@ useSeoMeta({ title: 'যোগাযোগ | গ্রাম বাংলা র
 .ct-card .gb-field small { font-weight: 400; color: var(--gb-ink-soft); }
 .ct-card .gb-btn:disabled { opacity: .7; cursor: wait; }
 .ct-err { color: #A23B16; background: #FBE9DF; border-radius: 8px; padding: 10px 12px; font-size: .92rem; }
+.ct-policy { font-size: var(--gb-t-small); color: var(--gb-ink-soft); }
 .ct-map { margin-top: clamp(48px, 7vw, 80px); }
 .ct-legal { margin-top: 16px; line-height: 1.7; color: var(--gb-ink-soft); font-size: var(--gb-t-small); }
 .ct-legal svg { color: var(--gb-leaf); vertical-align: -3px; margin-right: 4px; }

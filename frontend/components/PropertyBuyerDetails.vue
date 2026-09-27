@@ -5,15 +5,15 @@
     <div v-if="!property.hidePrice && total" class="total-price"><span>সম্পূর্ণ প্রপার্টির চাওয়া মূল্য</span><strong>{{ priceBn(total) }}</strong><span v-if="property.buyerDetails?.priceBasis === 'Per land unit'">{{ toBn(property.landSize) }} {{ unitLabels[property.landUnit] || property.landUnit }} × {{ priceBn(unitPrice || property.price) }}</span><span v-else-if="property.buyerDetails?.priceBasis === 'Per sqft'">{{ toBn(property.squareFootage) }} বর্গফুট × {{ priceBn(unitPrice || property.price) }}</span><small v-if="property.priceUnit">{{ property.priceUnit }}</small><small>অতিরিক্ত খরচ আলাদা। কোনো খরচ উল্লেখ না থাকলে তা মূল্যের অন্তর্ভুক্ত ধরে নেবেন না।</small></div>
     <details v-for="group in groups" :key="group.key" :open="group.key === 'terms' || group.key === 'building'">
       <summary>{{ group.bn }}</summary>
-      <dl><div v-for="field in group.fields" :key="field.key"><dt>{{ field.bn }}</dt><dd>{{ field.value }}</dd></div></dl>
+      <dl><div v-for="field in group.fields" :key="field.key"><dt>{{ field.bn }}</dt><dd>{{ field.display ?? field.value }}</dd></div></dl>
     </details>
-    <button type="button" @click="$emit('inquire')">শর্ত ও সাইট ভিজিট নিয়ে কথা বলি →</button>
+    <button type="button" @click="$emit('inquire')">{{ ctaLabel || 'ক্রয় তথ্য ও সাইট ভিজিট' }}</button>
   </section>
 </template>
 <script setup lang="ts">
 import { detailGroups, totalAskingPrice, unitAskingPrice } from '~/utils/buyerDetails.mjs'
 import { priceBn, toBn, unitLabels } from '~/utils/propertyLabels'
-const props = defineProps<{ property: any }>()
+const props = defineProps<{ property: any; ctaLabel?: string }>()
 defineEmits(['inquire'])
 const groups = computed(() => detailGroups(props.property))
 const total = computed(() => totalAskingPrice(props.property))

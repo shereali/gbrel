@@ -3,6 +3,7 @@ import { priceBn, toBn, unitLabels } from '~/utils/propertyLabels'
 
 // How each kind of property is priced for buyers:
 //   land / plot  → rate per land unit (katha, shotok…), total underneath
+//   land sold with a building on it → the total first, so the per-katha figure is not mistaken for bare land
 //   land share   → price per share, with land per share and the per-katha equivalent
 //   flat & homes → one fixed price
 //   everything else → rate per sqft, total underneath
@@ -12,6 +13,7 @@ export interface PriceDisplay {
   note: string // supporting line, e.g. "মোট ৳ ১২০.২৬ কোটি · ১৭.১৮ কাঠা"
   total: number | null
   hidden: boolean
+  fee: string // buyer's service charge, shown beside the price, e.g. "ক্রেতার সার্ভিস চার্জ ১%"
 }
 
 const LAND_TYPES = ['Plot', 'Land']
@@ -23,10 +25,21 @@ const sqftText = (sqft: number) => `${toBn(sqft.toLocaleString('en-IN'))} বর
 const join = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(' · ')
 
 export function priceDisplay(property: any): PriceDisplay {
-  if (!property) return { amount: '', per: '', note: '', total: null, hidden: false }
+  if (!property) return { amount: '', per: '', note: '', total: null, hidden: false, fee: '' }
   if (property.hidePrice) {
-    return { amount: property.priceDisplayText || 'দাম জানতে যোগাযোগ করুন', per: 'দাম প্রকাশ করা হয়নি', note: '', total: null, hidden: true }
+    return { amount: property.priceDisplayText || 'দাম জানতে যোগাযোগ করুন', per: 'দাম প্রকাশ করা হয়নি', note: '', total: null, hidden: true, fee: '' }
   }
+  return { ...visiblePrice(property), fee: buyerFee(property) }
+}
+
+// The buyer's service charge is never left for the price table to reveal.
+export function buyerFee(property: any): string {
+  const raw = property?.buyerDetails?.buyerCommission
+  if (raw === undefined || raw === null || String(raw).trim() === '' || Number.isNaN(Number(raw))) return ''
+  return Number(raw) > 0 ? `ক্রেতার সার্ভিস চার্জ ${toBn(Number(raw))}%` : 'ক্রেতার কোনো সার্ভিস চার্জ নেই'
+}
+
+function visiblePrice(property: any): Omit<PriceDisplay, 'fee'> {
 
   const details = property.buyerDetails || {}
   const basis: string = details.priceBasis || 'Total'
@@ -64,6 +77,17 @@ export function priceDisplay(property: any): PriceDisplay {
   // Land, plots and land shares quoted by area.
   if (LAND_TYPES.includes(type) || type === 'Land Share' || (basis === 'Per land unit' && !FIXED_TYPES.includes(type))) {
     if (basis === 'Per land unit') return perLand(price, true)
+    // A whole-price sale that includes a building: lead with the total, then what it works out to per katha.
+    const withBuilding = num(property.totalFloors) > 0 && type !== 'Land Share'
+    if (withBuilding && total) {
+      return {
+        amount: priceBn(total),
+        per: 'জমি ও ভবনসহ মোট দাম',
+        note: join(land && `জমি + ভবন মিলিয়ে ${unit}প্রতি ${priceBn(total / land)}`, landText, negotiable),
+        total,
+        hidden: false
+      }
+    }
     if (land && total) return perLand(total / land, false)
     return whole('সম্পূর্ণ জমির দাম', landText)
   }

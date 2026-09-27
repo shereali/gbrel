@@ -19,3 +19,12 @@ test('public facts preserve zero, omit unknowns and hide cost details for confid
   assert.deepEqual(detailGroups({ ...property, hidePrice: true }).map(g => g.key), ['ownership'])
   assert.deepEqual(detailGroups({ buyerDetails: {} }), [])
 })
+test('public facts are shown with Bangla digits, units and dates', () => {
+  const property = { buyerDetails: { depositPercent: 30, buyerCommission: 1, ownerCount: 2, updatedOn: '2026-09-15', paymentMethod: 'ব্যাংক ড্রাফট' } }
+  const shown = Object.fromEntries(detailGroups(property).flatMap(g => g.fields).map(f => [f.key, f.display]))
+  assert.equal(shown.depositPercent, '৩০%')
+  assert.equal(shown.buyerCommission, '১%')
+  assert.equal(shown.ownerCount, '২ জন')
+  assert.equal(shown.updatedOn, '১৫ সেপ্টেম্বর ২০২৬')
+  assert.equal(shown.paymentMethod, 'ব্যাংক ড্রাফট')
+})

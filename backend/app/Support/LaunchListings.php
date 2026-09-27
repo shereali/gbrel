@@ -100,4 +100,107 @@ class LaunchListings
             ] + (array_key_exists('parking', $fix) ? ['parking' => $fix['parking']] : []) + ($images === [] || $onlyStockPhotos ? ['images' => [$fix['image']]] : []))->save();
         }
     }
+
+    /**
+     * Rewrites the Lake View listing's seller text in GBREL's voice: plain Bangla, the seller's claims marked as the
+     * seller's, and the RAJUK timeline stated as an estimate. A field is only replaced while it still holds the
+     * original text, so anything staff have since edited in the admin panel is left alone.
+     */
+    public static function rewriteCopy(): void
+    {
+        if (! Schema::hasTable('properties')) {
+            return;
+        }
+
+        $property = Property::where('slug', 'lake-view-gulshan-1-road-8-23-katha-building')->first();
+        if (! $property) {
+            return;
+        }
+
+        $columns = [
+            'title' => [
+                'লেক ভিউ — গুলশান-১, রোড ৮-এ ২৩ কাঠা জমিসহ ৬ তলা ভবন',
+                'গুলশান-১, রোড ৮-এ ২৩ কাঠা জমিসহ ৬ তলা ভবন "লেক ভিউ"',
+            ],
+            'tagline' => [
+                'লেক ভিউ | ২৩ কাঠা জমিতে ৬ তলা ভবন ও ২৮টি কার পার্কিং | মূল্য ১৩৫ কোটি (আলোচনা সাপেক্ষ)',
+                '২৩ কাঠা জমি | ৬ তলা ভবন | ২৮টি গাড়ির পার্কিং | মোট ৳ ১৩৫ কোটি, আলোচনা সাপেক্ষ',
+            ],
+            'description' => [
+                'লেক ভিউ — বাড়ি #১০, রোড #৮, গুলশান-১, ঢাকা এ অবস্থিত ২৩ কাঠা জমির উপর ৬ তলা বিশিষ্ট সুদৃশ্য ভবন। ইউটিলিটি সরবরাহ সম্পূর্ণ আপডেটেড এবং ২৮টি কার পার্কিং সুবিধা রয়েছে। বর্তমান মালিক ২ জন। জমি মালিকের সরাসরি দখলে এবং নামজারি ও খাজনা পরিশোধিত। সম্পূর্ণ নিষ্কণ্টক ও টোটাল কাগজ-পাতি আপডেট কমপ্লিট। কোনো ব্যাংক লোন নেই। বিক্রিত মূল্যের ৩০% বায়না। রাজউক থেকে বিক্রয়ের অনুমতি প্রাপ্তি ১৫ কার্যদিবস। ৩০০ টাকার নন-জুডিশিয়াল স্ট্যাম্পে হস্তান্তর চুক্তি সম্পন্ন হবে।',
+                implode("\n\n", [
+                    'গুলশান-১-এর রোড ৮-এ (বাড়ি ১০) ২৩ কাঠা জমির ওপর ৬ তলা ভবন "লেক ভিউ"। ভবনে ২৮টি গাড়ি রাখার জায়গা, নিজস্ব বিদ্যুৎ সাবস্টেশন, গ্যাস সংযোগ ও গভীর নলকূপ আছে।',
+                    'মালিক ২ জন, জমি তাঁদের দখলে। বিক্রেতার তথ্য অনুযায়ী নামজারি ও খাজনা হালনাগাদ এবং কোনো ব্যাংক ঋণ নেই। সব কাগজ সাইট ভিজিটে মূল কপির সঙ্গে মিলিয়ে দেখাব।',
+                    'বিক্রয়মূল্যের ৩০% বায়না, লেনদেন ব্যাংক ড্রাফট বা পে-অর্ডারে। বায়নার পর রাজউকের বিক্রয় অনুমতির আবেদন হবে। বিক্রেতার হিসাবে এতে সাধারণত ১৫ কার্যদিবসের মতো লাগে, তবে সময়টি রাজউকের ওপর নির্ভর করে।',
+                ]),
+            ],
+        ];
+
+        $details = [
+            'buildingDescription' => [
+                'লেক ভিউ: ২৩ কাঠা জমিতে ৬ তলা বিশিষ্ট আধুনিক ভবন। কার পার্কিং সংখ্যা ২৮টি।',
+                '২৩ কাঠা জমিতে ৬ তলা ভবন "লেক ভিউ", ২৮টি গাড়ির পার্কিং।',
+            ],
+            'utilities' => [
+                'ইউটিলিটি সরবরাহ সম্পূর্ণ আপডেট—বিদ্যুৎ সাবস্টেশন, গ্যাস সংযোগ ও গভীর নলকূপ ওয়াসা।',
+                'নিজস্ব বিদ্যুৎ সাবস্টেশন, গ্যাস সংযোগ, গভীর নলকূপ ও ওয়াসার পানি (বিক্রেতার তথ্য)।',
+            ],
+            'transferTimeline' => [
+                'রাজউক থেকে বিক্রয়ের অনুমতি প্রাপ্তি ১৫ (পনের) কার্যদিবস।',
+                'বায়নার পর রাজউকের বিক্রয় অনুমতির আবেদন হবে। বিক্রেতার হিসাবে অনুমতি পেতে সাধারণত ১৫ কার্যদিবসের মতো লাগে; সময়টি রাজউকের ওপর নির্ভর করে।',
+            ],
+            'transferTrigger' => [
+                'রাজউক অনুমোদন ও যৌথ চুক্তি সম্পাদনের পর।',
+                'বায়না চুক্তি সম্পাদন ও রাজউকের বিক্রয় অনুমতি পাওয়ার পর।',
+            ],
+            'ownershipNotes' => [
+                'মালিক ২ জন, কোনো ব্যাংক লোন বা আইনি ঝামেলা নেই, সম্পূর্ণ নিষ্কণ্টক।',
+                'বিক্রেতার তথ্য অনুযায়ী মালিক ২ জন, কোনো ব্যাংক ঋণ বা মামলা নেই। কাগজ দেখে নিশ্চিত হয়ে নিন।',
+            ],
+            'approvalDetails' => [
+                'রাজউক অনুমোদিত ভবন, বিক্রয়ের অনুমতি প্রাপ্তি ১৫ কার্যদিবসের মধ্যে।',
+                'বিক্রেতার তথ্য অনুযায়ী ভবনের নকশা রাজউক অনুমোদিত। বিক্রয়ের জন্য রাজউকের অনুমতি বায়নার পর নেওয়া হবে।',
+            ],
+            'documentSummary' => [
+                'নিষ্কণ্টক / টোটাল কাগজ-পাতি আপডেট কমপ্লিট।',
+                'বিক্রেতা জানিয়েছেন দলিল, নামজারি ও খাজনার কাগজ হালনাগাদ। কাগজের তালিকা নিচে দেওয়া আছে; সাইট ভিজিটে মূল কপি দেখানো হবে।',
+            ],
+        ];
+
+        foreach ($columns as $column => [$original, $rewrite]) {
+            if (self::sameText($property->{$column}, $original)) {
+                $property->{$column} = $rewrite;
+            }
+        }
+
+        $buyerDetails = is_array($property->buyer_details) ? $property->buyer_details : [];
+        foreach ($details as $key => [$original, $rewrite]) {
+            if (self::sameText($buyerDetails[$key] ?? null, $original)) {
+                $buyerDetails[$key] = $rewrite;
+            }
+        }
+        $property->buyer_details = $buyerDetails;
+
+        if ($property->isDirty()) {
+            $property->save();
+        }
+    }
+
+    /**
+     * Compares Bangla text regardless of how nukta letters (য়, ড়, ঢ়) were encoded and of spacing.
+     */
+    private static function sameText(mixed $current, string $expected): bool
+    {
+        if (! is_string($current)) {
+            return false;
+        }
+
+        $normalize = fn (string $text): string => preg_replace('/\s+/u', ' ', trim(strtr($text, [
+            "\u{09AF}\u{09BC}" => "\u{09DF}",
+            "\u{09A1}\u{09BC}" => "\u{09DC}",
+            "\u{09A2}\u{09BC}" => "\u{09DD}",
+        ])));
+
+        return $normalize($current) === $normalize($expected);
+    }
 }

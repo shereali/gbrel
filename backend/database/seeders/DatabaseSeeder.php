@@ -696,6 +696,7 @@ class DatabaseSeeder extends Seeder
             );
 
             LaunchListings::correct();
+            LaunchListings::rewriteCopy();
         }
 
         // Sample viewings, leads, transactions and brochures are fake, so they stay out of production.

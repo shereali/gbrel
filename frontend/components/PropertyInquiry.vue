@@ -83,7 +83,7 @@
             </div>
             <label class="sv-consent">
               <input v-model="form.consent" type="checkbox" required />
-              <span>এই প্রপার্টি নিয়ে GBREL আমার দেওয়া নম্বরে যোগাযোগ করতে পারে।</span>
+              <span>এই প্রপার্টি নিয়ে GBREL আমার দেওয়া নম্বরে যোগাযোগ করতে পারে। <NuxtLink to="/privacy-policy" target="_blank" class="sv-policy">তথ্য কীভাবে রাখা হয়</NuxtLink></span>
             </label>
           </fieldset>
           <p v-if="phoneError || error" class="sv-error" role="alert">{{ phoneError || error }}</p>
@@ -288,6 +288,7 @@ const whatsappLink = computed(() => {
 .sv-chip:focus-within { outline: 3px solid #E2651C; outline-offset: 2px; }
 .sv-chip.picked { border-color: #1D4A2A; background: #1D4A2A; color: #fff; }
 .sv-consent { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; cursor: pointer; }
+.sv-policy { color: #3F7A35; text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
 .sv-consent input { width: 20px; height: 20px; margin-top: 3px; accent-color: #1D4A2A; flex-shrink: 0; }
 .sv-error { margin: 14px 0 0; padding: 10px 12px; border-radius: 10px; background: #FBE9DF; color: #8A3A0F; font-size: 14px; }
 

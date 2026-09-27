@@ -47,6 +47,7 @@
 
       <div class="gb-wrap"><div class="ft-base">
         <span>© {{ year }} গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL)</span>
+        <span class="ft-policies"><NuxtLink to="/privacy-policy">গোপনীয়তা নীতি</NuxtLink><NuxtLink to="/terms">শর্তাবলি</NuxtLink></span>
         <NuxtLink to="/legal" class="ft-reg">RJSC নিবন্ধন {{ settings.company_registration_no }} · ট্রেড লাইসেন্স {{ settings.trade_license_no }}</NuxtLink>
         <span>তালিকায় দেওয়া তথ্য কেনার আগে মূল কাগজপত্রের সঙ্গে মিলিয়ে নিন।</span>
       </div></div>
@@ -82,6 +83,8 @@ onMounted(() => { fetchSettings() })
 .ft-contact p { color: #C3D1B8; }
 .ft-phone { font-family: var(--gb-display); font-size: 1.45rem; font-weight: 700; color: #fff !important; font-variant-numeric: tabular-nums; }
 .ft-hours { font-size: .85rem; }
+.ft-policies { display: inline-flex; gap: 16px; }
+.ft-policies a { color: #C7D6B4; text-decoration: underline; text-underline-offset: 3px; }
 .ft-reg { color: #C7D6B4; text-decoration: underline; text-underline-offset: 3px; }
 .ft-base { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; border-top: 1px solid rgba(255,255,255,.14); padding-top: 22px; font-size: .85rem; color: #A9BAA0; }
 @media (max-width: 900px) { .ft-grid { grid-template-columns: 1fr 1fr; } }
