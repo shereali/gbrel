@@ -27,6 +27,7 @@
           <h2 class="ft-h">প্রতিষ্ঠান</h2>
           <ul>
             <li><NuxtLink to="/directors">পরিচালনা পর্ষদ</NuxtLink></li>
+            <li><NuxtLink to="/legal">নিবন্ধন ও ট্রেড লাইসেন্স</NuxtLink></li>
             <li><NuxtLink to="/agents">আমাদের এজেন্ট</NuxtLink></li>
             <li><NuxtLink to="/list-property">প্রপার্টি বিক্রি করুন</NuxtLink></li>
             <li><NuxtLink to="/compare">প্রপার্টি তুলনা</NuxtLink></li>
@@ -39,12 +40,14 @@
           <a v-if="whatsapp" :href="`https://wa.me/${whatsapp}`" target="_blank" rel="noopener noreferrer">WhatsApp-এ লিখুন</a>
           <a v-if="settings.contact_email" :href="`mailto:${settings.contact_email}`">{{ settings.contact_email }}</a>
           <p v-if="settings.office_address">{{ settings.office_address }}</p>
+          <a v-if="settings.map_location" :href="mapOpenUrl(settings.map_location)" target="_blank" rel="noopener noreferrer">ম্যাপে অফিস দেখুন</a>
           <p v-if="settings.working_hours" class="ft-hours">{{ settings.working_hours }}</p>
         </div>
       </div>
 
       <div class="gb-wrap"><div class="ft-base">
         <span>© {{ year }} গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL)</span>
+        <NuxtLink to="/legal" class="ft-reg">RJSC নিবন্ধন {{ settings.company_registration_no }} · ট্রেড লাইসেন্স {{ settings.trade_license_no }}</NuxtLink>
         <span>তালিকায় দেওয়া তথ্য কেনার আগে মূল কাগজপত্রের সঙ্গে মিলিয়ে নিন।</span>
       </div></div>
     </div>
@@ -54,6 +57,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useSettings } from '~/composables/useSettings'
+import { mapOpenUrl } from '~/utils/officeMap'
 
 const { settings, fetchSettings } = useSettings()
 const year = new Date().getFullYear()
@@ -78,6 +82,7 @@ onMounted(() => { fetchSettings() })
 .ft-contact p { color: #C3D1B8; }
 .ft-phone { font-family: var(--gb-display); font-size: 1.45rem; font-weight: 700; color: #fff !important; font-variant-numeric: tabular-nums; }
 .ft-hours { font-size: .85rem; }
+.ft-reg { color: #C7D6B4; text-decoration: underline; text-underline-offset: 3px; }
 .ft-base { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; border-top: 1px solid rgba(255,255,255,.14); padding-top: 22px; font-size: .85rem; color: #A9BAA0; }
 @media (max-width: 900px) { .ft-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { .ft-grid { grid-template-columns: 1fr; gap: 32px; } }

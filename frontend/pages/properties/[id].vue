@@ -17,6 +17,7 @@
           <ul v-if="trustFacts.length" class="trust-facts" aria-label="বিক্রেতার দেওয়া তথ্য"><li v-for="fact in trustFacts" :key="fact"><Check :size="15" aria-hidden="true" />{{ fact }}</li></ul>
           <div ref="heroCta" class="hero-cta"><button class="cta-sun" @click="openInquiry('hero_button')">{{ ctaLabel }}</button><a v-if="waLink" class="cta-wa" :href="waLink" target="_blank" rel="noopener noreferrer" @click="track('Contact', { method: 'WhatsApp', placement: 'hero' })"><MessageCircle :size="18" aria-hidden="true" /> WhatsApp-এ জিজ্ঞেস করুন</a></div>
           <small v-if="settings.property_cta_note" class="cta-note">{{ settings.property_cta_note }}</small>
+          <NuxtLink to="/legal" class="trust-line"><ShieldCheck :size="15" aria-hidden="true" /> সরকারি নিবন্ধিত কোম্পানি · লাইসেন্স দেখুন</NuxtLink>
         </div>
       </header>
       <section class="property-gallery" aria-label="প্রপার্টির ছবি" :class="{ single: slides.length < 2 }">
@@ -69,9 +70,8 @@
           <section id="property-location" class="detail-section"><p class="eyebrow">নিজে দেখে সিদ্ধান্ত নিন</p><h2>লোকেশন ও সাইট ভিজিট</h2><p class="property-location"><MapPin :size="20" />{{ location }}</p><p>সাইট ভিজিটের আগে সঠিক লোকেশন, যাতায়াতের পথ ও সময় টিমের সঙ্গে মিলিয়ে নিন।</p><a v-if="!property.hideExactAddress && property.lat && property.lng" class="text-action" :href="`https://www.google.com/maps/search/?api=1&query=${property.lat},${property.lng}`" target="_blank" rel="noopener noreferrer">ম্যাপে লোকেশন দেখুন <ArrowUpRight :size="16" /></a><button class="secondary" @click="openInquiry('site_visit')">সাইট ভিজিট নিয়ে কথা বলি <ArrowRight :size="16" /></button></section>
           <section id="property-questions" class="detail-section faq-section"><p class="eyebrow">সহজ উত্তর</p><h2>আপনার মনে হতে পারে</h2><details><summary>ফর্ম পূরণ করলে কি বুকিং হয়ে যাবে?</summary><p>না। এটি শুধু এই প্রপার্টি সম্পর্কে তথ্য ও যোগাযোগের অনুরোধ। কোনো টাকা বা বুকিংয়ের অঙ্গীকার প্রয়োজন নেই।</p></details><details><summary>তালিকাভুক্ত দামের বাইরে খরচ আছে?</summary><p>রেজিস্ট্রেশন, কর, সার্ভিস চার্জ এবং প্রযোজ্য হলে নির্মাণ খরচ মূল্যের মধ্যে আছে কি না, টিমের কাছে পূর্ণ হিসাব চেয়ে নিন। প্রকাশিত খরচের বিবরণ দেখুন; কোনো খরচ উল্লেখ না থাকলে তা অন্তর্ভুক্ত ধরে নেবেন না।</p></details><details><summary>এখনই কিনব না, তবু কথা বলা যাবে?</summary><p>অবশ্যই। ফর্মে আপনার আসল সময়সীমা বেছে নিন। আপনার প্রস্তুতি অনুযায়ী আলোচনা করা যাবে।</p></details><details><summary>ফর্ম জমা দেওয়ার পর কী হবে?</summary><p>GBREL টিম আপনার দেওয়া নম্বরে, পছন্দের মাধ্যমে যোগাযোগ করবে। ঐচ্ছিকভাবে সময় বা আগে জানতে চাওয়া বিষয়ও জানাতে পারবেন।</p></details></section>
         </div>
-        <aside class="inquiry-sidebar">
-          <PropertySurveyStart v-show="!inlineVisible" side :property-type="property.propertyType" :cta-label="ctaLabel" class="side-start" @choose="purpose => openInquiry('sidebar_first_question', purpose)" @direct="openInquiry('sidebar_cta')" />
-          <div v-if="inlineVisible" class="sidebar-sticky-cta">
+        <aside class="inquiry-sidebar" :class="{ 'is-resting': bottomCtaVisible }" :aria-hidden="bottomCtaVisible || undefined">
+          <div class="sidebar-sticky-cta">
             <div class="sidebar-sticky-price">
               <span>{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span>
               <strong>{{ price.amount }}</strong>
@@ -81,6 +81,7 @@
               {{ ctaLabel }}
             </button>
           </div>
+          <PropertySurveyStart v-show="!inlineVisible" side :property-type="property.propertyType" :cta-label="ctaLabel" class="side-start side-start--extra" @choose="purpose => openInquiry('sidebar_first_question', purpose)" @direct="openInquiry('sidebar_cta')" />
           <div v-if="agent && !property.hideAgentContact" class="advisor-direct">
             <span>প্রশ্ন ছাড়াই সরাসরি কথা বলতে চান?</span>
             <div>
@@ -92,7 +93,7 @@
       </div>
 
       <!-- Bottom Closing CTA Section for Desktop & Wide Devices -->
-      <section class="property-bottom-cta" aria-labelledby="bottom-cta-heading">
+      <section ref="bottomCta" class="property-bottom-cta" aria-labelledby="bottom-cta-heading">
         <div class="bottom-cta-card">
           <div class="bottom-cta-content">
             <span class="bottom-cta-badge">সাইট ভিজিট ও কাগজপত্র</span>
@@ -127,7 +128,7 @@
         </div>
       </section>
 
-      <aside v-if="!inquiryOpen && !lightboxOpen" class="mobile-inquiry-bar" :class="{ shown: !heroCtaVisible }" aria-label="প্রপার্টি সম্পর্কে যোগাযোগ"><div><strong>{{ price.amount }}</strong><small>{{ price.hidden ? 'বিস্তারিত জেনে নিন' : price.per }}</small></div><a v-if="waLink" class="bar-wa" :href="waLink" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp-এ জিজ্ঞেস করুন" @click="track('Contact', { method: 'WhatsApp', placement: 'sticky' })"><MessageCircle :size="22" /></a><button class="cta-sun" @click="openInquiry('mobile_sticky')">{{ ctaLabel }}</button></aside>
+      <aside v-if="!inquiryOpen && !lightboxOpen" class="mobile-inquiry-bar" :class="{ shown: !heroCtaVisible && !bottomCtaVisible }" aria-label="প্রপার্টি সম্পর্কে যোগাযোগ"><div><strong>{{ price.amount }}</strong><small>{{ price.hidden ? 'বিস্তারিত জেনে নিন' : price.per }}</small></div><a v-if="waLink" class="bar-wa" :href="waLink" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp-এ জিজ্ঞেস করুন" @click="track('Contact', { method: 'WhatsApp', placement: 'sticky' })"><MessageCircle :size="22" /></a><button class="cta-sun" @click="openInquiry('mobile_sticky')">{{ ctaLabel }}</button></aside>
       <PropertyInquiry :key="property.id" :open="inquiryOpen" :property="property" :source="inquirySource" :start-purpose="startPurpose" :whatsapp="leadWhatsapp" @close="inquiryOpen = false" @saved="leadSaved" />
     </div>
     <Teleport to="body"><div v-if="lightboxOpen && currentSlide" ref="lightboxRoot" class="photo-overlay" role="dialog" aria-modal="true" aria-label="প্রপার্টির ছবি ও ভিডিও" @click.self="lightboxOpen = false" @keydown.left="previousPhoto" @keydown.right="nextPhoto"><button class="photo-close" aria-label="বন্ধ করুন" @click="lightboxOpen = false"><X :size="25" /></button><img v-if="currentSlide.kind === 'image'" :src="currentSlide.src" :alt="`${property?.title} — ছবি ${photoIndex + 1}`" /><div v-else-if="video" class="photo-video"><video v-if="video.kind === 'file'" :key="video.src" :src="video.src" :poster="videoPoster || undefined" autoplay loop controls playsinline></video><iframe v-else :key="video.src" :src="video.src" title="প্রপার্টির ভিডিও" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div><div class="photo-controls"><button :disabled="slides.length < 2" aria-label="আগেরটি" @click="previousPhoto"><ChevronLeft /></button><span aria-live="polite">{{ photoIndex + 1 }} / {{ slides.length }}</span><button :disabled="slides.length < 2" aria-label="পরেরটি" @click="nextPhoto"><ChevronRight /></button></div></div></Teleport>
@@ -136,7 +137,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { ArrowRight, ArrowUpRight, Building2, Check, ChevronLeft, ChevronRight, CircleCheck, Compass, Copy, Expand, FileDown, FileText, Heart, Image as ImageIcon, MapPin, MessageCircle, MessagesSquare, Phone, Play, Volume2, Ruler, Share2, X } from 'lucide-vue-next'
+import { ArrowRight, ArrowUpRight, Building2, Check, ChevronLeft, ChevronRight, CircleCheck, Compass, Copy, Expand, FileDown, FileText, Heart, Image as ImageIcon, MapPin, MessageCircle, MessagesSquare, Phone, Play, ShieldCheck, Volume2, Ruler, Share2, X } from 'lucide-vue-next'
 import { useProperties, type PropertyItem } from '~/composables/useProperties'
 import { formatBDT, formatArea } from '~/composables/useCurrency'
 import { useAuth } from '~/composables/useAuth'
@@ -235,7 +236,7 @@ watch(inlineStart, el => {
   startObserver = new IntersectionObserver(([entry]) => { inlineVisible.value = entry.isIntersecting || entry.boundingClientRect.top > 0 })
   startObserver.observe(el)
 })
-onBeforeUnmount(() => { startObserver?.disconnect(); ctaObserver?.disconnect() })
+onBeforeUnmount(() => { startObserver?.disconnect(); ctaObserver?.disconnect(); bottomObserver?.disconnect() })
 // The sticky bar appears only after the price-box button scrolls away, so there is one clear action on screen at a time.
 const heroCta = ref<HTMLElement | null>(null)
 const heroCtaVisible = ref(true)
@@ -245,6 +246,17 @@ watch(heroCta, el => {
   if (!el || typeof IntersectionObserver === 'undefined') return
   ctaObserver = new IntersectionObserver(([entry]) => { heroCtaVisible.value = entry.intersectionRatio > 0.95 }, { threshold: [0, 0.95, 1] })
   ctaObserver.observe(el)
+})
+// The sidebar price + button stays on screen while reading, and steps aside once the closing CTA at the bottom
+// scrolls into view, so the page never shows two identical buttons side by side.
+const bottomCta = ref<HTMLElement | null>(null)
+const bottomCtaVisible = ref(false)
+let bottomObserver: IntersectionObserver | null = null
+watch(bottomCta, el => {
+  bottomObserver?.disconnect()
+  if (!el || typeof IntersectionObserver === 'undefined') return
+  bottomObserver = new IntersectionObserver(([entry]) => { bottomCtaVisible.value = entry.isIntersecting }, { rootMargin: '0px 0px -15% 0px' })
+  bottomObserver.observe(el)
 })
 // Up to three facts from the seller's details, shown next to the price. Only what was actually declared.
 const trustFacts = computed(() => {
@@ -319,7 +331,12 @@ const shareProperty = async () => {
 .land-share-note { padding:17px 20px; border-left:3px solid #b29e61; background:#f4f0e4; border-radius:0 10px 10px 0; margin:20px 0; }.land-share-note strong { font-size:14px; }.land-share-note p { margin:6px 0 0; font-size:13px; }
 .brochure-list a { display:flex; gap:12px; align-items:center; border:1px solid #d9e3d8; padding:15px; border-radius:9px; margin-top:10px; color:#1b6346; font-size:14px; }.brochure-list span { flex:1; }.detail-section .muted-note { font-size:12px; color:#6f7b70; }
 .faq-section details { border-bottom:1px solid #e0e7dc; padding:8px 0; }.faq-section summary { cursor:pointer; padding:14px 0; font-size:14px; font-weight:600; min-height:48px; }.faq-section details p { padding:0 12px 0 0; }
-.inquiry-sidebar { position:sticky; top:105px; }
+.inquiry-sidebar { position:sticky; top:105px; transition:opacity .25s ease, transform .25s ease; }
+.inquiry-sidebar.is-resting { opacity:0; transform:translateY(-8px); pointer-events:none; }
+/* The first question repeats under the button only when the inline one has scrolled away and the screen is tall enough for both. */
+.side-start--extra { margin-bottom:14px; }
+@media (max-height:1000px) { .side-start--extra { display:none !important; } }
+@media (prefers-reduced-motion:reduce) { .inquiry-sidebar { transition:none; } }
 .sidebar-sticky-cta { background:#fff; border:1px solid #dbe4d7; border-radius:16px; padding:20px 22px; box-shadow:0 8px 24px rgba(32,59,40,.08); display:flex; flex-direction:column; gap:12px; margin-bottom:14px; }
 .sidebar-sticky-price { display:flex; flex-direction:column; gap:2px; }
 .sidebar-sticky-price span { font-size:12px; color:#647269; }
@@ -406,4 +423,5 @@ const shareProperty = async () => {
 .unmute-btn { position:absolute; left:16px; bottom:16px; z-index:3; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 16px; border:0; border-radius:999px; background:#E2651C; color:#fff; font:inherit; font-size:14px; font-weight:700; box-shadow:0 4px 16px rgba(0,0,0,.3); cursor:pointer; }
 .property-gallery .unmute-btn { position:absolute; left:16px; bottom:16px; padding:0 16px; background:#E2651C; overflow:visible; }
 .gallery-player video { object-fit:cover; }
+.trust-line { display:flex; align-items:center; justify-content:center; gap:6px; margin-top:10px; font-size:12px; font-weight:600; color:#3F7A35; text-decoration:underline; text-underline-offset:3px; }
 </style>

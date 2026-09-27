@@ -16,6 +16,14 @@ export interface SiteSettings {
   whatsapp_number: string
   contact_email: string
   office_address: string
+  map_location: string
+  meta_pixel_id: string
+  gtm_container_id: string
+  ga4_measurement_id: string
+  company_registration_no: string
+  company_registration_date: string
+  trade_license_no: string
+  trade_license_valid_until: string
   working_hours: string
   home_headline: string
   home_subtitle: string
@@ -36,7 +44,15 @@ const defaultSettings: SiteSettings = {
   contact_phone: '',
   whatsapp_number: '',
   contact_email: '',
-  office_address: '',
+  office_address: 'স্বজন টাওয়ার-১, রুম ২০১ (২য় তলা), ৪ সেগুন বাগিচা, ঢাকা-১০০০',
+  map_location: 'Swajan Tower, 4 Segun Bagicha, Dhaka 1000',
+  meta_pixel_id: '',
+  gtm_container_id: '',
+  ga4_measurement_id: '',
+  company_registration_no: 'C-185751/2022',
+  company_registration_date: '2022-12-11',
+  trade_license_no: 'TRAD/DSCC/026884/2022',
+  trade_license_valid_until: '2027-06-30',
   working_hours: '',
   home_headline: 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন।',
   home_subtitle: '',

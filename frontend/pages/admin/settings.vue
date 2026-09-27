@@ -23,7 +23,53 @@
         <label class="st-field"><span>WhatsApp number</span><input v-model="form.whatsapp_number" placeholder="+8801XXXXXXXXX" /></label>
         <label class="st-field"><span>Email</span><input v-model="form.contact_email" type="email" /></label>
         <label class="st-field st-span2"><span>Office address</span><input v-model="form.office_address" /></label>
+        <label class="st-field st-span2"><span>Map location (what Google Maps should search)</span><input v-model="form.map_location" maxlength="200" placeholder="Swajan Tower, 4 Segun Bagicha, Dhaka 1000" /></label>
         <label class="st-field st-span2"><span>Office hours</span><input v-model="form.working_hours" placeholder="শনি–বৃহস্পতি, সকাল ১০টা–সন্ধ্যা ৭টা" /></label>
+      </div>
+    </section>
+
+    <section id="tracking" class="st-card" aria-labelledby="st-tracking">
+      <h2 id="st-tracking">Tracking &amp; analytics</h2>
+      <p class="st-help">Paste the ID from each tool and save. It starts working on the public website straight away. Leave a box empty to switch that tool off. Admin pages are never tracked.</p>
+      <div class="st-tools">
+        <div v-for="tool in trackingTools" :key="tool.key" class="st-tool">
+          <div class="st-tool-head">
+            <strong>{{ tool.name }}</strong>
+            <span class="st-state" :class="`st-state--${toolState(tool)}`">{{ { on: 'On', off: 'Off', bad: 'Check the ID' }[toolState(tool)] }}</span>
+          </div>
+          <p>{{ tool.purpose }}</p>
+          <label class="st-field">
+            <span>{{ tool.label }}</span>
+            <input v-model.trim="form[tool.key]" :placeholder="tool.placeholder" :aria-invalid="toolState(tool) === 'bad'" autocomplete="off" spellcheck="false" />
+          </label>
+          <small>{{ tool.where }} <a :href="tool.link" target="_blank" rel="noopener noreferrer">{{ tool.linkText }}</a></small>
+        </div>
+      </div>
+      <p v-if="form.gtm_container_id && form.ga4_measurement_id" class="st-warn">Both Tag Manager and Analytics are set. If Google Analytics is also set up inside Tag Manager, clear the Analytics box here, or every visit is counted twice.</p>
+      <details class="st-events">
+        <summary>Events the website sends</summary>
+        <table>
+          <thead><tr><th>When</th><th>Meta Pixel</th><th>Google Analytics / Tag Manager</th></tr></thead>
+          <tbody>
+            <tr><td>Any page opens</td><td>PageView</td><td>page_view · gbrel_page_view</td></tr>
+            <tr><td>A property page opens or its video plays</td><td>ViewContent</td><td>view_item</td></tr>
+            <tr><td>The buyer form or contact form is sent</td><td>Lead</td><td>generate_lead</td></tr>
+            <tr><td>WhatsApp or phone tapped</td><td>Contact</td><td>contact</td></tr>
+            <tr><td>A property owner creates an account</td><td>CompleteRegistration</td><td>sign_up</td></tr>
+          </tbody>
+        </table>
+        <p>In Tag Manager, every event also arrives in the data layer with a <code>gbrel_</code> name (for example <code>gbrel_generate_lead</code>), ready to use as a trigger.</p>
+      </details>
+    </section>
+
+    <section id="legal" class="st-card" aria-labelledby="st-legal">
+      <h2 id="st-legal">Registration &amp; licence</h2>
+      <p class="st-help">Shown on the "Registration &amp; trade licence" page, the contact page and the footer. Update the licence expiry each year after renewal, and replace the scanned copy in <code>frontend/public/docs/legal/</code>.</p>
+      <div class="st-grid">
+        <label class="st-field"><span>RJSC registration no.</span><input v-model="form.company_registration_no" maxlength="60" /></label>
+        <label class="st-field"><span>Registration date</span><input v-model="form.company_registration_date" type="date" /></label>
+        <label class="st-field"><span>Trade licence no.</span><input v-model="form.trade_license_no" maxlength="60" /></label>
+        <label class="st-field"><span>Trade licence valid until</span><input v-model="form.trade_license_valid_until" type="date" /></label>
       </div>
     </section>
 
@@ -107,13 +153,24 @@ definePageMeta({ layout: 'admin' })
 
 const toast = useToast()
 const { settings, isSaving, fetchSettings, updateSettings } = useSettings()
-const editable = ['site_name', 'site_title', 'contact_phone', 'whatsapp_number', 'contact_email', 'office_address', 'working_hours', 'home_headline', 'home_subtitle', 'property_cta_label', 'property_cta_label_hidden_price', 'property_cta_note', 'owner_commission_percent', 'owner_terms', 'listing_document_types'] as const
+const editable = ['site_name', 'site_title', 'contact_phone', 'whatsapp_number', 'contact_email', 'office_address', 'map_location', 'company_registration_no', 'company_registration_date', 'trade_license_no', 'trade_license_valid_until', 'meta_pixel_id', 'gtm_container_id', 'ga4_measurement_id', 'working_hours', 'home_headline', 'home_subtitle', 'property_cta_label', 'property_cta_label_hidden_price', 'property_cta_note', 'owner_commission_percent', 'owner_terms', 'listing_document_types'] as const
 
 const sections = [
-  { id: 'contact', label: 'Contact' }, { id: 'homepage', label: 'Homepage' }, { id: 'property-page', label: 'Property button' }, { id: 'owners', label: 'Owner terms' },
+  { id: 'contact', label: 'Contact' }, { id: 'tracking', label: 'Tracking' }, { id: 'legal', label: 'Licence' }, { id: 'homepage', label: 'Homepage' }, { id: 'property-page', label: 'Property button' }, { id: 'owners', label: 'Owner terms' },
   { id: 'documents', label: 'Owner papers' }, { id: 'options', label: 'Form options' }
 ]
 const form = reactive<Record<string, any>>({ listing_document_types: [] as DocumentType[] })
+
+const trackingTools = [
+  { key: 'meta_pixel_id', name: 'Meta Pixel (Facebook & Instagram ads)', purpose: 'Tells Facebook which ad visitors sent a form, so ads find more people like them.', label: 'Pixel ID', placeholder: '1234567890123456', pattern: /^\d{10,20}$/, where: 'Events Manager → Data sources → your Pixel → Settings.', link: 'https://business.facebook.com/events_manager2', linkText: 'Open Events Manager' },
+  { key: 'gtm_container_id', name: 'Google Tag Manager', purpose: 'Lets you add Google Ads, Analytics and other tags later without changing the website.', label: 'Container ID', placeholder: 'GTM-XXXXXXX', pattern: /^GTM-[A-Z0-9]{4,12}$/, where: 'Shown at the top of your Tag Manager workspace.', link: 'https://tagmanager.google.com', linkText: 'Open Tag Manager' },
+  { key: 'ga4_measurement_id', name: 'Google Analytics 4', purpose: 'Visitor numbers, where they come from and which pages lead to enquiries.', label: 'Measurement ID', placeholder: 'G-XXXXXXXXXX', pattern: /^G-[A-Z0-9]{4,15}$/, where: 'Admin → Data streams → your website stream.', link: 'https://analytics.google.com', linkText: 'Open Google Analytics' }
+]
+const toolState = (tool: { key: string; pattern: RegExp }) => {
+  const value = String(form[tool.key] || '').trim()
+  if (!value) return 'off'
+  return tool.pattern.test(tool.key === 'meta_pixel_id' ? value : value.toUpperCase()) ? 'on' : 'bad'
+}
 const snapshot = ref('')
 const error = ref('')
 
@@ -141,6 +198,12 @@ const save = async () => {
     error.value = 'Every paper needs a name, and keys may only use lowercase letters, numbers and _.'
     return
   }
+  const badTool = trackingTools.find(t => toolState(t) === 'bad')
+  if (badTool) {
+    error.value = `The ${badTool.label} doesn't look right. It should look like ${badTool.placeholder}.`
+    return
+  }
+  trackingTools.forEach(t => { if (t.key !== 'meta_pixel_id' && form[t.key]) form[t.key] = String(form[t.key]).trim().toUpperCase() })
   try {
     const payload = Object.fromEntries(editable.map(k => [k, form[k]]))
     await updateSettings(payload as any)
@@ -208,4 +271,25 @@ useSeoMeta({ title: 'Settings | GBREL Admin' })
   .st-docs td { border: 0; padding: 0; width: auto !important; }
   .st-docs td:nth-child(2) { grid-column: 1 / -1; }
 }
+.st-tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.st-tool { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: 12px; border: 1px solid var(--admin-border-subtle); background: var(--admin-bg-surface-alt); }
+.st-tool-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.st-tool-head strong { font-size: .95rem; line-height: 1.35; }
+.st-tool p { margin: 0; font-size: .84rem; color: var(--admin-text-secondary); line-height: 1.5; }
+.st-tool small { font-size: .78rem; color: var(--admin-text-muted); line-height: 1.5; }
+.st-tool small a { color: #3F7A35; font-weight: 600; text-decoration: underline; }
+.st-tool input { font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important; letter-spacing: .02em; }
+.st-tool input[aria-invalid=true] { border-color: #C2530F; box-shadow: 0 0 0 3px rgba(226, 101, 28, .18); }
+.st-state { flex-shrink: 0; font-size: .72rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+.st-state--on { background: #1D4A2A; color: #fff; }
+.st-state--off { background: var(--admin-bg-surface); color: var(--admin-text-muted); border: 1px solid var(--admin-border-hover); }
+.st-state--bad { background: #FBE9DF; color: #8A3A0F; }
+.st-warn { margin: 0; padding: 10px 14px; border-radius: 10px; background: #FBEBDD; color: #6B3413; font-size: .86rem; }
+.st-events summary { cursor: pointer; font-weight: 700; font-size: .88rem; color: var(--admin-text-primary); }
+.st-events table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .84rem; }
+.st-events th { text-align: left; font-size: .75rem; color: var(--admin-text-muted); padding: 6px 8px; border-bottom: 1px solid var(--admin-border-subtle); }
+.st-events td { padding: 8px; border-bottom: 1px solid var(--admin-border-subtle); }
+.st-events td + td { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8rem; }
+.st-events p { font-size: .82rem; color: var(--admin-text-secondary); }
+@media (max-width: 900px) { .st-tools { grid-template-columns: minmax(0, 1fr); } }
 </style>

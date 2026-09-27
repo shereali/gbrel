@@ -105,7 +105,7 @@ const navItems = [
   { to: '/directors', label: 'আমাদের সম্পর্কে' },
   { to: '/contact', label: 'যোগাযোগ' }
 ]
-const drawerItems = [{ to: '/', label: 'হোম' }, ...navItems, { to: '/agents', label: 'আমাদের এজেন্ট' }, { to: '/compare', label: 'প্রপার্টি তুলনা' }]
+const drawerItems = [{ to: '/', label: 'হোম' }, ...navItems, { to: '/agents', label: 'আমাদের এজেন্ট' }, { to: '/legal', label: 'নিবন্ধন ও লাইসেন্স' }, { to: '/compare', label: 'প্রপার্টি তুলনা' }]
 
 const isActive = (item: { to: string; type?: string }) => {
   const path = item.to.split('?')[0]

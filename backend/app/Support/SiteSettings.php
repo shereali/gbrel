@@ -9,6 +9,9 @@ use App\Models\Setting;
  */
 class SiteSettings
 {
+    /** Registered office, as printed on the DSCC trade licence. */
+    public const OFFICE_ADDRESS = 'স্বজন টাওয়ার-১, রুম ২০১ (২য় তলা), ৪ সেগুন বাগিচা, ঢাকা-১০০০';
+
     /**
      * @return array<string, array{default: mixed, rules: list<mixed>}>
      */
@@ -20,8 +23,17 @@ class SiteSettings
             'contact_phone' => ['default' => '', 'rules' => ['string', 'max:40']],
             'whatsapp_number' => ['default' => '', 'rules' => ['string', 'max:40']],
             'contact_email' => ['default' => '', 'rules' => ['nullable', 'email', 'max:150']],
-            'office_address' => ['default' => '', 'rules' => ['string', 'max:300']],
+            'office_address' => ['default' => self::OFFICE_ADDRESS, 'rules' => ['string', 'max:300']],
+            'map_location' => ['default' => 'Swajan Tower, 4 Segun Bagicha, Dhaka 1000', 'rules' => ['string', 'max:200']],
+            'company_registration_no' => ['default' => 'C-185751/2022', 'rules' => ['string', 'max:60']],
+            'company_registration_date' => ['default' => '2022-12-11', 'rules' => ['nullable', 'date_format:Y-m-d']],
+            'trade_license_no' => ['default' => 'TRAD/DSCC/026884/2022', 'rules' => ['string', 'max:60']],
+            'trade_license_valid_until' => ['default' => '2027-06-30', 'rules' => ['nullable', 'date_format:Y-m-d']],
             'working_hours' => ['default' => '', 'rules' => ['string', 'max:150']],
+            // Tracking: loaded only on public pages. Empty = off.
+            'meta_pixel_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^\d{10,20}$/']],
+            'gtm_container_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^GTM-[A-Z0-9]{4,12}$/']],
+            'ga4_measurement_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^G-[A-Z0-9]{4,15}$/']],
             'home_headline' => ['default' => 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন।', 'rules' => ['string', 'max:120']],
             'home_subtitle' => ['default' => 'প্লট, জমি শেয়ার আর ফ্ল্যাটের তালিকা — প্রতিটির দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য এক জায়গায়। পছন্দ হলে আমাদের টিমের সঙ্গে সরাসরি কথা বলুন।', 'rules' => ['string', 'max:400']],
             'property_cta_label' => ['default' => 'ক্রয় তথ্য ও সাইট ভিজিট', 'rules' => ['string', 'min:2', 'max:50']],
@@ -45,7 +57,10 @@ class SiteSettings
     {
         $values = [];
         foreach (self::definitions() as $key => $definition) {
-            $value = Setting::getVal($key, $definition['default']);
+            // Text settings are read as stored, so numeric-looking IDs (Meta Pixel) stay exact strings.
+            $value = is_string($definition['default'])
+                ? (Setting::where('key', $key)->value('value') ?? $definition['default'])
+                : Setting::getVal($key, $definition['default']);
             $values[$key] = ($value === null || $value === '') && $definition['default'] !== '' ? $definition['default'] : $value;
         }
         $values['owner_terms_version'] = substr(sha1($values['owner_terms'].'|'.$values['owner_commission_percent']), 0, 12);

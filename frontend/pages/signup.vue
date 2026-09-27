@@ -54,6 +54,7 @@
 import { reactive, ref } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 import { toApiPhone } from '~/utils/propertyLabels'
+import { trackPixel } from '~/utils/metaPixel'
 
 const route = useRoute()
 const router = useRouter()
@@ -74,6 +75,7 @@ const handleSignup = async () => {
   loading.value = true
   try {
     await register({ ...form, phone })
+    trackPixel('CompleteRegistration', { content_name: 'property_owner' })
     const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/') ? route.query.redirect : '/my-listings/new'
     router.push(redirect)
   } catch (err: any) {

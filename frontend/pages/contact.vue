@@ -55,14 +55,20 @@
         </form>
       </div>
     </div>
+
+    <section class="gb-wrap ct-map" aria-label="অফিসের ম্যাপ">
+      <OfficeMap :address="settings.office_address" :location="settings.map_location" tall />
+      <p class="ct-legal"><ShieldCheck :size="18" aria-hidden="true" /> সরকারি নিবন্ধিত কোম্পানি: RJSC {{ settings.company_registration_no }} · ট্রেড লাইসেন্স {{ settings.trade_license_no }} <NuxtLink to="/legal" class="gb-link">কাগজপত্র দেখুন</NuxtLink></p>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { Mail, MapPin, MessageCircle, Phone } from 'lucide-vue-next'
+import { Mail, MapPin, MessageCircle, Phone, ShieldCheck } from 'lucide-vue-next'
 import { useSettings } from '~/composables/useSettings'
 import { toApiPhone } from '~/utils/propertyLabels'
+import { trackPixel } from '~/utils/metaPixel'
 
 const { settings, fetchSettings } = useSettings()
 onMounted(() => { fetchSettings() })
@@ -91,6 +97,7 @@ const handleSubmit = async () => {
     if (!res.ok) throw new Error(String(res.status))
     sentPhone.value = phone
     sent.value = true
+    trackPixel('Lead', { content_name: 'contact_page' })
   } catch {
     error.value = 'বার্তা পাঠানো যায়নি। একটু পরে আবার চেষ্টা করুন, অথবা সরাসরি ফোন করুন।'
   } finally {
@@ -117,6 +124,10 @@ useSeoMeta({ title: 'যোগাযোগ | গ্রাম বাংলা র
 .ct-card .gb-field small { font-weight: 400; color: var(--gb-ink-soft); }
 .ct-card .gb-btn:disabled { opacity: .7; cursor: wait; }
 .ct-err { color: #A23B16; background: #FBE9DF; border-radius: 8px; padding: 10px 12px; font-size: .92rem; }
+.ct-map { margin-top: clamp(48px, 7vw, 80px); }
+.ct-legal { margin-top: 16px; line-height: 1.7; color: var(--gb-ink-soft); font-size: var(--gb-t-small); }
+.ct-legal svg { color: var(--gb-leaf); vertical-align: -3px; margin-right: 4px; }
+.ct-legal a { margin-left: 6px; }
 .ct-done { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
 @media (max-width: 900px) { .ct-grid { grid-template-columns: 1fr; } }
 </style>

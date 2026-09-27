@@ -1,12 +1,26 @@
-// Thin wrapper around the Meta (Facebook) Pixel. Safe to call when the pixel is not loaded.
+// One call sends a conversion event to every tracking tool that is switched on:
+// Meta Pixel (standard events), Google Analytics 4 (recommended event names) and GTM (dataLayer).
+// Safe to call when none of them are loaded.
 const standardEvents = new Set(['PageView', 'ViewContent', 'Lead', 'Contact', 'Schedule', 'CompleteRegistration', 'Search'])
+const ga4Names: Record<string, string> = {
+  ViewContent: 'view_item',
+  Lead: 'generate_lead',
+  Contact: 'contact',
+  Schedule: 'schedule_visit',
+  CompleteRegistration: 'sign_up',
+  Search: 'search'
+}
 
 export const trackPixel = (event: string, params: Record<string, unknown> = {}, eventID?: string) => {
   try {
-    const fbq = (window as any).fbq
-    if (typeof fbq !== 'function') return
-    const method = standardEvents.has(event) ? 'track' : 'trackCustom'
-    if (eventID) fbq(method, event, params, { eventID })
-    else fbq(method, event, params)
+    const w = window as any
+    if (typeof w.fbq === 'function') {
+      const method = standardEvents.has(event) ? 'track' : 'trackCustom'
+      if (eventID) w.fbq(method, event, params, { eventID })
+      else w.fbq(method, event, params)
+    }
+    const gaName = ga4Names[event] || event.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase()
+    if (typeof w.gtag === 'function') w.gtag('event', gaName, { ...params, ...(eventID ? { event_id: eventID } : {}) })
+    if (Array.isArray(w.dataLayer)) w.dataLayer.push({ event: `gbrel_${gaName}`, ...params, ...(eventID ? { event_id: eventID } : {}) })
   } catch { /* Analytics must never block a visitor. */ }
 }

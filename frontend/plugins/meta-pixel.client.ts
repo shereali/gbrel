@@ -1,25 +1,68 @@
-// Loads the Meta Pixel when NUXT_PUBLIC_META_PIXEL_ID is set, and sends a PageView on every route change.
-// Admin pages are skipped so staff activity does not pollute ad audiences.
-export default defineNuxtPlugin(() => {
-  const pixelId = String(useRuntimeConfig().public.metaPixelId || '').trim()
-  if (!pixelId || !/^\d+$/.test(pixelId)) return
+// Loads the tracking tools chosen in Admin → Settings → Tracking & analytics:
+//   Meta (Facebook) Pixel, Google Tag Manager and Google Analytics 4.
+// Nothing loads on /admin pages, so staff visits never reach ad audiences or reports.
+// NUXT_PUBLIC_META_PIXEL_ID still works as a fallback for the Pixel when the setting is empty.
+import { useSettings } from '~/composables/useSettings'
 
-  const w = window as any
-  if (!w.fbq) {
-    const n: any = (w.fbq = function (...args: unknown[]) { n.callMethod ? n.callMethod(...args) : n.queue.push(args) })
-    if (!w._fbq) w._fbq = n
-    n.push = n; n.loaded = true; n.version = '2.0'; n.queue = []
-    const script = document.createElement('script')
-    script.async = true
-    script.src = 'https://connect.facebook.net/en_US/fbevents.js'
-    document.head.appendChild(script)
-  }
-  w.fbq('init', pixelId)
+const PIXEL = /^\d{10,20}$/
+const GTM = /^GTM-[A-Z0-9]{4,12}$/
+const GA4 = /^G-[A-Z0-9]{4,15}$/
 
+const addScript = (src: string) => {
+  const script = document.createElement('script')
+  script.async = true
+  script.src = src
+  document.head.appendChild(script)
+}
+
+export default defineNuxtPlugin(async () => {
   const router = useRouter()
   const isPublic = (path: string) => !path.startsWith('/admin')
-  if (isPublic(router.currentRoute.value.path)) w.fbq('track', 'PageView')
+  const { settings, fetchSettings } = useSettings()
+  await fetchSettings().catch(() => null)
+
+  const pixelId = String(settings.value.meta_pixel_id || useRuntimeConfig().public.metaPixelId || '').trim()
+  const gtmId = String(settings.value.gtm_container_id || '').trim().toUpperCase()
+  const ga4Id = String(settings.value.ga4_measurement_id || '').trim().toUpperCase()
+  const w = window as any
+  let started = false
+
+  const start = () => {
+    if (started) return
+    started = true
+    if (PIXEL.test(pixelId) && !w.fbq) {
+      const n: any = (w.fbq = function (...args: unknown[]) { n.callMethod ? n.callMethod(...args) : n.queue.push(args) })
+      if (!w._fbq) w._fbq = n
+      n.push = n; n.loaded = true; n.version = '2.0'; n.queue = []
+      addScript('https://connect.facebook.net/en_US/fbevents.js')
+      w.fbq('init', pixelId)
+    }
+    if (GTM.test(gtmId)) {
+      w.dataLayer = w.dataLayer || []
+      w.dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' })
+      addScript(`https://www.googletagmanager.com/gtm.js?id=${gtmId}`)
+    }
+    if (GA4.test(ga4Id)) {
+      w.dataLayer = w.dataLayer || []
+      w.gtag = w.gtag || function () { w.dataLayer.push(arguments) }
+      w.gtag('js', new Date())
+      // Page views are sent by hand below, because this is a single-page app.
+      w.gtag('config', ga4Id, { send_page_view: false })
+      addScript(`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`)
+    }
+  }
+
+  const pageView = (path: string) => {
+    if (!isPublic(path)) return
+    start()
+    if (typeof w.fbq === 'function') w.fbq('track', 'PageView')
+    if (typeof w.gtag === 'function' && GA4.test(ga4Id)) w.gtag('event', 'page_view', { page_path: path, page_location: window.location.href, page_title: document.title })
+    if (GTM.test(gtmId)) w.dataLayer.push({ event: 'gbrel_page_view', page_path: path })
+  }
+
+  // Wait a tick so the page title is set before the first page view.
+  setTimeout(() => pageView(router.currentRoute.value.fullPath), 0)
   router.afterEach((to, from) => {
-    if (to.fullPath !== from.fullPath && isPublic(to.path)) w.fbq('track', 'PageView')
+    if (to.fullPath !== from.fullPath) setTimeout(() => pageView(to.fullPath), 0)
   })
 })
