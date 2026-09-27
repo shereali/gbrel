@@ -20,12 +20,11 @@ class PropertyBuyerDetailsTest extends TestCase
         $response = $this->postJson('/api/properties', [
             'title' => 'Building with land', 'address' => 'Test road', 'areaName' => 'Test area',
             'price' => 140000000, 'landSize' => 31, 'landUnit' => 'Katha', 'totalFloors' => 2,
-            'buyerDetails' => ['priceBasis' => 'Per land unit', 'ownerCount' => 3, 'depositPercent' => 30, 'buyerCommission' => 0, 'bankLoan' => 'None declared', 'taxPaidThrough' => '1432 Bangla', 'sourceDate' => '2026-09-15'],
+            'buyerDetails' => ['priceBasis' => 'Per land unit', 'ownerCount' => 3, 'depositPercent' => 30, 'bankLoan' => 'None declared', 'taxPaidThrough' => '1432 Bangla', 'sourceDate' => '2026-09-15'],
         ])->assertCreated();
         $id = $response->json('data.id');
         $this->getJson('/api/properties/'.$id)->assertOk()
             ->assertJsonPath('data.buyer_details.priceBasis', 'Per land unit')
-            ->assertJsonPath('data.buyer_details.buyerCommission', 0)
             ->assertJsonPath('data.buyer_details.ownerCount', 3)
             ->assertJsonPath('data.total_floors', 2)
             ->assertJsonPath('data.images', []);

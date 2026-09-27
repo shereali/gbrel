@@ -63,6 +63,7 @@ class LaunchListings
             }
 
             $details = is_array($property->buyer_details) ? $property->buyer_details : [];
+            unset($details['buyerCommission'], $details['sellerCommission']);
             foreach ($fix['details'] as $key => $value) {
                 if ($value === null) {
                     unset($details[$key]);

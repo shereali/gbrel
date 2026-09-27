@@ -12,18 +12,17 @@ test('per-unit pricing calculates the full property price without multiplying to
   assert.equal(totalAskingPrice({ price: 100, buyerDetails: {} }), null)
 })
 test('public facts preserve zero, omit unknowns and hide cost details for confidential listings', () => {
-  const property = { buyerDetails: { buyerCommission: 0, ownerCount: 3, bankLoan: '', ownerNid: 'must not render' } }
+  const property = { buyerDetails: { depositPercent: 0, ownerCount: 3, bankLoan: '', ownerNid: 'must not render' } }
   const fields = detailGroups(property).flatMap(g => g.fields)
-  assert.deepEqual(fields.map(f => f.key), ['buyerCommission', 'ownerCount'])
+  assert.deepEqual(fields.map(f => f.key), ['depositPercent', 'ownerCount'])
   assert.equal(fields[0].value, 0)
   assert.deepEqual(detailGroups({ ...property, hidePrice: true }).map(g => g.key), ['ownership'])
   assert.deepEqual(detailGroups({ buyerDetails: {} }), [])
 })
 test('public facts are shown with Bangla digits, units and dates', () => {
-  const property = { buyerDetails: { depositPercent: 30, buyerCommission: 1, ownerCount: 2, updatedOn: '2026-09-15', paymentMethod: 'ব্যাংক ড্রাফট' } }
+  const property = { buyerDetails: { depositPercent: 30, ownerCount: 2, updatedOn: '2026-09-15', paymentMethod: 'ব্যাংক ড্রাফট' } }
   const shown = Object.fromEntries(detailGroups(property).flatMap(g => g.fields).map(f => [f.key, f.display]))
   assert.equal(shown.depositPercent, '৩০%')
-  assert.equal(shown.buyerCommission, '১%')
   assert.equal(shown.ownerCount, '২ জন')
   assert.equal(shown.updatedOn, '১৫ সেপ্টেম্বর ২০২৬')
   assert.equal(shown.paymentMethod, 'ব্যাংক ড্রাফট')

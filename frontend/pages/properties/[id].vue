@@ -13,7 +13,7 @@
       </div>
       <header class="property-heading">
         <div><div class="property-badges"><span>{{ typeLabel(property.propertyType) }}</span><span>{{ listingLabels[property.listingType] || property.listingType }}</span><span v-if="property.completionStatus">{{ completionLabels[property.completionStatus] || property.completionStatus }}</span></div><h1>{{ property.title }}</h1><p class="property-location"><MapPin :size="17" /> {{ location }}</p></div>
-        <div class="asking-price"><span>{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span><strong>{{ price.amount }}</strong><small v-if="price.note">{{ price.note }}</small><small v-if="price.fee" class="price-fee">{{ price.fee }}</small>
+        <div class="asking-price"><span>{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span><strong>{{ price.amount }}</strong><small v-if="price.note">{{ price.note }}</small>
           <ul v-if="trustFacts.length" class="trust-facts" aria-label="বিক্রেতার দেওয়া তথ্য"><li v-for="fact in trustFacts" :key="fact"><Check :size="15" aria-hidden="true" />{{ fact }}</li></ul><small v-if="trustFacts.length" class="trust-source">বিক্রেতার দেওয়া তথ্য · কাগজ দেখে মিলিয়ে নিন</small>
           <div ref="heroCta" class="hero-cta"><button class="cta-sun" @click="openInquiry('hero_button')">{{ ctaLabel }}</button><a v-if="waLink" class="cta-wa" :href="waLink" target="_blank" rel="noopener noreferrer" @click="track('Contact', { method: 'WhatsApp', placement: 'hero' })"><MessageCircle :size="18" aria-hidden="true" /> WhatsApp-এ কথা বলুন</a></div>
           <small v-if="settings.property_cta_note" class="cta-note">{{ settings.property_cta_note }}</small>
@@ -76,7 +76,6 @@
               <span>{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span>
               <strong>{{ price.amount }}</strong>
               <small v-if="price.note">{{ price.note }}</small>
-              <small v-if="price.fee" class="price-fee">{{ price.fee }}</small>
             </div>
             <button class="cta-sun sidebar-cta-btn" @click="openInquiry('sidebar_sticky_cta')">
               {{ ctaLabel }}
@@ -113,7 +112,6 @@
               <span class="price-caption">{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span>
               <strong class="price-val">{{ price.amount }}</strong>
               <small v-if="price.note">{{ price.note }}</small>
-              <small v-if="price.fee" class="price-fee">{{ price.fee }}</small>
             </div>
             <button class="cta-sun bottom-cta-btn" @click="openInquiry('bottom_section_cta')">
               {{ ctaLabel }}

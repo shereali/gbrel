@@ -18,8 +18,6 @@ export const buyerDetailGroups = [
     field('agreementDuration', 'Bayna agreement duration', 'বায়না চুক্তির মেয়াদ'),
     field('paymentSchedule', 'Payment schedule', 'পেমেন্টের সময়সূচি', 'textarea'),
     field('paymentMethod', 'Payment method', 'লেনদেনের মাধ্যম'),
-    field('buyerCommission', 'Buyer commission (%)', 'ক্রেতার সার্ভিস চার্জ', 'number', { max: 100, suffix: '%' }),
-    field('sellerCommission', 'Seller commission (%)', 'বিক্রেতার সার্ভিস চার্জ', 'number', { max: 100, suffix: '%' }),
     field('registrationCost', 'Registration cost / basis (do not guess)', 'রেজিস্ট্রেশন খরচের বিবরণ'),
     field('registrationValue', 'Proposed deed value (BDT, if supplied)', 'প্রস্তাবিত দলিল মূল্য', 'number', { max: 1000000000000, prefix: '৳ ', grouped: true }),
     field('buyerCosts', 'Other costs paid by buyer', 'ক্রেতার অন্যান্য খরচ', 'textarea'),

@@ -13,7 +13,7 @@ export interface PriceDisplay {
   note: string // supporting line, e.g. "মোট ৳ ১২০.২৬ কোটি · ১৭.১৮ কাঠা"
   total: number | null
   hidden: boolean
-  fee: string // buyer's service charge, shown beside the price, e.g. "ক্রেতার সার্ভিস চার্জ ১%"
+  fee: string
 }
 
 const LAND_TYPES = ['Plot', 'Land']
@@ -29,14 +29,11 @@ export function priceDisplay(property: any): PriceDisplay {
   if (property.hidePrice) {
     return { amount: property.priceDisplayText || 'দাম জানতে যোগাযোগ করুন', per: 'দাম প্রকাশ করা হয়নি', note: '', total: null, hidden: true, fee: '' }
   }
-  return { ...visiblePrice(property), fee: buyerFee(property) }
+  return { ...visiblePrice(property), fee: '' }
 }
 
-// The buyer's service charge is never left for the price table to reveal.
-export function buyerFee(property: any): string {
-  const raw = property?.buyerDetails?.buyerCommission
-  if (raw === undefined || raw === null || String(raw).trim() === '' || Number.isNaN(Number(raw))) return ''
-  return Number(raw) > 0 ? `ক্রেতার সার্ভিস চার্জ ${toBn(Number(raw))}%` : 'ক্রেতার কোনো সার্ভিস চার্জ নেই'
+export function buyerFee(_property: any): string {
+  return ''
 }
 
 function visiblePrice(property: any): Omit<PriceDisplay, 'fee'> {

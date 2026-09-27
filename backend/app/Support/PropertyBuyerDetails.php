@@ -21,7 +21,7 @@ class PropertyBuyerDetails
             'mutationStatus' => ['Available', 'Pending', 'Unavailable'],
         ];
         $texts = ['buildingDescription', 'utilities', 'priceIncludes', 'agreementDuration', 'paymentSchedule', 'paymentMethod', 'registrationCost', 'buyerCosts', 'sellerCosts', 'transferTimeline', 'transferTrigger', 'saleAuthority', 'ownershipNotes', 'taxPaidThrough', 'serviceChargeStatus', 'approvalDetails', 'documentSummary'];
-        $numbers = ['roadWidth' => 1000, 'shareLandSize' => 100000, 'depositPercent' => 100, 'buyerCommission' => 100, 'sellerCommission' => 100, 'ownerCount' => 10000, 'registrationValue' => 1000000000000];
+        $numbers = ['roadWidth' => 1000, 'shareLandSize' => 100000, 'depositPercent' => 100, 'ownerCount' => 10000, 'registrationValue' => 1000000000000];
         $dates = ['sourceDate', 'updatedOn'];
         $keys = array_merge(array_keys($choices), $texts, array_keys($numbers), $dates);
         $rules = ['buyer_details' => ['nullable', 'array:'.implode(',', $keys)]];
