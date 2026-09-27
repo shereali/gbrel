@@ -129,7 +129,7 @@
             <div class="grid grid-2" style="gap:14px; margin-bottom:14px;">
               <div class="form-group">
                 <label class="form-label">Target Asset / Property</label>
-                <input v-model="leadForm.property" type="text" placeholder="e.g. Gulshan Penthouse / Purbachal Plot" class="form-input" />
+                <input v-model="leadForm.property" type="text" placeholder="যেমন: গুলশান ১ এ ১৫ কাঠা জমি / লেক ভিউ" class="form-input" />
               </div>
               <div class="form-group">
                 <label class="form-label">Buyer Category</label>
@@ -220,7 +220,7 @@ const filteredLeads = computed(() => {
 const leadForm = reactive({
   name: '',
   phone: '',
-  property: '10 Katha Corner Plot in Purbachal',
+  property: 'গুলশান ১, ১৩৫/৬ — ১৫ কাঠা জমি ও ২ তলা পুরাতন দালান',
   type: 'NRB Investor',
   message: ''
 })

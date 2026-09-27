@@ -247,6 +247,7 @@ class DatabaseSeeder extends Seeder
         FinancialTransaction::query()->delete();
         Brochure::query()->delete();
         Property::query()->delete();
+        Agent::query()->delete();
 
         // 3. Seed Official Representatives / Agents from PDFs
         $agent1 = Agent::updateOrCreate(
@@ -313,16 +314,16 @@ class DatabaseSeeder extends Seeder
         Property::updateOrCreate(
             ['id' => 1],
             [
-                'title' => 'Gulshan-1 Prime 15 Katha Residential Land with 2-Storey Building',
-                'slug' => 'gulshan-1-15-katha-residential-land-building',
-                'tagline' => '15 Katha Prime Gulshan-1 Land with Structure, 100% Freehold Clear Title & Bank Escrow Ready',
-                'description' => 'Prime 15 Katha residential land with an existing 2-storey building located at Road 135/6, Gulshan-1, Dhaka. Features unencumbered freehold ownership acquired through legal inheritance by 5 co-owners, with Ganiur Rahman et al. holding irrevocable power of attorney. 100% updated namjari mutation, online khajna paid through Bangla 1432, documentation and service charges cleared. Immediate possession by owners, 15-day RAJUK sale permission transfer timeline. Bank transaction only.',
-                'address' => 'Plot 135/6, Gulshan-1, Dhaka-1212',
+                'title' => 'গুলশান ১, ১৩৫/৬ — ১৫ কাঠা জমি ও ২ তলা পুরাতন দালান',
+                'slug' => 'gulshan-1-135-6-15-katha-building',
+                'tagline' => '১৫ কাঠা জমি ও ২ তলা পুরাতন দালান | নিষ্কণ্টক দলিল | ব্যাংক লেনদেন',
+                'description' => 'গুলশান ১, ১৩৫/৬ নম্বরে ১৫ কাঠা জমিতে ২ তলা পুরাতন দালান বিক্রয়ের প্রস্তাব। ৫ জন ওয়ারিশ সূত্রে মালিক, গনিউর রহমান গং বর্তমানে অপ্রত্যাহার যোগ্য পাওয়ার বলে জমির মালিক। বাংলা ১৪৩২ সনের অনলাইন খাজনা ও ২০২৩ সালের নামজারি পরিশোধ করা আছে। সার্ভিস চার্জ ও ডকুমেন্টেশন ফি জমা দেওয়া আছে। সম্পূর্ণ নিষ্কণ্টক এবং টোটাল কাগজ-পাতি আপডেট। জমি মালিকের দখলে আছে। আর্থিক লেনদেন ব্যাংকের মাধ্যমে। রাজউক থেকে বিক্রয়ের অনুমতি প্রাপ্তি ১৫ (পনের) কার্যদিবস।',
+                'address' => 'প্লট ১৩৫/৬, গুলশান-১, ঢাকা-১২১২',
                 'city' => 'Dhaka',
                 'state' => 'Dhaka North',
                 'area_name' => 'Gulshan-1',
                 'price' => 900000000,
-                'price_unit' => 'Total (৳ 6.00 Crore / Katha)',
+                'price_unit' => 'মোট মূল্য (প্রতি কাঠা ৳ ৬.০০ কোটি)',
                 'listing_type' => 'Sale',
                 'property_type' => 'Land',
                 'status' => 'Active',
@@ -410,16 +411,16 @@ class DatabaseSeeder extends Seeder
         Property::updateOrCreate(
             ['id' => 2],
             [
-                'title' => 'Gulshan-2 Road 92 Prime 17.18 Katha Residential Estate',
-                'slug' => 'gulshan-2-road-92-17-katha-residential-estate',
-                'tagline' => 'Prestigious Road 92 Mandate, 17.18 Katha Paternal Inheritance Land with 2-Storey Building',
-                'description' => 'An exclusive 17.18 Katha south-facing residential property situated on Road 92, Plot 06, Gulshan-2, Dhaka. Jointly owned by 2 brothers through clear paternal inheritance with direct self-possession. 100% dispute-free title with complete updated documentation, online khajna paid through Bangla 1432, mutation cleared. Quoted at ৳ 7 Crore per Katha (negotiable). Seller bears sale permission costs and service charges. Handover within 15 working days of RAJUK sale permission. Bank transactions only.',
-                'address' => 'Road 92, Plot 06, Gulshan-2, Dhaka-1212',
+                'title' => 'গুলশান ২, রোড ৯২, প্লট ০৬ — ১৭.১৮ কাঠা জমি ও ২ তলা বিল্ডিং',
+                'slug' => 'gulshan-2-road-92-plot-06-17-katha-building',
+                'tagline' => '১৭.১৮ কাঠা রেসিডেন্সিয়াল জমি ও ২ তলা বিল্ডিং | প্রতি কাঠা ৭ কোটি (আলোচনা সাপেক্ষ)',
+                'description' => 'গুলশান ২, রোড নম্বর ৯২, প্লট ০৬ এ ১৭.১৮ কাঠা জমি ও ২ তলা বিল্ডিং বিক্রয়ের প্রস্তাব। পৈতৃক সূত্রে ২ জন ভাই জমির বর্তমান মালিক। বাংলা ১৪৩২ সনের অনলাইন খাজনা পরিশোধ করা আছে, সার্ভিস চার্জ ও ডকুমেন্টেশন ফি জমা দেওয়া আছে। রেসিডেন্সিয়াল অনুমোদনপ্রাপ্ত। নিষ্কণ্টক ও টোটাল কাগজ-পাতি আপডেট কমপ্লিট। জমি ও দখল সম্পূর্ণ নিজ অধীনে। বিক্রিত মূল্যের ৩০% বায়না। আর্থিক লেনদেন ব্যাংকের মাধ্যমে। রাজউক থেকে বিক্রয়ের অনুমতি প্রাপ্তি ১৫ (পনের) কার্যদিবস। বিক্রয় অনুমতি পত্র ও সার্ভিস চার্জ বিক্রেতা বহন করবেন।',
+                'address' => 'রোড ৯২, প্লট ০৬, গুলশান-২, ঢাকা-১২১২',
                 'city' => 'Dhaka',
                 'state' => 'Dhaka North',
                 'area_name' => 'Gulshan-2',
                 'price' => 1202600000,
-                'price_unit' => 'Per land unit (৳ 7.00 Crore / Katha)',
+                'price_unit' => 'প্রতি কাঠা ৳ ৭.০০ কোটি',
                 'listing_type' => 'Sale',
                 'property_type' => 'Land',
                 'status' => 'Active',
@@ -506,16 +507,16 @@ class DatabaseSeeder extends Seeder
         Property::updateOrCreate(
             ['id' => 3],
             [
-                'title' => 'Gulshan-2 Road 48/4B 31 Katha Commercial Corner Plot & Structure',
-                'slug' => 'gulshan-2-road-48-31-katha-commercial-corner-plot',
-                'tagline' => 'Rare 31 Katha Commercial Approved Corner Plot in Gulshan-2, 100% Clear Title',
-                'description' => 'A once-in-a-generation 31 Katha prime commercial approved corner plot situated at Road 48/4B, Gulshan-2, Dhaka. Spanning an enormous corner plot with multi-road access, this property features an existing 2-storey structure and is fully approved for commercial high-rise tower redevelopment. Owned by 3 co-owners through inheritance with completed mutation and Bangla 1432 online khajna paid. Quoted at ৳ 14 Crore per Katha (negotiable). Seller bears sale permission and service charges. Handover within 15 working days of RAJUK sale permission. Bank transactions only.',
-                'address' => 'Road 48/4B, Gulshan-2, Dhaka-1212',
+                'title' => 'গুলশান-২, রোড ৪৮/৪বি — ৩১ কাঠা বাণিজ্যিক কর্নার প্লট ও ২ তলা দালান',
+                'slug' => 'gulshan-2-road-48-4b-31-katha-commercial-corner-plot',
+                'tagline' => '৩১ কাঠা বাণিজ্যিক কর্নার প্লট ও ২ তলা দালান | প্রতি কাঠা ১৪ কোটি (আলোচনা সাপেক্ষ)',
+                'description' => 'গুলশান-২, রোড ৪৮/৪বি তে ৩১ কাঠা বাণিজ্যিক কর্নার প্লট ও ২ তলা দালান বিক্রয়ের প্রস্তাব। ওয়ারিশ সূত্রে ৩ জন বর্তমান মালিক এবং নামজারি সম্পন্ন আছে। কমার্শিয়াল অনুমোদনপ্রাপ্ত। বাংলা ১৪৩২ সনের অনলাইন খাজনা পরিশোধিত ও সার্ভিস চার্জ জমা আছে। নিষ্কণ্টক ও টোটাল কাগজ-পাতি আপডেট কমপ্লিট। জমির দখল মালিকের। বিক্রিত মূল্যের ৩০% বায়না। আর্থিক লেনদেন ব্যাংকের মাধ্যমে। রাজউক থেকে বিক্রয়ের অনুমতি প্রাপ্তি ১৫ (পনের) কার্যদিবস। বিক্রয় অনুমতি পত্র ও সার্ভিস চার্জ বিক্রেতা বহন করবেন।',
+                'address' => 'রোড ৪৮/৪বি, গুলশান-২, ঢাকা-১২১২',
                 'city' => 'Dhaka',
                 'state' => 'Dhaka North',
                 'area_name' => 'Gulshan-2',
                 'price' => 4340000000,
-                'price_unit' => 'Per land unit (৳ 14.00 Crore / Katha)',
+                'price_unit' => 'প্রতি কাঠা ৳ ১৪.০০ কোটি',
                 'listing_type' => 'Sale',
                 'property_type' => 'Commercial',
                 'status' => 'Active',
@@ -603,16 +604,16 @@ class DatabaseSeeder extends Seeder
         Property::updateOrCreate(
             ['id' => 4],
             [
-                'title' => '"Lake View" 6-Storey Luxury Edifice on 23 Katha at Road 8, Gulshan-1',
+                'title' => 'লেক ভিউ — গুলশান-১ রোড ৮, বাড়ি ১০ এ ২৩ কাঠা জমিতে ৬ তলা বাণিজ্যিক ভবন',
                 'slug' => 'lake-view-gulshan-1-road-8-23-katha-building',
-                'tagline' => 'Prestigious "Lake View" 23 Katha Estate, 6-Storey Modern Edifice with 28 Dedicated Car Parks',
-                'description' => 'The iconic "Lake View" estate located at Road #8, House #10, Gulshan-1, Dhaka. Spread across 23 Katha of prime lakeside land, this distinguished property boasts a 6-storey modern building with 28 reserved basement car parking bays and comprehensive updated utility supply. Jointly owned by 2 owners (Owner Md. Towfiqul Islam), with complete physical possession by the owners. 100% dispute-free title with all updated documents, mutation cleared and online khajna fully paid. Quoted at ৳ 135 Crore (negotiable). Transfer agreement via 300 Taka non-judicial stamp, handover in 15 working days from RAJUK sale permission. Bank transactions only.',
-                'address' => 'House 10, Road 8, Gulshan-1, Dhaka-1212',
+                'tagline' => 'লেক ভিউ | ২৩ কাঠা জমিতে ৬ তলা ভবন ও ২৮টি কার পার্কিং | মূল্য ১৩৫ কোটি',
+                'description' => 'লেক ভিউ — বাড়ি #১০, রোড #৮, গুলশান-১, ঢাকা এ অবস্থিত ২৩ কাঠা জমির উপর ৬ তলা বিশিষ্ট সুদৃশ্য ভবন। ইউটিলিটি সরবরাহ সম্পূর্ণ আপডেটেড এবং ২৮টি কার পার্কিং সুবিধা রয়েছে। বর্তমান মালিক ২ জন (মূল মালিক মোঃ তওফিকুল ইসলাম)। জমি মালিকের সরাসরি দখলে এবং নামজারি ও খাজনা পরিশোধিত। সম্পূর্ণ নিষ্কণ্টক ও টোটাল কাগজ-পাতি আপডেট কমপ্লিট। কোনো ব্যাংক লোন নেই। বিক্রিত মূল্যের ৩০% বায়না। রাজউক থেকে বিক্রয়ের অনুমতি প্রাপ্তি ১৫ কার্যদিবস। ৩০০ টাকার নন-জুডিশিয়াল স্ট্যাম্পে হস্তান্তর চুক্তি সম্পন্ন হবে।',
+                'address' => 'বাড়ি ১০, রোড ৮, গুলশান-১, ঢাকা-১২১২',
                 'city' => 'Dhaka',
                 'state' => 'Dhaka North',
                 'area_name' => 'Gulshan-1',
                 'price' => 1350000000,
-                'price_unit' => 'Total (৳ 5.87 Crore / Katha)',
+                'price_unit' => 'মোট মূল্য (প্রতি কাঠা ৳ ৫.৮৭ কোটি)',
                 'listing_type' => 'Sale',
                 'property_type' => 'Duplex',
                 'status' => 'Active',
@@ -706,7 +707,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'buyer@gbrel.com',
                 'contact_method' => 'WhatsApp',
                 'property_id' => 1,
-                'property_title' => 'Gulshan-1 Prime 15 Katha Residential Land with 2-Storey Building',
+                'property_title' => 'গুলশান ১, ১৩৫/৬ — ১৫ কাঠা জমি ও ২ তলা পুরাতন দালান',
                 'scheduled_date' => '2026-09-28',
                 'scheduled_time' => '03:00 PM - 04:00 PM',
                 'vip_pickup' => true,
@@ -723,7 +724,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Dr. Farhan Chowdhury',
                 'phone' => '+44 7911 123456',
                 'email' => 'farhan.chowdhury@nhs.uk',
-                'property_title' => 'Gulshan-2 Road 48/4B 31 Katha Commercial Corner Plot & Structure',
+                'property_title' => 'গুলশান-২, রোড ৪৮/৪বি — ৩১ কাঠা বাণিজ্যিক কর্নার প্লট ও ২ তলা দালান',
                 'lead_type' => 'NRB Commercial Investor (UK)',
                 'message' => 'Interested in commercial approval verification deeds and bank escrow transfer options for the 31 Katha corner plot.',
                 'status' => 'Active',
@@ -734,7 +735,7 @@ class DatabaseSeeder extends Seeder
         FinancialTransaction::updateOrCreate(
             ['deal_code' => 'TX-901'],
             [
-                'property_title' => '"Lake View" 6-Storey Luxury Edifice on 23 Katha at Road 8, Gulshan-1',
+                'property_title' => 'লেক ভিউ — গুলশান-১ রোড ৮, বাড়ি ১০ এ ২৩ কাঠা জমিতে ৬ তলা বাণিজ্যিক ভবন',
                 'buyer_name' => 'Tariqul Islam',
                 'transacted_value' => 1350000000,
                 'commission_amount' => 27000000,

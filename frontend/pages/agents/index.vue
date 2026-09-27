@@ -8,7 +8,7 @@
           Find Verified Property Specialists by Region
         </h1>
         <p style="color: #64748B; font-size: 1rem;">
-          Our licensed brokers and legal valuation advisors specialize in Dhaka Diplomatic Enclaves, Purbachal plots, Chittagong commercial, and Cox's Bazar resorts.
+          Our authorized property representatives and legal valuation advisors specialize in prime Gulshan residential estates, commercial corner plots, and luxury buildings.
         </p>
 
         <!-- Division Filter Tabs -->

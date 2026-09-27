@@ -179,9 +179,9 @@ const selectedDeal = ref<any | null>(null)
 const isLoading = ref(false)
 
 const dealsList = ref<any[]>([
-  { id: 'TX-901', property: '"Lake View" 6-Storey Luxury Edifice on 23 Katha at Road 8, Gulshan-1', buyer: 'Tariqul Islam', value: 1350000000, commission: 27000000, bank: 'Standard Chartered Bank', status: 'Settled' },
-  { id: 'TX-902', property: 'Gulshan-1 Prime 15 Katha Residential Land with 2-Storey Building', buyer: 'Engr. Mahfuzur Rahman', value: 900000000, commission: 18000000, bank: 'BRAC Bank', status: 'Settled' },
-  { id: 'TX-903', property: 'Gulshan-2 Road 48/4B 31 Katha Commercial Corner Plot & Structure', buyer: 'Dr. Farhan Chowdhury', value: 4340000000, commission: 43400000, bank: 'City Bank Escrow', status: 'In Escrow' }
+  { id: 'TX-901', property: 'লেক ভিউ — গুলশান-১ রোড ৮, বাড়ি ১০ এ ২৩ কাঠা জমিতে ৬ তলা বাণিজ্যিক ভবন', buyer: 'Tariqul Islam', value: 1350000000, commission: 27000000, bank: 'Standard Chartered Bank', status: 'Settled' },
+  { id: 'TX-902', property: 'গুলশান ১, ১৩৫/৬ — ১৫ কাঠা জমি ও ২ তলা পুরাতন দালান', buyer: 'Engr. Mahfuzur Rahman', value: 900000000, commission: 18000000, bank: 'BRAC Bank', status: 'Settled' },
+  { id: 'TX-903', property: 'গুলশান-২, রোড ৪৮/৪বি — ৩১ কাঠা বাণিজ্যিক কর্নার প্লট ও ২ তলা দালান', buyer: 'Dr. Farhan Chowdhury', value: 4340000000, commission: 43400000, bank: 'City Bank Escrow', status: 'In Escrow' }
 ])
 
 const formatCrore = (val: number) => {

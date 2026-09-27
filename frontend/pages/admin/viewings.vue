@@ -132,9 +132,9 @@
               <div class="form-group">
                 <label class="form-label">Assigned Broker</label>
                 <select v-model="form.assignedAgent" class="form-select">
-                  <option value="Tanvir Ahmed">Tanvir Ahmed (Gulshan / Purbachal)</option>
-                  <option value="Nusrat Jahan">Nusrat Jahan (Coastal / Commercial)</option>
-                  <option value="Syed Mahbubur Rahman">Syed Mahbubur Rahman (Land Bank)</option>
+                  <option value="মোঃ আবু হানিফ (Md. Abu Hanif)">মোঃ আবু হানিফ (Md. Abu Hanif)</option>
+                  <option value="সিরাজুম মুনিরা খন্দকার (Sirajum Munira Khandakar)">সিরাজুম মুনিরা খন্দকার (Sirajum Munira Khandakar)</option>
+                  <option value="সিয়াম তালুকদার (Siam Talukder)">সিয়াম তালুকদার (Siam Talukder)</option>
                 </select>
               </div>
             </div>
@@ -178,7 +178,7 @@ const showModal = ref(false)
 const form = reactive({
   name: '',
   phone: '',
-  propertyTitle: 'Gulshan-1 Prime 15 Katha Residential Land with 2-Storey Building',
+  propertyTitle: 'গুলশান ১, ১৩৫/৬ — ১৫ কাঠা জমি ও ২ তলা পুরাতন দালান',
   date: new Date().toISOString().slice(0, 10),
   timeSlot: '02:30 PM - 04:00 PM',
   assignedAgent: 'মোঃ আবু হানিফ (Md. Abu Hanif)',
