@@ -33,29 +33,22 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { Cookie } from 'lucide-vue-next'
+import { useCookieConsent, type CookieConsentLevel } from '~/composables/useCookieConsent'
 
+const { hasConsented, init, setConsent } = useCookieConsent()
 const visible = ref(false)
 
 onMounted(() => {
-  try {
-    const saved = localStorage.getItem('gbrel_cookie_consent')
-    if (!saved) {
-      // Small delay so it smoothly slides in without blocking initial paint
-      setTimeout(() => {
-        visible.value = true
-      }, 1000)
-    }
-  } catch {
-    // If storage is unavailable/disabled, don't break
+  init()
+  if (!hasConsented.value) {
+    setTimeout(() => {
+      visible.value = true
+    }, 800)
   }
 })
 
-const accept = (level: 'all' | 'essential') => {
-  try {
-    localStorage.setItem('gbrel_cookie_consent', level)
-  } catch {
-    // ignore
-  }
+const accept = (level: CookieConsentLevel) => {
+  setConsent(level)
   visible.value = false
 }
 </script>

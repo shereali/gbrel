@@ -52,12 +52,29 @@ export default defineNuxtPlugin(async () => {
     }
   }
 
+  const isTrackingPermitted = () => {
+    try {
+      return localStorage.getItem('gbrel_cookie_consent') !== 'essential'
+    } catch {
+      return true
+    }
+  }
+
   const pageView = (path: string) => {
-    if (!isPublic(path)) return
+    if (!isPublic(path) || !isTrackingPermitted()) return
     start()
     if (typeof w.fbq === 'function') w.fbq('track', 'PageView')
     if (typeof w.gtag === 'function' && GA4.test(ga4Id)) w.gtag('event', 'page_view', { page_path: path, page_location: window.location.href, page_title: document.title })
     if (GTM.test(gtmId)) w.dataLayer.push({ event: 'gbrel_page_view', page_path: path })
+  }
+
+  // If the user accepts cookies later via the banner, trigger tracking immediately
+  if (typeof window !== 'undefined') {
+    window.addEventListener('gbrel:cookie-consent', ((e: CustomEvent) => {
+      if (e.detail === 'all') {
+        pageView(router.currentRoute.value.fullPath)
+      }
+    }) as EventListener)
   }
 
   // Wait a tick so the page title is set before the first page view.

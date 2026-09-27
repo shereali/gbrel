@@ -13,6 +13,9 @@ const ga4Names: Record<string, string> = {
 
 export const trackPixel = (event: string, params: Record<string, unknown> = {}, eventID?: string) => {
   try {
+    if (typeof window !== 'undefined' && localStorage.getItem('gbrel_cookie_consent') === 'essential') {
+      return
+    }
     const w = window as any
     if (typeof w.fbq === 'function') {
       const method = standardEvents.has(event) ? 'track' : 'trackCustom'
