@@ -40,7 +40,7 @@ const defaultSettings: SiteSettings = {
   working_hours: '',
   home_headline: 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন।',
   home_subtitle: '',
-  property_cta_label: 'বিস্তারিত জানুন ও সাইট ভিজিট',
+  property_cta_label: 'ক্রয় তথ্য ও সাইট ভিজিট',
   property_cta_label_hidden_price: 'সর্বশেষ দাম ও সাইট ভিজিট',
   property_cta_note: 'কাগজপত্র যাচাই, সাইট ভিজিট এবং সরাসরি মালিকপক্ষের সাথে আলোচনার সুযোগ। কোনো অগ্রিম ফি নেই।',
   owner_commission_percent: 2,

@@ -129,7 +129,7 @@ const priceSummary = computed(() => askingPriceSummary(property.value || {}))
 const hasBuyerDetails = computed(() => property.value && detailGroups(property.value).length > 0)
 const priceLabel = computed(() => property.value?.hidePrice ? (property.value.priceDisplayText || 'দাম জানতে যোগাযোগ করুন') : priceBn(priceSummary.value.amount ?? 0))
 // Button text and the promise under it are edited in Admin → Settings → Property page.
-const ctaLabel = computed(() => property.value?.hidePrice ? settings.value.property_cta_label_hidden_price : settings.value.property_cta_label)
+const ctaLabel = computed(() => property.value?.hidePrice ? (settings.value.property_cta_label_hidden_price || 'সর্বশেষ দাম ও সাইট ভিজিট') : (settings.value.property_cta_label || 'ক্রয় তথ্য ও সাইট ভিজিট'))
 const location = computed(() => { const p = property.value; return p ? (p.hideExactAddress ? [p.areaName, p.city].filter(Boolean).join(', ') : p.address || [p.areaName, p.city].filter(Boolean).join(', ')) : '' })
 const brochures = computed(() => {
   const p = property.value

@@ -119,7 +119,7 @@ const dialogRoot = ref<HTMLElement | null>(null)
 useOverlayBehavior(computed(() => props.open), () => emit('close'), dialogRoot)
 
 const { settings } = useSettings()
-const ctaLabel = computed(() => props.property.hidePrice ? settings.value.property_cta_label_hidden_price : settings.value.property_cta_label)
+const ctaLabel = computed(() => props.property.hidePrice ? (settings.value.property_cta_label_hidden_price || 'সর্বশেষ দাম ও সাইট ভিজিট') : (settings.value.property_cta_label || 'ক্রয় তথ্য ও সাইট ভিজিট'))
 const questions = computed(() => buildQuestions(!!props.property.hidePrice, props.property.propertyType))
 const totalSteps = computed(() => questions.value.length + 1)
 const bandColors = ['#B9D08F', '#9DBE73', '#7FA85A', '#5C924A', '#3A7234', '#1D4A2A']

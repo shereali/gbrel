@@ -52,13 +52,37 @@ export function totalAskingPrice(property) {
   if (!(price > 0)) return null
   if (basis === 'Total') return price
   const area = basis === 'Per land unit' ? Number(property.landSize) : basis === 'Per sqft' ? Number(property.squareFootage) : 0
-  return area > 0 ? price * area : null
+  if (area <= 0) return price
+  // If price is already greater than 50 crore for land (or > 10 lakh/sqft), it is already the total price, not the unit rate
+  if (basis === 'Per land unit' && price > 500000000 && area > 2) {
+    return price
+  }
+  if (basis === 'Per sqft' && price > 100000000 && area > 500) {
+    return price
+  }
+  return price * area
+}
+export function unitAskingPrice(property) {
+  const basis = property.buyerDetails?.priceBasis
+  const price = Number(property.price)
+  if (!(price > 0)) return null
+  if (basis === 'Total') return null
+  const area = basis === 'Per land unit' ? Number(property.landSize) : basis === 'Per sqft' ? Number(property.squareFootage) : 0
+  if (area <= 0) return price
+  if (basis === 'Per land unit' && price > 500000000 && area > 2) {
+    return price / area
+  }
+  if (basis === 'Per sqft' && price > 100000000 && area > 500) {
+    return price / area
+  }
+  return price
 }
 export function askingPriceSummary(property) {
   const total = totalAskingPrice(property)
   const basis = property.buyerDetails?.priceBasis
   const labels = { Total: 'সম্পূর্ণ প্রপার্টির চাওয়া মূল্য', 'Per land unit': `প্রতি ${property.landUnit || 'জমির একক'}`, 'Per sqft': 'প্রতি বর্গফুট', 'Per share': 'প্রতি শেয়ার' }
-  return { amount: total ?? property.price, label: total !== null ? labels.Total : labels[basis] || property.priceUnit || 'মূল্য ও অন্তর্ভুক্ত খরচ নিশ্চিত করুন' }
+  const label = property.priceUnit || (total !== null ? labels.Total : labels[basis] || 'মূল্য ও অন্তর্ভুক্ত খরচ নিশ্চিত করুন')
+  return { amount: total ?? property.price, label }
 }
 export function detailGroups(property) {
   const data = property.buyerDetails || {}
