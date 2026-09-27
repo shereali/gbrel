@@ -47,7 +47,7 @@
 
       <div class="gb-wrap"><div class="ft-base">
         <span>© {{ year }} গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL)</span>
-        <span class="ft-policies"><NuxtLink to="/privacy-policy">গোপনীয়তা নীতি</NuxtLink><NuxtLink to="/terms">শর্তাবলি</NuxtLink></span>
+        <span class="ft-policies"><NuxtLink to="/privacy-policy">গোপনীয়তা নীতি</NuxtLink><NuxtLink to="/terms">শর্তাবলি</NuxtLink><NuxtLink to="/cookie-policy">কুকি নীতি</NuxtLink></span>
         <NuxtLink to="/legal" class="ft-reg">RJSC নিবন্ধন {{ settings.company_registration_no }} · ট্রেড লাইসেন্স {{ settings.trade_license_no }}</NuxtLink>
         <span>তালিকায় দেওয়া তথ্য কেনার আগে মূল কাগজপত্রের সঙ্গে মিলিয়ে নিন।</span>
       </div></div>

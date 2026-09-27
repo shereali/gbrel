@@ -12,7 +12,9 @@
         <ol>
           <li v-for="(section, i) in sections" :key="section.id"><a :href="`#${section.id}`" :class="{ on: activeId === section.id }">{{ toBn(i + 1) }}. {{ section.title }}</a></li>
         </ol>
-        <NuxtLink v-if="otherLink" :to="otherLink.to" class="ld-other">{{ otherLink.label }}</NuxtLink>
+        <div v-if="normalizedOtherLinks.length" class="ld-other-links">
+          <NuxtLink v-for="link in normalizedOtherLinks" :key="link.to" :to="link.to" class="ld-other">{{ link.label }}</NuxtLink>
+        </div>
       </details>
 
       <article class="ld-article">
@@ -53,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { toBn } from '~/utils/propertyLabels'
 
 type LegalBlock = string | { heading?: string; list?: string[]; note?: string }
@@ -70,7 +72,14 @@ const props = defineProps<{
   phone?: string
   email?: string
   otherLink?: { to: string; label: string }
+  otherLinks?: Array<{ to: string; label: string }>
 }>()
+
+const normalizedOtherLinks = computed(() => {
+  if (Array.isArray(props.otherLinks) && props.otherLinks.length) return props.otherLinks
+  if (props.otherLink) return [props.otherLink]
+  return []
+})
 
 // Highlight the section being read in the table of contents.
 const activeId = ref('')
@@ -106,7 +115,9 @@ onBeforeUnmount(() => observer?.disconnect())
 .ld-toc a { display: block; padding: 6px 0 6px 14px; margin-left: -2px; border-left: 2px solid transparent; color: var(--gb-ink-soft); line-height: 1.45; }
 .ld-toc a:hover { color: var(--gb-paddy); }
 .ld-toc a.on { color: var(--gb-paddy); font-weight: 700; border-left-color: var(--gb-sun); }
+.ld-other-links { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
 .ld-other { display: inline-block; margin-top: 18px; color: var(--gb-leaf); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.ld-other-links .ld-other { margin-top: 0; }
 .ld-article { max-width: 72ch; }
 
 /* The plain-language summary is the page's one loud element: most people read only this. */

@@ -18,9 +18,16 @@
     <footer v-if="isPropertyDetail" class="property-footer">
       <strong>গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড</strong>
       <span>প্রপার্টি সম্পর্কে জানুন। বুঝে সিদ্ধান্ত নিন।</span>
-      <NuxtLink to="/properties">সব প্রপার্টি দেখুন</NuxtLink>
+      <div class="property-footer-links">
+        <NuxtLink to="/properties">সব প্রপার্টি দেখুন</NuxtLink>
+        <NuxtLink to="/privacy-policy">গোপনীয়তা নীতি</NuxtLink>
+        <NuxtLink to="/cookie-policy">কুকি নীতি</NuxtLink>
+      </div>
     </footer>
     <AppFooter v-else />
+
+    <!-- Floating Cookie Consent Banner -->
+    <CookieBanner />
 
     <!-- Global Website Toast Container -->
     <div class="toast-container" aria-live="polite">
@@ -51,6 +58,7 @@ import AppHeader from '~/components/AppHeader.vue'
 import AppFooter from '~/components/AppFooter.vue'
 import ComparisonDrawer from '~/components/ComparisonDrawer.vue'
 import LeadHunterWidget from '~/components/LeadHunterWidget.vue'
+import CookieBanner from '~/components/CookieBanner.vue'
 import { useToast } from '~/composables/useToast'
 
 const { toasts, remove: removeToast } = useToast()
@@ -72,6 +80,7 @@ const showLeadWidget = computed(() => !isPropertyDetail.value && !/^\/(my-listin
   min-height: calc(100vh - 80px);
 }
 .property-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18px; padding: 28px max(20px, calc((100vw - 1160px) / 2)); background: #edf2e9; color: #36513e; font-size: 12px; line-height: 1.8; }
+.property-footer-links { display: flex; gap: 14px; flex-wrap: wrap; }
 .property-footer a { color: #246346; }
 @media (max-width: 767px) { .property-footer { flex-direction: column; padding-bottom: calc(120px + env(safe-area-inset-bottom)); } }
 </style>

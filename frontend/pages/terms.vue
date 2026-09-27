@@ -9,7 +9,10 @@
     :address="settings.office_address"
     :phone="settings.contact_phone"
     :email="settings.contact_email"
-    :other-link="{ to: '/privacy-policy', label: 'গোপনীয়তা নীতি পড়ুন' }"
+    :other-links="[
+      { to: '/privacy-policy', label: 'গোপনীয়তা নীতি পড়ুন' },
+      { to: '/cookie-policy', label: 'কুকি নীতি পড়ুন' }
+    ]"
   />
 </template>
 
