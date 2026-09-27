@@ -199,6 +199,12 @@
               <select id="property-price-basis" v-model="propForm.buyerDetails.priceBasis" class="form-select">
                 <option value="">Not provided / জানা নেই</option><option value="Total">Total property price / সম্পূর্ণ মূল্য</option><option value="Per land unit">Per selected land unit / প্রতি কাঠা ইত্যাদি</option><option value="Per sqft">Per square foot / প্রতি বর্গফুট</option><option value="Per share">Per share / প্রতি শেয়ার</option>
               </select>
+              <p class="price-rule-hint">Land &amp; plots show a rate per katha, land shares a price per share, flats one fixed price, everything else a rate per sqft.</p>
+              <div v-if="!propForm.hidePrice && publicPrice.amount" class="public-price-preview" aria-live="polite">
+                <span>Buyers will see</span>
+                <strong>{{ publicPrice.amount }}</strong>
+                <small>{{ publicPrice.per }}<template v-if="publicPrice.note"> · {{ publicPrice.note }}</template></small>
+              </div>
               <label for="property-price-unit" class="form-label" style="margin-top:12px;">Price note / inclusions (optional)</label>
               <input id="property-price-unit" v-model="propForm.priceUnit" class="form-input" placeholder="e.g. Building included; registration extra" maxlength="255" />
             </div>
@@ -713,6 +719,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import PropertyBuyerDetailsEditor from './PropertyBuyerDetailsEditor.vue'
+import { priceDisplay } from '~/utils/priceDisplay'
 import { useRouter, useRoute } from 'vue-router'
 import { useProperties, type PropertyItem } from '~/composables/useProperties'
 import { usePropertyOptions } from '~/composables/usePropertyOptions'
@@ -806,6 +813,7 @@ const propForm = reactive({
   hideMortgageCalculator: false,
   agentId: 0
 })
+const publicPrice = computed(() => priceDisplay(propForm))
 const advisorOptions = ref<Array<{ id: number, name: string }>>([])
 const advisorError = ref(false)
 const amenitiesText = ref('')

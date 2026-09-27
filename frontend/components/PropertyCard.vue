@@ -25,8 +25,8 @@
           <strong class="pc-ask">দাম জানতে যোগাযোগ করুন</strong>
         </template>
         <template v-else>
-          <strong>{{ priceBn(summary.amount) }}</strong>
-          <span>{{ summary.label }}</span>
+          <strong>{{ price.amount }}</strong>
+          <span>{{ price.per }}<template v-if="price.total && price.per.includes('প্রতি')"> · মোট {{ priceBn(price.total) }}</template></span>
         </template>
       </div>
 
@@ -46,7 +46,7 @@ import { ArrowLeftRight, Heart, MapPin } from 'lucide-vue-next'
 import type { PropertyItem } from '~/composables/useProperties'
 import { useAuth } from '~/composables/useAuth'
 import { useCompare } from '~/composables/useCompare'
-import { askingPriceSummary } from '~/utils/buyerDetails.mjs'
+import { priceDisplay } from '~/utils/priceDisplay'
 import { areaLabel, completionLabels, priceBn, statusLabel, toBn, typeLabel } from '~/utils/propertyLabels'
 
 const props = defineProps<{ property: PropertyItem; wide?: boolean }>()
@@ -55,9 +55,14 @@ const { isInCompare, toggleCompare } = useCompare()
 
 const imageBroken = ref(false)
 const image = computed(() => props.property.featureImage || props.property.images?.[0] || '')
-const summary = computed(() => askingPriceSummary(props.property))
+const price = computed(() => priceDisplay(props.property))
 const area = computed(() => areaLabel(props.property.squareFootage, props.property.landSize, props.property.landUnit))
-const place = computed(() => [props.property.areaName, props.property.city].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(', '))
+// Prefer the Bangla address (last two parts); area/city fields are often in English.
+const place = computed(() => {
+  const address = String(props.property.address || '')
+  if (!props.property.hideExactAddress && /[\u0980-\u09FF]/.test(address)) return address.split(',').map(part => part.trim()).filter(Boolean).slice(-2).join(', ').replace(/-[০-৯]{4}$/, '')
+  return [props.property.areaName, props.property.city].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(', ')
+})
 </script>
 
 <style scoped>

@@ -13,7 +13,7 @@
       </div>
       <header class="property-heading">
         <div><div class="property-badges"><span>{{ typeLabel(property.propertyType) }}</span><span>{{ listingLabels[property.listingType] || property.listingType }}</span><span v-if="property.completionStatus">{{ completionLabels[property.completionStatus] || property.completionStatus }}</span></div><h1>{{ property.title }}</h1><p class="property-location"><MapPin :size="17" /> {{ location }}</p></div>
-        <div class="asking-price"><span>তালিকাভুক্ত মূল্য</span><strong>{{ priceLabel }}</strong><small v-if="!property.hidePrice">{{ priceSummary.label }}</small>
+        <div class="asking-price"><span>{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span><strong>{{ price.amount }}</strong><small v-if="price.note">{{ price.note }}</small>
           <ul v-if="trustFacts.length" class="trust-facts" aria-label="বিক্রেতার দেওয়া তথ্য"><li v-for="fact in trustFacts" :key="fact"><Check :size="15" aria-hidden="true" />{{ fact }}</li></ul>
           <div ref="heroCta" class="hero-cta"><button class="cta-sun" @click="openInquiry('hero_button')">{{ ctaLabel }}</button><a v-if="waLink" class="cta-wa" :href="waLink" target="_blank" rel="noopener noreferrer" @click="track('Contact', { method: 'WhatsApp', placement: 'hero' })"><MessageCircle :size="18" aria-hidden="true" /> WhatsApp-এ জিজ্ঞেস করুন</a></div>
           <small v-if="settings.property_cta_note" class="cta-note">{{ settings.property_cta_note }}</small>
@@ -27,7 +27,7 @@
       <div class="property-at-a-glance">
         <div><Ruler :size="20" /><span>আয়তন<strong>{{ areaLabel(property.squareFootage, property.landSize, property.landUnit) || 'জেনে নিন' }}</strong></span></div>
         <div><Building2 :size="20" /><span>ধরন<strong>{{ typeLabel(property.propertyType) }}</strong></span></div>
-        <div><Compass :size="20" /><span>{{ property.bedrooms ? 'বেডরুম' : 'অভিমুখ' }}<strong>{{ property.bedrooms || property.facing || 'জেনে নিন' }}</strong></span></div>
+        <div><Compass :size="20" /><span>{{ property.bedrooms ? 'বেডরুম' : 'অভিমুখ' }}<strong>{{ property.bedrooms ? toBn(property.bedrooms) : (facingLabel(property.facing) || 'জেনে নিন') }}</strong></span></div>
         <div><CircleCheck :size="20" /><span>অবস্থা<strong>{{ statusLabel(property.status) }}</strong></span></div>
       </div>
       <div ref="inlineStart"><PropertySurveyStart :property-type="property.propertyType" @choose="purpose => openInquiry('inline_first_question', purpose)" /></div>
@@ -53,22 +53,22 @@
       <section class="property-bottom-cta" aria-labelledby="bottom-cta-heading">
         <div class="bottom-cta-card">
           <div class="bottom-cta-content">
-            <span class="bottom-cta-badge">সরাসরি পরামর্শ ও সাইট ভিজিট</span>
+            <span class="bottom-cta-badge">সাইট ভিজিট ও কাগজপত্র</span>
             <h2 id="bottom-cta-heading">প্রপার্টিটি নিজের চোখে দেখতে চান বা কোনো প্রশ্ন আছে?</h2>
             <p class="bottom-cta-desc">
-              কাগজপত্র যাচাই, সরেজমিনে সাইট পরিদর্শন এবং সরাসরি মালিকপক্ষের সাথে গঠনমূলক আলোচনার জন্য আমরা প্রস্তুত। কোনো ধরনের হিডেন চার্জ বা অগ্রিম বুকিং ফি নেই।
+              দাম, কাগজপত্র আর সাইট ভিজিট নিয়ে আপনার সব প্রশ্নের উত্তর দেবে GBREL টিম। বিক্রির পুরো প্রক্রিয়া আমরাই পরিচালনা করি। কোনো অগ্রিম বা লুকানো ফি নেই।
             </p>
             <ul class="bottom-cta-highlights">
-              <li><Check :size="16" aria-hidden="true" /> ১০০% নিষ্কণ্টক ও মূল দলিল যাচাইকৃত</li>
-              <li><Check :size="16" aria-hidden="true" /> অনুমোদিত প্রতিনিধির সাথে সরাসরি সাইট পরিদর্শন</li>
-              <li><Check :size="16" aria-hidden="true" /> ব্যাংক লেনদেন নিরাপত্তা ও লিগ্যাল সাপোর্ট</li>
+              <li><Check :size="16" aria-hidden="true" /> কেনার আগে মূল কাগজপত্র নিজে দেখে নেওয়ার সুযোগ</li>
+              <li><Check :size="16" aria-hidden="true" /> GBREL প্রতিনিধির সাথে সাইট ভিজিট</li>
+              <li><Check :size="16" aria-hidden="true" /> দাম ও শর্তের আলোচনা GBREL-এর সাথে, এক জায়গায়</li>
             </ul>
           </div>
           <div class="bottom-cta-actions">
             <div class="bottom-price-tag">
-              <span class="price-caption">তালিকাভুক্ত মূল্য</span>
-              <strong class="price-val">{{ priceLabel }}</strong>
-              <small v-if="!property.hidePrice">{{ priceSummary.label }}</small>
+              <span class="price-caption">{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span>
+              <strong class="price-val">{{ price.amount }}</strong>
+              <small v-if="price.note">{{ price.note }}</small>
             </div>
             <button class="cta-sun bottom-cta-btn" @click="openInquiry('bottom_section_cta')">
               {{ ctaLabel }}
@@ -85,7 +85,7 @@
         </div>
       </section>
 
-      <aside v-if="!inquiryOpen && !lightboxOpen" class="mobile-inquiry-bar" :class="{ shown: !heroCtaVisible }" aria-label="প্রপার্টি সম্পর্কে যোগাযোগ"><div><strong>{{ priceLabel }}</strong><small>{{ property.hidePrice ? 'বিস্তারিত জেনে নিন' : priceSummary.label }}</small></div><a v-if="waLink" class="bar-wa" :href="waLink" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp-এ জিজ্ঞেস করুন" @click="track('Contact', { method: 'WhatsApp', placement: 'sticky' })"><MessageCircle :size="22" /></a><button class="cta-sun" @click="openInquiry('mobile_sticky')">{{ ctaLabel }}</button></aside>
+      <aside v-if="!inquiryOpen && !lightboxOpen" class="mobile-inquiry-bar" :class="{ shown: !heroCtaVisible }" aria-label="প্রপার্টি সম্পর্কে যোগাযোগ"><div><strong>{{ price.amount }}</strong><small>{{ price.hidden ? 'বিস্তারিত জেনে নিন' : price.per }}</small></div><a v-if="waLink" class="bar-wa" :href="waLink" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp-এ জিজ্ঞেস করুন" @click="track('Contact', { method: 'WhatsApp', placement: 'sticky' })"><MessageCircle :size="22" /></a><button class="cta-sun" @click="openInquiry('mobile_sticky')">{{ ctaLabel }}</button></aside>
       <PropertyInquiry :key="property.id" :open="inquiryOpen" :property="property" :source="inquirySource" :start-purpose="startPurpose" :whatsapp="leadWhatsapp" @close="inquiryOpen = false" @saved="leadSaved" />
     </div>
     <Teleport to="body"><div v-if="lightboxOpen && images.length" ref="lightboxRoot" class="photo-overlay" role="dialog" aria-modal="true" aria-label="প্রপার্টির ছবি" @click.self="lightboxOpen = false" @keydown.left="previousPhoto" @keydown.right="nextPhoto"><button class="photo-close" aria-label="ছবি বন্ধ করুন" @click="lightboxOpen = false"><X :size="25" /></button><img :src="images[photoIndex]" :alt="`${property?.title} — ছবি ${photoIndex + 1}`" /><div class="photo-controls"><button :disabled="images.length < 2" aria-label="আগের ছবি" @click="previousPhoto"><ChevronLeft /></button><span aria-live="polite">{{ photoIndex + 1 }} / {{ images.length }}</span><button :disabled="images.length < 2" aria-label="পরের ছবি" @click="nextPhoto"><ChevronRight /></button></div></div></Teleport>
@@ -100,13 +100,14 @@ import { formatBDT, formatArea } from '~/composables/useCurrency'
 import { useAuth } from '~/composables/useAuth'
 import { useCompare } from '~/composables/useCompare'
 import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
-import { askingPriceSummary, detailGroups } from '~/utils/buyerDetails.mjs'
+import { detailGroups } from '~/utils/buyerDetails.mjs'
+import { priceDisplay } from '~/utils/priceDisplay'
 import { safeBrochureUrl } from '~/utils/propertyInquiry.mjs'
 import { trackPixel } from '~/utils/metaPixel'
 import { useSettings } from '~/composables/useSettings'
 import PropertySurveyStart from '~/components/PropertySurveyStart.vue'
 import PropertyPlotSheet from '~/components/PropertyPlotSheet.vue'
-import { areaLabel, completionLabels, listingLabels, priceBn, statusLabel, typeLabel } from '~/utils/propertyLabels'
+import { areaLabel, completionLabels, facingLabel, listingLabels, statusLabel, toBn, typeLabel } from '~/utils/propertyLabels'
 const route = useRoute()
 const { fetchPropertyById, fetchAgents, agents } = useProperties()
 const { isPropertySaved, toggleSaveProperty } = useAuth()
@@ -125,9 +126,8 @@ const { settings, fetchSettings } = useSettings()
 fetchSettings()
 const leadWhatsapp = computed(() => (!property.value?.hideAgentContact && agent.value?.whatsapp) || settings.value.whatsapp_number || '')
 const images = computed(() => [...new Set((property.value?.images || []).filter(Boolean))])
-const priceSummary = computed(() => askingPriceSummary(property.value || {}))
+const price = computed(() => priceDisplay(property.value))
 const hasBuyerDetails = computed(() => property.value && detailGroups(property.value).length > 0)
-const priceLabel = computed(() => property.value?.hidePrice ? (property.value.priceDisplayText || 'দাম জানতে যোগাযোগ করুন') : priceBn(priceSummary.value.amount ?? 0))
 // Button text and the promise under it are edited in Admin → Settings → Property page.
 const ctaLabel = computed(() => property.value?.hidePrice ? (settings.value.property_cta_label_hidden_price || 'সর্বশেষ দাম ও সাইট ভিজিট') : (settings.value.property_cta_label || 'ক্রয় তথ্য ও সাইট ভিজিট'))
 const location = computed(() => { const p = property.value; return p ? (p.hideExactAddress ? [p.areaName, p.city].filter(Boolean).join(', ') : p.address || [p.areaName, p.city].filter(Boolean).join(', ')) : '' })
@@ -142,7 +142,7 @@ const brochures = computed(() => {
 const specifications = computed(() => {
   const p = property.value
   if (!p) return []
-  return [{ label: 'আয়তন', value: areaLabel(p.squareFootage, p.landSize, p.landUnit) }, { label: 'প্রপার্টির ধরন', value: typeLabel(p.propertyType) }, { label: 'নির্মাণের অবস্থা', value: completionLabels[p.completionStatus] || p.completionStatus }, { label: 'অভিমুখ', value: p.facing }, { label: 'পার্কিং', value: p.parking }, { label: 'মোট তলা', value: p.totalFloors }, { label: 'বেডরুম', value: p.bedrooms }, { label: 'বাথরুম', value: p.bathrooms }, { label: 'তালিকায় দেওয়া হস্তান্তর / নির্মাণ বছর', value: p.yearBuilt }].filter(item => item.value)
+  return [{ label: 'আয়তন', value: areaLabel(p.squareFootage, p.landSize, p.landUnit) }, { label: 'প্রপার্টির ধরন', value: typeLabel(p.propertyType) }, { label: 'নির্মাণের অবস্থা', value: completionLabels[p.completionStatus] || p.completionStatus }, { label: 'অভিমুখ', value: facingLabel(p.facing) }, { label: 'পার্কিং', value: p.parking ? `${toBn(p.parking)}টি` : '' }, { label: 'মোট তলা', value: p.totalFloors ? toBn(p.totalFloors) : '' }, { label: 'বেডরুম', value: p.bedrooms ? toBn(p.bedrooms) : '' }, { label: 'বাথরুম', value: p.bathrooms ? toBn(p.bathrooms) : '' }, { label: 'তালিকায় দেওয়া হস্তান্তর / নির্মাণ বছর', value: p.yearBuilt ? toBn(p.yearBuilt) : '' }].filter(item => item.value)
 })
 const whatsappUrl = computed(() => `https://wa.me/${(agent.value?.whatsapp || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hello GBREL, I would like details about ${property.value?.title} (GBR-${property.value?.id}).`)}`)
 const track = (event: string, extra: Record<string, unknown> = {}) => trackPixel(event, { content_ids: [String(property.value?.id)], content_type: 'product', content_name: property.value?.title, ...extra })
@@ -279,7 +279,7 @@ const shareProperty = async () => {
   .property-at-a-glance { grid-template-columns:1fr 1fr; gap:22px 0; padding:23px 0; margin-bottom:22px; }.property-at-a-glance > div { justify-content:flex-start; padding:0 12px; gap:12px; }.property-at-a-glance > div:nth-child(2) { border:0; }.property-at-a-glance strong { font-size:15px; }
   .interest-banner { flex-direction:column; align-items:stretch; padding:22px; gap:15px; margin-bottom:24px; }.interest-banner h2 { font-size:21px; }.interest-banner p { font-size:12px; }.interest-banner .primary { width:100%; }
   .property-body { grid-template-columns:minmax(0,1fr); gap:24px; }.section-nav { gap:23px; }.section-nav a { font-size:12px; }.detail-section { padding:28px 0; }.detail-section h2 { font-size:22px; }.detail-section p { font-size:14px; }.property-specs { grid-template-columns:1fr; }.amenity-list { grid-template-columns:1fr; }.inquiry-sidebar { position:static; }.advisor-card h2 br { display:none; }.advisor-card { padding:24px; }.advisor-symbol { margin-bottom:16px; }
-  .mobile-inquiry-bar { position:fixed; bottom:0; left:0; right:0; z-index:900; display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; border-top:1px solid #d9e2d3; padding:12px 18px max(12px,env(safe-area-inset-bottom)); box-shadow:0 -5px 30px #1a332216; }.mobile-inquiry-bar > div { min-width:0; flex:1; }.mobile-inquiry-bar strong { font-size:18px; line-height:1.4; display:block; }.mobile-inquiry-bar small { font-size:10px; display:block; color:#667562; line-height:1.5; }.mobile-inquiry-bar .primary { padding:12px 16px; font-size:13px; min-height:48px; flex-shrink:0; }
+  .mobile-inquiry-bar { position:fixed; bottom:0; left:0; right:0; z-index:900; display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; border-top:1px solid #d9e2d3; padding:12px 18px max(12px,env(safe-area-inset-bottom)); box-shadow:0 -5px 30px #1a332216; }.mobile-inquiry-bar > div { min-width:0; flex:1; }.mobile-inquiry-bar strong { font-size:18px; line-height:1.4; display:block; white-space:nowrap; }.mobile-inquiry-bar small { font-size:10px; display:block; color:#667562; line-height:1.5; }.mobile-inquiry-bar .primary { padding:12px 16px; font-size:13px; min-height:48px; flex-shrink:0; }
 }
 @media (max-width:767px) {
   .property-shell { display:flex; flex-direction:column; }
@@ -294,7 +294,7 @@ const shareProperty = async () => {
   .hero-cta .cta-sun { width:100%; }
   .mobile-inquiry-bar { transform:translateY(110%); transition:transform .25s ease; gap:10px; }
   .mobile-inquiry-bar.shown { transform:none; }
-  .mobile-inquiry-bar .cta-sun { min-height:48px; font-size:16px; padding:10px 18px; flex-shrink:0; }
+  .mobile-inquiry-bar .cta-sun { min-height:48px; font-size:15px; padding:10px 16px; flex-shrink:1; min-width:0; white-space:nowrap; }
   .bar-wa { width:48px; height:48px; border-radius:50%; display:grid; place-items:center; background:#1FA855; color:#fff; flex-shrink:0; }
   .bottom-cta-card { grid-template-columns:1fr; padding:28px 20px; gap:24px; border-radius:16px; }
   .property-bottom-cta { margin:32px 0 20px; }

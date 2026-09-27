@@ -106,7 +106,7 @@ import type { PropertyItem } from '~/composables/useProperties'
 import { formatBDT } from '~/composables/useCurrency'
 import { useApiUrl } from '~/composables/useApi'
 import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
-import { askingPriceSummary } from '~/utils/buyerDetails.mjs'
+import { priceDisplay } from '~/utils/priceDisplay'
 import { normalizePhone, validPhone, savePropertyInquiry } from '~/utils/propertyInquiry.mjs'
 import { buildQuestions, labelFor, scoreLead, type Answers } from '~/utils/leadSurvey'
 import { priceBn, toBn } from '~/utils/propertyLabels'
@@ -139,7 +139,11 @@ const started = ref(false)
 const current = computed(() => questions.value[step.value])
 const score = computed(() => scoreLead(questions.value, answers))
 const tier = computed(() => score.value.tier)
-const priceText = computed(() => props.property.hidePrice ? (props.property.priceDisplayText || 'দাম জানতে অনুরোধ করুন') : priceBn(askingPriceSummary(props.property).amount ?? 0))
+const priceText = computed(() => {
+  const d = priceDisplay(props.property)
+  if (d.hidden) return props.property.priceDisplayText || 'দাম জানতে অনুরোধ করুন'
+  return d.total && d.per.includes('প্রতি') ? `${d.amount} ${d.per} · মোট ${priceBn(d.total)}` : d.amount
+})
 
 const track = (event: string, extra: Record<string, unknown> = {}, eventID?: string) =>
   trackPixel(event, { content_ids: [String(props.property.id)], content_type: 'product', content_name: props.property.title, ...extra }, eventID)

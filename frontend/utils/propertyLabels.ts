@@ -22,12 +22,17 @@ export const completionLabels: Record<string, string> = {
   'Under Construction': 'নির্মাণাধীন',
   'Upcoming Project': 'আসন্ন প্রকল্প'
 }
+export const facingLabels: Record<string, string> = {
+  North: 'উত্তরমুখী', South: 'দক্ষিণমুখী', East: 'পূর্বমুখী', West: 'পশ্চিমমুখী',
+  'North-East': 'উত্তর-পূর্বমুখী', 'North-West': 'উত্তর-পশ্চিমমুখী', 'South-East': 'দক্ষিণ-পূর্বমুখী', 'South-West': 'দক্ষিণ-পশ্চিমমুখী'
+}
 export const unitLabels: Record<string, string> = { Katha: 'কাঠা', Bigha: 'বিঘা', Shotok: 'শতক', Decimal: 'শতাংশ', Sqft: 'বর্গফুট' }
 
 const bnDigits = '০১২৩৪৫৬৭৮৯'
 export const toBn = (v: string | number) => String(v).replace(/\d/g, d => bnDigits[Number(d)])
 
 export const typeLabel = (t?: string) => (t && typeLabels[t]) || t || ''
+export const facingLabel = (f?: string) => (f && facingLabels[f]) || f || ''
 export const statusLabel = (s?: string) => (s && statusLabels[s]) || s || ''
 
 export const areaLabel = (sqft?: number, landSize?: number, landUnit?: string) => {

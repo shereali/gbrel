@@ -26,7 +26,7 @@ class SiteSettings
             'home_subtitle' => ['default' => 'প্লট, জমি শেয়ার আর ফ্ল্যাটের তালিকা — প্রতিটির দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য এক জায়গায়। পছন্দ হলে আমাদের টিমের সঙ্গে সরাসরি কথা বলুন।', 'rules' => ['string', 'max:400']],
             'property_cta_label' => ['default' => 'ক্রয় তথ্য ও সাইট ভিজিট', 'rules' => ['string', 'min:2', 'max:50']],
             'property_cta_label_hidden_price' => ['default' => 'সর্বশেষ দাম ও সাইট ভিজিট', 'rules' => ['string', 'min:2', 'max:50']],
-            'property_cta_note' => ['default' => 'কাগজপত্র যাচাই, সাইট ভিজিট এবং সরাসরি মালিকপক্ষের সাথে আলোচনার সুযোগ। কোনো অগ্রিম ফি নেই।', 'rules' => ['string', 'max:250']],
+            'property_cta_note' => ['default' => 'কাগজপত্রের তথ্য, মোট খরচের হিসাব আর সাইট ভিজিটের সময়, সব জানাবে GBREL টিম। কোনো অগ্রিম ফি নেই।', 'rules' => ['string', 'max:250']],
             'owner_commission_percent' => ['default' => 2, 'rules' => ['numeric', 'min:0', 'max:20']],
             'owner_terms' => ['default' => self::defaultOwnerTerms(), 'rules' => ['string', 'max:6000']],
             'listing_document_types' => ['default' => self::defaultDocumentTypes(), 'rules' => ['array', 'min:1', 'max:40']],

@@ -42,7 +42,7 @@ const defaultSettings: SiteSettings = {
   home_subtitle: '',
   property_cta_label: 'ক্রয় তথ্য ও সাইট ভিজিট',
   property_cta_label_hidden_price: 'সর্বশেষ দাম ও সাইট ভিজিট',
-  property_cta_note: 'কাগজপত্র যাচাই, সাইট ভিজিট এবং সরাসরি মালিকপক্ষের সাথে আলোচনার সুযোগ। কোনো অগ্রিম ফি নেই।',
+  property_cta_note: 'কাগজপত্রের তথ্য, মোট খরচের হিসাব আর সাইট ভিজিটের সময়, সব জানাবে GBREL টিম। কোনো অগ্রিম ফি নেই।',
   owner_commission_percent: 2,
   owner_terms: '',
   owner_terms_version: '',

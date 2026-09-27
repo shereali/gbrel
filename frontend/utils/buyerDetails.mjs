@@ -11,6 +11,7 @@ export const buyerDetailGroups = [
   ] },
   { key: 'terms', title: 'Price, payment & buyer costs', bn: 'মূল্য, পেমেন্ট ও অতিরিক্ত খরচ', fields: [
     choice('priceBasis', 'How is the asking price quoted?', 'দামের ভিত্তি', [['Total', 'সম্পূর্ণ প্রপার্টির মূল্য'], ['Per land unit', 'প্রতি জমির একক'], ['Per sqft', 'প্রতি বর্গফুট'], ['Per share', 'প্রতি শেয়ার']]),
+    field('shareLandSize', 'Land per share (in the listing land unit)', 'প্রতি শেয়ারে জমির পরিমাণ', 'number', { max: 100000 }),
     choice('negotiable', 'Negotiable price', 'দাম আলোচনা সাপেক্ষ', [['Yes', 'হ্যাঁ'], ['No', 'না']]),
     field('priceIncludes', 'What does the price include?', 'মূল্যের মধ্যে যা আছে', 'textarea'),
     field('depositPercent', 'Proposed advance / bayna (%)', 'প্রস্তাবিত বায়না (%)', 'number', { max: 100 }),
@@ -46,36 +47,19 @@ export const buyerDetailGroups = [
   ] },
 ]
 export const hasDetail = value => value !== undefined && value !== null && String(value).trim() !== ''
+// `price` is quoted on the basis chosen in priceBasis: the whole property, one land unit, one sqft or one share.
 export function totalAskingPrice(property) {
   const basis = property.buyerDetails?.priceBasis
   const price = Number(property.price)
   if (!(price > 0)) return null
-  if (basis === 'Total') return price
-  const area = basis === 'Per land unit' ? Number(property.landSize) : basis === 'Per sqft' ? Number(property.squareFootage) : 0
-  if (area <= 0) return price
-  // If price is already greater than 50 crore for land (or > 10 lakh/sqft), it is already the total price, not the unit rate
-  if (basis === 'Per land unit' && price > 500000000 && area > 2) {
-    return price
-  }
-  if (basis === 'Per sqft' && price > 100000000 && area > 500) {
-    return price
-  }
-  return price * area
+  if (basis === 'Per land unit') return Number(property.landSize) > 0 ? price * Number(property.landSize) : null
+  if (basis === 'Per sqft') return Number(property.squareFootage) > 0 ? price * Number(property.squareFootage) : null
+  return basis === 'Total' ? price : null
 }
 export function unitAskingPrice(property) {
   const basis = property.buyerDetails?.priceBasis
   const price = Number(property.price)
-  if (!(price > 0)) return null
-  if (basis === 'Total') return null
-  const area = basis === 'Per land unit' ? Number(property.landSize) : basis === 'Per sqft' ? Number(property.squareFootage) : 0
-  if (area <= 0) return price
-  if (basis === 'Per land unit' && price > 500000000 && area > 2) {
-    return price / area
-  }
-  if (basis === 'Per sqft' && price > 100000000 && area > 500) {
-    return price / area
-  }
-  return price
+  return price > 0 && (basis === 'Per land unit' || basis === 'Per sqft' || basis === 'Per share') ? price : null
 }
 export function askingPriceSummary(property) {
   const total = totalAskingPrice(property)

@@ -47,18 +47,27 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { areaLabel } from '~/utils/propertyLabels'
+import { areaLabel, toBn } from '~/utils/propertyLabels'
 
 const props = defineProps<{ property: any }>()
 const bd = computed(() => props.property?.buyerDetails || {})
 const sizeText = computed(() => areaLabel(props.property?.squareFootage, props.property?.landSize, props.property?.landUnit) || 'জমি')
-const place = computed(() => [props.property?.areaName, props.property?.city].filter(Boolean).filter((v: string, i: number, a: string[]) => a.indexOf(v) === i).join(', '))
+// Prefer the Bangla address (last two parts, e.g. "গুলশান-১, ঢাকা"); area/city fields are often in English.
+const place = computed(() => {
+  const address = String(props.property?.address || '')
+  if (/[\u0980-\u09FF]/.test(address)) return address.split(',').map(part => part.trim()).filter(Boolean).slice(-2).join(', ').replace(/-[০-৯]{4}$/, '')
+  return [props.property?.areaName, props.property?.city].filter(Boolean).filter((v: string, i: number, a: string[]) => a.indexOf(v) === i).join(', ')
+})
 const corner = computed(() => bd.value.cornerPlot === 'Yes')
-const building = computed(() => (bd.value.buildingDescription || '').split(/[,،\n]/)[0]?.trim().slice(0, 40) || '')
+const building = computed(() => {
+  if (Number(props.property?.totalFloors) > 0) return `${toBn(props.property.totalFloors)} তলা ভবন`
+  const first = (bd.value.buildingDescription || '').split(/[,،।:\n]/)[0]?.trim() || ''
+  return first.length <= 28 ? first : ''
+})
 const landUse = computed(() => ({ Residential: 'আবাসিক', Commercial: 'বাণিজ্যিক', Mixed: 'মিশ্র ব্যবহার' } as Record<string, string>)[bd.value.landUse] || '')
 const roadLabel = computed(() => {
   const m = props.property?.hideExactAddress ? null : String(props.property?.address || '').match(/(?:রোড|Road)\s*(?:নম্বর|No\.?|#)?\s*([\d০-৯]+)/i)
-  const width = bd.value.roadWidth ? ` · ${bd.value.roadWidth} ফুট রাস্তা` : ''
+  const width = bd.value.roadWidth ? ` · ${toBn(bd.value.roadWidth)} ফুট রাস্তা` : ''
   return m ? `রোড ${m[1]}${width}` : (width ? width.slice(3) : '')
 })
 </script>

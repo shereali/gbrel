@@ -1807,3 +1807,8 @@ body.admin-theme-light {
 .admin-shell .property-guide-panel .guide-floating-badge-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .admin-shell .property-guide-panel .guide-floating-badge-row .badge { white-space: nowrap; }
 .admin-shell .property-guide-panel .guide-step-item, .admin-shell .property-guide-panel .guide-step-item:hover { transform: none; margin: 0; } .admin-shell .guide-floating-badge { white-space: nowrap; }
+.admin-shell .price-rule-hint { font-size: .75rem; color: var(--admin-text-muted); margin: 6px 0 0; line-height: 1.45; }
+.admin-shell .public-price-preview { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: #EEF2E9; border: 1px solid #D6DDCB; display: flex; flex-direction: column; gap: 2px; color: #1D4A2A; }
+.admin-shell .public-price-preview span { font-size: .72rem; color: #4A5A4E; }
+.admin-shell .public-price-preview strong { font-family: "Anek Bangla", "Noto Sans Bengali", sans-serif; font-size: 1.35rem; }
+.admin-shell .public-price-preview small { font-size: .8rem; color: #4A5A4E; }
