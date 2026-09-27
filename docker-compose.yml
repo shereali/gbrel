@@ -68,6 +68,10 @@ services:
     image: mysql:8
     container_name: gbrel-db-1
     restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_DATABASE: gbrel
       MYSQL_USER: gbrel_user
@@ -89,7 +93,9 @@ services:
 
 volumes:
   backend-storage:
+    name: gbrel_backend_storage
   db-data:
+    name: gbrel_db_data
 
 networks:
   default:

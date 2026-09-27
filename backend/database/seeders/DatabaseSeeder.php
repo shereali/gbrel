@@ -9,9 +9,11 @@ use App\Models\Lead;
 use App\Models\Permission;
 use App\Models\Property;
 use App\Models\Role;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\Viewing;
 use App\Support\LaunchListings;
+use App\Support\SiteSettings;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -243,10 +245,7 @@ class DatabaseSeeder extends Seeder
 
         }
 
-        // Seed deploys must never delete leads, viewings or owner submissions. The launch listings are only
-        // inserted into an empty database; after that they are managed in Admin → Properties.
-        if (Property::query()->doesntExist()) {
-            // 3. Seed Official Representatives / Agents from PDFs
+        // 3. Seed Official Representatives / Agents from PDFs (Insert once, next time update)
             $agent1 = Agent::updateOrCreate(
                 ['email' => 'abu.hanif@gbrel.com'],
                 [
@@ -307,9 +306,9 @@ class DatabaseSeeder extends Seeder
                 ]
             );
 
-            // 4. Seed 4 Verified Properties from PDFs
+            // 4. Seed 4 Verified Properties from PDFs (Insert once, next time update. Never delete other properties)
             Property::updateOrCreate(
-                ['id' => 1],
+                ['slug' => 'gulshan-1-135-6-15-katha-building'],
                 [
                     'title' => 'গুলশান ১, ১৩৫/৬ — ১৫ কাঠা জমি ও ২ তলা পুরাতন দালান',
                     'slug' => 'gulshan-1-135-6-15-katha-building',
@@ -404,7 +403,7 @@ class DatabaseSeeder extends Seeder
             );
 
             Property::updateOrCreate(
-                ['id' => 2],
+                ['slug' => 'gulshan-2-road-92-plot-06-17-katha-building'],
                 [
                     'title' => 'গুলশান ২, রোড ৯২, প্লট ০৬ — ১৭.১৮ কাঠা জমি ও ২ তলা বিল্ডিং',
                     'slug' => 'gulshan-2-road-92-plot-06-17-katha-building',
@@ -498,7 +497,7 @@ class DatabaseSeeder extends Seeder
             );
 
             Property::updateOrCreate(
-                ['id' => 3],
+                ['slug' => 'gulshan-2-road-48-4b-31-katha-commercial-corner-plot'],
                 [
                     'title' => 'গুলশান-২, রোড ৪৮/৪বি — ৩১ কাঠা বাণিজ্যিক কর্নার প্লট ও ২ তলা দালান',
                     'slug' => 'gulshan-2-road-48-4b-31-katha-commercial-corner-plot',
@@ -593,7 +592,7 @@ class DatabaseSeeder extends Seeder
             );
 
             Property::updateOrCreate(
-                ['id' => 4],
+                ['slug' => 'lake-view-gulshan-1-road-8-23-katha-building'],
                 [
                     'title' => 'লেক ভিউ — গুলশান-১ রোড ৮, বাড়ি ১০ এ ২৩ কাঠা জমিতে ৬ তলা বাণিজ্যিক ভবন',
                     'slug' => 'lake-view-gulshan-1-road-8-23-katha-building',
@@ -687,8 +686,14 @@ class DatabaseSeeder extends Seeder
                 ]
             );
 
-            LaunchListings::correct();
-            LaunchListings::rewriteCopy();
+        LaunchListings::correct();
+        LaunchListings::rewriteCopy();
+
+        // 5. Seed Default Site Settings (Insert once if missing, keep existing safe)
+        foreach (SiteSettings::definitions() as $key => $def) {
+            if (! Setting::where('key', $key)->exists() && $def['default'] !== '') {
+                Setting::setVal($key, $def['default']);
+            }
         }
 
         // Sample viewings, leads, transactions and brochures are fake, so they stay out of production.
