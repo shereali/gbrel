@@ -176,10 +176,7 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // Demo staff, agents, listings and leads are only for local development.
-        if (! $this->shouldSeedDemoData()) {
-            return;
-        }
+        // Demo staff accounts, official agents, verified properties, and brochures are seeded in all environments.
 
         User::updateOrCreate(
             ['email' => 'manager@gbrel.com'],
