@@ -9,6 +9,14 @@
         <ChevronRight :size="20" aria-hidden="true" />
       </button>
     </div>
+    <div class="ss-cta-divider" aria-hidden="true">
+      <span>অথবা সরাসরি</span>
+    </div>
+    <div class="ss-cta-wrap">
+      <button type="button" class="ss-cta-btn" @click="emit('direct')">
+        {{ ctaLabel || 'ক্রয় তথ্য ও সাইট ভিজিট' }}
+      </button>
+    </div>
     <p class="ss-fine">এক মিনিটের কম লাগবে। কোনো বুকিং বা পেমেন্ট নেই।</p>
   </section>
 </template>
@@ -18,9 +26,12 @@ import { ChevronRight } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { purposeOptionsFor } from '~/utils/leadSurvey'
 
-const props = defineProps<{ side?: boolean; propertyType?: string }>()
+const props = defineProps<{ side?: boolean; propertyType?: string; ctaLabel?: string }>()
 const options = computed(() => purposeOptionsFor(props.propertyType))
-const emit = defineEmits<{ choose: [purpose: string] }>()
+const emit = defineEmits<{
+  choose: [purpose: string]
+  direct: []
+}>()
 const uid = Math.random().toString(36).slice(2, 8)
 </script>
 
@@ -36,11 +47,19 @@ const uid = Math.random().toString(36).slice(2, 8)
 .ss-option:hover { background: #fff; color: #1D4A2A; border-color: #fff; }
 .ss-option:focus-visible { outline: 3px solid #E2651C; outline-offset: 3px; }
 .ss-option svg { flex-shrink: 0; opacity: .8; }
+.ss-cta-divider { display: flex; align-items: center; text-align: center; margin: 14px 0 12px; color: #A9BAA0; font-size: 12px; }
+.ss-cta-divider::before, .ss-cta-divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255, 255, 255, .18); }
+.ss-cta-divider span { padding: 0 10px; font-weight: 500; }
+.ss-cta-wrap { display: flex; justify-content: center; }
+.ss-cta-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 12px 32px; border: 0; border-radius: 999px; background: #E2651C; color: #fff; font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif; font-size: 17px; font-weight: 700; cursor: pointer; box-shadow: 0 10px 22px -10px rgba(194, 83, 15, .9); transition: background .2s ease, transform .15s ease; max-width: 380px; width: 100%; }
+.ss-cta-btn:hover { background: #C2530F; transform: translateY(-1px); }
+.ss-cta-btn:active { transform: translateY(0); }
 .ss-fine { font-size: 12px; color: #A9BAA0; margin: 14px 0 0; }
 
 .ss--side { margin-bottom: 0; padding: 26px 22px 22px; }
 .ss--side .ss-title { font-size: 25px; margin-right: 60px; }
 .ss--side .ss-options { grid-template-columns: 1fr; }
+.ss--side .ss-cta-btn { max-width: 100%; }
 .ss--side::after { width: 100px; height: 100px; right: -34px; top: -34px; }
 
 @media (max-width: 767px) {

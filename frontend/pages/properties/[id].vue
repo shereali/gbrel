@@ -24,8 +24,9 @@
         <template v-if="slides.length">
           <template v-if="slides[0].kind === 'video' && video">
             <div v-if="heroPlaying" class="gallery-primary gallery-player">
-              <video v-if="video.kind === 'file'" :src="video.src" :poster="videoPoster || undefined" autoplay controls playsinline></video>
-              <iframe v-else :src="video.src" title="প্রপার্টির ভিডিও" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
+              <video v-if="video.kind === 'file'" ref="heroVideoEl" :src="video.src" :poster="videoPoster || undefined" autoplay :muted="heroMuted" loop controls playsinline></video>
+              <iframe v-else ref="heroFrame" :src="heroEmbed?.src" title="প্রপার্টির ভিডিও" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
+              <button v-if="heroMuted && video.kind !== 'facebook'" type="button" class="unmute-btn" @click="unmuteHero"><Volume2 :size="18" aria-hidden="true" /> শব্দ চালু করুন</button>
             </div>
             <button v-else class="gallery-primary gallery-video" aria-label="প্রপার্টির ভিডিও চালু করুন" @click="playHeroVideo">
               <img v-if="videoPoster" :src="videoPoster" :alt="property.title" fetchpriority="high" decoding="async" @error="imageFailed" />
@@ -52,7 +53,7 @@
         <div><Compass :size="20" /><span>{{ property.bedrooms ? 'বেডরুম' : 'অভিমুখ' }}<strong>{{ property.bedrooms ? toBn(property.bedrooms) : (facingLabel(property.facing) || 'জেনে নিন') }}</strong></span></div>
         <div><CircleCheck :size="20" /><span>অবস্থা<strong>{{ statusLabel(property.status) }}</strong></span></div>
       </div>
-      <div ref="inlineStart"><PropertySurveyStart :property-type="property.propertyType" @choose="purpose => openInquiry('inline_first_question', purpose)" /></div>
+      <div ref="inlineStart"><PropertySurveyStart :property-type="property.propertyType" :cta-label="ctaLabel" @choose="purpose => openInquiry('inline_first_question', purpose)" @direct="openInquiry('inline_cta')" /></div>
       <div class="property-body">
         <div class="property-information">
           <nav class="section-nav" aria-label="প্রপার্টির বিভাগ"><a href="#property-overview">বিস্তারিত</a><a v-if="hasBuyerDetails" href="#property-buyer-details">মূল্য ও শর্ত</a><a href="#property-documents">কাগজপত্র</a><a href="#property-location">লোকেশন</a><a href="#property-questions">আপনার প্রশ্ন</a></nav>
@@ -68,7 +69,26 @@
           <section id="property-location" class="detail-section"><p class="eyebrow">নিজে দেখে সিদ্ধান্ত নিন</p><h2>লোকেশন ও সাইট ভিজিট</h2><p class="property-location"><MapPin :size="20" />{{ location }}</p><p>সাইট ভিজিটের আগে সঠিক লোকেশন, যাতায়াতের পথ ও সময় টিমের সঙ্গে মিলিয়ে নিন।</p><a v-if="!property.hideExactAddress && property.lat && property.lng" class="text-action" :href="`https://www.google.com/maps/search/?api=1&query=${property.lat},${property.lng}`" target="_blank" rel="noopener noreferrer">ম্যাপে লোকেশন দেখুন <ArrowUpRight :size="16" /></a><button class="secondary" @click="openInquiry('site_visit')">সাইট ভিজিট নিয়ে কথা বলি <ArrowRight :size="16" /></button></section>
           <section id="property-questions" class="detail-section faq-section"><p class="eyebrow">সহজ উত্তর</p><h2>আপনার মনে হতে পারে</h2><details><summary>ফর্ম পূরণ করলে কি বুকিং হয়ে যাবে?</summary><p>না। এটি শুধু এই প্রপার্টি সম্পর্কে তথ্য ও যোগাযোগের অনুরোধ। কোনো টাকা বা বুকিংয়ের অঙ্গীকার প্রয়োজন নেই।</p></details><details><summary>তালিকাভুক্ত দামের বাইরে খরচ আছে?</summary><p>রেজিস্ট্রেশন, কর, সার্ভিস চার্জ এবং প্রযোজ্য হলে নির্মাণ খরচ মূল্যের মধ্যে আছে কি না, টিমের কাছে পূর্ণ হিসাব চেয়ে নিন। প্রকাশিত খরচের বিবরণ দেখুন; কোনো খরচ উল্লেখ না থাকলে তা অন্তর্ভুক্ত ধরে নেবেন না।</p></details><details><summary>এখনই কিনব না, তবু কথা বলা যাবে?</summary><p>অবশ্যই। ফর্মে আপনার আসল সময়সীমা বেছে নিন। আপনার প্রস্তুতি অনুযায়ী আলোচনা করা যাবে।</p></details><details><summary>ফর্ম জমা দেওয়ার পর কী হবে?</summary><p>GBREL টিম আপনার দেওয়া নম্বরে, পছন্দের মাধ্যমে যোগাযোগ করবে। ঐচ্ছিকভাবে সময় বা আগে জানতে চাওয়া বিষয়ও জানাতে পারবেন।</p></details></section>
         </div>
-        <aside class="inquiry-sidebar"><PropertySurveyStart v-show="!inlineVisible" side :property-type="property.propertyType" class="side-start" @choose="purpose => openInquiry('sidebar_first_question', purpose)" /><div v-if="agent && !property.hideAgentContact" class="advisor-direct"><span>প্রশ্ন ছাড়াই সরাসরি কথা বলতে চান?</span><div><a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" @click="track('Contact', { method: 'WhatsApp' })">WhatsApp <ArrowUpRight :size="15" /></a><a :href="`tel:${agent.phone}`" @click="track('Contact', { method: 'Phone' })"><Phone :size="15" /> কল করুন</a></div></div></aside>
+        <aside class="inquiry-sidebar">
+          <PropertySurveyStart v-show="!inlineVisible" side :property-type="property.propertyType" :cta-label="ctaLabel" class="side-start" @choose="purpose => openInquiry('sidebar_first_question', purpose)" @direct="openInquiry('sidebar_cta')" />
+          <div v-if="inlineVisible" class="sidebar-sticky-cta">
+            <div class="sidebar-sticky-price">
+              <span>{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span>
+              <strong>{{ price.amount }}</strong>
+              <small v-if="price.note">{{ price.note }}</small>
+            </div>
+            <button class="cta-sun sidebar-cta-btn" @click="openInquiry('sidebar_sticky_cta')">
+              {{ ctaLabel }}
+            </button>
+          </div>
+          <div v-if="agent && !property.hideAgentContact" class="advisor-direct">
+            <span>প্রশ্ন ছাড়াই সরাসরি কথা বলতে চান?</span>
+            <div>
+              <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" @click="track('Contact', { method: 'WhatsApp' })">WhatsApp <ArrowUpRight :size="15" /></a>
+              <a :href="`tel:${agent.phone}`" @click="track('Contact', { method: 'Phone' })"><Phone :size="15" /> কল করুন</a>
+            </div>
+          </div>
+        </aside>
       </div>
 
       <!-- Bottom Closing CTA Section for Desktop & Wide Devices -->
@@ -110,13 +130,13 @@
       <aside v-if="!inquiryOpen && !lightboxOpen" class="mobile-inquiry-bar" :class="{ shown: !heroCtaVisible }" aria-label="প্রপার্টি সম্পর্কে যোগাযোগ"><div><strong>{{ price.amount }}</strong><small>{{ price.hidden ? 'বিস্তারিত জেনে নিন' : price.per }}</small></div><a v-if="waLink" class="bar-wa" :href="waLink" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp-এ জিজ্ঞেস করুন" @click="track('Contact', { method: 'WhatsApp', placement: 'sticky' })"><MessageCircle :size="22" /></a><button class="cta-sun" @click="openInquiry('mobile_sticky')">{{ ctaLabel }}</button></aside>
       <PropertyInquiry :key="property.id" :open="inquiryOpen" :property="property" :source="inquirySource" :start-purpose="startPurpose" :whatsapp="leadWhatsapp" @close="inquiryOpen = false" @saved="leadSaved" />
     </div>
-    <Teleport to="body"><div v-if="lightboxOpen && currentSlide" ref="lightboxRoot" class="photo-overlay" role="dialog" aria-modal="true" aria-label="প্রপার্টির ছবি ও ভিডিও" @click.self="lightboxOpen = false" @keydown.left="previousPhoto" @keydown.right="nextPhoto"><button class="photo-close" aria-label="বন্ধ করুন" @click="lightboxOpen = false"><X :size="25" /></button><img v-if="currentSlide.kind === 'image'" :src="currentSlide.src" :alt="`${property?.title} — ছবি ${photoIndex + 1}`" /><div v-else-if="video" class="photo-video"><video v-if="video.kind === 'file'" :key="video.src" :src="video.src" :poster="videoPoster || undefined" autoplay controls playsinline></video><iframe v-else :key="video.src" :src="video.src" title="প্রপার্টির ভিডিও" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div><div class="photo-controls"><button :disabled="slides.length < 2" aria-label="আগেরটি" @click="previousPhoto"><ChevronLeft /></button><span aria-live="polite">{{ photoIndex + 1 }} / {{ slides.length }}</span><button :disabled="slides.length < 2" aria-label="পরেরটি" @click="nextPhoto"><ChevronRight /></button></div></div></Teleport>
+    <Teleport to="body"><div v-if="lightboxOpen && currentSlide" ref="lightboxRoot" class="photo-overlay" role="dialog" aria-modal="true" aria-label="প্রপার্টির ছবি ও ভিডিও" @click.self="lightboxOpen = false" @keydown.left="previousPhoto" @keydown.right="nextPhoto"><button class="photo-close" aria-label="বন্ধ করুন" @click="lightboxOpen = false"><X :size="25" /></button><img v-if="currentSlide.kind === 'image'" :src="currentSlide.src" :alt="`${property?.title} — ছবি ${photoIndex + 1}`" /><div v-else-if="video" class="photo-video"><video v-if="video.kind === 'file'" :key="video.src" :src="video.src" :poster="videoPoster || undefined" autoplay loop controls playsinline></video><iframe v-else :key="video.src" :src="video.src" title="প্রপার্টির ভিডিও" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div><div class="photo-controls"><button :disabled="slides.length < 2" aria-label="আগেরটি" @click="previousPhoto"><ChevronLeft /></button><span aria-live="polite">{{ photoIndex + 1 }} / {{ slides.length }}</span><button :disabled="slides.length < 2" aria-label="পরেরটি" @click="nextPhoto"><ChevronRight /></button></div></div></Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { ArrowRight, ArrowUpRight, Building2, Check, ChevronLeft, ChevronRight, CircleCheck, Compass, Copy, Expand, FileDown, FileText, Heart, Image as ImageIcon, MapPin, MessageCircle, MessagesSquare, Phone, Play, Ruler, Share2, X } from 'lucide-vue-next'
+import { ArrowRight, ArrowUpRight, Building2, Check, ChevronLeft, ChevronRight, CircleCheck, Compass, Copy, Expand, FileDown, FileText, Heart, Image as ImageIcon, MapPin, MessageCircle, MessagesSquare, Phone, Play, Volume2, Ruler, Share2, X } from 'lucide-vue-next'
 import { useProperties, type PropertyItem } from '~/composables/useProperties'
 import { formatBDT, formatArea } from '~/composables/useCurrency'
 import { useAuth } from '~/composables/useAuth'
@@ -124,7 +144,7 @@ import { useCompare } from '~/composables/useCompare'
 import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
 import { detailGroups } from '~/utils/buyerDetails.mjs'
 import { priceDisplay } from '~/utils/priceDisplay'
-import { parseVideo } from '~/utils/videoEmbed'
+import { parseVideo, unmuteEmbed } from '~/utils/videoEmbed'
 import { safeBrochureUrl } from '~/utils/propertyInquiry.mjs'
 import { trackPixel } from '~/utils/metaPixel'
 import { useSettings } from '~/composables/useSettings'
@@ -162,7 +182,28 @@ const slides = computed<Slide[]>(() => {
 const videoIndex = computed(() => slides.value.findIndex(slide => slide.kind === 'video'))
 const currentSlide = computed(() => slides.value[photoIndex.value])
 const heroPlaying = ref(false)
-const playHeroVideo = () => { heroPlaying.value = true; track('ViewContent', { content_category: 'video' }) }
+// Autoplay only works with the sound off, so the hero starts muted with a clear "sound on" button.
+const heroMuted = ref(false)
+const heroFrame = ref<HTMLIFrameElement | null>(null)
+const heroVideoEl = ref<HTMLVideoElement | null>(null)
+// Built once when playback starts, so turning the sound on does not reload the player.
+const heroEmbed = ref<ReturnType<typeof parseVideo>>(null)
+const playHeroVideo = () => { heroMuted.value = false; heroEmbed.value = parseVideo(property.value?.videoUrl); heroPlaying.value = true; track('ViewContent', { content_category: 'video' }) }
+const unmuteHero = () => {
+  heroMuted.value = false
+  if (heroVideoEl.value) { heroVideoEl.value.muted = false; heroVideoEl.value.play().catch(() => {}) }
+  else if (video.value) unmuteEmbed(heroFrame.value, video.value.kind)
+}
+// Video-first listings start playing on arrival, unless the visitor asked for less motion or to save data.
+const startHeroAutoplay = () => {
+  if (!process.client || !video.value || slides.value[0]?.kind !== 'video') return
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  const saveData = (navigator as any).connection?.saveData
+  if (reduceMotion || saveData) return
+  heroMuted.value = true
+  heroEmbed.value = parseVideo(property.value?.videoUrl, { muted: true })
+  heroPlaying.value = true
+}
 const price = computed(() => priceDisplay(property.value))
 const hasBuyerDetails = computed(() => property.value && detailGroups(property.value).length > 0)
 // Button text and the promise under it are edited in Admin → Settings → Property page.
@@ -237,7 +278,7 @@ const loadProperty = async () => {
   const result = await fetchPropertyById(String(route.params.id), { strict: true })
   if (version !== loadVersion) return
   property.value = result; loading.value = false
-  if (result) track('ViewContent')
+  if (result) { track('ViewContent'); startHeroAutoplay() }
   await fetchAgents()
 }
 watch(() => route.params.id, loadProperty, { immediate: true })
@@ -278,7 +319,14 @@ const shareProperty = async () => {
 .land-share-note { padding:17px 20px; border-left:3px solid #b29e61; background:#f4f0e4; border-radius:0 10px 10px 0; margin:20px 0; }.land-share-note strong { font-size:14px; }.land-share-note p { margin:6px 0 0; font-size:13px; }
 .brochure-list a { display:flex; gap:12px; align-items:center; border:1px solid #d9e3d8; padding:15px; border-radius:9px; margin-top:10px; color:#1b6346; font-size:14px; }.brochure-list span { flex:1; }.detail-section .muted-note { font-size:12px; color:#6f7b70; }
 .faq-section details { border-bottom:1px solid #e0e7dc; padding:8px 0; }.faq-section summary { cursor:pointer; padding:14px 0; font-size:14px; font-weight:600; min-height:48px; }.faq-section details p { padding:0 12px 0 0; }
-.inquiry-sidebar { position:sticky; top:105px; }.advisor-card { padding:28px; border:1px solid #dbe4d7; border-radius:17px; background:#fff; box-shadow:0 8px 24px #203b2810; }.advisor-symbol { display:inline-flex; padding:12px; background:#eaf2e8; border-radius:13px; margin-bottom:22px; color:#336947; }.advisor-card h2 { font-size:26px; line-height:1.6; margin-bottom:12px; }.advisor-card > p:not(.eyebrow) { font-size:13px; line-height:1.9; color:#687967; }.advisor-card ul { padding:0; list-style:none; display:grid; gap:12px; margin:24px 0; }.advisor-card li { display:flex; gap:9px; font-size:12px; align-items:center; }.advisor-card li svg { flex-shrink:0; color:#548459; }.advisor-card .primary { width:100%; padding:14px 10px; }.advisor-card > small { display:block; text-align:center; font-size:10px; margin-top:12px; color:#71836b; }
+.inquiry-sidebar { position:sticky; top:105px; }
+.sidebar-sticky-cta { background:#fff; border:1px solid #dbe4d7; border-radius:16px; padding:20px 22px; box-shadow:0 8px 24px rgba(32,59,40,.08); display:flex; flex-direction:column; gap:12px; margin-bottom:14px; }
+.sidebar-sticky-price { display:flex; flex-direction:column; gap:2px; }
+.sidebar-sticky-price span { font-size:12px; color:#647269; }
+.sidebar-sticky-price strong { font-family:'Outfit','Noto Sans Bengali',sans-serif; font-size:24px; font-weight:700; color:#1D4A2A; }
+.sidebar-sticky-price small { font-size:11px; color:#71836b; }
+.sidebar-cta-btn { width:100%; font-size:17px; }
+.advisor-card { padding:28px; border:1px solid #dbe4d7; border-radius:17px; background:#fff; box-shadow:0 8px 24px #203b2810; }.advisor-symbol { display:inline-flex; padding:12px; background:#eaf2e8; border-radius:13px; margin-bottom:22px; color:#336947; }.advisor-card h2 { font-size:26px; line-height:1.6; margin-bottom:12px; }.advisor-card > p:not(.eyebrow) { font-size:13px; line-height:1.9; color:#687967; }.advisor-card ul { padding:0; list-style:none; display:grid; gap:12px; margin:24px 0; }.advisor-card li { display:flex; gap:9px; font-size:12px; align-items:center; }.advisor-card li svg { flex-shrink:0; color:#548459; }.advisor-card .primary { width:100%; padding:14px 10px; }.advisor-card > small { display:block; text-align:center; font-size:10px; margin-top:12px; color:#71836b; }
 .advisor-direct { border:1px solid #dbe4d7; border-radius:14px; background:#fff; padding:14px 18px 6px; margin-top:14px; }.advisor-direct > span { display:block; font-size:11px; color:#71836b; margin-bottom:8px; }.advisor-direct > div { display:flex; justify-content:space-between; }.advisor-direct a { display:inline-flex; align-items:center; gap:5px; min-height:44px; font-size:13px; color:#386b45; }
 .mobile-inquiry-bar { display:none; }
 .trust-facts { list-style:none; padding:0; margin:10px 0 2px; display:flex; flex-direction:column; gap:5px; }.trust-facts li { display:flex; align-items:center; gap:7px; font-size:13px; color:#1D4A2A; font-weight:600; }.trust-facts svg { color:#3F7A35; flex-shrink:0; }
@@ -355,4 +403,7 @@ const shareProperty = async () => {
 .photo-video video, .photo-video iframe { width:100%; height:100%; border:0; display:block; }
 @media (max-width:768px) { .gallery-chips { right:12px; bottom:12px; } .play-disc { width:64px; height:64px; } }
 @media (prefers-reduced-motion:reduce) { .play-disc { transition:none; } }
+.unmute-btn { position:absolute; left:16px; bottom:16px; z-index:3; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 16px; border:0; border-radius:999px; background:#E2651C; color:#fff; font:inherit; font-size:14px; font-weight:700; box-shadow:0 4px 16px rgba(0,0,0,.3); cursor:pointer; }
+.property-gallery .unmute-btn { position:absolute; left:16px; bottom:16px; padding:0 16px; background:#E2651C; overflow:visible; }
+.gallery-player video { object-fit:cover; }
 </style>

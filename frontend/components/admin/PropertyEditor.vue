@@ -444,12 +444,16 @@
               </div>
             </div>
             <div v-else class="pm-video-empty">
-              <p>Upload a walkthrough or add a YouTube, Facebook or Vimeo link. Buyers tap to play, so the page stays fast on mobile data.</p>
-              <form class="flex gap-2" @submit.prevent="useVideoLink">
-                <input v-model.trim="videoLinkDraft" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" class="form-input" style="flex:1;" />
-                <button type="submit" class="pm-btn">Add link</button>
-              </form>
+              <p>Add a YouTube link or choose a video from the media library. Video-first listings start playing on their own, with the sound off.</p>
             </div>
+            <form class="pm-youtube" @submit.prevent="useVideoLink">
+              <label for="pm-youtube-url"><Youtube :size="18" aria-hidden="true" /> {{ videoSource ? 'Replace with a YouTube link' : 'YouTube link' }}</label>
+              <div class="flex gap-2">
+                <input id="pm-youtube-url" v-model.trim="videoLinkDraft" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…  or  https://youtu.be/…" class="form-input" style="flex:1;" />
+                <button type="submit" class="pm-btn pm-btn--solid">{{ videoSource ? 'Replace' : 'Add video' }}</button>
+              </div>
+              <small>Shorts, youtu.be and normal links all work. Facebook and Vimeo links are accepted too.</small>
+            </form>
           </div>
 
           <AdminMediaPicker :open="picker.open" :accept="picker.accept" :multiple="picker.multiple" :title="picker.title" :pick-label="picker.label" @close="picker.open = false" @pick="onPicked" />
@@ -754,9 +758,9 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import PropertyBuyerDetailsEditor from './PropertyBuyerDetailsEditor.vue'
 import { priceDisplay } from '~/utils/priceDisplay'
-import { Film, Image as ImageIcon, Images, Play, Upload, X } from 'lucide-vue-next'
+import { Film, Image as ImageIcon, Images, Play, Upload, X, Youtube } from 'lucide-vue-next'
 import { parseVideo, videoProviderLabel } from '~/utils/videoEmbed'
-import type { MediaItem } from '~/composables/useMediaLibrary'
+import { useMediaLibrary, type MediaItem } from '~/composables/useMediaLibrary'
 import { useRouter, useRoute } from 'vue-router'
 import { useProperties, type PropertyItem } from '~/composables/useProperties'
 import { usePropertyOptions } from '~/composables/usePropertyOptions'
@@ -862,7 +866,7 @@ const photoCount = computed(() => (propForm.featureImage ? 1 : 0) + propForm.gal
 const firstViewHint = computed(() => {
   if (!videoSource.value) return 'Add a video below to be able to show it first.'
   return propForm.coverMedia === 'video'
-    ? 'The page opens on the video cover with a play button. Photos follow in the gallery.'
+    ? 'The video starts playing on its own when the page opens (sound off, with a "sound on" button). Photos follow in the gallery.'
     : 'The page opens on the main photo. The video sits in the gallery with a play button.'
 })
 const videoLinkDraft = ref('')
@@ -888,16 +892,21 @@ function onPicked(items: MediaItem[]) {
   }
   if (picker.target === 'video') {
     propForm.videoUrl = items[0].url
+    propForm.coverMedia = 'video'
     if (!propForm.videoPoster && items[0].thumbnail_url) propForm.videoPoster = items[0].thumbnail_url
   }
 }
 function useVideoLink() {
   if (!parseVideo(videoLinkDraft.value)) {
-    toast.warning('Link not recognised', 'Paste a YouTube, Facebook or Vimeo link that starts with https://.')
+    toast.warning('Link not recognised', 'Paste a YouTube link like https://www.youtube.com/watch?v=… or https://youtu.be/… (Facebook and Vimeo links work too).')
     return
   }
   propForm.videoUrl = videoLinkDraft.value
+  useMediaLibrary().addLink(videoLinkDraft.value).catch(() => {}) // keep it reusable from the library
+  propForm.videoPoster = ''
+  propForm.coverMedia = 'video'
   videoLinkDraft.value = ''
+  toast.success('Video added', 'Buyers will see this video first. Switch to "Main photo" above to change that.')
 }
 function clearVideo() {
   propForm.videoUrl = ''

@@ -12,16 +12,16 @@
         <input v-model.trim="query" type="search" placeholder="Search by name" @input="scheduleLoad" />
       </label>
       <div class="ml-actions">
-        <button v-if="accept !== 'image'" type="button" class="ml-btn ml-btn--ghost" :aria-expanded="linkOpen" @click="linkOpen = !linkOpen"><Link2 :size="16" aria-hidden="true" /> Add video link</button>
+        <button v-if="accept !== 'image'" type="button" class="ml-btn ml-btn--ghost" :aria-expanded="linkOpen" @click="linkOpen = !linkOpen"><Youtube :size="16" aria-hidden="true" /> Add YouTube video</button>
         <button type="button" class="ml-btn ml-btn--solid" @click="fileInput?.click()"><Upload :size="16" aria-hidden="true" /> Upload</button>
         <input ref="fileInput" type="file" multiple :accept="acceptAttr" hidden @change="onFilesChosen" />
       </div>
     </div>
 
     <form v-if="linkOpen" class="ml-link" @submit.prevent="submitLink">
-      <label for="ml-link-url">YouTube, Facebook or Vimeo link</label>
+      <label for="ml-link-url">YouTube link <span class="ml-link-note">(Facebook and Vimeo links work too)</span></label>
       <div>
-        <input id="ml-link-url" ref="linkInput" v-model.trim="linkUrl" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" required />
+        <input id="ml-link-url" ref="linkInput" v-model.trim="linkUrl" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…  or  https://youtu.be/…" required />
         <button type="submit" class="ml-btn ml-btn--solid" :disabled="linkSaving">{{ linkSaving ? 'Adding…' : 'Add video' }}</button>
       </div>
       <p>Long walkthroughs work best on YouTube: they load faster for buyers on mobile data.</p>
@@ -111,7 +111,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { Check, Film, ImagePlus, Link2, Play, Search, Trash2, Upload, X } from 'lucide-vue-next'
+import { Check, Film, ImagePlus, Play, Search, Trash2, Upload, X, Youtube } from 'lucide-vue-next'
 import { formatBytes, useMediaLibrary, type MediaCounts, type MediaItem } from '~/composables/useMediaLibrary'
 import { parseVideo, videoProviderLabel } from '~/utils/videoEmbed'
 
@@ -341,6 +341,7 @@ defineExpose({ reload: load })
 .ml-btn--danger { background: transparent; color: #A0361B; border-color: #E9C4B4; width: 100%; justify-content: center; }
 .ml-link { display: grid; gap: 6px; padding: 14px; border-radius: 12px; background: var(--admin-bg-surface-alt, #EEF2E9); }
 .ml-link label { font-weight: 700; font-size: .85rem; }
+.ml-link-note { font-weight: 500; color: var(--admin-text-muted); }
 .ml-link > div { display: flex; gap: 8px; }
 .ml-link input { flex: 1; min-height: 40px; border-radius: 10px; border: 1px solid var(--admin-border-hover, #CBD5BE); padding: 0 12px; font: inherit; background: var(--admin-bg-surface, #fff); color: var(--admin-text-primary); }
 .ml-link p { font-size: .78rem; color: var(--admin-text-muted); margin: 0; }

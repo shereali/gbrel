@@ -1850,3 +1850,7 @@ body.admin-theme-light {
 .admin-shell .pm-video-empty { display: grid; gap: 10px; padding: 16px; border-radius: 12px; border: 2px dashed var(--admin-border-hover, #CBD5BE); }
 .admin-shell .pm-video-empty p { margin: 0; font-size: .85rem; color: var(--admin-text-secondary, #4A5A4E); }
 @media (max-width: 760px) { .admin-shell .pm-video-row { grid-template-columns: minmax(0, 1fr); } }
+.admin-shell .pm-youtube { display: grid; gap: 8px; margin-top: 14px; padding: 14px 16px; border-radius: 12px; background: var(--admin-bg-surface-alt, #EEF2E9); }
+.admin-shell .pm-youtube label { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: .88rem; color: var(--admin-text-primary); }
+.admin-shell .pm-youtube label svg { color: #C4302B; }
+.admin-shell .pm-youtube small { color: var(--admin-text-muted); font-size: .76rem; }
