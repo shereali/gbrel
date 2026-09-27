@@ -9,7 +9,7 @@ class Agent extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['id'];
+    protected $guarded = [];
 
     protected $casts = [
         'rating' => 'float',

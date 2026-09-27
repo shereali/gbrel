@@ -25,6 +25,8 @@ git fetch origin main >> "$LOG_FILE" 2>&1 || true
 git reset --hard origin/main >> "$LOG_FILE" 2>&1 || true
 
 if docker compose up -d --build >> "$LOG_FILE" 2>&1; then
+    docker compose exec -T backend php artisan migrate --force >> "$LOG_FILE" 2>&1 || true
+    docker compose exec -T backend php artisan optimize:clear >> "$LOG_FILE" 2>&1 || true
     STATUS=$(docker compose ps --format '{{.Service}}={{.Status}}' | tr '\n' ' ')
     echo "deploy finished — $STATUS" >> "$LOG_FILE"
     echo "OK: $STATUS" > "$STATUS_FILE"

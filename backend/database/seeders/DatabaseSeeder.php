@@ -242,12 +242,17 @@ class DatabaseSeeder extends Seeder
         );
 
         // 2. Clean up dummy listings and related records
+        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+        if (\Illuminate\Support\Facades\Schema::hasTable('property_documents')) {
+            \App\Models\PropertyDocument::query()->delete();
+        }
         Viewing::query()->delete();
         Lead::query()->delete();
         FinancialTransaction::query()->delete();
         Brochure::query()->delete();
         Property::query()->delete();
         Agent::query()->delete();
+        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
 
         // 3. Seed Official Representatives / Agents from PDFs
         $agent1 = Agent::updateOrCreate(

@@ -13,7 +13,7 @@ class Property extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['id'];
+    protected $guarded = [];
 
     /**
      * Statuses that are never shown on the public site.

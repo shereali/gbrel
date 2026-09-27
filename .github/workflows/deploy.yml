@@ -97,8 +97,7 @@ jobs:
               -o StrictHostKeyChecking=accept-new \
               -o ConnectTimeout=20 \
               -o BatchMode=yes \
-              "$USER@$HOST" \
-              "APP_DIR=\$( [ -d /var/www/gbrel ] && echo /var/www/gbrel || echo /var/www/gangchil ); LOG_DIR=\$( [ -d /var/log/gbrel ] && echo /var/log/gbrel || echo /var/log/gangchil ); rm -f \$LOG_DIR/deploy.done; setsid nohup bash \$APP_DIR/deploy/deploy.sh </dev/null >/dev/null 2>&1 & echo started; exit 0"
+              "APP_DIR=\$( [ -d /var/www/gbrel ] && echo /var/www/gbrel || echo /var/www/gangchil ); rm -f /var/log/gbrel/deploy.done /var/log/gangchil/deploy.done /var/log/gbrel/deploy.status /var/log/gangchil/deploy.status; setsid nohup bash \$APP_DIR/deploy/deploy.sh </dev/null >/dev/null 2>&1 & echo started; exit 0"
 
       - name: Wait for deploy to finish
         env:
