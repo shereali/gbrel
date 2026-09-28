@@ -124,16 +124,32 @@ class Property extends Model
      */
     public function scopeVisibleToPublic(Builder $query): Builder
     {
-        return $query->whereNotIn('status', self::HIDDEN_STATUSES)
-            ->where(function (Builder $inner) {
-                $inner->whereNull('owner_id')->orWhereNotNull('published_at');
-            });
+        $query->whereNotIn('status', self::HIDDEN_STATUSES);
+
+        try {
+            if (Schema::hasColumn('properties', 'owner_id') && Schema::hasColumn('properties', 'published_at')) {
+                $query->where(function (Builder $inner) {
+                    $inner->whereNull('owner_id')->orWhereNotNull('published_at');
+                });
+            }
+        } catch (\Throwable $e) {
+            // Ignore schema inspection failures and fallback to status check
+        }
+
+        return $query;
     }
 
     public function isVisibleToPublic(): bool
     {
-        return ! in_array($this->status, self::HIDDEN_STATUSES, true)
-            && ($this->owner_id === null || $this->published_at !== null);
+        if (in_array($this->status, self::HIDDEN_STATUSES, true)) {
+            return false;
+        }
+
+        if (array_key_exists('owner_id', $this->attributes)) {
+            return $this->owner_id === null || $this->published_at !== null;
+        }
+
+        return true;
     }
 
     public function withPrivateFields(): static

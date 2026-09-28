@@ -33,6 +33,7 @@ use App\Support\VideoLink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -339,111 +340,122 @@ function normalizePropertyData(array $input, bool $isCreate = true, ?int $existi
 
 // 1. Properties API Endpoints (Realtime MySQL Operations)
 Route::get('/properties', function (Request $request) {
-    $isStaff = (bool) $request->user()?->isStaff();
-    $query = Property::query();
-    if (! $isStaff) {
-        $query->visibleToPublic();
-    }
-    $columns = Property::getTableColumns();
+    try {
+        $isStaff = (bool) $request->user()?->isStaff();
+        $query = Property::query();
+        if (! $isStaff) {
+            $query->visibleToPublic();
+        }
+        $columns = Property::getTableColumns();
 
-    // 1. Dynamic Keyword Search (q, search, keyword) across all text columns
-    $searchQuery = $request->input('q') ?? $request->input('search') ?? $request->input('keyword');
-    if (! empty($searchQuery)) {
-        $term = '%'.trim($searchQuery).'%';
-        $textColumns = ['title', 'slug', 'tagline', 'description', 'address', 'area_name', 'city', 'state'];
-        $validSearchCols = array_intersect($textColumns, $columns);
-        $query->where(function ($q) use ($term, $validSearchCols) {
-            foreach ($validSearchCols as $index => $col) {
-                if ($index === 0) {
-                    $q->where($col, 'like', $term);
+        // 1. Dynamic Keyword Search (q, search, keyword) across all text columns
+        $searchQuery = $request->input('q') ?? $request->input('search') ?? $request->input('keyword');
+        if (! empty($searchQuery)) {
+            $term = '%'.trim($searchQuery).'%';
+            $textColumns = ['title', 'slug', 'tagline', 'description', 'address', 'area_name', 'city', 'state'];
+            $validSearchCols = array_intersect($textColumns, $columns);
+            $query->where(function ($q) use ($term, $validSearchCols) {
+                foreach ($validSearchCols as $index => $col) {
+                    if ($index === 0) {
+                        $q->where($col, 'like', $term);
+                    } else {
+                        $q->orWhere($col, 'like', $term);
+                    }
+                }
+            });
+        }
+
+        // 2. Dynamic Attribute Matching (supports both camelCase and snake_case parameters)
+        foreach ($request->all() as $rawKey => $val) {
+            if ($val === null || $val === '' || in_array($rawKey, ['q', 'search', 'keyword', 'sort', 'sort_by', 'page', 'per_page', 'limit'])) {
+                continue;
+            }
+
+            $key = Str::snake($rawKey);
+
+            // Special aliases
+            if ($key === 'type') {
+                $key = 'property_type';
+            }
+            if ($key === 'area') {
+                $key = 'area_name';
+            }
+
+            // Range filters
+            if ($key === 'min_price' || $key === 'price_min') {
+                $query->where('price', '>=', (float) $val);
+
+                continue;
+            }
+            if ($key === 'max_price' || $key === 'price_max') {
+                $query->where('price', '<=', (float) $val);
+
+                continue;
+            }
+            if ($key === 'min_bedrooms') {
+                $query->where('bedrooms', '>=', (int) $val);
+
+                continue;
+            }
+            if ($key === 'min_sqft' || $key === 'min_square_footage') {
+                $query->where('square_footage', '>=', (int) $val);
+
+                continue;
+            }
+
+            // Direct column matching against database schema
+            if (in_array($key, $columns) && ! in_array($key, ['id', 'created_at', 'updated_at', 'images', 'amenities', 'documents_verified', 'buyer_details'])) {
+                if (str_starts_with($key, 'is_') || str_starts_with($key, 'has_')) {
+                    $query->where($key, filter_var($val, FILTER_VALIDATE_BOOLEAN));
                 } else {
-                    $q->orWhere($col, 'like', $term);
+                    $query->where($key, $val);
                 }
             }
-        });
+        }
+
+        // 3. Dynamic Sorting
+        $sort = $request->input('sort', $request->input('sort_by', 'default'));
+        switch ($sort) {
+            case 'price_asc':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price_desc':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'newest':
+                $query->orderBy('created_at', 'desc');
+                break;
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'sqft_desc':
+                $query->orderBy('square_footage', 'desc');
+                break;
+            default:
+                $query->orderBy('is_featured', 'desc')->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $properties = $query->get();
+        if ($isStaff) {
+            $properties->each(fn (Property $property) => $property->withPrivateFields());
+        }
+
+        return response()->json([
+            'success' => true,
+            'count' => $properties->count(),
+            'data' => $properties,
+        ]);
+    } catch (\Throwable $e) {
+        Log::error('Error in GET /api/properties: '.$e->getMessage(), ['exception' => $e]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Error retrieving properties: '.$e->getMessage(),
+            'count' => 0,
+            'data' => [],
+        ], 500);
     }
-
-    // 2. Dynamic Attribute Matching (supports both camelCase and snake_case parameters)
-    foreach ($request->all() as $rawKey => $val) {
-        if ($val === null || $val === '' || in_array($rawKey, ['q', 'search', 'keyword', 'sort', 'sort_by', 'page', 'per_page', 'limit'])) {
-            continue;
-        }
-
-        $key = Str::snake($rawKey);
-
-        // Special aliases
-        if ($key === 'type') {
-            $key = 'property_type';
-        }
-        if ($key === 'area') {
-            $key = 'area_name';
-        }
-
-        // Range filters
-        if ($key === 'min_price' || $key === 'price_min') {
-            $query->where('price', '>=', (float) $val);
-
-            continue;
-        }
-        if ($key === 'max_price' || $key === 'price_max') {
-            $query->where('price', '<=', (float) $val);
-
-            continue;
-        }
-        if ($key === 'min_bedrooms') {
-            $query->where('bedrooms', '>=', (int) $val);
-
-            continue;
-        }
-        if ($key === 'min_sqft' || $key === 'min_square_footage') {
-            $query->where('square_footage', '>=', (int) $val);
-
-            continue;
-        }
-
-        // Direct column matching against database schema
-        if (in_array($key, $columns) && ! in_array($key, ['id', 'created_at', 'updated_at', 'images', 'amenities', 'documents_verified', 'buyer_details'])) {
-            if (str_starts_with($key, 'is_') || str_starts_with($key, 'has_')) {
-                $query->where($key, filter_var($val, FILTER_VALIDATE_BOOLEAN));
-            } else {
-                $query->where($key, $val);
-            }
-        }
-    }
-
-    // 3. Dynamic Sorting
-    $sort = $request->input('sort', $request->input('sort_by', 'default'));
-    switch ($sort) {
-        case 'price_asc':
-            $query->orderBy('price', 'asc');
-            break;
-        case 'price_desc':
-            $query->orderBy('price', 'desc');
-            break;
-        case 'newest':
-            $query->orderBy('created_at', 'desc');
-            break;
-        case 'oldest':
-            $query->orderBy('created_at', 'asc');
-            break;
-        case 'sqft_desc':
-            $query->orderBy('square_footage', 'desc');
-            break;
-        default:
-            $query->orderBy('is_featured', 'desc')->orderBy('created_at', 'desc');
-            break;
-    }
-
-    $properties = $query->get();
-    if ($isStaff) {
-        $properties->each(fn (Property $property) => $property->withPrivateFields());
-    }
-
-    return response()->json([
-        'success' => true,
-        'count' => $properties->count(),
-        'data' => $properties,
-    ]);
 });
 
 Route::get('/properties/{id}', function ($id) {
