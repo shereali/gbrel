@@ -83,7 +83,7 @@ jobs:
             exit 1
           fi
 
-      - name: Start deploy (detached on server)
+      - name: Execute Deploy Script
         env:
           SSH_USER: ${{ secrets.VPS_USER }}
           SSH_HOST: ${{ secrets.VPS_HOST }}
@@ -92,51 +92,20 @@ jobs:
           USER=$(echo "$SSH_USER" | tr -d '[:space:]')
           HOST=$(echo "$SSH_HOST" | tr -d '[:space:]')
           PORT=$(echo "${SSH_PORT:-22}" | tr -d '[:space:]')
+
           ssh -i ~/.ssh/deploy_key \
               -p "$PORT" \
               -o StrictHostKeyChecking=accept-new \
+              -o IdentitiesOnly=yes \
               -o ConnectTimeout=20 \
-              -o BatchMode=yes \
               "$USER@$HOST" \
-              "APP_DIR=\$( [ -d /var/www/gbrel ] && echo /var/www/gbrel || echo /var/www/gangchil ); rm -f /var/log/gbrel/deploy.done /var/log/gangchil/deploy.done /var/log/gbrel/deploy.status /var/log/gangchil/deploy.status; setsid nohup bash \$APP_DIR/deploy/deploy.sh </dev/null >/dev/null 2>&1 & echo started; exit 0"
+              "APP_DIR=\$( [ -d /var/www/gbrel ] && echo /var/www/gbrel || echo /var/www/gangchil ); bash \$APP_DIR/deploy/deploy.sh"
 
-      - name: Wait for deploy to finish
-        env:
-          SSH_USER: ${{ secrets.VPS_USER }}
-          SSH_HOST: ${{ secrets.VPS_HOST }}
-          SSH_PORT: ${{ secrets.VPS_PORT }}
+      - name: Verify Live Services
         run: |
-          USER=$(echo "$SSH_USER" | tr -d '[:space:]')
-          HOST=$(echo "$SSH_HOST" | tr -d '[:space:]')
-          PORT=$(echo "${SSH_PORT:-22}" | tr -d '[:space:]')
-          for i in $(seq 1 60); do
-            RESULT=$(ssh -i ~/.ssh/deploy_key \
-                -p "$PORT" \
-                -o StrictHostKeyChecking=accept-new \
-                "$USER@$HOST" \
-                "cat /var/log/gbrel/deploy.done 2>/dev/null || cat /var/log/gangchil/deploy.done 2>/dev/null || echo WAITING")
-            if [ "$RESULT" = "done" ]; then
-              echo "Deploy finished."
-              break
-            fi
-            if [ "$i" -eq 60 ]; then
-              echo "Timed out waiting for deploy" >&2
-              exit 1
-            fi
-            sleep 15
-          done
-
-      - name: Show deploy result
-        env:
-          SSH_USER: ${{ secrets.VPS_USER }}
-          SSH_HOST: ${{ secrets.VPS_HOST }}
-          SSH_PORT: ${{ secrets.VPS_PORT }}
-        run: |
-          USER=$(echo "$SSH_USER" | tr -d '[:space:]')
-          HOST=$(echo "$SSH_HOST" | tr -d '[:space:]')
-          PORT=$(echo "${SSH_PORT:-22}" | tr -d '[:space:]')
-          ssh -i ~/.ssh/deploy_key \
-              -p "$PORT" \
-              -o StrictHostKeyChecking=accept-new \
-              "$USER@$HOST" \
-              "cat /var/log/gbrel/deploy.status 2>/dev/null || cat /var/log/gangchil/deploy.status 2>/dev/null"
+          echo "Waiting 8 seconds for Caddy and containers to settle..."
+          sleep 8
+          echo "Checking https://gbrel.com/api/properties..."
+          curl -sS -i --max-time 15 "https://gbrel.com/api/properties" | head -n 15 || echo "API check curl warning"
+          echo "Checking https://gbrel.com/..."
+          curl -sS -i --max-time 15 "https://gbrel.com/" | head -n 15 || echo "Frontend check curl warning"
