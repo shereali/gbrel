@@ -25,11 +25,34 @@ docker compose up -d --build --remove-orphans
 
 echo "=== Waiting for Database Service ==="
 sleep 4
+if docker compose logs db 2>&1 | grep -qE "Table 'mysql\.user' doesn't exist|Could not open the mysql\.plugin table"; then
+    echo "WARNING: Detected half-initialized MySQL volume from previous interrupted run. Re-initializing clean database volume..."
+    docker compose stop db
+    docker compose rm -f db
+    docker volume rm gbrel_db_data 2>/dev/null || true
+    docker compose up -d db
+    echo "Waiting 15s for clean MySQL 8 init..."
+    sleep 15
+fi
+
 if ! docker compose ps db | grep -q "Up"; then
     echo "db service was not Up, starting db service..."
     docker compose up -d db
     sleep 5
 fi
+
+echo "=== Waiting for MySQL to accept connections ==="
+MAX_WAIT=15
+WAIT_COUNT=0
+until docker compose exec -T db mysqladmin ping -h 127.0.0.1 --silent 2>/dev/null; do
+    WAIT_COUNT=$((WAIT_COUNT + 1))
+    if [ "$WAIT_COUNT" -ge "$MAX_WAIT" ]; then
+        echo "Warning: MySQL wait reached attempt ($WAIT_COUNT)."
+        break
+    fi
+    sleep 2
+done
+echo "MySQL ready status reached."
 
 echo "=== Docker Compose PS ==="
 docker compose ps -a
@@ -65,6 +88,10 @@ echo "=== Clearing caches ==="
 docker compose exec -T backend php artisan optimize:clear || true
 docker compose exec -T backend php artisan route:clear || true
 docker compose exec -T backend php artisan config:clear || true
+
+echo "=== Refreshing Backend Container ==="
+docker compose restart backend
+sleep 3
 
 echo "=== Container Status ==="
 docker compose ps
