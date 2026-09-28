@@ -6,43 +6,35 @@ chown -R www-data:www-data storage bootstrap/cache resources/views 2>/dev/null |
 chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
 if [ "$DB_CONNECTION" = "mysql" ]; then
-    DB_HOST="${DB_HOST:-gbrel-db-1}"
+    DB_HOST="${DB_HOST:-db}"
     DB_PORT="${DB_PORT:-3306}"
     DB_DATABASE="${DB_DATABASE:-gbrel}"
     echo "Waiting for MySQL at ${DB_HOST}:${DB_PORT}..."
-    MAX_TRIES=30
+    MAX_TRIES=10
     TRY_COUNT=0
     until php -r "
-        try {
-            \$pdo = new PDO(
-                'mysql:host=' . (getenv('DB_HOST') ?: 'gbrel-db-1') . ';port=' . (getenv('DB_PORT') ?: '3306') . ';dbname=' . (getenv('DB_DATABASE') ?: 'gbrel'),
-                getenv('DB_USERNAME') ?: 'root',
-                getenv('DB_PASSWORD') ?: ''
-            );
-            \$pdo->query('SELECT 1');
-            exit(0);
-        } catch (\Throwable \$e) {
+        \$hosts = array_unique([getenv('DB_HOST') ?: 'db', 'db', 'gbrel-db-1', 'gbrel-db', '127.0.0.1']);
+        \$port = getenv('DB_PORT') ?: '3306';
+        \$user = getenv('DB_USERNAME') ?: 'root';
+        \$pass = getenv('DB_PASSWORD') ?: '';
+        \$opts = [PDO::ATTR_TIMEOUT => 2, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION];
+        foreach (\$hosts as \$h) {
             try {
-                \$pdo = new PDO(
-                    'mysql:host=' . (getenv('DB_HOST') ?: 'gbrel-db-1') . ';port=' . (getenv('DB_PORT') ?: '3306'),
-                    getenv('DB_USERNAME') ?: 'root',
-                    getenv('DB_PASSWORD') ?: ''
-                );
+                \$pdo = new PDO(\"mysql:host={\$h};port={\$port}\", \$user, \$pass, \$opts);
                 \$pdo->query('SELECT 1');
                 exit(0);
-            } catch (\Throwable \$e2) {
-                exit(1);
-            }
+            } catch (\Throwable \$e) {}
         }
+        exit(1);
     " 2>/dev/null; do
         TRY_COUNT=$((TRY_COUNT + 1))
         if [ "$TRY_COUNT" -ge "$MAX_TRIES" ]; then
-            echo "Warning: MySQL wait reached maximum attempts (${MAX_TRIES}). Continuing container startup..."
+            echo "Warning: MySQL wait reached attempt (${TRY_COUNT}). Continuing container startup..."
             break
         fi
-        sleep 2
+        sleep 1
     done
-    echo "MySQL connection ready."
+    echo "MySQL connection check completed."
 
     # Ensure database exists with utf8mb4 collation before migrations run
     php -r "

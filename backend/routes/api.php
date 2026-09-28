@@ -470,6 +470,18 @@ Route::get('/properties', function (Request $request) {
     } catch (\Throwable $e) {
         Log::error('Error in GET /api/properties: '.$e->getMessage(), ['exception' => $e]);
 
+        // Graceful fallback to cached/baseline listings during database initialization
+        $fallback = \App\Support\LaunchListings::getFallbackPayload();
+        if (! empty($fallback)) {
+            return response()->json([
+                'success' => true,
+                'count' => count($fallback),
+                'data' => $fallback,
+                'fallback' => true,
+                'db_status' => 'reconnecting',
+            ]);
+        }
+
         return response()->json([
             'success' => false,
             'message' => 'Error retrieving properties: '.$e->getMessage(),
@@ -480,32 +492,58 @@ Route::get('/properties', function (Request $request) {
 });
 
 Route::get('/properties/{id}', function ($id) {
-    $property = is_numeric($id)
-        ? (Property::find($id) ?: Property::where('slug', $id)->first())
-        : Property::where('slug', $id)->first();
+    try {
+        $property = is_numeric($id)
+            ? (Property::find($id) ?: Property::where('slug', $id)->first())
+            : Property::where('slug', $id)->first();
 
-    if (! $property) {
-        return response()->json(['success' => false, 'message' => 'Property not found in database'], 404);
+        if (! $property) {
+            $fallback = \App\Support\LaunchListings::findFallback($id);
+            if ($fallback) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $fallback,
+                    'fallback' => true,
+                ]);
+            }
+
+            return response()->json(['success' => false, 'message' => 'Property not found in database'], 404);
+        }
+        $viewer = request()->user();
+        $canSeePrivate = $viewer && ($viewer->isStaff() || ($property->owner_id && $property->owner_id === $viewer->id));
+        if (! $property->isVisibleToPublic() && ! $canSeePrivate) {
+            return response()->json(['success' => false, 'message' => 'Property not found in database'], 404);
+        }
+        if ($viewer?->isStaff()) {
+            $property->withPrivateFields();
+        }
+
+        $property->load(['agent']);
+        $brochures = Brochure::where('property_id', $property->id)->where('is_public', true)->get();
+
+        $data = $property->toArray();
+        $data['brochures_vault'] = $brochures;
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    } catch (\Throwable $e) {
+        Log::warning('Notice in GET /properties/{id}: '.$e->getMessage());
+        $fallback = \App\Support\LaunchListings::findFallback($id);
+        if ($fallback) {
+            return response()->json([
+                'success' => true,
+                'data' => $fallback,
+                'fallback' => true,
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Property not found',
+        ], 404);
     }
-    $viewer = request()->user();
-    $canSeePrivate = $viewer && ($viewer->isStaff() || ($property->owner_id && $property->owner_id === $viewer->id));
-    if (! $property->isVisibleToPublic() && ! $canSeePrivate) {
-        return response()->json(['success' => false, 'message' => 'Property not found in database'], 404);
-    }
-    if ($viewer?->isStaff()) {
-        $property->withPrivateFields();
-    }
-
-    $property->load(['agent']);
-    $brochures = Brochure::where('property_id', $property->id)->where('is_public', true)->get();
-
-    $data = $property->toArray();
-    $data['brochures_vault'] = $brochures;
-
-    return response()->json([
-        'success' => true,
-        'data' => $data,
-    ]);
 });
 
 Route::post('/properties', function (Request $request) {
