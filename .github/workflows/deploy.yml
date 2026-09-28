@@ -140,6 +140,12 @@ jobs:
               ls -la /opt/caddy/conf.d/ 2>/dev/null || true;
               cat /opt/caddy/conf.d/gbrel.caddy 2>/dev/null || cat /opt/caddy/conf.d/gangchil.caddy 2>/dev/null || true;
               echo '';
+              echo '=== MAIN CADDYFILE ===';
+              cat /opt/caddy/Caddyfile 2>/dev/null || cat /etc/caddy/Caddyfile 2>/dev/null || true;
+              echo '';
+              echo '=== CADDY_NET NETWORK INSPECT ===';
+              docker network inspect caddy_net 2>/dev/null || true;
+              echo '';
               echo '=== DB VOLUME DETAILS ===';
               docker volume ls | grep -E 'db|mysql|gbrel|gangchil' || true;
               " 2>&1 | tee server_diagnostics.txt || true
@@ -150,6 +156,16 @@ jobs:
         with:
           name: server-diagnostics
           path: server_diagnostics.txt
+
+      - name: Push Diagnostics to Git
+        if: always()
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git checkout -b diagnostics 2>/dev/null || git checkout diagnostics || true
+          git add -f server_diagnostics.txt
+          git commit -m "Update server diagnostics [skip ci]" || true
+          git push -f origin diagnostics || true
 
       - name: Verify Live Services
         run: |
