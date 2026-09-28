@@ -48,7 +48,7 @@ use Illuminate\Support\Str;
 // Diagnostic endpoint to probe database host candidates
 Route::get('/diag', function () {
     $results = [];
-    $hosts = ['db', 'gbrel-db-1', 'gbrel-db', '127.0.0.1', 'localhost'];
+    $hosts = array_values(array_unique([env('DB_HOST') ?: 'gbrel-db', 'gbrel-db', 'db', '127.0.0.1']));
     $port = (int) env('DB_PORT', 3306);
     $user = env('DB_USERNAME', 'gbrel_user');
     $pass = (string) env('DB_PASSWORD', '');

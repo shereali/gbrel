@@ -13,36 +13,26 @@ echo "=== Pulling latest commits ==="
 git fetch origin main
 git reset --hard origin/main
 
-echo "=== Ensuring .env exists ==="
+echo "=== Ensuring .env exists and is up to date ==="
 if [ ! -f .env ]; then
     echo "Creating .env from .env.example..."
     cp .env.example .env
     chmod 600 .env
+else
+    # Ensure DB_HOST points to gbrel-db to avoid collision on caddy_net
+    sed -i 's/^DB_HOST=.*/DB_HOST=gbrel-db/' .env 2>/dev/null || true
 fi
+
+echo "=== Cleaning up any old/corrupted db container ==="
+docker stop gbrel-db-1 2>/dev/null || true
+docker rm -f -v gbrel-db-1 2>/dev/null || true
+docker volume rm gbrel_db_data gbrel_db-data gangchil_db-data 2>/dev/null || true
 
 echo "=== Building and starting Docker services ==="
 docker compose up -d --build --remove-orphans
 
-echo "=== Waiting for Database Service ==="
-sleep 4
-if docker compose ps db | grep -q "Restarting" || docker compose logs db 2>&1 | grep -qE "Table 'mysql\.user' doesn't exist|Could not open the mysql\.plugin table"; then
-    echo "WARNING: Detected crash-looping or uninitialized MySQL container/volume. Purging broken container and volume..."
-    docker stop gbrel-db-1 2>/dev/null || true
-    docker rm -f -v gbrel-db-1 2>/dev/null || true
-    docker volume rm gbrel_db_data 2>/dev/null || true
-    docker compose up -d db
-    echo "Waiting 20 seconds for fresh MySQL 8.0 initialization..."
-    sleep 20
-fi
-
-if ! docker compose ps db | grep -q "Up"; then
-    echo "db service was not Up, starting db service..."
-    docker compose up -d db
-    sleep 5
-fi
-
 echo "=== Waiting for MySQL to accept connections ==="
-MAX_WAIT=15
+MAX_WAIT=30
 WAIT_COUNT=0
 until docker compose exec -T db mysqladmin ping -h 127.0.0.1 --silent 2>/dev/null; do
     WAIT_COUNT=$((WAIT_COUNT + 1))
@@ -52,7 +42,7 @@ until docker compose exec -T db mysqladmin ping -h 127.0.0.1 --silent 2>/dev/nul
     fi
     sleep 2
 done
-echo "MySQL ready status reached."
+echo "MySQL status check finished (attempt $WAIT_COUNT)."
 
 echo "=== Docker Compose PS ==="
 docker compose ps -a

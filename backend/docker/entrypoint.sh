@@ -6,14 +6,14 @@ chown -R www-data:www-data storage bootstrap/cache resources/views 2>/dev/null |
 chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
 if [ "$DB_CONNECTION" = "mysql" ]; then
-    DB_HOST="${DB_HOST:-db}"
+    DB_HOST="${DB_HOST:-gbrel-db}"
     DB_PORT="${DB_PORT:-3306}"
     DB_DATABASE="${DB_DATABASE:-gbrel}"
     echo "Waiting for MySQL at ${DB_HOST}:${DB_PORT}..."
     MAX_TRIES=10
     TRY_COUNT=0
     until php -r "
-        \$hosts = array_unique([getenv('DB_HOST') ?: 'db', 'db', 'gbrel-db-1', 'gbrel-db', '127.0.0.1']);
+        \$hosts = array_unique([getenv('DB_HOST') ?: 'gbrel-db', 'gbrel-db', 'gbrel-db-1', 'db', '127.0.0.1']);
         \$port = getenv('DB_PORT') ?: '3306';
         \$user = getenv('DB_USERNAME') ?: 'root';
         \$pass = getenv('DB_PASSWORD') ?: '';
@@ -40,7 +40,7 @@ if [ "$DB_CONNECTION" = "mysql" ]; then
     php -r "
         try {
             \$pdo = new PDO(
-                'mysql:host=' . (getenv('DB_HOST') ?: 'gbrel-db-1') . ';port=' . (getenv('DB_PORT') ?: '3306'),
+                'mysql:host=' . (getenv('DB_HOST') ?: 'gbrel-db') . ';port=' . (getenv('DB_PORT') ?: '3306'),
                 getenv('DB_USERNAME') ?: 'root',
                 getenv('DB_PASSWORD') ?: ''
             );
