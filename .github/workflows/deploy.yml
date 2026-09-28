@@ -10,6 +10,8 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -160,12 +162,12 @@ jobs:
       - name: Push Diagnostics to Git
         if: always()
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b diagnostics 2>/dev/null || git checkout diagnostics || true
           git add -f server_diagnostics.txt
           git commit -m "Update server diagnostics [skip ci]" || true
-          git push -f origin diagnostics || true
+          git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:diagnostics || true
 
       - name: Verify Live Services
         run: |

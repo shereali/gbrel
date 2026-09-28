@@ -45,25 +45,47 @@ use Illuminate\Support\Str;
 |--------------------------------------------------------------------------
 */
 
-// Health check endpoint for deployment verification
-Route::get('/health', function () {
-    $dbOk = false;
-    $dbError = null;
-    try {
-        \Illuminate\Support\Facades\DB::connection()->getPdo();
-        $dbOk = true;
-    } catch (\Throwable $e) {
-        $dbError = $e->getMessage();
+// Diagnostic endpoint to probe database host candidates
+Route::get('/diag', function () {
+    $results = [];
+    $hosts = ['db', 'gbrel-db-1', 'gbrel-db', '127.0.0.1', 'localhost'];
+    $port = (int) env('DB_PORT', 3306);
+    $user = env('DB_USERNAME', 'gbrel_user');
+    $pass = (string) env('DB_PASSWORD', '');
+    $db = env('DB_DATABASE', 'gbrel');
+
+    foreach ($hosts as $h) {
+        $start = microtime(true);
+        $status = 'unknown';
+        $error = null;
+        try {
+            $pdo = new \PDO("mysql:host={$h};port={$port};dbname={$db}", $user, $pass, [
+                \PDO::ATTR_TIMEOUT => 1,
+                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+            ]);
+            $pdo->query('SELECT 1');
+            $status = 'connected';
+        } catch (\Throwable $e) {
+            $status = 'failed';
+            $error = $e->getMessage();
+        }
+        $timeMs = round((microtime(true) - $start) * 1000, 2);
+        $results[$h] = [
+            'status' => $status,
+            'time_ms' => $timeMs,
+            'error' => $error,
+        ];
     }
 
     return response()->json([
         'success' => true,
         'app' => config('app.name'),
-        'status' => $dbOk ? 'ok' : 'degraded',
-        'database' => $dbOk ? 'connected' : 'disconnected',
-        'db_error' => $dbError,
-        'timestamp' => now()->toIso8601String(),
-    ], $dbOk ? 200 : 503);
+        'env_db_host' => env('DB_HOST'),
+        'env_db_database' => env('DB_DATABASE'),
+        'env_db_username' => env('DB_USERNAME'),
+        'has_password' => ! empty(env('DB_PASSWORD')),
+        'probes' => $results,
+    ]);
 });
 
 // ==========================================
