@@ -66,8 +66,16 @@ php artisan db:seed --force || true
 php artisan storage:link || true
 mkdir -p storage/app/public/properties && chmod -R 775 storage/app/public 2>/dev/null || true
 
+mkdir -p /run/nginx /var/log/nginx /var/cache/nginx 2>/dev/null || true
+
 php artisan config:clear >/dev/null 2>&1 || true
 php artisan route:clear >/dev/null 2>&1 || true
 php artisan view:clear >/dev/null 2>&1 || true
 
-exec "$@"
+if [ $# -gt 0 ]; then
+    exec "$@"
+else
+    echo "Starting PHP-FPM daemon and Nginx on port 8000..."
+    php-fpm -D
+    exec nginx -g 'daemon off;'
+fi

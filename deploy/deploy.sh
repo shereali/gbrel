@@ -30,4 +30,13 @@ docker compose exec -T backend php artisan config:clear || true
 echo "=== Container Status ==="
 docker compose ps
 
+echo "=== Syncing Caddy Configuration ==="
+if [ -d "/opt/caddy/conf.d" ]; then
+    cp "$DEPLOY_DIR/deploy/gbrel.caddy" /opt/caddy/conf.d/gbrel.caddy 2>/dev/null || true
+    docker exec caddy caddy reload --config /etc/caddy/Caddyfile 2>/dev/null || caddy reload 2>/dev/null || true
+fi
+
+echo "=== Verifying Backend Health ==="
+docker compose exec -T backend curl -sS -i http://127.0.0.1:8000/up || echo "Warning: Internal backend healthcheck failed"
+
 echo "=== Deploy Finished Successfully ==="

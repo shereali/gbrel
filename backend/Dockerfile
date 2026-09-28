@@ -33,5 +33,4 @@ RUN chmod +x /usr/local/bin/entrypoint.sh \
     && mkdir -p /run/nginx /var/log/nginx /var/cache/nginx
 
 EXPOSE 8000
-ENTRYPOINT ["entrypoint.sh"]
-CMD ["sh", "-c", "nginx -g 'daemon off;' & php-fpm -F"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
