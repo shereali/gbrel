@@ -139,7 +139,10 @@ jobs:
               echo '=== CADDY STATUS & CONFIG ===';
               ls -la /opt/caddy/conf.d/ 2>/dev/null || true;
               cat /opt/caddy/conf.d/gbrel.caddy 2>/dev/null || cat /opt/caddy/conf.d/gangchil.caddy 2>/dev/null || true;
-              " > server_diagnostics.txt 2>&1 || true
+              echo '';
+              echo '=== DB VOLUME DETAILS ===';
+              docker volume ls | grep -E 'db|mysql|gbrel|gangchil' || true;
+              " 2>&1 | tee server_diagnostics.txt || true
 
       - name: Upload Server Diagnostics
         if: always()
@@ -152,7 +155,9 @@ jobs:
         run: |
           echo "Waiting 5 seconds..."
           sleep 5
+          echo "Checking https://gbrel.com/api/health..."
+          curl -sS -i --max-time 15 "https://gbrel.com/api/health" || echo "Health check curl warning"
           echo "Checking https://gbrel.com/api/properties..."
-          curl -sS -i --max-time 15 "https://gbrel.com/api/properties" | head -n 15 || echo "API check curl warning"
+          curl -sS -i --max-time 15 "https://gbrel.com/api/properties" | head -n 25 || echo "API check curl warning"
           echo "Checking https://gbrel.com/..."
           curl -sS -i --max-time 15 "https://gbrel.com/" | head -n 15 || echo "Frontend check curl warning"

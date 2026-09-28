@@ -45,6 +45,27 @@ use Illuminate\Support\Str;
 |--------------------------------------------------------------------------
 */
 
+// Health check endpoint for deployment verification
+Route::get('/health', function () {
+    $dbOk = false;
+    $dbError = null;
+    try {
+        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        $dbOk = true;
+    } catch (\Throwable $e) {
+        $dbError = $e->getMessage();
+    }
+
+    return response()->json([
+        'success' => true,
+        'app' => config('app.name'),
+        'status' => $dbOk ? 'ok' : 'degraded',
+        'database' => $dbOk ? 'connected' : 'disconnected',
+        'db_error' => $dbError,
+        'timestamp' => now()->toIso8601String(),
+    ], $dbOk ? 200 : 503);
+});
+
 // ==========================================
 // 0. AUTHENTICATION & SESSION MANAGEMENT
 // ==========================================
