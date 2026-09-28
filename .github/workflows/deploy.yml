@@ -101,10 +101,57 @@ jobs:
               "$USER@$HOST" \
               "APP_DIR=\$( [ -d /var/www/gbrel ] && echo /var/www/gbrel || echo /var/www/gangchil ); bash \$APP_DIR/deploy/deploy.sh"
 
+      - name: Collect Server Diagnostics
+        if: always()
+        env:
+          SSH_USER: ${{ secrets.VPS_USER }}
+          SSH_HOST: ${{ secrets.VPS_HOST }}
+          SSH_PORT: ${{ secrets.VPS_PORT }}
+        run: |
+          USER=$(echo "$SSH_USER" | tr -d '[:space:]')
+          HOST=$(echo "$SSH_HOST" | tr -d '[:space:]')
+          PORT=$(echo "${SSH_PORT:-22}" | tr -d '[:space:]')
+
+          ssh -i ~/.ssh/deploy_key \
+              -p "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              -o IdentitiesOnly=yes \
+              -o ConnectTimeout=20 \
+              "$USER@$HOST" \
+              "APP_DIR=\$( [ -d /var/www/gbrel ] && echo /var/www/gbrel || echo /var/www/gangchil );
+              echo '=== ALL DOCKER CONTAINERS ===';
+              docker ps -a;
+              echo '';
+              echo '=== DOCKER COMPOSE PS ===';
+              cd \$APP_DIR && docker compose ps;
+              echo '';
+              echo '=== BACKEND LOGS ===';
+              cd \$APP_DIR && docker compose logs --tail=80 backend;
+              echo '';
+              echo '=== DB LOGS ===';
+              cd \$APP_DIR && docker compose logs --tail=30 db;
+              echo '';
+              echo '=== INTERNAL CURL HOST PORTS ===';
+              curl -sS -i --max-time 5 http://127.0.0.1:8004/up || echo 'Port 8004 failed';
+              echo '';
+              curl -sS -i --max-time 5 http://127.0.0.1:3004/ || echo 'Port 3004 failed';
+              echo '';
+              echo '=== CADDY STATUS & CONFIG ===';
+              ls -la /opt/caddy/conf.d/ 2>/dev/null || true;
+              cat /opt/caddy/conf.d/gbrel.caddy 2>/dev/null || cat /opt/caddy/conf.d/gangchil.caddy 2>/dev/null || true;
+              " > server_diagnostics.txt 2>&1 || true
+
+      - name: Upload Server Diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-diagnostics
+          path: server_diagnostics.txt
+
       - name: Verify Live Services
         run: |
-          echo "Waiting 8 seconds for Caddy and containers to settle..."
-          sleep 8
+          echo "Waiting 5 seconds..."
+          sleep 5
           echo "Checking https://gbrel.com/api/properties..."
           curl -sS -i --max-time 15 "https://gbrel.com/api/properties" | head -n 15 || echo "API check curl warning"
           echo "Checking https://gbrel.com/..."
