@@ -25,14 +25,14 @@ docker compose up -d --build --remove-orphans
 
 echo "=== Waiting for Database Service ==="
 sleep 4
-if docker compose logs db 2>&1 | grep -qE "Table 'mysql\.user' doesn't exist|Could not open the mysql\.plugin table"; then
-    echo "WARNING: Detected half-initialized MySQL volume from previous interrupted run. Re-initializing clean database volume..."
-    docker compose stop db
-    docker compose rm -f db
+if docker compose ps db | grep -q "Restarting" || docker compose logs db 2>&1 | grep -qE "Table 'mysql\.user' doesn't exist|Could not open the mysql\.plugin table"; then
+    echo "WARNING: Detected crash-looping or uninitialized MySQL container/volume. Purging broken container and volume..."
+    docker stop gbrel-db-1 2>/dev/null || true
+    docker rm -f -v gbrel-db-1 2>/dev/null || true
     docker volume rm gbrel_db_data 2>/dev/null || true
     docker compose up -d db
-    echo "Waiting 15s for clean MySQL 8 init..."
-    sleep 15
+    echo "Waiting 20 seconds for fresh MySQL 8.0 initialization..."
+    sleep 20
 fi
 
 if ! docker compose ps db | grep -q "Up"; then
