@@ -311,7 +311,7 @@
                 <td style="color:var(--admin-text-secondary);">
                   {{ p.areaName || p.city }}, {{ p.state }}
                 </td>
-                <td style="font-weight:800; color:#10B981; font-size:0.95rem;">
+                <td style="font-weight:800; color:var(--admin-text-emerald); font-size:0.95rem;">
                   {{ formatBDT(p.price) }}
                 </td>
                 <td>
@@ -715,7 +715,8 @@ const exportReport = () => {
   margin-top: 24px;
 }
 
-.panel-header-custom {
+.panel-header-custom,
+.panel-header-padded {
   padding: 20px 22px 16px;
   display: flex;
   align-items: center;
@@ -723,6 +724,7 @@ const exportReport = () => {
   flex-wrap: wrap;
   gap: 12px;
   border-bottom: 1px solid var(--admin-border-subtle);
+  background: var(--admin-bg-surface);
 }
 
 .panel-header-counter {
@@ -832,9 +834,9 @@ const exportReport = () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #EF4444;
+  background: var(--admin-badge-urgent-bg);
+  border: 1px solid var(--admin-badge-urgent-border);
+  color: var(--admin-badge-urgent-text);
   font-size: 0.73rem;
   font-weight: 700;
   padding: 3px 9px;
@@ -846,8 +848,8 @@ const exportReport = () => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #EF4444;
-  box-shadow: 0 0 6px #EF4444;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
 }
 
 .action-filter-pills {
@@ -864,12 +866,12 @@ const exportReport = () => {
 }
 
 .filter-pill {
-  background: transparent;
+  background: var(--admin-bg-surface-alt);
   border: 1px solid var(--admin-border-subtle);
   color: var(--admin-text-secondary);
   font-size: 0.76rem;
   font-weight: 600;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 20px;
   cursor: pointer;
   white-space: nowrap;
@@ -877,14 +879,16 @@ const exportReport = () => {
 }
 
 .filter-pill:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--admin-chip-bg);
   color: var(--admin-text-primary);
+  border-color: var(--admin-border-hover);
 }
 
 .filter-pill.active {
   background: var(--admin-text-primary);
   color: var(--admin-bg-base);
   border-color: var(--admin-text-primary);
+  font-weight: 700;
 }
 
 .action-queue-list {
@@ -898,20 +902,22 @@ const exportReport = () => {
 
 /* Individual Queue Card */
 .action-queue-card {
-  background: var(--admin-bg-surface-alt);
+  background: var(--admin-bg-surface);
   border: 1px solid var(--admin-border-subtle);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-lg, 12px);
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   position: relative;
+  box-shadow: var(--admin-card-shadow);
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .action-queue-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--admin-card-shadow-hover);
+  border-color: var(--admin-border-hover);
 }
 
 .action-queue-card.card-border-gold {
@@ -942,18 +948,21 @@ const exportReport = () => {
 }
 
 .action-type-pill.type-legal {
-  background: rgba(226, 101, 28, 0.14);
-  color: #FBBF24;
+  background: var(--admin-pill-legal-bg);
+  color: var(--admin-pill-legal-text);
+  border: 1px solid var(--admin-pill-legal-border);
 }
 
 .action-type-pill.type-tour {
-  background: rgba(59, 130, 246, 0.14);
-  color: #60A5FA;
+  background: var(--admin-pill-tour-bg);
+  color: var(--admin-pill-tour-text);
+  border: 1px solid var(--admin-pill-tour-border);
 }
 
 .action-type-pill.type-lead {
-  background: rgba(16, 185, 129, 0.14);
-  color: #34D399;
+  background: var(--admin-pill-lead-bg);
+  color: var(--admin-pill-lead-text);
+  border: 1px solid var(--admin-pill-lead-border);
 }
 
 .action-priority-badge {
@@ -966,27 +975,27 @@ const exportReport = () => {
 }
 
 .priority-high {
-  background: rgba(239, 68, 68, 0.15);
-  color: #F87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--admin-badge-urgent-bg);
+  color: var(--admin-badge-urgent-text);
+  border: 1px solid var(--admin-badge-urgent-border);
 }
 
 .priority-confirmed {
-  background: rgba(59, 130, 246, 0.15);
-  color: #93C5FD;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: var(--admin-badge-confirmed-bg);
+  color: var(--admin-badge-confirmed-text);
+  border: 1px solid var(--admin-badge-confirmed-border);
 }
 
 .priority-pending {
-  background: rgba(245, 158, 11, 0.15);
-  color: #FCD34D;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: var(--admin-badge-pending-bg);
+  color: var(--admin-badge-pending-text);
+  border: 1px solid var(--admin-badge-pending-border);
 }
 
 .priority-active {
-  background: rgba(16, 185, 129, 0.15);
-  color: #6EE7B7;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: var(--admin-pill-lead-bg);
+  color: var(--admin-pill-lead-text);
+  border: 1px solid var(--admin-pill-lead-border);
 }
 
 .action-card-main {
@@ -1003,21 +1012,26 @@ const exportReport = () => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background: var(--admin-chip-bg);
+  border: 1px solid var(--admin-chip-border);
 }
 
 .action-icon-box.icon-gold {
-  background: rgba(226, 101, 28, 0.15);
-  color: #E2651C;
+  background: var(--admin-pill-legal-bg);
+  color: var(--admin-text-gold);
+  border-color: var(--admin-pill-legal-border);
 }
 
 .action-icon-box.icon-blue {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60A5FA;
+  background: var(--admin-pill-tour-bg);
+  color: var(--admin-text-blue);
+  border-color: var(--admin-pill-tour-border);
 }
 
 .action-icon-box.icon-emerald {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10B981;
+  background: var(--admin-pill-lead-bg);
+  color: var(--admin-text-emerald);
+  border-color: var(--admin-pill-lead-border);
 }
 
 .action-text-block {
@@ -1041,13 +1055,15 @@ const exportReport = () => {
 
 .meta-tag {
   font-size: 0.74rem;
-  color: var(--admin-text-secondary);
-  background: rgba(255, 255, 255, 0.04);
-  padding: 2px 7px;
+  color: var(--admin-chip-text);
+  background: var(--admin-chip-bg);
+  border: 1px solid var(--admin-chip-border);
+  padding: 3px 8px;
   border-radius: 4px;
   display: inline-flex;
   align-items: center;
   line-height: 1.3;
+  font-weight: 500;
 }
 
 .action-card-footer {
@@ -1056,7 +1072,7 @@ const exportReport = () => {
   justify-content: space-between;
   padding-top: 10px;
   margin-top: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--admin-border-subtle);
 }
 
 .action-timestamp {
@@ -1071,18 +1087,30 @@ const exportReport = () => {
   font-weight: 700;
   padding: 6px 14px;
   border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  text-decoration: none;
 }
 
 .btn-blue {
   background: #2563EB;
-  color: #FFFFFF;
+  color: #FFFFFF !important;
   border: 1px solid #3B82F6;
 }
 
 .btn-blue:hover {
   background: #1D4ED8;
-  color: #FFFFFF;
+  color: #FFFFFF !important;
+}
+
+.btn-emerald {
+  background: #059669;
+  color: #FFFFFF !important;
+  border: 1px solid #10B981;
+}
+
+.btn-emerald:hover {
+  background: #047857;
+  color: #FFFFFF !important;
 }
 
 /* Empty Queue State */
@@ -1099,8 +1127,9 @@ const exportReport = () => {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: rgba(16, 185, 129, 0.15);
-  color: #10B981;
+  background: var(--admin-pill-lead-bg);
+  border: 1px solid var(--admin-pill-lead-border);
+  color: var(--admin-text-emerald);
   font-size: 1.4rem;
   display: flex;
   align-items: center;
@@ -1128,15 +1157,15 @@ const exportReport = () => {
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--admin-text-primary);
-  border: 1px solid var(--admin-border-subtle);
+  background: var(--admin-chip-bg);
+  color: var(--admin-chip-text);
+  border: 1px solid var(--admin-chip-border);
 }
 
 .badge-rajuk-pass {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10B981;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: var(--admin-pill-lead-bg);
+  color: var(--admin-pill-lead-text);
+  border: 1px solid var(--admin-pill-lead-border);
   font-size: 0.72rem;
   font-weight: 700;
   padding: 3px 8px;
@@ -1144,9 +1173,9 @@ const exportReport = () => {
 }
 
 .badge-rajuk-pending {
-  background: rgba(245, 158, 11, 0.15);
-  color: #F59E0B;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: var(--admin-badge-pending-bg);
+  color: var(--admin-badge-pending-text);
+  border: 1px solid var(--admin-badge-pending-border);
   font-size: 0.72rem;
   font-weight: 700;
   padding: 3px 8px;
@@ -1154,9 +1183,9 @@ const exportReport = () => {
 }
 
 .badge-status-active {
-  background: rgba(16, 185, 129, 0.12);
-  color: #34D399;
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: var(--admin-pill-lead-bg);
+  color: var(--admin-pill-lead-text);
+  border: 1px solid var(--admin-pill-lead-border);
   font-size: 0.72rem;
   font-weight: 700;
   padding: 3px 8px;
@@ -1164,38 +1193,73 @@ const exportReport = () => {
 }
 
 .badge-status-subtle {
-  background: rgba(148, 163, 184, 0.12);
-  color: #8E9B8F;
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: var(--admin-chip-bg);
+  color: var(--admin-text-muted);
+  border: 1px solid var(--admin-chip-border);
   font-size: 0.72rem;
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 4px;
 }
 
-/* Light Mode Overrides for Action Queue & Cards */
-.admin-theme-light .action-queue-card {
-  background: #FFFFFF;
-  border-color: #D6DDCB;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+/* Mobile Mandates List & Cards (<= 768px) */
+.mobile-mandates-list {
+  display: none;
 }
 
-.admin-theme-light .action-queue-card:hover {
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+.mobile-mandate-card {
+  background: var(--admin-bg-surface);
+  border: 1px solid var(--admin-border-subtle);
+  border-radius: var(--radius-lg, 12px);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--admin-card-shadow);
+  transition: transform 0.18s ease, border-color 0.18s ease;
 }
 
-.admin-theme-light .meta-tag {
-  background: #EDF1E6;
-  color: #4A5A4E;
+.mobile-mandate-card:hover {
+  border-color: var(--admin-border-hover);
 }
 
-.admin-theme-light .action-card-footer {
-  border-top-color: #EDF1E6;
+.mobile-mandate-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  line-height: 1.3;
+  margin: 4px 0 6px;
 }
 
-.admin-theme-light .regional-footer-summary {
-  background: #F3F5EC;
-  border-top-color: #D6DDCB;
+.mobile-mandate-location {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--admin-text-muted);
+}
+
+.mobile-mandate-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--admin-border-subtle);
+}
+
+.val-label {
+  display: block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--admin-text-muted);
+  font-weight: 700;
+}
+
+.val-num {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--admin-text-emerald);
 }
 
 /* Responsive Media Queries */

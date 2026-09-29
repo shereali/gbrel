@@ -4,14 +4,17 @@
    ========================================================================== */
 
 :root {
-  --admin-bg-base: #0D1A12;
-  --admin-bg-surface: #132A1B;
-  --admin-bg-surface-alt: #17321F;
-  --admin-bg-surface-elevated: #21402C;
+  --admin-bg-base: #0B160F;
+  --admin-bg-surface: #112417;
+  --admin-bg-surface-alt: #162E1E;
+  --admin-bg-surface-elevated: #1F3F2A;
   --admin-border-subtle: rgba(255, 255, 255, 0.08);
-  --admin-border-hover: rgba(255, 255, 255, 0.16);
-  --admin-border-accent: rgba(226, 101, 28, 0.35);
+  --admin-border-hover: rgba(255, 255, 255, 0.18);
+  --admin-border-accent: rgba(226, 101, 28, 0.4);
   
+  --admin-card-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.55);
+  --admin-card-shadow-hover: 0 18px 40px -10px rgba(0, 0, 0, 0.7);
+
   --admin-text-primary: #FFFFFF;
   --admin-text-secondary: #C3CCB6;
   --admin-text-muted: #8E9B8F;
@@ -19,6 +22,39 @@
   --admin-text-emerald: #10B981;
   --admin-text-blue: #60A5FA;
   --admin-text-rose: #FB7185;
+
+  /* Pill & Badge Tokens (Dark Mode) */
+  --admin-pill-legal-bg: rgba(226, 101, 28, 0.16);
+  --admin-pill-legal-text: #FBBF24;
+  --admin-pill-legal-border: rgba(226, 101, 28, 0.35);
+
+  --admin-pill-tour-bg: rgba(59, 130, 246, 0.16);
+  --admin-pill-tour-text: #60A5FA;
+  --admin-pill-tour-border: rgba(59, 130, 246, 0.35);
+
+  --admin-pill-lead-bg: rgba(16, 185, 129, 0.16);
+  --admin-pill-lead-text: #34D399;
+  --admin-pill-lead-border: rgba(16, 185, 129, 0.35);
+
+  --admin-badge-urgent-bg: rgba(239, 68, 68, 0.18);
+  --admin-badge-urgent-text: #F87171;
+  --admin-badge-urgent-border: rgba(239, 68, 68, 0.35);
+
+  --admin-badge-confirmed-bg: rgba(59, 130, 246, 0.18);
+  --admin-badge-confirmed-text: #93C5FD;
+  --admin-badge-confirmed-border: rgba(59, 130, 246, 0.35);
+
+  --admin-badge-pending-bg: rgba(245, 158, 11, 0.18);
+  --admin-badge-pending-text: #FCD34D;
+  --admin-badge-pending-border: rgba(245, 158, 11, 0.35);
+
+  --admin-chip-bg: rgba(255, 255, 255, 0.05);
+  --admin-chip-text: #C3CCB6;
+  --admin-chip-border: rgba(255, 255, 255, 0.09);
+
+  --admin-table-row-hover: rgba(255, 255, 255, 0.03);
+  --admin-table-th-bg: rgba(255, 255, 255, 0.025);
+  --admin-table-border: rgba(255, 255, 255, 0.06);
 }
 
 /* Light Theme Variable Overrides */
@@ -28,20 +64,65 @@ body.admin-theme-light,
 .admin-theme-light {
   --admin-bg-base: #F3F5EC;
   --admin-bg-surface: #FFFFFF;
-  --admin-bg-surface-alt: #EDF1E6;
+  --admin-bg-surface-alt: #F8FAF5;
   --admin-bg-surface-elevated: #FFFFFF;
-  --admin-border-subtle: #D6DDCB;
-  --admin-border-hover: #C3CCB6;
+  --admin-border-subtle: #D8DFCD;
+  --admin-border-hover: #BFCCB1;
   --admin-border-accent: #E2651C;
+
+  --admin-card-shadow: 0 4px 20px -2px rgba(19, 42, 27, 0.06), 0 1px 4px rgba(19, 42, 27, 0.03);
+  --admin-card-shadow-hover: 0 12px 30px -4px rgba(19, 42, 27, 0.12), 0 3px 8px rgba(19, 42, 27, 0.04);
   
-  --admin-text-primary: #132A1B;
-  --admin-text-secondary: #34463A;
-  --admin-text-muted: #5F6E63;
+  --admin-text-primary: #112316;
+  --admin-text-secondary: #2C3D31;
+  --admin-text-muted: #56685B;
   --admin-text-gold: #B34A0C;
-  --admin-text-emerald: #059669;
-  --admin-text-blue: #2563EB;
-  --admin-text-rose: #E11D48;
+  --admin-text-emerald: #047857;
+  --admin-text-blue: #1D4ED8;
+  --admin-text-rose: #BE123C;
+
+  /* Pill & Badge Tokens (Light Mode - Crisp Executive Contrast) */
+  --admin-pill-legal-bg: #FFF4EC;
+  --admin-pill-legal-text: #9A3412;
+  --admin-pill-legal-border: #FDBA74;
+
+  --admin-pill-tour-bg: #EFF6FF;
+  --admin-pill-tour-text: #1E40AF;
+  --admin-pill-tour-border: #BFDBFE;
+
+  --admin-pill-lead-bg: #ECFDF5;
+  --admin-pill-lead-text: #065F46;
+  --admin-pill-lead-border: #A7F3D0;
+
+  --admin-badge-urgent-bg: #FEF2F2;
+  --admin-badge-urgent-text: #991B1B;
+  --admin-badge-urgent-border: #FECACA;
+
+  --admin-badge-confirmed-bg: #EFF6FF;
+  --admin-badge-confirmed-text: #1E40AF;
+  --admin-badge-confirmed-border: #BFDBFE;
+
+  --admin-badge-pending-bg: #FFFBEB;
+  --admin-badge-pending-text: #92400E;
+  --admin-badge-pending-border: #FDE68A;
+
+  --admin-chip-bg: #EEF2E6;
+  --admin-chip-text: #243B2B;
+  --admin-chip-border: #D3DCB5;
+
+  --admin-table-row-hover: #F4F7EE;
+  --admin-table-th-bg: #EDF2E4;
+  --admin-table-border: #D8DFCD;
 }
+
+/* Semantic Text Utilities for Admin Interface */
+.text-gold { color: var(--admin-text-gold) !important; }
+.text-emerald { color: var(--admin-text-emerald) !important; }
+.text-blue { color: var(--admin-text-blue) !important; }
+.text-rose { color: var(--admin-text-rose) !important; }
+.text-primary { color: var(--admin-text-primary) !important; }
+.text-secondary { color: var(--admin-text-secondary) !important; }
+.text-muted { color: var(--admin-text-muted) !important; }
 
 /* Base Admin Page Container (Full Width) */
 .admin-page {
@@ -103,8 +184,8 @@ body.admin-theme-light,
   border: 1px solid var(--admin-border-subtle);
   border-radius: var(--radius-xl);
   padding: 24px;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: var(--admin-card-shadow);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
 .panel-card:hover {
@@ -136,6 +217,54 @@ body.admin-theme-light,
   margin-top: 2px;
 }
 
+/* Global Outline Button Overrides for Admin Portal */
+.admin-shell .btn-outline-white {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--admin-text-primary) !important;
+  border: 1px solid var(--admin-border-subtle);
+  border-radius: 8px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+}
+
+.admin-shell .btn-outline-white:hover {
+  background: var(--admin-bg-surface-elevated);
+  border-color: var(--admin-border-hover);
+  color: var(--admin-text-primary) !important;
+  transform: translateY(-1px);
+}
+
+.admin-shell.admin-theme-light .btn-outline-white,
+.admin-theme-light .admin-shell .btn-outline-white,
+.admin-theme-light .btn-outline-white {
+  background: #FFFFFF !important;
+  color: #112316 !important;
+  border: 1px solid #D8DFCD !important;
+  box-shadow: 0 1px 3px rgba(19, 42, 27, 0.05);
+}
+
+.admin-shell.admin-theme-light .btn-outline-white:hover,
+.admin-theme-light .admin-shell .btn-outline-white:hover,
+.admin-theme-light .btn-outline-white:hover {
+  background: #F3F5EC !important;
+  border-color: #1D4A2A !important;
+  color: #1D4A2A !important;
+  box-shadow: 0 2px 6px rgba(19, 42, 27, 0.09);
+}
+
+.btn-xs {
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  border-radius: 6px;
+  gap: 4px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
 /* KPI Cards Grid */
 .kpi-grid {
   display: grid;
@@ -152,10 +281,10 @@ body.admin-theme-light,
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--admin-card-shadow);
   position: relative;
   overflow: hidden;
-  transition: transform var(--transition-fast), border-color var(--transition-fast);
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .kpi-card::before {
@@ -165,13 +294,14 @@ body.admin-theme-light,
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, rgba(226, 101, 28, 0.6), transparent);
-  opacity: 0.4;
+  background: linear-gradient(90deg, rgba(226, 101, 28, 0.7), transparent);
+  opacity: 0.8;
 }
 
 .kpi-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(226, 101, 28, 0.3);
+  border-color: var(--admin-border-hover);
+  box-shadow: var(--admin-card-shadow-hover);
 }
 
 .kpi-header {
@@ -190,19 +320,25 @@ body.admin-theme-light,
 }
 
 .kpi-icon-pill {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--admin-chip-bg);
+  border: 1px solid var(--admin-chip-border);
+  transition: transform 0.2s ease;
 }
 
-.kpi-icon-pill.emerald { background: rgba(16, 185, 129, 0.15); color: #10B981; }
-.kpi-icon-pill.gold { background: rgba(226, 101, 28, 0.15); color: #E2651C; }
-.kpi-icon-pill.blue { background: rgba(59, 130, 246, 0.15); color: #60A5FA; }
-.kpi-icon-pill.rose { background: rgba(244, 63, 94, 0.15); color: #FB7185; }
+.kpi-card:hover .kpi-icon-pill {
+  transform: scale(1.08);
+}
+
+.kpi-icon-pill.emerald { background: var(--admin-pill-lead-bg); color: var(--admin-text-emerald); border-color: var(--admin-pill-lead-border); }
+.kpi-icon-pill.gold { background: var(--admin-pill-legal-bg); color: var(--admin-text-gold); border-color: var(--admin-pill-legal-border); }
+.kpi-icon-pill.blue { background: var(--admin-pill-tour-bg); color: var(--admin-text-blue); border-color: var(--admin-pill-tour-border); }
+.kpi-icon-pill.rose { background: var(--admin-badge-urgent-bg); color: var(--admin-text-rose); border-color: var(--admin-badge-urgent-border); }
 
 .kpi-value {
   font-family: var(--font-ui);
@@ -212,6 +348,7 @@ body.admin-theme-light,
   line-height: 1.15;
   font-variant-numeric: tabular-nums;
   margin-bottom: 8px;
+  letter-spacing: -0.02em;
 }
 
 .kpi-sub {
@@ -236,7 +373,7 @@ body.admin-theme-light,
 .admin-table th {
   padding: 14px 18px;
   text-align: left;
-  background: rgba(255, 255, 255, 0.025);
+  background: var(--admin-table-th-bg);
   border-bottom: 1px solid var(--admin-border-subtle);
   font-size: 0.76rem;
   color: var(--admin-text-muted);
@@ -248,13 +385,13 @@ body.admin-theme-light,
 
 .admin-table td {
   padding: 16px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.035);
+  border-bottom: 1px solid var(--admin-table-border);
   vertical-align: middle;
   color: var(--admin-text-secondary);
 }
 
 .admin-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--admin-table-row-hover);
 }
 
 .table-thumb {
