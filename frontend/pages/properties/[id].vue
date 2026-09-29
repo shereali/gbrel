@@ -302,7 +302,7 @@ const trustFacts = computed(() => {
   return facts.slice(0, 3)
 })
 const waLink = computed(() => whatsappLink(leadWhatsapp.value, `আসসালামু আলাইকুম, "${property.value?.title}" (GBR-${property.value?.id}) নিয়ে জানতে চাই।`))
-const openInquiry = (source: string, purpose = '') => { inquirySource.value = source; if (purpose) startPurpose.value = purpose; inquiryOpen.value = true }
+const openInquiry = (source: string, purpose = '') => { if (!inquiryOpen.value) track('SurveyOpen', { cta: source }); inquirySource.value = source; if (purpose) startPurpose.value = purpose; inquiryOpen.value = true }
 // The survey sends the Lead pixel event itself (with a dedup event ID).
 const leadSaved = (_id: number) => {}
 const openPhoto = (index: number) => { photoIndex.value = index; lightboxOpen.value = true }

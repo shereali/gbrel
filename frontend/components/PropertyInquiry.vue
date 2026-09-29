@@ -111,7 +111,7 @@ import { priceDisplay } from '~/utils/priceDisplay'
 import { normalizePhone, validPhone, savePropertyInquiry } from '~/utils/propertyInquiry.mjs'
 import { buildQuestions, labelFor, scoreLead, type Answers } from '~/utils/leadSurvey'
 import { priceBn, toBn } from '~/utils/propertyLabels'
-import { trackPixel } from '~/utils/metaPixel'
+import { trackPixel, setPixelUserData } from '~/utils/metaPixel'
 
 const props = defineProps<{ open: boolean; property: PropertyItem; source: string; startPurpose?: string; whatsapp?: string }>()
 const emit = defineEmits<{ close: []; saved: [id: number] }>()
@@ -171,6 +171,8 @@ let advanceTimer: ReturnType<typeof setTimeout> | undefined
 const choose = (value: string) => {
   answers[current.value.key] = value
   markStarted()
+  // Funnel step: shows where people drop off (e.g. at the budget question). No personal data.
+  track('SurveyStep', { step: step.value + 1, question: current.value.key, answer: value, cta: props.source })
   clearTimeout(advanceTimer)
   // A short pause lets the person see their tap register before the next question.
   advanceTimer = setTimeout(() => { step.value++; focusStep() }, 220)
@@ -220,6 +222,7 @@ const submit = async () => {
       utm_content: q('utm_content'), utm_term: q('utm_term')
     })
     // Same event ID as the stored request, so a future server-side (Conversions API) event deduplicates.
+    setPixelUserData(normalizePhone(form.phone), form.name)
     track('Lead', { lead_tier: s.tier, lead_score: s.points, cta: props.source }, requestId.value)
     if (s.tier === 'HOT') track('QualifiedLead', { lead_score: s.points }, `${requestId.value}-q`)
     emit('saved', savedId.value!)

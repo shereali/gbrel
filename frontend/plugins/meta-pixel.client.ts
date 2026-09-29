@@ -36,6 +36,7 @@ export default defineNuxtPlugin(async () => {
       n.push = n; n.loaded = true; n.version = '2.0'; n.queue = []
       addScript('https://connect.facebook.net/en_US/fbevents.js')
       w.fbq('init', pixelId)
+      w.__gbrelPixelId = pixelId
     }
     if (GTM.test(gtmId)) {
       w.dataLayer = w.dataLayer || []

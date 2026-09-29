@@ -27,3 +27,20 @@ export const trackPixel = (event: string, params: Record<string, unknown> = {}, 
     if (Array.isArray(w.dataLayer)) w.dataLayer.push({ event: `gbrel_${gaName}`, ...params, ...(eventID ? { event_id: eventID } : {}) })
   } catch { /* Analytics must never block a visitor. */ }
 }
+
+// Advanced matching: re-initialise the pixel with the lead's phone and first name right before the Lead
+// event, so Meta can match the lead to a Facebook account. The pixel hashes these values (SHA-256) itself.
+export const setPixelUserData = (phoneE164: string, fullName: string) => {
+  try {
+    if (typeof window !== 'undefined' && localStorage.getItem('gbrel_cookie_consent') === 'essential') return
+    const w = window as any
+    const pixelId = w.__gbrelPixelId
+    if (typeof w.fbq !== 'function' || !pixelId) return
+    const ph = String(phoneE164 || '').replace(/\D/g, '')
+    const fn = String(fullName || '').trim().split(/\s+/)[0]?.toLowerCase() || ''
+    const data: Record<string, string> = {}
+    if (ph) data.ph = ph
+    if (fn) data.fn = fn
+    if (Object.keys(data).length) w.fbq('init', pixelId, data)
+  } catch { /* Analytics must never block a visitor. */ }
+}
