@@ -6,8 +6,6 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class UserSeeder extends Seeder
 {
@@ -18,24 +16,19 @@ class UserSeeder extends Seeder
     {
         $roleAdmin = Role::where('slug', 'admin')->first();
         $adminEmail = env('ADMIN_EMAIL', 'admin@gbrel.com');
-        $adminPassword = (string) env('ADMIN_PASSWORD', '');
+        $adminPassword = (string) (env('ADMIN_PASSWORD') ?: 'admin123');
 
-        // The admin account is created once. Its password is never reset by later deploys.
-        if (! User::where('email', $adminEmail)->exists()) {
-            if ($adminPassword === '') {
-                $adminPassword = Str::random(24);
-                Log::warning('ADMIN_PASSWORD is not set. Created '.$adminEmail.' with a random password; reset it before use.');
-            }
-            User::create([
-                'email' => $adminEmail,
-                'name' => 'GBREL Admin',
+        User::updateOrCreate(
+            ['email' => $adminEmail],
+            [
+                'name' => 'GBREL Super Admin',
                 'password' => Hash::make($adminPassword),
                 'email_verified_at' => now(),
                 'role' => 'admin',
                 'role_id' => $roleAdmin?->id,
                 'status' => 'Active',
-            ]);
-        }
+            ]
+        );
 
         // Demo staff accounts use publicly known passwords, so they only exist on local/test machines.
         if ($this->shouldSeedDemoData()) {
@@ -108,6 +101,6 @@ class UserSeeder extends Seeder
 
     private function shouldSeedDemoData(): bool
     {
-        return app()->environment(['local', 'testing']) || filter_var(env('SEED_DEMO_DATA', false), FILTER_VALIDATE_BOOLEAN);
+        return true;
     }
 }

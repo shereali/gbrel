@@ -58,8 +58,8 @@ const handleAdminLogin = async () => {
     }
     const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/admin') ? route.query.redirect : '/admin'
     router.push(redirect)
-  } catch {
-    error.value = 'The email/phone or password is not correct.'
+  } catch (err: any) {
+    error.value = err?.message || 'The email/phone or password is not correct.'
   } finally {
     loading.value = false
   }

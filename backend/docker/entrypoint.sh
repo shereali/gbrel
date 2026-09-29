@@ -10,7 +10,7 @@ if [ "$DB_CONNECTION" = "mysql" ]; then
     DB_PORT="${DB_PORT:-3306}"
     DB_DATABASE="${DB_DATABASE:-gbrel}"
     echo "Waiting for MySQL at ${DB_HOST}:${DB_PORT}..."
-    MAX_TRIES=10
+    MAX_TRIES=45
     TRY_COUNT=0
     until php -r "
         \$hosts = array_unique([getenv('DB_HOST') ?: 'gbrel-db', 'gbrel-db', 'gbrel-db-1', 'db', '127.0.0.1']);

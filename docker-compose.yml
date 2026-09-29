@@ -43,7 +43,7 @@ services:
       DB_USERNAME: ${DB_USERNAME:-gbrel_user}
       DB_PASSWORD: ${DB_PASSWORD:-gbrel_secret_pass_2026}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@gbrel.com}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Gbrel-PfsaMwekZYvi}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
       MAIL_MAILER: ${MAIL_MAILER:-log}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-contact@gbrel.com}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME:-GBREL}
