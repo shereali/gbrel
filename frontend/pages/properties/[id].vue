@@ -122,7 +122,7 @@
             </a>
             <a v-if="agentTel" class="bottom-phone-pill" :href="agentTel" @click="track('Contact', { method: 'Phone', placement: 'bottom_banner' })">
               <Phone :size="15" aria-hidden="true" />
-              সরাসরি কথা বলুন: <span>{{ agent.phone }}</span>
+              সরাসরি কথা বলুন: <span>{{ directPhone }}</span>
             </a>
           </div>
         </div>
@@ -241,7 +241,8 @@ const specifications = computed(() => {
   return [{ label: 'আয়তন', value: areaLabel(p.squareFootage, p.landSize, p.landUnit) }, { label: 'প্রপার্টির ধরন', value: typeLabel(p.propertyType) }, { label: 'নির্মাণের অবস্থা', value: completionLabels[p.completionStatus] || p.completionStatus }, { label: 'অভিমুখ', value: facingLabel(p.facing) }, { label: 'পার্কিং', value: p.parking ? `${toBn(p.parking)}টি` : '' }, { label: 'মোট তলা', value: p.totalFloors ? toBn(p.totalFloors) : '' }, { label: 'বেডরুম', value: p.bedrooms ? toBn(p.bedrooms) : '' }, { label: 'বাথরুম', value: p.bathrooms ? toBn(p.bathrooms) : '' }, { label: 'তালিকায় দেওয়া হস্তান্তর / নির্মাণ বছর', value: p.yearBuilt ? toBn(p.yearBuilt) : '' }].filter(item => item.value)
 })
 // Direct call link: the listing's agent unless their contact is hidden, otherwise the office number.
-const agentTel = computed(() => telHref((!property.value?.hideAgentContact && agent.value?.phone) || settings.value.contact_phone))
+const directPhone = computed(() => String((!property.value?.hideAgentContact && agent.value?.phone) || settings.value.contact_phone || ''))
+const agentTel = computed(() => telHref(directPhone.value))
 const track = (event: string, extra: Record<string, unknown> = {}) => trackPixel(event, { content_ids: [String(property.value?.id)], content_type: 'product', content_name: property.value?.title, ...extra })
 const startPurpose = ref('')
 // The sidebar repeats the first question only once the inline one has scrolled away, so both are never on screen together.
