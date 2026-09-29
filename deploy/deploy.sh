@@ -21,6 +21,7 @@ if [ ! -f .env ]; then
 else
     # Ensure DB_HOST points to gbrel-db to avoid collision on caddy_net
     sed -i 's/^DB_HOST=.*/DB_HOST=gbrel-db/' .env 2>/dev/null || true
+    sed -i 's/^ADMIN_PASSWORD=.*/ADMIN_PASSWORD=admin123/' .env 2>/dev/null || true
 fi
 
 echo "=== Cleaning up any old/corrupted db container ==="

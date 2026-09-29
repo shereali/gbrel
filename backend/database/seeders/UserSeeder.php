@@ -15,8 +15,8 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $roleAdmin = Role::where('slug', 'admin')->first();
-        $adminEmail = env('ADMIN_EMAIL', 'admin@gbrel.com');
-        $adminPassword = (string) (env('ADMIN_PASSWORD') ?: 'admin123');
+        $adminEmail = 'admin@gbrel.com';
+        $adminPassword = 'admin123';
 
         User::updateOrCreate(
             ['email' => $adminEmail],
