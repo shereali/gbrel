@@ -45,20 +45,22 @@ const error = ref('')
 
 const handleLogin = async () => {
   error.value = ''
-  if (!identifier.value || !password.value) {
+  const cleanId = identifier.value.trim()
+  const cleanPass = password.value.trim()
+  if (!cleanId || !cleanPass) {
     error.value = 'মোবাইল নম্বর বা ইমেইল আর পাসওয়ার্ড দুটোই লিখুন।'
     return
   }
   loading.value = true
   try {
-    const user = await login(identifier.value, password.value, true)
+    const user = await login(cleanId, cleanPass, true)
     const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/') ? route.query.redirect : ''
     if (redirect) return router.push(redirect)
     if (user.is_staff || user.is_admin) return router.push('/admin')
     if (user.role === 'owner') return router.push('/my-listings')
     return router.push('/dashboard')
-  } catch {
-    error.value = 'নম্বর/ইমেইল বা পাসওয়ার্ড মেলেনি। আবার চেষ্টা করুন।'
+  } catch (err: any) {
+    error.value = err?.message || 'নম্বর/ইমেইল বা পাসওয়ার্ড মেলেনি। আবার চেষ্টা করুন।'
   } finally {
     loading.value = false
   }

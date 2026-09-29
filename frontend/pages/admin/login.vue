@@ -44,13 +44,15 @@ const error = ref('')
 
 const handleAdminLogin = async () => {
   error.value = ''
-  if (!email.value || !password.value) {
+  const trimmedEmail = email.value.trim()
+  const trimmedPassword = password.value.trim()
+  if (!trimmedEmail || !trimmedPassword) {
     error.value = 'Enter your email or phone and your password.'
     return
   }
   loading.value = true
   try {
-    const user = await login(email.value, password.value, true)
+    const user = await login(trimmedEmail, trimmedPassword, true)
     if (!user.is_staff && !user.is_admin) {
       await logout()
       error.value = 'This account is not a staff account. Property owners use the main sign-in page.'
