@@ -27,6 +27,42 @@ return Application::configure(basePath: dirname(__DIR__))
         );
         $exceptions->render(function (\Throwable $e, Request $request) {
             if ($request->is('api/*')) {
+                if ($e instanceof \Illuminate\Validation\ValidationException) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $e->getMessage(),
+                        'errors' => $e->errors(),
+                    ], 422);
+                }
+
+                if ($e instanceof \Illuminate\Auth\AuthenticationException) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Unauthenticated.',
+                    ], 401);
+                }
+
+                if ($e instanceof \Illuminate\Auth\Access\AuthorizationException) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $e->getMessage() ?: 'Forbidden.',
+                    ], 403);
+                }
+
+                if ($e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException || $e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Resource not found.',
+                    ], 404);
+                }
+
+                if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $e->getMessage(),
+                    ], $e->getStatusCode());
+                }
+
                 \Illuminate\Support\Facades\Log::error('API Exception: '.$e->getMessage(), [
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),

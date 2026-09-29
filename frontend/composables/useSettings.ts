@@ -105,9 +105,14 @@ export const useSettings = () => {
   const updateSettings = async (changes: Partial<SiteSettings>) => {
     isSaving.value = true
     try {
+      const { token } = useAuth()
       const res = await fetch(useApiUrl('/settings'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          ...(token.value ? { Authorization: `Bearer ${token.value}` } : {})
+        },
         body: JSON.stringify(changes)
       })
       const body = await res.json().catch(() => null)

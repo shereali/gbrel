@@ -2085,7 +2085,7 @@ Route::get('/admin/stats', function () {
         ->orWhereNull('is_rajuk_approved')
         ->orderBy('created_at', 'desc')
         ->get();
-    $settledVolume = (float) FinancialTransaction::where('status', 'Settled')->sum('amount');
+    $settledVolume = (float) FinancialTransaction::where('status', 'Settled')->sum('transacted_value');
 
     $payload = [
         'total_portfolio_valuation' => $totalValuation,
