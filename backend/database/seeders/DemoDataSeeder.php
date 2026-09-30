@@ -38,19 +38,6 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        // 2. Seed Demo Leads
-        Lead::updateOrCreate(
-            ['id' => 1],
-            [
-                'name' => 'Dr. Farhan Chowdhury',
-                'phone' => '+44 7911 123456',
-                'email' => 'farhan.chowdhury@nhs.uk',
-                'property_title' => 'গুলশান-২, রোড ৪৮/৪বি — ৩১ কাঠা বাণিজ্যিক কর্নার প্লট ও ২ তলা দালান',
-                'lead_type' => 'NRB Commercial Investor (UK)',
-                'message' => 'Interested in commercial approval verification deeds and bank escrow transfer options for the 31 Katha corner plot.',
-                'status' => 'Active',
-            ]
-        );
 
         // 3. Seed Demo Financial Transactions
         FinancialTransaction::updateOrCreate(

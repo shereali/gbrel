@@ -128,4 +128,39 @@ class PropertyLeadTest extends TestCase
             ->assertJsonPath('data.amenities', [])
             ->assertJsonPath('data.documents_verified', []);
     }
+
+    public function test_admin_can_soft_delete_and_restore_lead(): void
+    {
+        $this->signInAs('admin');
+        $lead = Lead::create([
+            'name' => 'Soft Delete Prospect',
+            'phone' => '+8801711000000',
+            'status' => 'New',
+        ]);
+
+        $this->assertDatabaseHas('leads', ['id' => $lead->id, 'deleted_at' => null]);
+
+        // Soft delete lead
+        $this->deleteJson('/api/leads/'.$lead->id)
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        // Verify soft-deleted in database
+        $this->assertSoftDeleted('leads', ['id' => $lead->id]);
+
+        // Verify excluded from active leads list
+        $activeList = $this->getJson('/api/leads')->assertOk()->json('data');
+        $this->assertEmpty(collect($activeList)->where('id', $lead->id));
+
+        // Verify included when querying only_trashed
+        $trashedList = $this->getJson('/api/leads?only_trashed=1')->assertOk()->json('data');
+        $this->assertNotEmpty(collect($trashedList)->where('id', $lead->id));
+
+        // Restore lead
+        $this->postJson('/api/leads/'.$lead->id.'/restore')
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseHas('leads', ['id' => $lead->id, 'deleted_at' => null]);
+    }
 }

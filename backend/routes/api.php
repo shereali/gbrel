@@ -838,9 +838,15 @@ Route::delete('/viewings/{id}', function ($id) {
     ]);
 })->middleware('staff:viewings.manage');
 
-// 4. Leads API (Full CRUD)
+// 4. Leads API (Full CRUD with Soft Delete)
 Route::get('/leads', function (Request $request) {
     $query = Lead::query();
+    if ($request->boolean('only_trashed')) {
+        $query->onlyTrashed();
+    } elseif ($request->boolean('with_trashed')) {
+        $query->withTrashed();
+    }
+
     if ($request->has('stage') && ! empty($request->stage)) {
         $query->where('status', $request->stage);
     }
@@ -873,7 +879,18 @@ Route::delete('/leads/{id}', function ($id) {
 
     return response()->json([
         'success' => true,
-        'message' => 'Lead inquiry deleted from MySQL database',
+        'message' => 'Lead inquiry soft deleted successfully',
+    ]);
+});
+
+Route::post('/leads/{id}/restore', function ($id) {
+    $lead = Lead::onlyTrashed()->findOrFail($id);
+    $lead->restore();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Lead inquiry restored successfully',
+        'data' => $lead,
     ]);
 });
 
