@@ -13,7 +13,8 @@ class Viewing extends Model
 
     protected $casts = [
         'vip_pickup' => 'boolean',
-        'scheduled_date' => 'date'
+        'scheduled_date' => 'date',
+        'scheduled_at' => 'datetime',
     ];
 
     public function property()

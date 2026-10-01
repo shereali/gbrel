@@ -37,14 +37,15 @@
               <td>
                 <strong class="text-contrast">{{ v.name }}</strong>
                 <div style="font-size:0.78rem;" class="text-subtle">{{ v.phone }} • {{ v.contact }}</div>
+                <NuxtLink v-if="v.lead_id" :to="`/admin/leads?lead=${v.lead_id}`" style="font-size:0.78rem; color:var(--admin-text-emerald); font-weight:600;">Open lead in CRM</NuxtLink>
               </td>
               <td style="font-weight:600; max-width:240px;">{{ v.property_title || v.propertyTitle || 'Property' }}</td>
               <td>
-                <div style="font-weight:700;">{{ v.preferred_date || v.date || 'TBD' }}</div>
-                <div style="font-size:0.78rem;" class="text-subtle">{{ v.preferred_time || v.timeSlot || 'Slot TBD' }}</div>
+                <div style="font-weight:700;">{{ (v.scheduled_date ? String(v.scheduled_date).slice(0, 10) : '') || v.preferred_date || v.date || 'TBD' }}</div>
+                <div style="font-size:0.78rem;" class="text-subtle">{{ v.scheduled_time || v.preferred_time || v.timeSlot || 'Slot TBD' }}<template v-if="v.visit_type === 'Video call'"> · Video call</template></div>
               </td>
               <td>
-                <span v-if="v.pickup_requested || v.pickup" class="badge-admin active" style="font-size:0.72rem;">VIP Chauffeur</span>
+                <span v-if="v.vip_pickup || v.pickup_requested || v.pickup" class="badge-admin active" style="font-size:0.72rem;">VIP Chauffeur</span>
                 <span v-else style="font-size:0.8rem;" class="text-subtle">Direct Arrival</span>
               </td>
               <td>
@@ -55,6 +56,7 @@
                   <option value="Confirmed">Confirmed</option>
                   <option value="Completed">Completed</option>
                   <option value="In-Progress">In-Progress</option>
+                  <option value="No-show">No-show</option>
                   <option value="Cancelled">Cancelled</option>
                 </select>
               </td>

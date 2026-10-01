@@ -48,6 +48,13 @@
       </div>
     </div>
 
+    <!-- Quick views: the lists a salesperson starts the day with -->
+    <div v-if="view === 'active'" class="ld-views" role="group" aria-label="Quick views">
+      <button v-for="q in quickViews" :key="q.key" type="button" :class="{ on: quick === q.key, alert: q.alert && q.count > 0 }" :aria-pressed="quick === q.key" @click="quick = q.key">
+        {{ q.label }}<span class="ld-count">{{ q.count }}</span>
+      </button>
+    </div>
+
     <div v-if="isLoading" class="ld-empty" role="status">Loading leads…</div>
 
     <div v-else-if="filteredLeads.length === 0" class="ld-empty">
@@ -69,6 +76,7 @@
                 <span v-if="isFresh(lead)" class="ld-new" title="Not contacted yet"></span>{{ lead.name }}
               </span>
               <span class="ld-prop">{{ lead.property }}</span>
+              <span v-if="flagFor(lead)" class="ld-flag" :data-tone="flagFor(lead)!.tone">{{ flagFor(lead)!.text }}</span>
             </span>
             <span class="ld-side">
               <span class="ld-tier" :data-tier="lead.tier || 'none'">{{ tierLabel(lead.tier) }}</span>
@@ -116,8 +124,51 @@
           </div>
           <span v-if="!stages.includes(selected.stage)" class="ld-muted">Current status: {{ selected.stage }}</span>
         </div>
+        <p v-if="selected.stage === 'Lost' && selected.lost_reason" class="ld-lost">Lost: {{ selected.lost_reason }}</p>
 
-        <section v-for="section in detailSections" :key="section.title" class="ld-section">
+        <div v-if="!selected.deleted_at" class="ld-work">
+          <label class="ld-field">
+            <span>Assigned to</span>
+            <select :value="selected.assigned_to ?? ''" class="ld-select" @change="assignLead(selected, $event)">
+              <option value="">Unassigned</option>
+              <option v-for="s in staff" :key="s.id" :value="s.id">{{ s.name }}</option>
+            </select>
+          </label>
+          <div class="ld-field">
+            <span id="ld-follow-label">Next follow-up</span>
+            <p class="ld-follow-now" :class="followState(selected)">{{ followText(selected) }}</p>
+            <div class="ld-chips" role="group" aria-labelledby="ld-follow-label">
+              <button type="button" @click="setFollowUp(selected, inDays(1))">Tomorrow</button>
+              <button type="button" @click="setFollowUp(selected, inDays(3))">In 3 days</button>
+              <button type="button" @click="setFollowUp(selected, inDays(7))">Next week</button>
+              <label class="ld-pick">
+                <span class="ld-sr">Pick a date and time</span>
+                <input v-model="pickedFollowUp" type="datetime-local" @change="pickFollowUp(selected)" />
+              </label>
+              <button v-if="selected.next_follow_up_at" type="button" class="ld-clear" @click="setFollowUp(selected, null)">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="!selected.deleted_at" class="ld-tabs-detail" role="tablist" aria-label="Lead sections">
+          <button v-for="t in detailTabs" :key="t.key" type="button" role="tab" :aria-selected="tab === t.key" :class="{ on: tab === t.key }" @click="tab = t.key">
+            {{ t.label }}<span v-if="t.count" class="ld-count">{{ t.count }}</span>
+          </button>
+        </div>
+
+        <LeadActivityPanel
+          v-if="!selected.deleted_at && tab === 'activity'"
+          :lead-id="selected.id" :received-at="selected.created_at" :activities="crmDetail.activities" :loading="crmLoading"
+          @changed="refreshAll"
+        />
+        <LeadVisitsPanel
+          v-if="!selected.deleted_at && tab === 'visits'"
+          :lead-id="selected.id" :visits="crmDetail.visits" :staff="staff" :assigned-to="selected.assigned_to ?? null"
+          :suggest-video="selected.parsed?.lives === 'Abroad (NRB)'"
+          @changed="refreshAll"
+        />
+
+        <section v-for="section in detailSections" v-show="selected.deleted_at || tab === 'overview'" :key="section.title" class="ld-section">
           <h3>{{ section.title }}</h3>
           <dl>
             <div v-for="row in section.rows" :key="row.label">
@@ -130,7 +181,7 @@
           </dl>
         </section>
 
-        <section v-if="selected.note" class="ld-section">
+        <section v-if="selected.note" v-show="selected.deleted_at || tab === 'overview'" class="ld-section">
           <h3>Notes</h3>
           <p class="ld-note">{{ selected.note }}</p>
         </section>
@@ -140,6 +191,30 @@
           <button v-else type="button" class="ld-delete" @click="promptDeleteLead(selected)">Delete this inquiry</button>
         </footer>
       </article>
+    </div>
+
+    <!-- MODAL: WHY WAS THE LEAD LOST? -->
+    <div v-if="lostTarget" class="admin-modal-overlay" @click.self="lostTarget = null">
+      <div class="admin-modal-card animate-fade-in-up" style="max-width: 460px;">
+        <div class="admin-modal-header">
+          <h3 class="admin-modal-title">Mark {{ lostTarget.name }} as lost</h3>
+          <button class="admin-modal-close" aria-label="Close" @click="lostTarget = null">✕</button>
+        </div>
+        <form @submit.prevent="confirmLost">
+          <div class="admin-modal-body">
+            <label class="form-label" for="lost-reason">Why did we lose this lead?</label>
+            <select id="lost-reason" v-model="lostChoice" class="form-select">
+              <option v-for="r in lostReasons" :key="r" :value="r">{{ r }}</option>
+            </select>
+            <input v-if="lostChoice === 'Other'" v-model.trim="lostOther" type="text" class="form-input" style="margin-top: 10px;" placeholder="Write the reason" maxlength="150" aria-label="Other reason" />
+            <p style="font-size: 0.82rem; color: var(--admin-text-muted); margin-top: 10px;">You can move the lead back to another status any time.</p>
+          </div>
+          <div class="admin-modal-footer">
+            <button type="button" class="btn btn-sm btn-outline-white" @click="lostTarget = null">Cancel</button>
+            <button type="submit" class="btn btn-sm" style="background:#EF4444; color:#FFF;" :disabled="lostChoice === 'Other' && !lostOther">Mark as lost</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- ======================================================================
@@ -245,6 +320,12 @@ import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useToast } from '~/composables/useToast'
 import { useApiUrl } from '~/composables/useApi'
 import { buildQuestions } from '~/utils/leadSurvey'
+import LeadActivityPanel from '~/components/admin/crm/LeadActivityPanel.vue'
+import LeadVisitsPanel from '~/components/admin/crm/LeadVisitsPanel.vue'
+import {
+  LEAD_STAGES, dhakaIso, endOfDhakaDay, formatDay, formatTime, formatWhen, inDays, parseApiDate, useLeadCrm,
+  type LeadActivity, type LeadVisit, type StaffMember
+} from '~/composables/useLeadCrm'
 
 definePageMeta({
   layout: 'admin'
@@ -268,7 +349,7 @@ const deleteLeadTarget = ref<any | null>(null)
 const isDeleting = ref(false)
 
 const leadsList = ref<any[]>([])
-const stages = ['New', 'Contacted', 'Qualified', 'Converted']
+const stages: readonly string[] = LEAD_STAGES
 
 /* ---------- Reading what the website stored ---------- */
 
@@ -313,11 +394,13 @@ const readMessage = (message?: string | null) => {
 
 const normalizeStage = (value?: string | null) => {
   const s = String(value || 'New').trim()
-  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
+  const known = LEAD_STAGES.find(stage => stage.toLowerCase() === s.toLowerCase())
+  return known || s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
 }
 
-const fetchLeads = async (onlyTrashed = false) => {
-  isLoading.value = true
+// quiet: refresh in the background without hiding the open lead behind a loading message.
+const fetchLeads = async (onlyTrashed = false, quiet = false) => {
+  if (!quiet) isLoading.value = true
   try {
     const url = onlyTrashed ? useApiUrl('/leads?only_trashed=1') : useApiUrl('/leads')
     const res = await fetch(url, { headers: { Authorization: `Bearer ${token.value}` } })
@@ -346,11 +429,20 @@ const fetchLeads = async (onlyTrashed = false) => {
 const changeView = async (next: 'active' | 'trash') => {
   view.value = next
   statusFilter.value = 'All'
+  quick.value = 'all'
   detailOpen.value = false
   await fetchLeads(next === 'trash')
 }
 
-onMounted(() => fetchLeads())
+onMounted(async () => {
+  await Promise.all([fetchLeads(), loadOverview()])
+  // /admin/leads?lead=12 (linked from the Site Viewings page) opens that lead.
+  const wanted = Number(route.query.lead)
+  if (wanted && leadsList.value.some(l => l.id === wanted)) {
+    selectedId.value = wanted
+    detailOpen.value = true
+  }
+})
 
 /* ---------- Filtering, sorting, selection ---------- */
 
@@ -367,7 +459,7 @@ const matchesSearch = (l: any) => {
   return [l.name, l.phone, l.property].some(v => String(v || '').toLowerCase().includes(q))
 }
 
-const baseLeads = computed(() => leadsList.value.filter(l => matchesFocus(l) && matchesSearch(l)))
+const baseLeads = computed(() => leadsList.value.filter(l => matchesFocus(l) && matchesSearch(l) && matchesQuick(l)))
 
 const statusTabs = computed(() => [
   { value: 'All', label: 'All', count: baseLeads.value.length },
@@ -379,14 +471,154 @@ const filteredLeads = computed(() => {
   const list = view.value === 'trash' || statusFilter.value === 'All'
     ? [...baseLeads.value]
     : baseLeads.value.filter(l => l.stage === statusFilter.value)
-  if (sortBy.value === 'hottest') {
+  if (quick.value === 'followups') list.sort((a, b) => (followMs(a) ?? 0) - (followMs(b) ?? 0))
+  else if (quick.value === 'visits') list.sort((a, b) => visitKey(a).localeCompare(visitKey(b)))
+  else if (sortBy.value === 'hottest') {
     list.sort((a, b) => (tierRank[a.tier] ?? 3) - (tierRank[b.tier] ?? 3) || String(b.created_at).localeCompare(String(a.created_at)))
   }
   return list
 })
 
-const hasFilters = computed(() => !!search.value || focus.value !== 'All' || (view.value === 'active' && statusFilter.value !== 'All'))
-const clearFilters = () => { search.value = ''; focus.value = 'All'; statusFilter.value = 'All' }
+const hasFilters = computed(() => !!search.value || focus.value !== 'All' || (view.value === 'active' && (statusFilter.value !== 'All' || quick.value !== 'all')))
+const clearFilters = () => { search.value = ''; focus.value = 'All'; statusFilter.value = 'All'; quick.value = 'all' }
+
+/* ---------- CRM: owner, follow-up, site visits and activity ---------- */
+
+const crm = useLeadCrm()
+const route = useRoute()
+const { user: me } = useAuth()
+
+const staff = ref<StaffMember[]>([])
+const upcomingVisits = ref<LeadVisit[]>([])
+const crmDetail = ref<{ activities: LeadActivity[]; visits: LeadVisit[] }>({ activities: [], visits: [] })
+const crmLoading = ref(false)
+const tab = ref<'overview' | 'activity' | 'visits'>('overview')
+const quick = ref<'all' | 'followups' | 'visits' | 'unassigned' | 'mine'>('all')
+const pickedFollowUp = ref('')
+const lostTarget = ref<any | null>(null)
+const lostReasons = ['Bought elsewhere', 'Price too high', 'Not interested any more', 'Could not reach the buyer', 'Other']
+const lostChoice = ref(lostReasons[0])
+const lostOther = ref('')
+
+const isClosed = (l: any) => ['Converted', 'Lost'].includes(l.stage)
+const followMs = (l: any): number | null => (l.next_follow_up_at ? parseApiDate(l.next_follow_up_at).getTime() : null)
+const followState = (l: any): 'none' | 'overdue' | 'today' | 'later' => {
+  const t = followMs(l)
+  if (t === null) return 'none'
+  if (t < Date.now()) return 'overdue'
+  return t <= endOfDhakaDay() ? 'today' : 'later'
+}
+const followText = (l: any) => (followState(l) === 'none' ? 'Not set' : (followState(l) === 'overdue' ? 'Overdue, was ' : '') + formatWhen(l.next_follow_up_at))
+
+// First open visit per lead (the overview is already sorted by date and time).
+const nextVisit = computed(() => {
+  const map = new Map<number, LeadVisit>()
+  for (const v of upcomingVisits.value) if (!map.has(v.lead_id)) map.set(v.lead_id, v)
+  return map
+})
+const visitKey = (l: any) => { const v = nextVisit.value.get(l.id); return v ? v.date + (v.time || '') : '9999' }
+
+const flagFor = (l: any): { tone: string; text: string } | null => {
+  if (isClosed(l) || l.deleted_at) return null
+  const state = followState(l)
+  if (state === 'overdue') return { tone: 'bad', text: 'Follow-up overdue' }
+  if (state === 'today') return { tone: 'warn', text: 'Follow up today' }
+  const v = nextVisit.value.get(l.id)
+  if (v) return { tone: 'info', text: v.visit_type + ' ' + formatDay(v.date) + (v.time ? ', ' + formatTime(v.time) : '') }
+  if (state === 'later') return { tone: 'muted', text: 'Follow up ' + formatWhen(l.next_follow_up_at) }
+  return null
+}
+
+const openLeads = computed(() => leadsList.value.filter(l => !isClosed(l)))
+const quickViews = computed(() => [
+  { key: 'all' as const, label: 'All leads', count: leadsList.value.length, alert: false },
+  { key: 'followups' as const, label: 'Needs follow-up', count: openLeads.value.filter(l => ['overdue', 'today'].includes(followState(l))).length, alert: true },
+  { key: 'visits' as const, label: 'Visits coming up', count: openLeads.value.filter(l => nextVisit.value.has(l.id)).length, alert: false },
+  { key: 'unassigned' as const, label: 'Unassigned', count: openLeads.value.filter(l => !l.assigned_to).length, alert: false },
+  { key: 'mine' as const, label: 'Assigned to me', count: openLeads.value.filter(l => l.assigned_to && l.assigned_to === me.value?.id).length, alert: false }
+])
+function matchesQuick(l: any) {
+  if (view.value === 'trash') return true
+  switch (quick.value) {
+    case 'followups': return !isClosed(l) && ['overdue', 'today'].includes(followState(l))
+    case 'visits': return !isClosed(l) && nextVisit.value.has(l.id)
+    case 'unassigned': return !isClosed(l) && !l.assigned_to
+    case 'mine': return !!l.assigned_to && l.assigned_to === me.value?.id
+    default: return true
+  }
+}
+
+const detailTabs = computed(() => [
+  { key: 'overview' as const, label: 'Overview', count: 0 },
+  { key: 'activity' as const, label: 'Activity', count: crmDetail.value.activities.length },
+  { key: 'visits' as const, label: 'Site visits', count: crmDetail.value.visits.filter(v => v.status === 'Confirmed').length }
+])
+
+async function loadOverview() {
+  try {
+    const data = await crm.overview()
+    staff.value = data.staff
+    upcomingVisits.value = data.visits
+  } catch {
+    // The list still works without owners and visit flags.
+  }
+}
+async function loadDetail() {
+  const id = selectedId.value
+  if (!id || view.value === 'trash') { crmDetail.value = { activities: [], visits: [] }; return }
+  crmLoading.value = true
+  try {
+    const data = await crm.detail(id)
+    if (selectedId.value === id) crmDetail.value = data
+  } catch {
+    crmDetail.value = { activities: [], visits: [] }
+  } finally {
+    crmLoading.value = false
+  }
+}
+const refreshAll = () => Promise.all([fetchLeads(view.value === 'trash', true), loadOverview(), loadDetail()])
+
+watch(selectedId, () => {
+  tab.value = 'overview'
+  pickedFollowUp.value = ''
+  crmDetail.value = { activities: [], visits: [] }
+  loadDetail()
+})
+
+// Copies the fields the CRM can change from the server's answer onto the lead shown in the list.
+const syncLead = (lead: any, data: any) => Object.assign(lead, {
+  status: data.status, stage: normalizeStage(data.status), lost_reason: data.lost_reason,
+  assigned_to: data.assigned_to, next_follow_up_at: data.next_follow_up_at, last_contacted_at: data.last_contacted_at
+})
+
+const assignLead = async (lead: any, event: Event) => {
+  const select = event.target as HTMLSelectElement
+  const previous = lead.assigned_to ?? ''
+  try {
+    syncLead(lead, await crm.assign(lead.id, select.value ? Number(select.value) : null))
+    toast.info('Owner updated', lead.name + (lead.assigned_to ? ' is assigned.' : ' is unassigned.'))
+    loadDetail()
+  } catch (err: any) {
+    select.value = String(previous)
+    toast.error('Could not assign', err?.message || 'Try again.')
+  }
+}
+
+const setFollowUp = async (lead: any, at: string | null) => {
+  try {
+    syncLead(lead, await crm.followUp(lead.id, at))
+    toast.success(at ? 'Follow-up set' : 'Follow-up cleared', at ? followText(lead) : '')
+    loadDetail()
+  } catch (err: any) {
+    toast.error('Could not save', err?.message || 'Try again.')
+  }
+}
+const pickFollowUp = (lead: any) => {
+  if (!pickedFollowUp.value) return
+  const [date, time] = pickedFollowUp.value.split('T')
+  pickedFollowUp.value = ''
+  return setFollowUp(lead, dhakaIso(date, time))
+}
 
 // Stays open after a status change even if the active tab no longer lists the lead.
 const selected = computed(() => leadsList.value.find(l => l.id === selectedId.value) || null)
@@ -545,21 +777,34 @@ const saveNewLead = async () => {
 
 const setStage = async (lead: any, newStage: string) => {
   if (lead.stage === newStage) return
-  const prevStage = lead.stage
-  lead.stage = newStage
+  if (newStage === 'Lost') {
+    lostChoice.value = lostReasons[0]
+    lostOther.value = ''
+    lostTarget.value = lead
+    return
+  }
+  await applyStage(lead, newStage)
+}
 
+const applyStage = async (lead: any, stage: string, reason?: string) => {
+  const previous = lead.stage
+  lead.stage = stage
   try {
-    const res = await fetch(useApiUrl(`/leads/${lead.id}/stage`), {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token.value}` },
-      body: JSON.stringify({ stage: newStage })
-    })
-    if (!res.ok) throw new Error('Failed to update stage on server')
-    toast.info('Status updated', `${lead.name} is now "${newStage}".`)
+    syncLead(lead, await crm.setStage(lead.id, stage, reason))
+    toast.info('Status updated', lead.name + ' is now "' + stage + '".')
+    loadDetail()
   } catch (err: any) {
-    lead.stage = prevStage
+    lead.stage = previous
     toast.error('Update Failed', err?.message || 'Could not update lead stage.')
   }
+}
+
+const confirmLost = async () => {
+  const lead = lostTarget.value
+  if (!lead) return
+  const reason = lostChoice.value === 'Other' ? lostOther.value : lostChoice.value
+  lostTarget.value = null
+  await applyStage(lead, 'Lost', reason)
 }
 
 const promptDeleteLead = (lead: any) => {
@@ -640,6 +885,42 @@ const restoreLead = async (lead: any) => {
 .ld-trash-toggle.on { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: var(--ld-danger); }
 .ld button:focus-visible, .ld a:focus-visible, .ld select:focus-visible { outline: 2px solid var(--admin-text-gold); outline-offset: 2px; }
 
+/* Quick views */
+.ld-views { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 18px; }
+.ld-views button { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 4px 14px; border-radius: 10px; border: 1px solid var(--admin-border-hover); background: transparent; color: var(--admin-text-secondary); font: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer; }
+.ld-views button:hover { background: var(--admin-chip-bg); }
+.ld-views button.on { background: var(--admin-text-primary); color: var(--admin-bg-surface); border-color: transparent; }
+.ld-views button.alert:not(.on) { border-color: var(--ld-danger); color: var(--ld-danger); }
+.ld-views button.on .ld-count { color: inherit; opacity: 0.75; }
+.ld-views button.alert:not(.on) .ld-count { color: inherit; font-weight: 800; }
+
+/* Flags on list rows */
+.ld-flag { font-size: 0.76rem; font-weight: 700; color: var(--admin-text-muted); }
+.ld-flag[data-tone='bad'] { color: var(--ld-danger); }
+.ld-flag[data-tone='warn'] { color: var(--ld-warm); }
+.ld-flag[data-tone='info'] { color: #2563EB; }
+
+/* Owner, follow-up and sections inside a lead */
+.ld-lost { margin: 10px 0 0; font-size: 0.88rem; color: var(--ld-danger); font-weight: 600; }
+.ld-work { display: grid; grid-template-columns: minmax(180px, 240px) 1fr; gap: 18px 24px; margin-top: 22px; padding: 16px 0 0; border-top: 1px solid var(--admin-border-subtle); }
+.ld-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ld-field > span { font-size: 0.82rem; font-weight: 600; color: var(--admin-text-secondary); }
+.ld-follow-now { margin: 0; font-size: 0.95rem; font-weight: 700; }
+.ld-follow-now.overdue { color: var(--ld-danger); }
+.ld-follow-now.today { color: var(--ld-warm); }
+.ld-follow-now.none { color: var(--admin-text-muted); font-weight: 500; }
+.ld-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ld-chips button { min-height: 34px; padding: 2px 12px; border-radius: 999px; border: 1px solid var(--admin-border-hover); background: transparent; color: var(--admin-text-secondary); font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+.ld-chips button:hover { background: var(--admin-chip-bg); }
+.ld-chips .ld-clear { border-color: transparent; color: var(--admin-text-muted); text-decoration: underline; text-underline-offset: 3px; }
+.ld-pick input { min-height: 34px; padding: 2px 8px; border-radius: 8px; border: 1px solid var(--admin-border-hover); background: var(--admin-bg-surface); color: inherit; font: inherit; font-size: 0.82rem; }
+.ld-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ld-tabs-detail { display: flex; gap: 2px; margin: 24px 0 18px; border-bottom: 1px solid var(--admin-border-subtle); overflow-x: auto; }
+.ld-tabs-detail button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 16px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--admin-text-secondary); font: inherit; font-size: 0.92rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.ld-tabs-detail button:hover { color: var(--admin-text-primary); }
+.ld-tabs-detail button.on { color: var(--admin-text-primary); border-bottom-color: var(--admin-text-gold); }
+.ld-detail .ld-section:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
+
 /* Empty / loading */
 .ld-empty { text-align: center; padding: 56px 24px; color: var(--admin-text-muted); border: 1px dashed var(--admin-border-hover); border-radius: 14px; }
 .ld-empty strong { display: block; color: var(--admin-text-primary); font-size: 1.05rem; margin-bottom: 6px; }
@@ -717,6 +998,7 @@ const restoreLead = async (lead: any) => {
   .ld-controls { margin-left: 0; width: 100%; }
   .ld-controls .ld-select { flex: 1 1 140px; }
   .ld-act { flex: 1 1 140px; }
+  .ld-work { grid-template-columns: 1fr; }
   .ld-section dl > div { grid-template-columns: 1fr; gap: 0; padding: 8px 0; }
   .ld-section dt { font-size: 0.8rem; }
 }

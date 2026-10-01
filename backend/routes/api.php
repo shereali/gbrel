@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LeadCrmController;
 use App\Http\Controllers\LeadJourneyController;
 use App\Http\Controllers\ListingReviewController;
 use App\Http\Controllers\MediaLibraryController;
@@ -868,19 +869,15 @@ Route::get('/leads/{id}/journey', [LeadJourneyController::class, 'show'])->where
 Route::post('/t', [TrackController::class, 'collect'])->middleware('throttle:300,1');
 Route::post('/t/draft', [TrackController::class, 'draft'])->middleware('throttle:10,1');
 
-Route::patch('/leads/{id}/stage', function (Request $request, $id) {
-    $lead = Lead::findOrFail($id);
-    $raw = json_decode($request->getContent(), true);
-    $stage = is_array($raw) && isset($raw['stage']) ? $raw['stage'] : $request->input('stage', $request->input('status', 'New'));
-    $lead->status = $stage;
-    $lead->save();
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Lead stage updated in MySQL database',
-        'data' => $lead,
-    ]);
-});
+// Lead CRM: stage, owner, follow-up, activity timeline and site visits (see LeadCrmController).
+Route::get('/leads/overview', [LeadCrmController::class, 'overview']);
+Route::get('/leads/{id}/crm', [LeadCrmController::class, 'show'])->whereNumber('id');
+Route::patch('/leads/{id}/stage', [LeadCrmController::class, 'setStage'])->whereNumber('id');
+Route::patch('/leads/{id}/assign', [LeadCrmController::class, 'assign'])->whereNumber('id');
+Route::patch('/leads/{id}/follow-up', [LeadCrmController::class, 'followUp'])->whereNumber('id');
+Route::post('/leads/{id}/activities', [LeadCrmController::class, 'addActivity'])->whereNumber('id');
+Route::post('/leads/{id}/visits', [LeadCrmController::class, 'scheduleVisit'])->whereNumber('id');
+Route::patch('/leads/{id}/visits/{visitId}', [LeadCrmController::class, 'updateVisit'])->whereNumber(['id', 'visitId']);
 
 Route::delete('/leads/{id}', function ($id) {
     $lead = Lead::findOrFail($id);
