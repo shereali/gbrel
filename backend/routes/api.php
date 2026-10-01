@@ -7,10 +7,10 @@ use App\Http\Controllers\MediaLibraryController;
 use App\Http\Controllers\OwnerAccountController;
 use App\Http\Controllers\OwnerListingController;
 use App\Http\Controllers\PropertyDocumentController;
-use App\Http\Controllers\PasswordResetLinkController;
 use App\Http\Controllers\PropertyLeadController;
 use App\Http\Controllers\TrackController;
 use App\Http\Controllers\UserAvatarController;
+use App\Http\Controllers\UserPasswordController;
 use App\Models\Agent;
 use App\Models\Brochure;
 use App\Models\Category;
@@ -1223,10 +1223,7 @@ Route::delete('/users/{id}', function ($id) {
 Route::post('/users/{id}/avatar', [UserAvatarController::class, 'store'])->whereNumber('id')->middleware('staff:users.manage', 'throttle:30,1');
 Route::delete('/users/{id}/avatar', [UserAvatarController::class, 'destroy'])->whereNumber('id')->middleware('staff:users.manage');
 
-// Password reset: staff create a one-time link for a user; the user opens it and chooses a new password.
-Route::post('/users/{id}/password-reset', [PasswordResetLinkController::class, 'create'])->whereNumber('id')->middleware('staff:users.manage', 'throttle:20,1');
-Route::post('/auth/reset-password/check', [PasswordResetLinkController::class, 'check'])->middleware('throttle:20,1');
-Route::post('/auth/reset-password', [PasswordResetLinkController::class, 'reset'])->middleware('throttle:10,1');
+Route::post('/users/{id}/password', [UserPasswordController::class, 'update'])->whereNumber('id')->middleware('staff:users.manage', 'throttle:20,1');
 
 // 7. Official Project Brochures & Marketing Collateral Vault API
 Route::get('/brochures', function (Request $request) {

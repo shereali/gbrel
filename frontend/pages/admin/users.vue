@@ -270,8 +270,8 @@
                     <button
                       class="btn btn-sm btn-outline-white"
                       style="font-size: 0.78rem; padding: 5px 12px;"
-                      title="Create a one-time link so this user can choose a new password"
-                      @click="createResetLink(user)"
+                      title="Set a new password for this user"
+                      @click="openReset(user)"
                     >
                       Reset password
                     </button>
@@ -516,35 +516,33 @@
     </div>
 
     <!-- ======================================================================
-         MODAL: PASSWORD RESET LINK
+         MODAL: RESET PASSWORD
          ====================================================================== -->
-    <div v-if="resetTarget" class="admin-modal-overlay" @click.self="closeResetLink">
-      <div class="admin-modal-card animate-fade-in-up" style="max-width: 560px;">
+    <div v-if="resetTarget" class="admin-modal-overlay" @click.self="closeReset">
+      <div class="admin-modal-card animate-fade-in-up" style="max-width: 440px;">
         <div class="admin-modal-header">
-          <h3 class="admin-modal-title">Password reset link for {{ resetTarget.name }}</h3>
-          <button class="admin-modal-close" aria-label="Close" @click="closeResetLink">✕</button>
+          <h3 class="admin-modal-title">Reset password for {{ resetTarget.name }}</h3>
+          <button class="admin-modal-close" aria-label="Close" @click="closeReset">✕</button>
         </div>
-        <div class="admin-modal-body">
-          <p v-if="resetBusy" style="color: var(--admin-text-muted);">Creating the link…</p>
-          <template v-else-if="resetLink">
-            <p style="font-size: 0.9rem; line-height: 1.55; margin-bottom: 12px;">
-              Send this link to {{ resetTarget.name }}. They open it and choose a new password. The current password keeps working until they do.
-            </p>
-            <div class="reset-link-box">
-              <input ref="resetInput" :value="resetLink.url" readonly class="form-input" aria-label="Password reset link" @focus="($event.target as HTMLInputElement).select()" />
-              <button type="button" class="btn btn-sm btn-emerald" @click="copyResetLink">Copy link</button>
+        <form @submit.prevent="savePassword">
+          <div class="admin-modal-body">
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label" for="reset-password">New password</label>
+              <input id="reset-password" v-model="resetForm.password" :type="resetForm.show ? 'text' : 'password'" class="form-input" autocomplete="new-password" minlength="8" required />
             </div>
-            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px;">
-              <a v-if="resetWhatsapp" :href="resetWhatsapp" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background: #178A45; color: #fff;">Send on WhatsApp</a>
+            <div class="form-group">
+              <label class="form-label" for="reset-confirmation">Repeat new password</label>
+              <input id="reset-confirmation" v-model="resetForm.confirmation" :type="resetForm.show ? 'text' : 'password'" class="form-input" autocomplete="new-password" minlength="8" required />
             </div>
-            <p style="font-size: 0.8rem; color: var(--admin-text-muted); margin-top: 14px; line-height: 1.5;">
-              Works once and expires in {{ resetLink.minutes }} minutes. This link is shown only now; creating a new link cancels this one. Share it only with {{ resetTarget.name }}.
-            </p>
-          </template>
-        </div>
-        <div class="admin-modal-footer">
-          <button type="button" class="btn btn-sm btn-outline-white" @click="closeResetLink">Done</button>
-        </div>
+            <label class="reset-show"><input v-model="resetForm.show" type="checkbox" /> Show passwords</label>
+            <p class="reset-help">Use at least 8 characters. {{ resetTarget.name }} can sign in with the new password straight away, so tell them what it is.</p>
+            <p v-if="resetError" class="reset-error" role="alert">{{ resetError }}</p>
+          </div>
+          <div class="admin-modal-footer">
+            <button type="button" class="btn btn-sm btn-outline-white" @click="closeReset">Cancel</button>
+            <button type="submit" class="btn btn-sm btn-emerald" :disabled="resetBusy">{{ resetBusy ? 'Saving…' : 'Save password' }}</button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -789,7 +787,6 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from '~/composables/useToast'
 import { useApiUrl } from '~/composables/useApi'
 import AvatarPicker from '~/components/admin/AvatarPicker.vue'
-import { whatsappLink } from '~/utils/contact.mjs'
 
 definePageMeta({
   layout: 'admin'
@@ -822,49 +819,42 @@ const initialsOf = (name?: string) => {
   return ((parts[0]?.[0] || '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase() || '?'
 }
 
-// Password reset: a one-time link the admin sends to the user (no email or SMS needed).
+// Reset password: the admin types a new password twice and saves.
 const resetTarget = ref<any | null>(null)
-const resetLink = ref<{ url: string; minutes: number } | null>(null)
+const resetForm = reactive({ password: '', confirmation: '', show: false })
 const resetBusy = ref(false)
-const resetInput = ref<HTMLInputElement | null>(null)
+const resetError = ref('')
 
-const resetWhatsapp = computed(() => {
-  if (!resetTarget.value || !resetLink.value) return ''
-  const text = `আসসালামু আলাইকুম ${resetTarget.value.name}, গ্রাম বাংলা রিয়েল এস্টেটে আপনার অ্যাকাউন্টের নতুন পাসওয়ার্ড দিতে এই লিংকটি খুলুন। লিংকটি ${resetLink.value.minutes} মিনিট চলবে এবং একবারই কাজ করবে: ${resetLink.value.url}`
-  return whatsappLink(resetTarget.value.phone, text)
-})
-
-const createResetLink = async (user: any) => {
+const openReset = (user: any) => {
   resetTarget.value = user
-  resetLink.value = null
+  resetForm.password = ''
+  resetForm.confirmation = ''
+  resetForm.show = false
+  resetError.value = ''
+}
+const closeReset = () => { resetTarget.value = null }
+
+const savePassword = async () => {
+  if (!resetTarget.value) return
+  resetError.value = ''
+  if (resetForm.password.length < 8) { resetError.value = 'Use at least 8 characters.'; return }
+  if (resetForm.password !== resetForm.confirmation) { resetError.value = 'The two passwords do not match.'; return }
   resetBusy.value = true
   try {
-    const res = await fetch(useApiUrl(`/users/${user.id}/password-reset`), { method: 'POST' })
+    const res = await fetch(useApiUrl(`/users/${resetTarget.value.id}/password`), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: resetForm.password, password_confirmation: resetForm.confirmation })
+    })
     const json = await res.json().catch(() => null)
-    if (!res.ok) throw new Error(json?.message || 'Could not create the link.')
-    resetLink.value = { url: `${window.location.origin}/reset-password?token=${json.data.token}`, minutes: json.data.minutes }
+    if (!res.ok) throw new Error(json?.errors?.password?.[0] || json?.message || 'Could not change the password.')
+    toast.success('Password changed', `${resetTarget.value.name} can sign in with the new password now.`)
+    closeReset()
   } catch (err: any) {
-    resetTarget.value = null
-    toast.error('Reset link failed', err?.message || 'Could not create the reset link.')
+    resetError.value = err?.message || 'Could not change the password. Try again.'
   } finally {
     resetBusy.value = false
   }
-}
-
-const copyResetLink = async () => {
-  if (!resetLink.value) return
-  try {
-    await navigator.clipboard.writeText(resetLink.value.url)
-    toast.success('Link copied', 'Paste it into WhatsApp or a message to the user.')
-  } catch {
-    resetInput.value?.select()
-    toast.info('Select and copy', 'Press Ctrl+C to copy the selected link.')
-  }
-}
-
-const closeResetLink = () => {
-  resetTarget.value = null
-  resetLink.value = null
 }
 
 // Returns an error message, or '' when the photo was saved (or nothing needed saving).
@@ -1285,6 +1275,7 @@ const deleteRole = async (role: any) => {
 
 <style scoped>
 .user-initials { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--admin-bg-surface-elevated); border: 1px solid var(--admin-border-hover); color: var(--admin-text-secondary); font-size: 0.85rem; font-weight: 800; }
-.reset-link-box { display: flex; gap: 8px; align-items: center; }
-.reset-link-box .form-input { flex: 1; min-width: 0; font-size: 0.82rem; }
+.reset-show { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 0.88rem; cursor: pointer; }
+.reset-help { margin: 12px 0 0; font-size: 0.82rem; line-height: 1.5; color: var(--admin-text-muted); }
+.reset-error { margin: 12px 0 0; font-size: 0.88rem; font-weight: 600; color: #DC2626; }
 </style>

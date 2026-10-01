@@ -32,7 +32,7 @@
     try { return w.localStorage.getItem('gbrel_cookie_consent') === 'all'; } catch (e) { return false; }
   }
   // Staff, sign-in and owner pages are never tracked.
-  function isPrivatePage() { return /^\/(admin|login|register|signup|reset-password|dashboard|my-listings)(\/|$)/.test(location.pathname); }
+  function isPrivatePage() { return /^\/(admin|login|register|signup|dashboard|my-listings)(\/|$)/.test(location.pathname); }
 
   /* ---------- cookies & ids ---------- */
   function getCookie(n) {

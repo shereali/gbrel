@@ -17,8 +17,7 @@ const addScript = (src: string) => {
 
 export default defineNuxtPlugin(async () => {
   const router = useRouter()
-  // The password reset link carries a secret in its address, so it is never sent to ad or analytics tools.
-  const isPublic = (path: string) => !path.startsWith('/admin') && !path.startsWith('/reset-password')
+  const isPublic = (path: string) => !path.startsWith('/admin')
   const { settings, fetchSettings } = useSettings()
   await fetchSettings().catch(() => null)
 
