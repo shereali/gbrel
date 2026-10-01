@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePropertyLeadRequest;
 use App\Models\Lead;
 use App\Models\Property;
+use App\Support\VisitorJourney;
 use Illuminate\Http\JsonResponse;
 
 class PropertyLeadController extends Controller
@@ -37,6 +38,10 @@ class PropertyLeadController extends Controller
         $lead = ! empty($input['request_id'])
             ? Lead::firstOrCreate(['request_id' => $input['request_id']], $fields)
             : Lead::create($fields);
+        // A retried request returns the stored lead; only a new lead is linked to the journey and sent to Meta.
+        if ($lead->wasRecentlyCreated) {
+            VisitorJourney::record($request, $lead, $input);
+        }
 
         return response()->json(['success' => true, 'data' => ['id' => $lead->id]], $lead->wasRecentlyCreated ? 201 : 200);
     }

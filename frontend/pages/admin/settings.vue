@@ -153,7 +153,7 @@ definePageMeta({ layout: 'admin' })
 
 const toast = useToast()
 const { settings, isSaving, fetchSettings, updateSettings } = useSettings()
-const editable = ['site_name', 'site_title', 'contact_phone', 'whatsapp_number', 'contact_email', 'office_address', 'map_location', 'company_registration_no', 'company_registration_date', 'trade_license_no', 'trade_license_valid_until', 'meta_pixel_id', 'gtm_container_id', 'ga4_measurement_id', 'working_hours', 'home_headline', 'home_subtitle', 'property_cta_label', 'property_cta_label_hidden_price', 'property_cta_note', 'owner_commission_percent', 'owner_terms', 'listing_document_types'] as const
+const editable = ['site_name', 'site_title', 'contact_phone', 'whatsapp_number', 'contact_email', 'office_address', 'map_location', 'company_registration_no', 'company_registration_date', 'trade_license_no', 'trade_license_valid_until', 'meta_pixel_id', 'gtm_container_id', 'ga4_measurement_id', 'clarity_project_id', 'working_hours', 'home_headline', 'home_subtitle', 'property_cta_label', 'property_cta_label_hidden_price', 'property_cta_note', 'owner_commission_percent', 'owner_terms', 'listing_document_types'] as const
 
 const sections = [
   { id: 'contact', label: 'Contact' }, { id: 'tracking', label: 'Tracking' }, { id: 'legal', label: 'Licence' }, { id: 'homepage', label: 'Homepage' }, { id: 'property-page', label: 'Property button' }, { id: 'owners', label: 'Owner terms' },
@@ -164,12 +164,15 @@ const form = reactive<Record<string, any>>({ listing_document_types: [] as Docum
 const trackingTools = [
   { key: 'meta_pixel_id', name: 'Meta Pixel (Facebook & Instagram ads)', purpose: 'Tells Facebook which ad visitors sent a form, so ads find more people like them.', label: 'Pixel ID', placeholder: '1234567890123456', pattern: /^\d{10,20}$/, where: 'Events Manager → Data sources → your Pixel → Settings.', link: 'https://business.facebook.com/events_manager2', linkText: 'Open Events Manager' },
   { key: 'gtm_container_id', name: 'Google Tag Manager', purpose: 'Lets you add Google Ads, Analytics and other tags later without changing the website.', label: 'Container ID', placeholder: 'GTM-XXXXXXX', pattern: /^GTM-[A-Z0-9]{4,12}$/, where: 'Shown at the top of your Tag Manager workspace.', link: 'https://tagmanager.google.com', linkText: 'Open Tag Manager' },
-  { key: 'ga4_measurement_id', name: 'Google Analytics 4', purpose: 'Visitor numbers, where they come from and which pages lead to enquiries.', label: 'Measurement ID', placeholder: 'G-XXXXXXXXXX', pattern: /^G-[A-Z0-9]{4,15}$/, where: 'Admin → Data streams → your website stream.', link: 'https://analytics.google.com', linkText: 'Open Google Analytics' }
+  { key: 'ga4_measurement_id', name: 'Google Analytics 4', purpose: 'Visitor numbers, where they come from and which pages lead to enquiries.', label: 'Measurement ID', placeholder: 'G-XXXXXXXXXX', pattern: /^G-[A-Z0-9]{4,15}$/, where: 'Admin → Data streams → your website stream.', link: 'https://analytics.google.com', linkText: 'Open Google Analytics' },
+  { key: 'clarity_project_id', name: 'Microsoft Clarity', purpose: 'Free recordings and heatmaps of how visitors use the site. Only visitors who accepted cookies are recorded; typed text is masked.', label: 'Project ID', placeholder: 'abcd1234ef', pattern: /^[a-z0-9]{8,12}$/i, where: 'Clarity → your project → Settings → Overview.', link: 'https://clarity.microsoft.com', linkText: 'Open Clarity' }
 ]
+// IDs that are not upper-case (the Pixel is digits, Clarity is lower-case letters and digits).
+const keepCase = ['meta_pixel_id', 'clarity_project_id']
 const toolState = (tool: { key: string; pattern: RegExp }) => {
   const value = String(form[tool.key] || '').trim()
   if (!value) return 'off'
-  return tool.pattern.test(tool.key === 'meta_pixel_id' ? value : value.toUpperCase()) ? 'on' : 'bad'
+  return tool.pattern.test(keepCase.includes(tool.key) ? value : value.toUpperCase()) ? 'on' : 'bad'
 }
 const snapshot = ref('')
 // Stable row ids so focus follows a paper when it is moved up or down. Never sent to the server.
@@ -211,7 +214,7 @@ const save = async () => {
     error.value = `The ${badTool.label} doesn't look right. It should look like ${badTool.placeholder}.`
     return
   }
-  trackingTools.forEach(t => { if (t.key !== 'meta_pixel_id' && form[t.key]) form[t.key] = String(form[t.key]).trim().toUpperCase() })
+  trackingTools.forEach(t => { if (!keepCase.includes(t.key) && form[t.key]) form[t.key] = String(form[t.key]).trim().toUpperCase() })
   try {
     const payload = JSON.parse(current()) // same values the page compares against, without the row ids
     await updateSettings(payload as any)

@@ -20,6 +20,7 @@ export interface SiteSettings {
   meta_pixel_id: string
   gtm_container_id: string
   ga4_measurement_id: string
+  clarity_project_id: string
   company_registration_no: string
   company_registration_date: string
   trade_license_no: string
@@ -49,6 +50,7 @@ const defaultSettings: SiteSettings = {
   meta_pixel_id: '',
   gtm_container_id: '',
   ga4_measurement_id: '',
+  clarity_project_id: '',
   company_registration_no: 'C-185751/2022',
   company_registration_date: '2022-12-11',
   trade_license_no: 'TRAD/DSCC/026884/2022',

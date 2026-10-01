@@ -135,6 +135,9 @@
               <a v-if="lead.phone" :href="`tel:${lead.phone}`" class="btn btn-sm btn-outline-white">
                 <span>📞 Call {{ lead.phone }}</span>
               </a>
+              <NuxtLink v-if="lead.visitor_id" :to="`/admin/lead-journey/${lead.id}`" class="btn btn-sm btn-outline-white" title="Pages visited, ad source and survey steps">
+                <span>🧭 Journey</span>
+              </NuxtLink>
 
               <!-- Soft Delete Button -->
               <button 

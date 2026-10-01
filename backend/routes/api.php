@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\LeadJourneyController;
 use App\Http\Controllers\ListingReviewController;
 use App\Http\Controllers\MediaLibraryController;
 use App\Http\Controllers\OwnerAccountController;
 use App\Http\Controllers\OwnerListingController;
 use App\Http\Controllers\PropertyDocumentController;
 use App\Http\Controllers\PropertyLeadController;
+use App\Http\Controllers\TrackController;
 use App\Models\Agent;
 use App\Models\Brochure;
 use App\Models\Category;
@@ -858,6 +860,11 @@ Route::get('/leads', function (Request $request) {
 });
 
 Route::post('/leads', [PropertyLeadController::class, 'store'])->middleware('throttle:10,1');
+Route::get('/leads/{id}/journey', [LeadJourneyController::class, 'show'])->whereNumber('id');
+
+// Visitor journey tracking (public/gb-track.js, cookie-consented visitors only)
+Route::post('/t', [TrackController::class, 'collect'])->middleware('throttle:300,1');
+Route::post('/t/draft', [TrackController::class, 'draft'])->middleware('throttle:10,1');
 
 Route::patch('/leads/{id}/stage', function (Request $request, $id) {
     $lead = Lead::findOrFail($id);

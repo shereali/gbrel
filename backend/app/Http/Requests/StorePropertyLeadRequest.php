@@ -65,6 +65,8 @@ class StorePropertyLeadRequest extends FormRequest
             'next_step' => ['nullable', 'string', 'max:255'],
             'form_version' => ['nullable', Rule::in(['property_inquiry_v1'])],
             'contact_consent' => $qualified ? ['required', 'accepted'] : ['nullable', 'boolean'],
+            'vid' => ['nullable', 'string', 'max:40'],
+            'sid' => ['nullable', 'string', 'max:40'],
             'request_id' => [Rule::requiredIf($qualified), 'nullable', 'uuid'],
         ];
     }

@@ -111,7 +111,7 @@ import { priceDisplay } from '~/utils/priceDisplay'
 import { normalizePhone, validPhone, savePropertyInquiry } from '~/utils/propertyInquiry.mjs'
 import { buildQuestions, labelFor, scoreLead, type Answers } from '~/utils/leadSurvey'
 import { priceBn, toBn } from '~/utils/propertyLabels'
-import { trackPixel, setPixelUserData } from '~/utils/metaPixel'
+import { trackPixel, setPixelUserData, trackingIds } from '~/utils/metaPixel'
 
 const props = defineProps<{ open: boolean; property: PropertyItem; source: string; startPurpose?: string; whatsapp?: string }>()
 const emit = defineEmits<{ close: []; saved: [id: number] }>()
@@ -219,7 +219,8 @@ const submit = async () => {
       next_step: `${s.tier} lead — ${answers.residence === 'Abroad (NRB)' ? 'video call walkthrough' : 'site visit'}`,
       message, status: 'New',
       utm_source: q('utm_source'), utm_medium: q('utm_medium'), utm_campaign: q('utm_campaign'),
-      utm_content: q('utm_content'), utm_term: q('utm_term')
+      utm_content: q('utm_content'), utm_term: q('utm_term'),
+      ...trackingIds()
     })
     // Same event ID as the stored request, so a future server-side (Conversions API) event deduplicates.
     setPixelUserData(normalizePhone(form.phone), form.name)

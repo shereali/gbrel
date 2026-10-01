@@ -17,6 +17,8 @@ export const trackPixel = (event: string, params: Record<string, unknown> = {}, 
       return
     }
     const w = window as any
+    // Own journey tracker (public/gb-track.js); it ignores events it does not map and runs only with consent.
+    w.GBTrack?.pixelEvent?.(event, params)
     if (typeof w.fbq === 'function') {
       const method = standardEvents.has(event) ? 'track' : 'trackCustom'
       if (eventID) w.fbq(method, event, params, { eventID })
@@ -26,6 +28,15 @@ export const trackPixel = (event: string, params: Record<string, unknown> = {}, 
     if (typeof w.gtag === 'function') w.gtag('event', gaName, { ...params, ...(eventID ? { event_id: eventID } : {}) })
     if (Array.isArray(w.dataLayer)) w.dataLayer.push({ event: `gbrel_${gaName}`, ...params, ...(eventID ? { event_id: eventID } : {}) })
   } catch { /* Analytics must never block a visitor. */ }
+}
+
+// Visitor and visit ids of the journey tracker, to send with a lead so it links to the visit. Empty without consent.
+export const trackingIds = (): { vid?: string; sid?: string } => {
+  try {
+    return (window as any).GBTrack?.ids?.() ?? {}
+  } catch {
+    return {}
+  }
 }
 
 // Advanced matching: re-initialise the pixel with the lead's phone and first name right before the Lead

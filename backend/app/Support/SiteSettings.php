@@ -35,6 +35,7 @@ class SiteSettings
             'meta_pixel_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^\d{10,20}\z/']],
             'gtm_container_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^GTM-[A-Z0-9]{4,12}\z/']],
             'ga4_measurement_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^G-[A-Z0-9]{4,15}\z/']],
+            'clarity_project_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^[a-z0-9]{8,12}\z/i']],
             'home_headline' => ['default' => 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন।', 'rules' => ['nullable', 'string', 'max:120']],
             'home_subtitle' => ['default' => 'প্লট, জমি শেয়ার আর ফ্ল্যাটের তালিকা — প্রতিটির দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য এক জায়গায়। পছন্দ হলে আমাদের টিমের সঙ্গে সরাসরি কথা বলুন।', 'rules' => ['nullable', 'string', 'max:400']],
             'property_cta_label' => ['default' => 'ক্রয় তথ্য ও সাইট ভিজিট', 'rules' => ['nullable', 'string', 'min:2', 'max:50']],
