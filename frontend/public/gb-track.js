@@ -32,7 +32,7 @@
     try { return w.localStorage.getItem('gbrel_cookie_consent') === 'all'; } catch (e) { return false; }
   }
   // Staff, sign-in and owner pages are never tracked.
-  function isPrivatePage() { return /^\/(admin|login|register|signup|dashboard|my-listings)(\/|$)/.test(location.pathname); }
+  function isPrivatePage() { return /^\/(admin|login|register|signup|reset-password|dashboard|my-listings)(\/|$)/.test(location.pathname); }
 
   /* ---------- cookies & ids ---------- */
   function getCookie(n) {
@@ -81,7 +81,8 @@
         utm_source: p.utm_source, utm_medium: p.utm_medium, utm_campaign: p.utm_campaign,
         utm_content: p.utm_content, utm_term: p.utm_term,
         fb_campaign_id: p.fb_campaign_id, fb_adset_id: p.fb_adset_id, fb_ad_id: p.fb_ad_id,
-        fbclid: p.fbclid, landing_url: location.href.split('#')[0], referrer: d.referrer || null
+        // A private page (for example a password reset link) must never end up in the stored landing address.
+        fbclid: p.fbclid, landing_url: isPrivatePage() ? location.origin + location.pathname : location.href.split('#')[0], referrer: d.referrer || null
       };
       try { w.sessionStorage.setItem('gb_src_' + sid, JSON.stringify(src)); } catch (e) {}
     }

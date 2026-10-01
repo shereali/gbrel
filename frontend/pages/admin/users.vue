@@ -193,12 +193,14 @@
               <tr v-for="user in filteredUsers" :key="user.id">
                 <td>
                   <div class="flex items-center gap-3">
-                    <img 
-                      :src="user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop'" 
-                      :alt="user.name" 
-                      class="table-thumb" 
-                      style="border-radius: 50%; width: 40px; height: 40px; object-fit: cover;" 
+                    <img
+                      v-if="realAvatar(user)"
+                      :src="realAvatar(user)"
+                      :alt="user.name"
+                      class="table-thumb"
+                      style="border-radius: 50%; width: 40px; height: 40px; object-fit: cover;"
                     />
+                    <span v-else class="user-initials" aria-hidden="true">{{ initialsOf(user.name) }}</span>
                     <div>
                       <strong style="display: block; font-size: 0.94rem; color: #FFF;">{{ user.name }}</strong>
                       <div style="font-size: 0.78rem; color: var(--admin-text-muted);">{{ user.email }}</div>
@@ -264,6 +266,14 @@
                       title="Edit user details and permissions"
                     >
                       Edit User
+                    </button>
+                    <button
+                      class="btn btn-sm btn-outline-white"
+                      style="font-size: 0.78rem; padding: 5px 12px;"
+                      title="Create a one-time link so this user can choose a new password"
+                      @click="createResetLink(user)"
+                    >
+                      Reset password
                     </button>
                     <button 
                       v-if="user.id !== 1" 
@@ -397,6 +407,7 @@
 
         <form @submit.prevent="saveNewUser">
           <div class="admin-modal-body">
+            <AvatarPicker v-model:file="avatarFile" v-model:removed="avatarRemoved" :name="form.name" />
             <div class="grid grid-2" style="gap: 14px; margin-bottom: 14px;">
               <div class="form-group">
                 <label class="form-label">Full Name *</label>
@@ -505,6 +516,39 @@
     </div>
 
     <!-- ======================================================================
+         MODAL: PASSWORD RESET LINK
+         ====================================================================== -->
+    <div v-if="resetTarget" class="admin-modal-overlay" @click.self="closeResetLink">
+      <div class="admin-modal-card animate-fade-in-up" style="max-width: 560px;">
+        <div class="admin-modal-header">
+          <h3 class="admin-modal-title">Password reset link for {{ resetTarget.name }}</h3>
+          <button class="admin-modal-close" aria-label="Close" @click="closeResetLink">✕</button>
+        </div>
+        <div class="admin-modal-body">
+          <p v-if="resetBusy" style="color: var(--admin-text-muted);">Creating the link…</p>
+          <template v-else-if="resetLink">
+            <p style="font-size: 0.9rem; line-height: 1.55; margin-bottom: 12px;">
+              Send this link to {{ resetTarget.name }}. They open it and choose a new password. The current password keeps working until they do.
+            </p>
+            <div class="reset-link-box">
+              <input ref="resetInput" :value="resetLink.url" readonly class="form-input" aria-label="Password reset link" @focus="($event.target as HTMLInputElement).select()" />
+              <button type="button" class="btn btn-sm btn-emerald" @click="copyResetLink">Copy link</button>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px;">
+              <a v-if="resetWhatsapp" :href="resetWhatsapp" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background: #178A45; color: #fff;">Send on WhatsApp</a>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--admin-text-muted); margin-top: 14px; line-height: 1.5;">
+              Works once and expires in {{ resetLink.minutes }} minutes. This link is shown only now; creating a new link cancels this one. Share it only with {{ resetTarget.name }}.
+            </p>
+          </template>
+        </div>
+        <div class="admin-modal-footer">
+          <button type="button" class="btn btn-sm btn-outline-white" @click="closeResetLink">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
          MODAL 2: EDIT USER
          ====================================================================== -->
     <div v-if="editingUser" class="admin-modal-overlay" @click.self="editingUser = null">
@@ -516,6 +560,7 @@
 
         <form @submit.prevent="saveUserChanges">
           <div class="admin-modal-body">
+            <AvatarPicker :key="editingUser.id" v-model:file="avatarFile" v-model:removed="avatarRemoved" :current="editingUser.avatar" :name="editForm.name" />
             <div class="grid grid-2" style="gap: 14px; margin-bottom: 14px;">
               <div class="form-group">
                 <label class="form-label">Full Name *</label>
@@ -743,6 +788,8 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from '~/composables/useToast'
 import { useApiUrl } from '~/composables/useApi'
+import AvatarPicker from '~/components/admin/AvatarPicker.vue'
+import { whatsappLink } from '~/utils/contact.mjs'
 
 definePageMeta({
   layout: 'admin'
@@ -763,6 +810,83 @@ const filterStatus = ref('all')
 
 const isLoading = ref(false)
 const isSubmitting = ref(false)
+
+// Profile photo chosen in the Add / Edit form. Uploaded after the account is saved.
+const avatarFile = ref<File | null>(null)
+const avatarRemoved = ref(false)
+
+// Older accounts carry a stock photo of a stranger; show initials instead.
+const realAvatar = (u: any): string => (u?.avatar && !String(u.avatar).includes('images.unsplash.com') ? u.avatar : '')
+const initialsOf = (name?: string) => {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean)
+  return ((parts[0]?.[0] || '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase() || '?'
+}
+
+// Password reset: a one-time link the admin sends to the user (no email or SMS needed).
+const resetTarget = ref<any | null>(null)
+const resetLink = ref<{ url: string; minutes: number } | null>(null)
+const resetBusy = ref(false)
+const resetInput = ref<HTMLInputElement | null>(null)
+
+const resetWhatsapp = computed(() => {
+  if (!resetTarget.value || !resetLink.value) return ''
+  const text = `আসসালামু আলাইকুম ${resetTarget.value.name}, গ্রাম বাংলা রিয়েল এস্টেটে আপনার অ্যাকাউন্টের নতুন পাসওয়ার্ড দিতে এই লিংকটি খুলুন। লিংকটি ${resetLink.value.minutes} মিনিট চলবে এবং একবারই কাজ করবে: ${resetLink.value.url}`
+  return whatsappLink(resetTarget.value.phone, text)
+})
+
+const createResetLink = async (user: any) => {
+  resetTarget.value = user
+  resetLink.value = null
+  resetBusy.value = true
+  try {
+    const res = await fetch(useApiUrl(`/users/${user.id}/password-reset`), { method: 'POST' })
+    const json = await res.json().catch(() => null)
+    if (!res.ok) throw new Error(json?.message || 'Could not create the link.')
+    resetLink.value = { url: `${window.location.origin}/reset-password?token=${json.data.token}`, minutes: json.data.minutes }
+  } catch (err: any) {
+    resetTarget.value = null
+    toast.error('Reset link failed', err?.message || 'Could not create the reset link.')
+  } finally {
+    resetBusy.value = false
+  }
+}
+
+const copyResetLink = async () => {
+  if (!resetLink.value) return
+  try {
+    await navigator.clipboard.writeText(resetLink.value.url)
+    toast.success('Link copied', 'Paste it into WhatsApp or a message to the user.')
+  } catch {
+    resetInput.value?.select()
+    toast.info('Select and copy', 'Press Ctrl+C to copy the selected link.')
+  }
+}
+
+const closeResetLink = () => {
+  resetTarget.value = null
+  resetLink.value = null
+}
+
+// Returns an error message, or '' when the photo was saved (or nothing needed saving).
+const syncAvatar = async (userId: number): Promise<string> => {
+  try {
+    if (avatarFile.value) {
+      const body = new FormData()
+      body.append('avatar', avatarFile.value)
+      const res = await fetch(useApiUrl(`/users/${userId}/avatar`), { method: 'POST', body })
+      if (!res.ok) {
+        const err = await res.json().catch(() => null)
+        return err?.errors?.avatar?.[0] || err?.message || 'The photo could not be uploaded.'
+      }
+    } else if (avatarRemoved.value) {
+      const res = await fetch(useApiUrl(`/users/${userId}/avatar`), { method: 'DELETE' })
+      if (!res.ok) return 'The photo could not be removed.'
+    }
+    return ''
+  } catch {
+    return 'The photo could not be uploaded. Check your connection and try again.'
+  }
+}
 
 const showCreateModal = ref(false)
 const editingUser = ref<any | null>(null)
@@ -947,6 +1071,8 @@ const openCreateUserModal = () => {
   form.phone = ''
   form.password = ''
   form.custom_permissions = []
+  avatarFile.value = null
+  avatarRemoved.value = false
   showCreateModal.value = true
 }
 
@@ -974,7 +1100,10 @@ const saveNewUser = async () => {
       throw new Error(err?.message || `Failed to create user: status ${res.status}`)
     }
 
+    const created = await res.json().catch(() => null)
+    const photoError = created?.data?.id ? await syncAvatar(created.data.id) : ''
     toast.success('User Added', `Account for ${form.name} created successfully.`)
+    if (photoError) toast.warning('Photo not saved', `${photoError} Open Edit on this user to add it again.`)
     showCreateModal.value = false
     await loadData()
   } catch (err: any) {
@@ -986,6 +1115,8 @@ const saveNewUser = async () => {
 
 const openEditUserModal = (u: any) => {
   editingUser.value = u
+  avatarFile.value = null
+  avatarRemoved.value = false
   editForm.name = u.name
   editForm.email = u.email
   editForm.role_id = u.role_id || (roles.value.find(r => r.slug === u.role)?.id || 1)
@@ -1024,6 +1155,13 @@ const saveUserChanges = async () => {
       throw new Error(err?.message || 'Failed to update user')
     }
 
+    const photoError = await syncAvatar(editingUser.value.id)
+    if (photoError) {
+      // Keep the form open so the photo can be fixed; the other changes are already saved.
+      toast.warning('Photo not saved', `${photoError} The other changes were saved.`)
+      await loadData()
+      return
+    }
     toast.success('User Updated', `Changes saved for ${editForm.name}.`)
     editingUser.value = null
     await loadData()
@@ -1144,3 +1282,9 @@ const deleteRole = async (role: any) => {
   }
 }
 </script>
+
+<style scoped>
+.user-initials { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--admin-bg-surface-elevated); border: 1px solid var(--admin-border-hover); color: var(--admin-text-secondary); font-size: 0.85rem; font-weight: 800; }
+.reset-link-box { display: flex; gap: 8px; align-items: center; }
+.reset-link-box .form-input { flex: 1; min-width: 0; font-size: 0.82rem; }
+</style>

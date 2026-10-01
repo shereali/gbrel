@@ -6,8 +6,10 @@ use App\Http\Controllers\MediaLibraryController;
 use App\Http\Controllers\OwnerAccountController;
 use App\Http\Controllers\OwnerListingController;
 use App\Http\Controllers\PropertyDocumentController;
+use App\Http\Controllers\PasswordResetLinkController;
 use App\Http\Controllers\PropertyLeadController;
 use App\Http\Controllers\TrackController;
+use App\Http\Controllers\UserAvatarController;
 use App\Models\Agent;
 use App\Models\Brochure;
 use App\Models\Category;
@@ -1088,7 +1090,7 @@ Route::get('/users', function () {
             'phone' => $u->phone ?? '+880 1711-000000',
             'region' => $u->region ?? 'Dhaka HQ',
             'status' => $u->status ?? 'Active',
-            'avatar' => $u->avatar ?? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+            'avatar' => $u->avatar,
             'custom_permissions' => $u->custom_permissions ?? [],
             'effective_permissions' => $u->getEffectivePermissions(),
             'created_at' => $u->created_at,
@@ -1125,12 +1127,6 @@ Route::post('/users', function (Request $request) {
         }
     }
 
-    $defaultAvatar = $roleSlug === 'admin'
-        ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop'
-        : ($roleSlug === 'property_manager'
-            ? 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
-            : 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop');
-
     $customPerms = $input['custom_permissions'] ?? $input['customPermissions'] ?? [];
     if (is_string($customPerms)) {
         $decoded = json_decode($customPerms, true);
@@ -1147,7 +1143,7 @@ Route::post('/users', function (Request $request) {
         'phone' => $input['phone'] ?? '+880 1819-000000',
         'region' => $input['region'] ?? 'Dhaka HQ',
         'status' => $input['status'] ?? 'Active',
-        'avatar' => $input['avatar'] ?? $defaultAvatar,
+        'avatar' => null,
     ]);
 
     return response()->json([
@@ -1226,6 +1222,14 @@ Route::delete('/users/{id}', function ($id) {
         'message' => 'User account deleted from database',
     ]);
 })->middleware('staff:users.manage');
+
+Route::post('/users/{id}/avatar', [UserAvatarController::class, 'store'])->whereNumber('id')->middleware('staff:users.manage', 'throttle:30,1');
+Route::delete('/users/{id}/avatar', [UserAvatarController::class, 'destroy'])->whereNumber('id')->middleware('staff:users.manage');
+
+// Password reset: staff create a one-time link for a user; the user opens it and chooses a new password.
+Route::post('/users/{id}/password-reset', [PasswordResetLinkController::class, 'create'])->whereNumber('id')->middleware('staff:users.manage', 'throttle:20,1');
+Route::post('/auth/reset-password/check', [PasswordResetLinkController::class, 'check'])->middleware('throttle:20,1');
+Route::post('/auth/reset-password', [PasswordResetLinkController::class, 'reset'])->middleware('throttle:10,1');
 
 // 7. Official Project Brochures & Marketing Collateral Vault API
 Route::get('/brochures', function (Request $request) {

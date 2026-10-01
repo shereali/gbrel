@@ -5,7 +5,7 @@ import { useSettings } from '~/composables/useSettings'
 
 const CLARITY = /^[a-z0-9]{8,12}$/i
 // Clarity masks typed text, but staff and sign-in pages should not be recorded at all.
-const isRecordable = (path: string) => !/^\/(admin|login|register|signup|dashboard|my-listings)(\/|$)/.test(path)
+const isRecordable = (path: string) => !/^\/(admin|login|register|signup|reset-password|dashboard|my-listings)(\/|$)/.test(path)
 
 export default defineNuxtPlugin(async () => {
   const w = window as any

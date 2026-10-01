@@ -27,7 +27,7 @@ export default defineNuxtConfig({
         { name: 'twitter:card', content: 'summary_large_image' }
       ],
       // Visitor journey tracker. Waits for cookie consent by itself; /gb-track.js?v= is bumped when the file changes.
-      script: [{ src: '/gb-track.js?v=1', defer: true }],
+      script: [{ src: '/gb-track.js?v=2', defer: true }],
       link: [
         { rel: 'icon', type: 'image/png', href: '/favicon.png' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
