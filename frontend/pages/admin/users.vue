@@ -786,6 +786,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from '~/composables/useToast'
 import { useApiUrl } from '~/composables/useApi'
+import { useAuth } from '~/composables/useAuth'
 import AvatarPicker from '~/components/admin/AvatarPicker.vue'
 
 definePageMeta({
@@ -793,6 +794,12 @@ definePageMeta({
 })
 
 const toast = useToast()
+const { token } = useAuth()
+
+const authHeaders = (extra: Record<string, string> = {}) => ({
+  ...(token.value ? { Authorization: `Bearer ${token.value}` } : {}),
+  ...extra
+})
 
 const activeTab = ref<'users' | 'matrix'>('users')
 const userAccounts = ref<any[]>([])
@@ -843,7 +850,7 @@ const savePassword = async () => {
   try {
     const res = await fetch(useApiUrl(`/users/${resetTarget.value.id}/password`), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ password: resetForm.password, password_confirmation: resetForm.confirmation })
     })
     const json = await res.json().catch(() => null)
@@ -863,13 +870,20 @@ const syncAvatar = async (userId: number): Promise<string> => {
     if (avatarFile.value) {
       const body = new FormData()
       body.append('avatar', avatarFile.value)
-      const res = await fetch(useApiUrl(`/users/${userId}/avatar`), { method: 'POST', body })
+      const res = await fetch(useApiUrl(`/users/${userId}/avatar`), {
+        method: 'POST',
+        headers: authHeaders(),
+        body
+      })
       if (!res.ok) {
         const err = await res.json().catch(() => null)
         return err?.errors?.avatar?.[0] || err?.message || 'The photo could not be uploaded.'
       }
     } else if (avatarRemoved.value) {
-      const res = await fetch(useApiUrl(`/users/${userId}/avatar`), { method: 'DELETE' })
+      const res = await fetch(useApiUrl(`/users/${userId}/avatar`), {
+        method: 'DELETE',
+        headers: authHeaders()
+      })
       if (!res.ok) return 'The photo could not be removed.'
     }
     return ''
@@ -1006,9 +1020,9 @@ const loadData = async () => {
   isLoading.value = true
   try {
     const [resUsers, resRoles, resPerms] = await Promise.all([
-      fetch(useApiUrl('/users')),
-      fetch(useApiUrl('/roles')),
-      fetch(useApiUrl('/permissions'))
+      fetch(useApiUrl('/users'), { headers: authHeaders() }),
+      fetch(useApiUrl('/roles'), { headers: authHeaders() }),
+      fetch(useApiUrl('/permissions'), { headers: authHeaders() })
     ])
 
     if (resUsers.ok) {
@@ -1071,7 +1085,7 @@ const saveNewUser = async () => {
   try {
     const res = await fetch(useApiUrl('/users'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
         name: form.name,
         email: form.email,
@@ -1136,7 +1150,7 @@ const saveUserChanges = async () => {
 
     const res = await fetch(useApiUrl(`/users/${editingUser.value.id}`), {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(payload)
     })
 
@@ -1168,7 +1182,7 @@ const toggleUserStatus = async (user: any) => {
   try {
     const res = await fetch(useApiUrl(`/users/${user.id}`), {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ status: next })
     })
     if (!res.ok) throw new Error('Failed to update status on server')
@@ -1190,9 +1204,13 @@ const executeDeleteUser = async () => {
 
   try {
     const res = await fetch(useApiUrl(`/users/${id}`), {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: authHeaders()
     })
-    if (!res.ok) throw new Error('Failed to delete user')
+    if (!res.ok) {
+      const err = await res.json().catch(() => null)
+      throw new Error(err?.message || 'Failed to delete user')
+    }
     toast.info('User Removed', `Account for ${name} has been deleted.`)
     deleteUserTarget.value = null
     await loadData()
@@ -1233,7 +1251,7 @@ const saveRole = async () => {
 
     const res = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
         name: roleForm.name,
         slug: roleForm.slug,
@@ -1260,7 +1278,10 @@ const saveRole = async () => {
 const deleteRole = async (role: any) => {
   if (!confirm(`Are you sure you want to delete custom role "${role.name}"?`)) return
   try {
-    const res = await fetch(useApiUrl(`/roles/${role.id}`), { method: 'DELETE' })
+    const res = await fetch(useApiUrl(`/roles/${role.id}`), {
+      method: 'DELETE',
+      headers: authHeaders()
+    })
     if (!res.ok) {
       const err = await res.json().catch(() => null)
       throw new Error(err?.message || 'Failed to delete role')

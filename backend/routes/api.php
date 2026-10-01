@@ -1207,11 +1207,33 @@ Route::put('/users/{id}', function (Request $request, $id) {
     ]);
 })->middleware('staff:users.manage');
 
-Route::delete('/users/{id}', function ($id) {
-    if ((int) $id === 1) {
+Route::delete('/users/{id}', function (Request $request, $id) {
+    $user = User::findOrFail($id);
+
+    $rootEmail = env('ADMIN_EMAIL', 'admin@gbrel.com');
+    if ($user->email && strtolower($user->email) === strtolower($rootEmail)) {
         return response()->json(['success' => false, 'message' => 'Cannot delete primary root administrator'], 403);
     }
-    $user = User::findOrFail($id);
+
+    $authUserId = $request->user()?->id;
+    if ($authUserId && (int) $id === (int) $authUserId) {
+        return response()->json(['success' => false, 'message' => 'Cannot delete your own active account'], 403);
+    }
+
+    // Clean up dependent user records safely
+    if (Schema::hasTable('saved_properties')) {
+        DB::table('saved_properties')->where('user_id', $user->id)->delete();
+    }
+    if (Schema::hasTable('lead_activities')) {
+        DB::table('lead_activities')->where('user_id', $user->id)->update(['user_id' => null]);
+    }
+    if (Schema::hasTable('leads')) {
+        DB::table('leads')->where('assigned_to', $user->id)->update(['assigned_to' => null]);
+    }
+    if (Schema::hasTable('viewings')) {
+        DB::table('viewings')->where('assigned_to', $user->id)->update(['assigned_to' => null]);
+    }
+
     $user->delete();
 
     return response()->json([

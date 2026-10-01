@@ -62,4 +62,22 @@ class UserPasswordTest extends TestCase
         $this->change($member)->assertOk();
         $this->assertTrue(Hash::check('secret-password', $admin->fresh()->password));
     }
+
+    public function test_admin_can_delete_user_and_cannot_delete_self_or_root(): void
+    {
+        $admin = $this->signInAs('admin');
+        $member = $this->member();
+
+        // Cannot delete primary root admin
+        $rootEmail = env('ADMIN_EMAIL', 'admin@gbrel.com');
+        $root = User::create(['name' => 'Root', 'email' => $rootEmail, 'password' => 'secret', 'role' => 'admin']);
+        $this->deleteJson("/api/users/{$root->id}")->assertForbidden();
+
+        // Cannot delete own account
+        $this->deleteJson("/api/users/{$admin->id}")->assertForbidden();
+
+        // Can delete another user account
+        $this->deleteJson("/api/users/{$member->id}")->assertOk()->assertJsonPath('success', true);
+        $this->assertDatabaseMissing('users', ['id' => $member->id]);
+    }
 }
