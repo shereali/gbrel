@@ -61,9 +61,19 @@ class PropertyLeadTest extends TestCase
         $payload = $this->inquiry();
         $payload['phone'] = '123';
         $payload['contact_consent'] = false;
-        unset($payload['budget_range']);
-        $this->postJson('/api/leads', $payload)->assertUnprocessable()->assertJsonValidationErrors(['phone', 'contact_consent', 'budget_range']);
+        unset($payload['investment_readiness']);
+        $this->postJson('/api/leads', $payload)->assertUnprocessable()->assertJsonValidationErrors(['phone', 'contact_consent', 'investment_readiness']);
         $this->assertDatabaseCount('leads', 0);
+    }
+
+    public function test_a_lead_is_saved_before_the_budget_question_is_answered(): void
+    {
+        $payload = $this->inquiry();
+        unset($payload['budget_range']);
+
+        $this->postJson('/api/leads', $payload)->assertCreated();
+
+        $this->assertNull(Lead::first()->budget_range);
     }
 
     public function test_existing_general_inquiry_does_not_invent_buyer_readiness(): void

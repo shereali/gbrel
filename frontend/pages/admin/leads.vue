@@ -376,6 +376,7 @@ const readMessage = (message?: string | null) => {
     else if (key === 'Payment plan') out.payment = m![2]
     else if (key === 'Lives') out.lives = m![2]
     else if (key?.startsWith('Preferred time')) { if (m![2] !== 'Not specified') out.time = m![2] }
+    else if (key === 'Survey') out.survey = m![2]
     else if (key === 'Price shown') out.price = m![2]
     else if (key === 'CTA') out.cta = m![2]
     else if (key === 'Landing page') out.landing = m![2]
@@ -681,6 +682,13 @@ const copyPhone = async (phone: string) => {
   }
 }
 
+// "partial (2 of 5 questions)" → plain words for the team. Buyers who left after the contact step have not answered everything.
+const surveyText = (raw?: string) => {
+  const m = String(raw || '').match(/^(complete|partial) \((\d+) of (\d+)/)
+  if (!m) return ''
+  return m[1] === 'complete' ? `All ${m[3]} questions answered` : `Answered ${m[2]} of ${m[3]} questions. Ask the rest on the call.`
+}
+
 type Row = { label: string; value: string; to?: string }
 const detailSections = computed(() => {
   const l = selected.value
@@ -695,7 +703,8 @@ const detailSections = computed(() => {
         { label: 'Wants to buy', value: say(l.investment_readiness) },
         { label: 'Budget', value: say(l.budget_range) },
         { label: 'Payment', value: say(l.parsed?.payment) },
-        { label: 'Lives', value: say(l.parsed?.lives) }
+        { label: 'Lives', value: say(l.parsed?.lives) },
+        { label: 'Form answers', value: surveyText(l.parsed?.survey) }
       ]
     },
     {

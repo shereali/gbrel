@@ -13,8 +13,8 @@
         <div class="cookie-banner-text">
           <strong class="cookie-banner-title">আমরা কুকি ব্যবহার করি</strong>
           <p>
-            আপনার ব্রাউজিং অভিজ্ঞতা উন্নত করতে, সাইন-ইন বজায় রাখতে এবং প্রাসঙ্গিক প্রপার্টির তথ্য তুলে ধরতে আমরা কুকি ব্যবহার করি। বিস্তারিত জানতে আমাদের
-            <NuxtLink to="/cookie-policy" class="cookie-link">কুকি নীতি</NuxtLink> পড়ুন।
+            সাইট ঠিকভাবে চালাতে এবং কোন বিজ্ঞাপন কাজ করছে বুঝতে আমরা কুকি ব্যবহার করি।
+            <NuxtLink to="/cookie-policy" class="cookie-link">কুকি নীতি</NuxtLink>
           </p>
         </div>
       </div>
@@ -181,20 +181,32 @@ const accept = (level: CookieConsentLevel) => {
 }
 
 @media (max-width: 600px) {
+  /* A slim strip: the first screen of a property page belongs to the price and the main button. */
   .cookie-banner {
     bottom: 84px; /* leaves room above mobile navigation / sticky bars */
-    right: 16px;
-    left: 16px;
+    right: 12px;
+    left: 12px;
     width: auto;
-    padding: 16px 18px;
+    padding: 12px 14px;
+    gap: 10px;
+    border-radius: 14px;
+  }
+  .cookie-banner-icon,
+  .cookie-banner-title {
+    display: none;
+  }
+  .cookie-banner-text p {
+    font-size: 12.5px;
+    line-height: 1.5;
   }
   .cookie-banner-actions {
-    flex-direction: column-reverse;
     gap: 8px;
   }
   .cookie-btn {
-    width: 100%;
+    flex: 1;
     min-height: 42px;
+    padding: 6px 10px;
+    font-size: 13.5px;
   }
 }
 </style>

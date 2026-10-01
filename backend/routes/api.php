@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LeadAnswersController;
 use App\Http\Controllers\LeadCrmController;
 use App\Http\Controllers\LeadJourneyController;
 use App\Http\Controllers\ListingReviewController;
@@ -863,7 +864,9 @@ Route::get('/leads', function (Request $request) {
 });
 
 Route::post('/leads', [PropertyLeadController::class, 'store'])->middleware('throttle:10,1');
-Route::get('/leads/{id}/journey', [LeadJourneyController::class, 'show'])->whereNumber('id');
+// Later survey answers from the buyer who just sent the form (public; found by the request id, see LeadAnswersController).
+Route::post('/lead-answers', [LeadAnswersController::class, 'store'])->middleware('throttle:60,1');
+Route::get('/leads/{id}/journey',[LeadJourneyController::class, 'show'])->whereNumber('id');
 
 // Visitor journey tracking (public/gb-track.js, cookie-consented visitors only)
 Route::post('/t', [TrackController::class, 'collect'])->middleware('throttle:300,1');

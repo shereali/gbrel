@@ -426,6 +426,18 @@ const shareProperty = async () => {
   .property-bottom-cta { margin:32px 0 20px; }
 }
 @media (prefers-reduced-motion:reduce) { .mobile-inquiry-bar { transition:none; } }
+@media (max-width:767px) {
+  /* Visitors from an ad decide within seconds: the price and the main button belong on the first screen, so the
+     title is smaller, the photo a little shorter, and the seller's facts move below the button. */
+  .property-heading { gap:12px; margin-bottom:18px; }
+  .property-heading h1 { font-size:23px; line-height:1.25; letter-spacing:0; margin-bottom:6px; }
+  .property-gallery { height:clamp(190px,50vw,250px); margin-bottom:14px; }
+  .asking-price .hero-cta { order:1; margin-top:10px; }
+  .asking-price .cta-note { order:2; }
+  .asking-price .trust-facts { order:3; }
+  .asking-price .trust-source { order:4; }
+  .asking-price .trust-line { order:5; }
+}
 @media (max-width:360px) { .property-shell { padding:0 14px; }.property-topline { gap:7px; }.property-tools button { padding:8px; }.property-heading h1 { font-size:26px; }.mobile-inquiry-bar { padding-left:12px; padding-right:12px; }.mobile-inquiry-bar strong { font-size:16px; }.mobile-inquiry-bar .primary { padding:11px; }.property-gallery { height:210px; } }
 @media (prefers-reduced-motion:reduce) { .property-gallery img { transition:none; } }
 

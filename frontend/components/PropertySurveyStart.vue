@@ -1,7 +1,7 @@
 <template>
   <section class="ss" :class="{ 'ss--side': side }" :aria-labelledby="`ss-title-${uid}`">
     <h2 :id="`ss-title-${uid}`" class="ss-title">এই প্রপার্টি নিয়ে ভাবছেন?</h2>
-    <p class="ss-lead">কয়েকটি প্রশ্নের উত্তর দিন, আপনার পরিকল্পনা অনুযায়ী মোট খরচ, পেমেন্টের ধাপ আর সাইট ভিজিটের তথ্য জানাব।</p>
+    <p class="ss-lead">দুটি ছোট প্রশ্নের উত্তর আর আপনার নম্বর দিন। আপনার পরিকল্পনা অনুযায়ী মোট খরচ, পেমেন্টের ধাপ আর সাইট ভিজিটের তথ্য আমরা জানাব।</p>
     <p class="ss-q" :id="`ss-q-${uid}`">প্রথম প্রশ্ন: প্রপার্টিটি কী কাজে লাগাতে চান?</p>
     <div class="ss-options" role="group" :aria-labelledby="`ss-q-${uid}`">
       <button v-for="o in options" :key="o.value" type="button" class="ss-option" @click="emit('choose', o.value)">
@@ -9,7 +9,7 @@
         <ChevronRight :size="20" aria-hidden="true" />
       </button>
     </div>
-    <p class="ss-fine">এক মিনিটের কম লাগবে। কোনো বুকিং বা পেমেন্ট নেই।</p>
+    <p class="ss-fine">মাত্র ৩টি ধাপ, ৩০ সেকেন্ডের কাজ। কোনো বুকিং বা পেমেন্ট নেই।</p>
   </section>
 </template>
 

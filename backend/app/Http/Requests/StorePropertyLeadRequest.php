@@ -53,7 +53,8 @@ class StorePropertyLeadRequest extends FormRequest
             'type' => ['nullable', 'string', 'max:255'],
             'buyer_category' => [Rule::requiredIf($qualified), 'nullable', 'string', 'max:255'],
             'investment_readiness' => [Rule::requiredIf($qualified), 'nullable', 'string', 'max:255'],
-            'budget_range' => [Rule::requiredIf($qualified), 'nullable', 'string', 'max:255'],
+            // Asked after the lead is saved (see LeadAnswersController), so a buyer who stops early is still a lead.
+            'budget_range' => ['nullable', 'string', 'max:255'],
             'preferred_contact' => [Rule::requiredIf($qualified), 'nullable', Rule::in(['Phone Call', 'WhatsApp', 'Email'])],
             'message' => ['nullable', 'string', 'max:5000'],
             'utm_source' => ['nullable', 'string', 'max:200'],

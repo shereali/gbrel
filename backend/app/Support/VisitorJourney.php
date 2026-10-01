@@ -59,6 +59,32 @@ class VisitorJourney
             return;
         }
 
+        [$userData, $custom, $url] = self::metaPayload($request, $lead, $vid, $session);
+
+        SendMetaEvent::dispatchAfterResponse('Lead', (string) $lead->request_id, $userData, $custom, $url);
+        if (self::tier($lead) === 'HOT') {
+            SendMetaEvent::dispatchAfterResponse('QualifiedLead', $lead->request_id.'-q', $userData, $custom, $url);
+        }
+    }
+
+    /** A lead that became hot after it was saved (the buyer answered the money questions later). */
+    public static function recordQualified(Request $request, Lead $lead): void
+    {
+        try {
+            if (! $lead->visitor_id || ! $lead->request_id) {
+                return;
+            }
+            $session = $lead->session_id ? VisitorSession::where('session_id', $lead->session_id)->where('visitor_id', $lead->visitor_id)->first() : null;
+            [$userData, $custom, $url] = self::metaPayload($request, $lead, $lead->visitor_id, $session);
+            SendMetaEvent::dispatchAfterResponse('QualifiedLead', $lead->request_id.'-q', $userData, $custom, $url);
+        } catch (\Throwable $e) {
+            Log::warning('Qualified lead could not be sent to Meta for lead '.$lead->id, ['error' => $e->getMessage()]);
+        }
+    }
+
+    /** @return array{0: array<string, mixed>, 1: array<string, mixed>, 2: string|null} */
+    private static function metaPayload(Request $request, Lead $lead, string $vid, ?VisitorSession $session): array
+    {
         $userData = [
             'phone' => $lead->phone,
             'first_name' => explode(' ', trim((string) $lead->name))[0] ?: null,
@@ -68,18 +94,13 @@ class VisitorJourney
             'fbc' => $request->cookie('_fbc') ?: $session?->fbc,
             'fbp' => $request->cookie('_fbp') ?: $session?->fbp,
         ];
-        $tier = self::tier($lead);
         $custom = array_filter([
             'content_ids' => $lead->property_id ? [(string) $lead->property_id] : null,
             'content_type' => 'product',
-            'lead_tier' => $tier,
+            'lead_tier' => self::tier($lead),
         ]);
-        $url = $request->headers->get('referer');
 
-        SendMetaEvent::dispatchAfterResponse('Lead', (string) $lead->request_id, $userData, $custom, $url);
-        if ($tier === 'HOT') {
-            SendMetaEvent::dispatchAfterResponse('QualifiedLead', $lead->request_id.'-q', $userData, $custom, $url);
-        }
+        return [$userData, $custom, $request->headers->get('referer')];
     }
 
     private static function cleanId(mixed $value): ?string

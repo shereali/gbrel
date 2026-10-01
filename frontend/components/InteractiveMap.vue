@@ -34,6 +34,8 @@ const initMap = async () => {
   if (typeof window === 'undefined' || !mapContainer.value) return
 
   // Dynamically import leaflet to prevent SSR issues
+  // The map stylesheet is only needed here, so it loads with the map instead of blocking every page.
+  await import('leaflet/dist/leaflet.css')
   const L = (await import('leaflet')).default
 
   // Center on Dhaka or provided coords
