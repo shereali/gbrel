@@ -1,14 +1,4 @@
 <template>
-  <div class="bs-wrap">
-  <!-- Facebook's own Page plugin (Like / Follow button inside) and Share button. Shown unless the visitor chose
-       "only essential cookies", because Facebook's frames set their own cookies. -->
-  <div v-if="pluginsAllowed" class="bs-fb">
-    <iframe :src="pagePluginSrc" class="bs-page" title="ফেসবুক পেজ: গ্রাম বাংলা রিয়েল এস্টেট" width="340" height="130" scrolling="no" frameborder="0" allow="encrypted-media" loading="lazy" />
-    <div class="bs-fb-share">
-      <iframe :src="sharePluginSrc" title="ফেসবুকে শেয়ার করুন" width="96" height="30" scrolling="no" frameborder="0" loading="lazy" />
-      <small>ওপরের পেজে Like / Follow চাপুন, পাশে Share চাপুন</small>
-    </div>
-  </div>
   <div class="bs" :class="`bs--${tone}`">
     <a :href="BOOK.facebookPage" target="_blank" rel="noopener" class="bs-btn bs-like" @click="onLike">
       <ThumbsUp :size="18" aria-hidden="true" /> পেজে লাইক দিন
@@ -24,13 +14,12 @@
       <span aria-live="polite">{{ copied ? 'লিংক কপি হয়েছে' : canNativeShare ? 'অন্য অ্যাপে পাঠান' : 'লিংক কপি করুন' }}</span>
     </button>
   </div>
-  </div>
 </template>
 
 <script setup lang="ts">
-// Like and share for the free book. Meta retired the stand-alone Like button plugin in February 2026, but the
-// Page plugin (with its Like/Follow button) and the Share button plugin still work, so those come first.
-// The plain buttons below them always work (in-app browsers, blocked frames) and are the ones we can count.
+// Like and share for the free book. Meta retired its Like button plugin (February 2026), and the Page/Share
+// plugins looked out of place here, so these are plain links: they open the Facebook page (the app on phones)
+// and the share dialogs, work in in-app browsers, and every click is counted.
 import { onMounted, ref } from 'vue'
 import { Check, Link2, MessageCircle, Share2, ThumbsUp } from 'lucide-vue-next'
 import { BOOK, BOOK_SHARE_TEXT, bookShareLinks, bookShareUrl } from '~/utils/book'
@@ -40,13 +29,7 @@ const props = withDefaults(defineProps<{ placement: string; tone?: 'light' | 'da
 
 const copied = ref(false)
 const canNativeShare = ref(false)
-const pluginsAllowed = ref(false)
-const pagePluginSrc = `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(BOOK.facebookPage)}&tabs=&width=340&height=130&small_header=false&adapt_container_width=true&hide_cover=true&show_facepile=false`
-const sharePluginSrc = `https://www.facebook.com/plugins/share_button.php?href=${encodeURIComponent(bookShareUrl('fb_share_button'))}&layout=button&size=large&width=96&height=30`
-onMounted(() => {
-  canNativeShare.value = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
-  try { pluginsAllowed.value = localStorage.getItem('gbrel_cookie_consent') !== 'essential' } catch { pluginsAllowed.value = true }
-})
+onMounted(() => { canNativeShare.value = typeof navigator !== 'undefined' && typeof navigator.share === 'function' })
 
 const base = () => ({ content_ids: [BOOK.contentId], content_name: BOOK.title, placement: props.placement })
 const onLike = () => trackPixel('FacebookPageLikeClick', base())
@@ -70,13 +53,6 @@ const copyOrShare = async () => {
 </script>
 
 <style scoped>
-.bs-wrap { display: grid; gap: 12px; }
-.bs-fb { display: grid; gap: 8px; justify-items: start; }
-.bs-page { width: 100%; max-width: 340px; height: 130px; border: 0; border-radius: var(--gb-r); overflow: hidden; background: #fff; box-shadow: 0 4px 14px rgba(0, 0, 0, .12); }
-.bs-fb-share { display: flex; align-items: center; gap: 10px; }
-.bs-fb-share iframe { border: 0; overflow: hidden; flex: none; }
-.bs-fb-share small { font-size: .8rem; color: var(--gb-ink-soft); line-height: 1.4; }
-.bs-wrap:has(.bs--dark) small { color: #DCE6CF; }
 .bs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .bs-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 8px 12px;
