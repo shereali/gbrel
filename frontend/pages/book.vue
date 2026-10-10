@@ -29,11 +29,11 @@
             <button type="button" class="gb-btn gb-btn--sun bp-cta" @click="openModal('hero')">
               <Download :size="20" aria-hidden="true" /> ফ্রি বইটি ডাউনলোড করুন
             </button>
-            <a :href="BOOK.facebookPage" target="_blank" rel="noopener" class="bp-like-link" @click="likeClick('hero')">
-              <ThumbsUp :size="17" aria-hidden="true" /> পেজে লাইক দিন
-            </a>
           </div>
           <p class="bp-how">একটা প্রশ্নের উত্তর, তারপর নাম আর মোবাইল নম্বর। বইটা সঙ্গে সঙ্গে খুলে যাবে।</p>
+          <div class="bp-hero-social">
+            <BookSocialActions placement="hero" tone="dark" />
+          </div>
         </div>
         <div class="bp-hero-book">
           <div class="bp-stage">
@@ -135,7 +135,7 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { Download, ThumbsUp } from 'lucide-vue-next'
+import { Download } from 'lucide-vue-next'
 import BookDownloadModal from '~/components/BookDownloadModal.vue'
 import BookSocialActions from '~/components/BookSocialActions.vue'
 import { BOOK } from '~/utils/book'
@@ -175,8 +175,6 @@ const openModal = (source: string) => {
   modalOpen.value = true
 }
 
-const likeClick = (placement: string) =>
-  trackPixel('FacebookPageLikeClick', { content_ids: [BOOK.contentId], content_name: BOOK.title, placement })
 
 const heroRef = ref<HTMLElement | null>(null)
 const showBar = ref(false)
@@ -213,6 +211,7 @@ onBeforeUnmount(() => observer?.disconnect())
 .bp-like-link { display: inline-flex; align-items: center; gap: 8px; color: #fff; font-weight: 600; text-decoration: underline; text-underline-offset: 5px; text-decoration-color: rgba(255, 255, 255, .4); }
 .bp-like-link:hover { text-decoration-color: #fff; }
 .bp-how { font-size: .9rem; color: #B9C9A9; margin: 14px 0 0; }
+.bp-hero-social { margin-top: 26px; max-width: 420px; }
 
 .bp-hero-book { display: flex; justify-content: center; }
 .bp-stage { position: relative; width: var(--book-w); padding-bottom: calc(var(--book-w) * .22); --book-w: min(62vw, 300px); }
