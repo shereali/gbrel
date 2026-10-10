@@ -48,7 +48,7 @@ const defaultSettings: SiteSettings = {
   corporate_office_address: 'House 461, Road No. 7, Avenue 6, DOHS, Mirpur 12, Dhaka 1216',
   office_address: 'স্বজন টাওয়ার-১, রুম ২০১ (২য় তলা), ৪ সেগুন বাগিচা, ঢাকা-১০০০',
   map_location: 'Swajan Tower, 4 Segun Bagicha, Dhaka 1000',
-  meta_pixel_id: '',
+  meta_pixel_id: '1390835626467163',
   gtm_container_id: '',
   ga4_measurement_id: '',
   clarity_project_id: '',

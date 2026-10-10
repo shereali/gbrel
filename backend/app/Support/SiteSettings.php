@@ -35,7 +35,7 @@ class SiteSettings
             'trade_license_valid_until' => ['default' => '2027-06-30', 'rules' => ['nullable', 'date_format:Y-m-d']],
             'working_hours' => ['default' => '', 'rules' => ['nullable', 'string', 'max:150']],
             // Tracking: loaded only on public pages. Empty = off.
-            'meta_pixel_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^\d{10,20}\z/']],
+            'meta_pixel_id' => ['default' => '1390835626467163', 'rules' => ['nullable', 'string', 'regex:/^\d{10,20}\z/']],
             'gtm_container_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^GTM-[A-Z0-9]{4,12}\z/']],
             'ga4_measurement_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^G-[A-Z0-9]{4,15}\z/']],
             'clarity_project_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^[a-z0-9]{8,12}\z/i']],
