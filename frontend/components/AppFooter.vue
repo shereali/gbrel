@@ -39,7 +39,8 @@
           <a v-if="settings.contact_phone" :href="`tel:${tel(settings.contact_phone)}`" class="ft-phone">{{ settings.contact_phone }}</a>
           <a v-if="whatsapp" :href="`https://wa.me/${whatsapp}`" target="_blank" rel="noopener noreferrer">WhatsApp-এ লিখুন</a>
           <a v-if="settings.contact_email" :href="`mailto:${settings.contact_email}`">{{ settings.contact_email }}</a>
-          <p v-if="settings.office_address">{{ settings.office_address }}</p>
+          <p v-if="settings.corporate_office_address"><strong>কর্পোরেট অফিস:</strong> {{ settings.corporate_office_address }}</p>
+          <p v-if="settings.office_address"><strong>নিবন্ধিত অফিস:</strong> {{ settings.office_address }}</p>
           <a v-if="settings.map_location" :href="mapOpenUrl(settings.map_location)" target="_blank" rel="noopener noreferrer">ম্যাপে অফিস দেখুন</a>
           <p v-if="settings.working_hours" class="ft-hours">{{ settings.working_hours }}</p>
         </div>

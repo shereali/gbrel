@@ -18,9 +18,13 @@
             <Mail :size="22" aria-hidden="true" />
             <div><span>ইমেইল</span><a :href="`mailto:${settings.contact_email}`" class="gb-link">{{ settings.contact_email }}</a></div>
           </li>
+          <li v-if="settings.corporate_office_address">
+            <MapPin :size="22" aria-hidden="true" />
+            <div><span>কর্পোরেট অফিস</span><p>{{ settings.corporate_office_address }}</p><small v-if="settings.working_hours">{{ settings.working_hours }}</small></div>
+          </li>
           <li v-if="settings.office_address">
             <MapPin :size="22" aria-hidden="true" />
-            <div><span>অফিস</span><p>{{ settings.office_address }}</p><small v-if="settings.working_hours">{{ settings.working_hours }}</small></div>
+            <div><span>নিবন্ধিত অফিস</span><p>{{ settings.office_address }}</p></div>
           </li>
         </ul>
       </div>

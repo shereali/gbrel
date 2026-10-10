@@ -42,9 +42,10 @@ export interface SiteSettings {
 const defaultSettings: SiteSettings = {
   site_name: 'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড',
   site_title: 'গ্রাম বাংলা রিয়েল এস্টেট | জমি, প্লট ও ফ্ল্যাট — GBREL',
-  contact_phone: '',
-  whatsapp_number: '',
+  contact_phone: '01831512910',
+  whatsapp_number: '01831512910',
   contact_email: '',
+  corporate_office_address: 'House 461, Road No. 7, Avenue 6, DOHS, Mirpur 12, Dhaka 1216',
   office_address: 'স্বজন টাওয়ার-১, রুম ২০১ (২য় তলা), ৪ সেগুন বাগিচা, ঢাকা-১০০০',
   map_location: 'Swajan Tower, 4 Segun Bagicha, Dhaka 1000',
   meta_pixel_id: '',

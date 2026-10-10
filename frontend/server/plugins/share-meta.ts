@@ -22,9 +22,31 @@ function toPreviewProperty(d: any) {
   }
 }
 
+// The free-book landing page (/book) is shared on Facebook and WhatsApp a lot, so it gets its own preview.
+const BOOK_TAGS = [
+  `<title>ফ্রি ই-বুক: The Hidden Business of Land | গ্রাম বাংলা রিয়েল এস্টেট</title>`,
+  `<meta name="description" content="জমি, ফ্ল্যাট ও ল্যান্ড শেয়ার নিরাপদে কেনা, ন্যায্য দামে বেচা আর এই ব্যবসায় আয়ের পথ নিয়ে ৩৭ পাতার ফ্রি বাংলা ই-বুক।">`,
+  `<meta property="og:type" content="website">`,
+  `<meta property="og:site_name" content="গ্রাম বাংলা রিয়েল এস্টেট">`,
+  `<meta property="og:locale" content="bn_BD">`,
+  `<meta property="og:title" content="সোনার হরিণ আপনার পায়ের নিচে: ফ্রি বাংলা ই-বুক">`,
+  `<meta property="og:description" content="জমি, ফ্ল্যাট ও ল্যান্ড শেয়ার কেনা-বেচার আগে পড়ে নিন। ৩৭ পাতা, সম্পূর্ণ ফ্রি।">`,
+  `<meta property="og:url" content="${SITE_URL}/book">`,
+  `<meta property="og:image" content="${SITE_URL}/img/book/og-book.jpg">`,
+  `<meta property="og:image:width" content="1200">`,
+  `<meta property="og:image:height" content="630">`,
+  `<meta name="twitter:card" content="summary_large_image">`
+].join('')
+
 export default defineNitroPlugin(nitroApp => {
   nitroApp.hooks.hook('render:html', async (html, { event }) => {
-    const match = /^\/properties\/(\d+)\/?$/.exec(getRequestURL(event).pathname)
+    const path = getRequestURL(event).pathname
+    if (/^\/book\/?$/.test(path)) {
+      html.head = html.head.map(chunk => chunk.replace(REPLACED, '').replace(/<meta[^>]+property="og:image:(?:width|height)"[^>]*>/g, ''))
+      html.head.push(BOOK_TAGS)
+      return
+    }
+    const match = /^\/properties\/(\d+)\/?$/.exec(path)
     if (!match) return
     const base = String(useRuntimeConfig().apiBaseServer || '').replace(/\/$/, '')
     if (!base) return

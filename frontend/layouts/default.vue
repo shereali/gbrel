@@ -65,7 +65,8 @@ const { toasts, remove: removeToast } = useToast()
 const route = useRoute()
 const isPropertyDetail = computed(() => /^\/properties\/[^/]+\/?$/.test(route.path))
 // The buyer call-back button is not useful on the property page (it has its own form) or on owner/account pages.
-const showLeadWidget = computed(() => !isPropertyDetail.value && !/^\/(my-listings|login|signup|dashboard)/.test(route.path))
+// The free-book landing page (/book) keeps one action, the download, so it hides the widget too.
+const showLeadWidget = computed(() => !isPropertyDetail.value && !/^\/(my-listings|login|signup|dashboard|book)(\/|$)/.test(route.path))
 </script>
 
 <style scoped>

@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>GBREL - Official Property Listing & Intake Form</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 9mm 12mm 11mm 12mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Kalpurush', 'Nirmala UI', 'Segoe UI', Arial, sans-serif;
+      font-size: 8.6pt;
+      line-height: 1.3;
+      color: #0f172a;
+      background: #ffffff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .en {
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+
+    /* HEADER BLOCK */
+    .header {
+      border-bottom: 2px solid #0f5132;
+      padding-bottom: 6px;
+      margin-bottom: 7px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .brand-left {
+      flex: 1;
+    }
+
+    .brand-logo-img {
+      height: 48px;
+      width: auto;
+      object-fit: contain;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .brand-mini-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-mini-logo {
+      height: 28px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .company-title-bn {
+      font-size: 13pt;
+      font-weight: 700;
+      color: #0f5132;
+      line-height: 1.15;
+    }
+
+    .company-meta {
+      font-size: 7.2pt;
+      color: #334155;
+      line-height: 1.3;
+    }
+
+    .company-meta strong {
+      color: #0f5132;
+    }
+
+    .form-badge-box {
+      border: 1.5px solid #0f5132;
+      border-radius: 4px;
+      padding: 4px 8px;
+      text-align: right;
+      background: #f0fdf4;
+      min-width: 175px;
+    }
+
+    .form-title-bn {
+      font-size: 9.6pt;
+      font-weight: 700;
+      color: #0f5132;
+      line-height: 1.2;
+    }
+
+    .form-title-en {
+      font-size: 7pt;
+      font-weight: 600;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 2px;
+    }
+
+    .tracking-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 2px 6px;
+      font-size: 7.2pt;
+      color: #334155;
+      margin-top: 2px;
+      border-top: 1px dashed #cbd5e1;
+      padding-top: 2px;
+      text-align: left;
+    }
+
+    .tracking-grid .lbl {
+      font-weight: 600;
+    }
+
+    .tracking-grid .box {
+      border-bottom: 1px dotted #64748b;
+      min-width: 65px;
+    }
+
+    /* NOTICE CALLOUT */
+    .notice-bar {
+      background: #f8fafc;
+      border-left: 3.5px solid #0f5132;
+      border-right: 1px solid #e2e8f0;
+      border-top: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 4px 7px;
+      font-size: 7.4pt;
+      color: #334155;
+      margin-bottom: 7px;
+      border-radius: 2px;
+      line-height: 1.32;
+    }
+
+    /* SECTION STYLES */
+    .sec {
+      margin-bottom: 7px;
+    }
+
+    .sec-header {
+      background: #0f5132;
+      color: #ffffff;
+      padding: 2.5px 7px;
+      font-size: 8.5pt;
+      font-weight: 700;
+      border-radius: 3px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .sec-header .sec-sub {
+      font-size: 7.1pt;
+      font-weight: 500;
+      opacity: 0.9;
+    }
+
+    /* FORM GRID & TABLES */
+    .form-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 7.9pt;
+    }
+
+    .form-table td, .form-table th {
+      border: 1px solid #cbd5e1;
+      padding: 3px 5.5px;
+      vertical-align: middle;
+    }
+
+    .form-table .field-label {
+      background: #f8fafc;
+      font-weight: 600;
+      color: #1e293b;
+      width: 22%;
+    }
+
+    .form-table .field-value {
+      color: #0f172a;
+    }
+
+    .sub-txt {
+      display: block;
+      font-size: 6.7pt;
+      color: #64748b;
+      font-weight: normal;
+      line-height: 1.15;
+    }
+
+    /* CHECKBOX & OPTIONS */
+    .options-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2.5px 9px;
+      align-items: center;
+    }
+
+    .opt {
+      display: inline-flex;
+      align-items: center;
+      gap: 3.5px;
+      white-space: nowrap;
+    }
+
+    .sq {
+      display: inline-block;
+      width: 9.5px;
+      height: 9.5px;
+      border: 1.2px solid #334155;
+      border-radius: 2px;
+      background: #ffffff;
+    }
+
+    .fill-line {
+      display: inline-block;
+      border-bottom: 1px dotted #64748b;
+      min-width: 50px;
+      height: 12px;
+      vertical-align: bottom;
+    }
+
+    .fill-line-lg {
+      display: block;
+      width: 100%;
+      border-bottom: 1px dotted #64748b;
+      height: 13px;
+      margin-top: 2px;
+    }
+
+    /* CHECKLIST TABLE */
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 7.5pt;
+    }
+
+    .doc-table th {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 3px 5px;
+      font-weight: 700;
+      color: #1e293b;
+      text-align: left;
+    }
+
+    .doc-table td {
+      border: 1px solid #cbd5e1;
+      padding: 2.8px 5px;
+      vertical-align: middle;
+    }
+
+    .badge-req {
+      background: #fee2e2;
+      color: #991b1b;
+      font-weight: 700;
+      font-size: 6.4pt;
+      padding: 1px 4px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .badge-opt {
+      background: #f1f5f9;
+      color: #475569;
+      font-weight: 600;
+      font-size: 6.4pt;
+      padding: 1px 4px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    /* AGREEMENT BOX */
+    .terms-box {
+      border: 1px solid #cbd5e1;
+      border-radius: 3px;
+      padding: 5px 7px;
+      background: #fafaf9;
+      font-size: 7.2pt;
+      line-height: 1.38;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    .terms-box ol {
+      padding-left: 13px;
+      margin: 2px 0;
+    }
+
+    .terms-box li {
+      margin-bottom: 2px;
+    }
+
+    /* SIGNATURE BLOCK */
+    .sig-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 4px;
+    }
+
+    .sig-table td {
+      border: 1px solid #cbd5e1;
+      padding: 6px 8px;
+      vertical-align: top;
+      width: 50%;
+    }
+
+    .sig-title {
+      font-weight: 700;
+      font-size: 7.9pt;
+      color: #0f5132;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 3px;
+      margin-bottom: 15px;
+    }
+
+    .sig-meta {
+      font-size: 7.2pt;
+      line-height: 1.5;
+      color: #334155;
+    }
+
+    /* OFFICE USE ONLY */
+    .office-box {
+      border: 1.5px dashed #0f5132;
+      border-radius: 4px;
+      background: #f0fdf4;
+      padding: 5px 7px;
+      font-size: 7.2pt;
+      margin-top: 6px;
+    }
+
+    .office-title {
+      font-weight: 700;
+      color: #0f5132;
+      font-size: 7.7pt;
+      margin-bottom: 2px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .page-break {
+      page-break-before: always;
+      break-before: page;
+    }
+
+    .page-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 6.8pt;
+      color: #64748b;
+      margin-top: 7px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== PAGE 1 ==================== -->
+  <div>
+    <!-- HEADER -->
+    <header class="header">
+      <div class="brand-left">
+        <img src="logo.png" alt="Gram Bangla Real Estate Limited" class="brand-logo-img" />
+        <div class="company-meta">
+          <strong>কর্পোরেট কার্যালয়:</strong> বাড়ি ৪৬১, রোড নং ৭, এভিনিউ ৬, ডিওএইচএস, মিরপুর ১২, ঢাকা-১২১৬, বাংলাদেশ<br>
+          <strong>নিবন্ধিত কার্যালয়:</strong> স্বজন টাওয়ার-১, রুম ২০১ (২য় তলা), ৪ সেগুন বাগিচা, ঢাকা-১০০০ | <strong>ফোন / হটলাইন:</strong> ০১৮৩১-৫১২৯১০<br>
+          <strong>Company Reg:</strong> C-185751/2022 (RJSC) | <strong>Trade License:</strong> TRAD/DSCC/026884/2022 | <strong>ওয়েব:</strong> gbrel.com
+        </div>
+      </div>
+      <div class="form-badge-box">
+        <div class="form-title-bn">প্রপার্টি লিস্টিং ইনটেক ফর্ম</div>
+        <div class="form-title-en">PROPERTY INTAKE & VETTING FORM</div>
+        <div class="tracking-grid">
+          <span class="lbl">Form No:</span><span class="box"></span>
+          <span class="lbl">Date:</span><span class="box"></span>
+          <span class="lbl">Advisor:</span><span class="box"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- INTRODUCTORY NOTICE -->
+    <div class="notice-bar">
+      <strong>নির্দেশনা:</strong> জমি, প্লট, ফ্ল্যাট বা বাণিজ্যিক প্রপার্টি বিক্রয়ের জন্য এই ফর্মের সকল তথ্য নির্ভুলভাবে পূরণ করুন। চিহ্নিত গোপনীয় তথ্যসমূহ (দাগ, খতিয়ান, পূর্ণ হোল্ডিং নম্বর, দলিলপত্র) শুধুমাত্র GBREL লিগ্যাল ভেরিফিকেশন টিম দেখতে পারবে; অনুমতি ছাড়া কোনো ব্যক্তিগত বা মালিকানা নথি জনসম্মুখে প্রকাশ করা হয় না।
+    </div>
+
+    <!-- SECTION 1: BASIC IDENTITY -->
+    <div class="sec">
+      <div class="sec-header">
+        <span>১. প্রপার্টির ধরন ও মৌলিক পরিচিতি (Basic Listing Identity & Category)</span>
+        <span class="sec-sub">মৌলিক তথ্য</span>
+      </div>
+      <table class="form-table">
+        <tr>
+          <td class="field-label">প্রপার্টির ধরন<br><span class="sub-txt">Property Category</span></td>
+          <td class="field-value" colspan="3">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> প্লট (Plot)</span>
+              <span class="opt"><span class="sq"></span> জমি (Land)</span>
+              <span class="opt"><span class="sq"></span> ফ্ল্যাট (Flat / Apartment)</span>
+              <span class="opt"><span class="sq"></span> ডুপ্লেক্স / বাড়ি (Duplex)</span>
+              <span class="opt"><span class="sq"></span> জমি শেয়ার (Land Share)</span>
+              <span class="opt"><span class="sq"></span> বাণিজ্যিক (Commercial)</span>
+              <span class="opt"><span class="sq"></span> পেন্টহাউস (Penthouse)</span>
+              <span class="opt"><span class="sq"></span> হোটেল / রিসোর্ট (Hotel)</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">প্রপার্টির শিরোনাম<br><span class="sub-txt">Listing Title</span></td>
+          <td class="field-value" colspan="3">
+            <span class="fill-line-lg"></span>
+            <span class="sub-txt">(যেমন: বসুন্ধরায় ৫ কাঠার দক্ষিণমুখী প্লট / গুলশানে ৩৫০০ বর্গফুটের লেকভিউ ফ্ল্যাট)</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">লেনদেনের প্রকৃতি<br><span class="sub-txt">Listing Type</span></td>
+          <td class="field-value" style="width:28%;">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> বিক্রয় (Sale)</span>
+              <span class="opt"><span class="sq"></span> ভাড়া / লিজ (Rent/Lease)</span>
+            </div>
+          </td>
+          <td class="field-label" style="width:20%;">লিস্টিং অবস্থা<br><span class="sub-txt">Lifecycle Status</span></td>
+          <td class="field-value">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> ড্রাফট (Draft)</span>
+              <span class="opt"><span class="sq"></span> যাচাই চলছে (Review)</span>
+              <span class="opt"><span class="sq"></span> সক্রিয় (Active)</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">প্রধান আকর্ষণ / স্লোগান<br><span class="sub-txt">Headline / Tagline</span></td>
+          <td class="field-value" colspan="3">
+            <span class="fill-line-lg"></span>
+            <span class="sub-txt">(যেমন: ৬০ ফুট প্রশস্ত রাস্তার উপর কর্নার প্লট, নিরিবিলি পরিবেশ, তাৎক্ষণিক হস্তান্তরের উপযোগী)</span>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- SECTION 2: LOCATION -->
+    <div class="sec">
+      <div class="sec-header">
+        <span>২. অবস্থান ও আঞ্চলিক তথ্য (Location & Geographic Mapping)</span>
+        <span class="sec-sub">ঠিকানা ও ম্যাপ</span>
+      </div>
+      <table class="form-table">
+        <tr>
+          <td class="field-label">বিভাগ<br><span class="sub-txt">Division / State</span></td>
+          <td class="field-value">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> ঢাকা</span>
+              <span class="opt"><span class="sq"></span> চট্টগ্রাম</span>
+              <span class="opt"><span class="sq"></span> সিলেট</span>
+              <span class="opt"><span class="sq"></span> রাজশাহী</span>
+              <span class="opt"><span class="sq"></span> খুলনা</span>
+              <span class="opt"><span class="sq"></span> বরিশাল</span>
+              <span class="opt"><span class="sq"></span> রংপুর</span>
+              <span class="opt"><span class="sq"></span> ময়মনসিংহ</span>
+            </div>
+          </td>
+          <td class="field-label">জেলা / শহর<br><span class="sub-txt">District / City</span></td>
+          <td class="field-value"><span class="fill-line" style="width:100%;"></span></td>
+        </tr>
+        <tr>
+          <td class="field-label">এলাকা / নেইবারহুড<br><span class="sub-txt">Area / Neighborhood</span></td>
+          <td class="field-value"><span class="fill-line" style="width:100%;"></span><span class="sub-txt">(যেমন: গুলশান-২, বসুন্ধরা আ/এ, পূর্বাচল ১৭ নং সেক্টর, মিরপুর ডিওএইচএস)</span></td>
+          <td class="field-label">থানা ও পোস্ট কোড<br><span class="sub-txt">Thana & Post Code</span></td>
+          <td class="field-value"><span class="fill-line" style="width:100%;"></span></td>
+        </tr>
+        <tr>
+          <td class="field-label">বিজ্ঞাপনের সাধারণ ঠিকানা<br><span class="sub-txt">Public Display Address</span></td>
+          <td class="field-value" colspan="3">
+            <span class="fill-line" style="width:100%;"></span>
+            <span class="sub-txt">(ক্রেতাদের জন্য প্রদর্শিত এলাকা ও রোডের নাম; বাড়ি/প্লট নম্বর এখানে লিখবেন না)</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label" style="background:#fef2f2; color:#991b1b;">পূর্ণ ঠিকানা (গোপনীয়)<br><span class="sub-txt" style="color:#b91c1c;">Full Exact Address (Confidential)</span></td>
+          <td class="field-value" colspan="3" style="background:#fffafa;">
+            <span class="fill-line" style="width:100%; border-bottom-color:#ef4444;"></span>
+            <span class="sub-txt">প্লট/হোল্ডিং নং, রোড নং, ব্লক/সেক্টর, বিস্তারিত ল্যান্ডমার্ক (শুধুমাত্র GBREL যাচাই টিম সরেজমিনে পরিদর্শনের জন্য ব্যবহার করবে)</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">ম্যাপ স্থানাঙ্ক (ঐচ্ছিক)<br><span class="sub-txt">GPS Latitude & Longitude</span></td>
+          <td class="field-value">Latitude (অক্ষাংশ): <span class="fill-line" style="width:80px;"></span></td>
+          <td class="field-value" colspan="2">Longitude (দ্রাঘিমাংশ): <span class="fill-line" style="width:80px;"></span></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- SECTION 3: LAND & SURVEY DETAILS -->
+    <div class="sec">
+      <div class="sec-header">
+        <span>৩. মৌজা, জরিপ রেকর্ড ও জমির পরিমাপ (Cadastral Survey & Land Specs)</span>
+        <span class="sec-sub">ভূমি রেকর্ড</span>
+      </div>
+      <table class="form-table">
+        <tr>
+          <td class="field-label">মৌজা ও জে.এল. নং<br><span class="sub-txt">Mouza & J.L. No.</span></td>
+          <td class="field-value">মৌজা: <span class="fill-line" style="width:90px;"></span> জে.এল: <span class="fill-line" style="width:50px;"></span></td>
+          <td class="field-label">জমির অনুমোদিত ব্যবহার<br><span class="sub-txt">Declared Land Use</span></td>
+          <td class="field-value">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> আবাসিক</span>
+              <span class="opt"><span class="sq"></span> বাণিজ্যিক</span>
+              <span class="opt"><span class="sq"></span> মিশ্র</span>
+              <span class="opt"><span class="sq"></span> কৃষি</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">দাগ নম্বরসমূহ<br><span class="sub-txt">Dag Numbers</span></td>
+          <td class="field-value" colspan="3">
+            সিএস (CS): <span class="fill-line" style="width:60px;"></span> &nbsp;|&nbsp;
+            এসএ (SA): <span class="fill-line" style="width:60px;"></span> &nbsp;|&nbsp;
+            আরএস (RS): <span class="fill-line" style="width:60px;"></span> &nbsp;|&nbsp;
+            বিএস / সিটি জরিপ: <span class="fill-line" style="width:80px;"></span>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">খতিয়ান নম্বরসমূহ<br><span class="sub-txt">Khatian Numbers</span></td>
+          <td class="field-value" colspan="3">
+            সিএস: <span class="fill-line" style="width:50px;"></span> &nbsp;|&nbsp;
+            এসএ: <span class="fill-line" style="width:50px;"></span> &nbsp;|&nbsp;
+            আরএস: <span class="fill-line" style="width:50px;"></span> &nbsp;|&nbsp;
+            বিএস / সিটি: <span class="fill-line" style="width:60px;"></span> &nbsp;|&nbsp;
+            <strong>নামজারি খতিয়ান:</strong> <span class="fill-line" style="width:70px;"></span>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">জমির পরিমাণ ও একক<br><span class="sub-txt">Land Size & Unit</span></td>
+          <td class="field-value">
+            পরিমাণ: <span class="fill-line" style="width:60px;"></span>
+            <span class="options-row" style="margin-top:2px;">
+              <span class="opt"><span class="sq"></span> কাঠা</span>
+              <span class="opt"><span class="sq"></span> শতাংশ/শতক</span>
+              <span class="opt"><span class="sq"></span> বিঘা</span>
+              <span class="opt"><span class="sq"></span> বর্গফুট</span>
+            </span>
+          </td>
+          <td class="field-label">রাস্তা ও কর্নার প্লট<br><span class="sub-txt">Road & Corner</span></td>
+          <td class="field-value">
+            সামনের রাস্তা: <span class="fill-line" style="width:45px;"></span> ফুট &nbsp;|&nbsp;
+            কর্নার প্লট: <span class="opt"><span class="sq"></span> হ্যাঁ</span> <span class="opt"><span class="sq"></span> না</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">বর্তমান স্থাপনা / অবস্থা<br><span class="sub-txt">Existing Structure</span></td>
+          <td class="field-value" colspan="3">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> খালি জমি (Vacant)</span>
+              <span class="opt"><span class="sq"></span> বাউন্ডারি ওয়াল করা</span>
+              <span class="opt"><span class="sq"></span> টিনশেড ঘর</span>
+              <span class="opt"><span class="sq"></span> পাকা ভবন (তলার সংখ্যা: <span class="fill-line" style="width:35px;"></span>)</span>
+              <span class="opt"><span class="sq"></span> অন্যান্য: <span class="fill-line" style="width:70px;"></span></span>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="page-footer">
+      <span>গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL) | কর্পোরেট কার্যালয়: মিরপুর ১২, ডিওএইচএস, ঢাকা-১২১৬ | হটলাইন: ০১৮৩১-৫১২৯১০</span>
+      <span>পৃষ্ঠা ১ / ৪</span>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 2 ==================== -->
+  <div class="page-break"></div>
+  <div>
+    <!-- PAGE 2 HEADER -->
+    <header class="header">
+      <div class="brand-left">
+        <div class="brand-mini-header">
+          <img src="logo-mark.png" alt="GBREL" class="brand-mini-logo" />
+          <div>
+            <div class="company-title-bn">গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL)</div>
+            <div class="company-meta"><strong>কর্পোরেট কার্যালয়:</strong> মিরপুর ১২, ডিওএইচএস এভিনিউ ৬, রোড ৭, বাড়ি ৪৬১, ঢাকা-১২১৬ | <strong>ফোন:</strong> ০১৮৩১-৫১২৯১০</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-badge-box">
+        <div class="form-title-bn">মালিকানা ও আর্থিক শর্ত</div>
+        <div class="tracking-grid">
+          <span class="lbl">Form No:</span><span class="box"></span>
+          <span class="lbl">Date:</span><span class="box"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- SECTION 4: ARCHITECTURAL SPECS (FLATS/BUILDINGS) -->
+    <div class="sec">
+      <div class="sec-header">
+        <span>৪. ফ্ল্যাট ও ভবনের স্থাপত্য ও কাঠামোগত বিবরণ (Architectural & Physical Specs)</span>
+        <span class="sec-sub">ফ্ল্যাট/ভবনের ক্ষেত্রে প্রযোজ্য</span>
+      </div>
+      <table class="form-table">
+        <tr>
+          <td class="field-label">আয়তন (বর্গফুট)<br><span class="sub-txt">Square Footage</span></td>
+          <td class="field-value"><span class="fill-line" style="width:80px;"></span> বর্গফুট (Sq. Ft.)</td>
+          <td class="field-label">তলা সংক্রান্ত তথ্য<br><span class="sub-txt">Floor Specs</span></td>
+          <td class="field-value">নির্দিষ্ট তলা: <span class="fill-line" style="width:40px;"></span> &nbsp;|&nbsp; ভবনের মোট তলা: <span class="fill-line" style="width:40px;"></span></td>
+        </tr>
+        <tr>
+          <td class="field-label">রুমের বিন্যাস<br><span class="sub-txt">Room Layout</span></td>
+          <td class="field-value">
+            বেডরুম: <span class="fill-line" style="width:30px;"></span> &nbsp;|&nbsp;
+            বাথরুম: <span class="fill-line" style="width:30px;"></span> &nbsp;|&nbsp;
+            বারান্দা: <span class="fill-line" style="width:30px;"></span>
+          </td>
+          <td class="field-label">পার্কিং ও ড্রাইভওয়ে<br><span class="sub-txt">Car Parking</span></td>
+          <td class="field-value">পার্কিং সংখ্যা: <span class="fill-line" style="width:40px;"></span> টি গাড়ি</td>
+        </tr>
+        <tr>
+          <td class="field-label">ভবনের অভিমুখ<br><span class="sub-txt">Facing Direction</span></td>
+          <td class="field-value">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> দক্ষিণ</span>
+              <span class="opt"><span class="sq"></span> উত্তর</span>
+              <span class="opt"><span class="sq"></span> পূর্ব</span>
+              <span class="opt"><span class="sq"></span> পশ্চিম</span>
+              <span class="opt"><span class="sq"></span> দক্ষিণ-পূর্ব</span>
+              <span class="opt"><span class="sq"></span> উত্তর-পূর্ব</span>
+            </div>
+          </td>
+          <td class="field-label">সমাপ্তির অবস্থা<br><span class="sub-txt">Completion Status</span></td>
+          <td class="field-value">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> রেডি (Ready)</span>
+              <span class="opt"><span class="sq"></span> নির্মাণাধীন</span>
+              <span class="opt"><span class="sq"></span> আসন্ন প্রকল্প</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">হস্তান্তর / নির্মাণের বছর<br><span class="sub-txt">Year Built / Handover</span></td>
+          <td class="field-value">সাল: <span class="fill-line" style="width:60px;"></span> (যেমন: ২০২৪)</td>
+          <td class="field-label">প্ল্যান অনুমোদন<br><span class="sub-txt">Plan Approval</span></td>
+          <td class="field-value">
+            <span class="opt"><span class="sq"></span> রাজউক / সিডিএ অনুমোদিত</span>
+            <span class="opt"><span class="sq"></span> ইউনিয়ন পরিষদ</span>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- SECTION 5: LEGAL TITLE & OWNERSHIP VETTING -->
+    <div class="sec">
+      <div class="sec-header">
+        <span>৫. মালিকানা, দখল ও আইনি যাচাই প্রশ্নমালা (Legal Title & Ownership Vetting)</span>
+        <span class="sec-sub">আইনি সত্যতা যাচাই</span>
+      </div>
+      <table class="form-table">
+        <tr>
+          <td class="field-label">জমা প্রদানকারীর পরিচয়<br><span class="sub-txt">Submitter Role</span></td>
+          <td class="field-value" colspan="3">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> আমি মূল মালিক (Owner)</span>
+              <span class="opt"><span class="sq"></span> আমি অংশীদার মালিক (Co-owner)</span>
+              <span class="opt"><span class="sq"></span> মালিকের নিযুক্ত প্রতিনিধি / আমমোক্তার (Authorized Representative)</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">মালিকের সংখ্যা ও সম্মতি<br><span class="sub-txt">Owners & Agreement</span></td>
+          <td class="field-value">
+            মোট অংশীদার/মালিক: <span class="fill-line" style="width:40px;"></span> জন
+          </td>
+          <td class="field-label">সকল মালিক বিক্রিতে রাজি?<br><span class="sub-txt">All Owners Agree?</span></td>
+          <td class="field-value">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> হ্যাঁ, সবাই রাজি</span>
+              <span class="opt"><span class="sq"></span> না</span>
+              <span class="opt"><span class="sq"></span> নিশ্চিত নই</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">মালিকানার সূত্র<br><span class="sub-txt">Ownership Source</span></td>
+          <td class="field-value" colspan="3">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> ক্রয়সূত্রে (সাফ কবলা)</span>
+              <span class="opt"><span class="sq"></span> ওয়ারিশ / উত্তরাধিকার সূত্রে</span>
+              <span class="opt"><span class="sq"></span> সরকারি বরাদ্দ (রাজউক/সিডিএ/গৃহায়ন)</span>
+              <span class="opt"><span class="sq"></span> হেবা / দান সূত্রে</span>
+              <span class="opt"><span class="sq"></span> বণ্টননামা বা অন্যান্য: <span class="fill-line" style="width:80px;"></span></span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">বর্তমান দখলদারিত্ব<br><span class="sub-txt">Physical Possession</span></td>
+          <td class="field-value">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> মালিকের দখলে</span>
+              <span class="opt"><span class="sq"></span> ভাড়াটিয়ার দখলে</span>
+              <span class="opt"><span class="sq"></span> খালি</span>
+              <span class="opt"><span class="sq"></span> অন্যান্য</span>
+            </div>
+          </td>
+          <td class="field-label">নামজারির অবস্থা<br><span class="sub-txt">Mutation Status</span></td>
+          <td class="field-value">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> নামজারি হয়েছে (Done)</span>
+              <span class="opt"><span class="sq"></span> প্রক্রিয়াগত (Pending)</span>
+              <span class="opt"><span class="sq"></span> হয়নি (Not done)</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">খাজনা পরিশোধের সাল<br><span class="sub-txt">Tax Paid Through</span></td>
+          <td class="field-value">
+            সর্বশেষ পরিশোধিত সাল: <span class="fill-line" style="width:85px;"></span> (বাংলা সন)
+          </td>
+          <td class="field-label">ব্যাংক ঋণ বা বন্ধক<br><span class="sub-txt">Bank Loan / Mortgage</span></td>
+          <td class="field-value">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> ঋণ নেই (None)</span>
+              <span class="opt"><span class="sq"></span> ঋণ আছে (Exists): ব্যাংক: <span class="fill-line" style="width:65px;"></span></span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">অন্য পক্ষের সঙ্গে বায়না চুক্তি<br><span class="sub-txt">Existing Bayna Agreement</span></td>
+          <td class="field-value">
+            <span class="opt"><span class="sq"></span> অন্য কারও সঙ্গে বায়না নেই</span>
+            <span class="opt"><span class="sq"></span> পূর্বে বায়না করা আছে</span>
+          </td>
+          <td class="field-label">মামলা বা সীমানা বিরোধ<br><span class="sub-txt">Court Case / Dispute</span></td>
+          <td class="field-value">
+            <span class="opt"><span class="sq"></span> কোনো মামলা নেই</span>
+            <span class="opt"><span class="sq"></span> মামলা বা বিরোধ আছে</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">বিরোধ সংক্রান্ত নোট (যদি থাকে)<br><span class="sub-txt">Dispute Details (if any)</span></td>
+          <td class="field-value" colspan="3">
+            <span class="fill-line-lg"></span>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- SECTION 6: COMMERCIAL TERMS & VALUATION -->
+    <div class="sec">
+      <div class="sec-header">
+        <span>৬. প্রত্যাশিত মূল্য, বাণিজ্যিক শর্ত ও পেমেন্ট কাঠামো (Commercial Terms, Valuation & Payment)</span>
+        <span class="sec-sub">মূল্য ও বায়না</span>
+      </div>
+      <table class="form-table">
+        <tr>
+          <td class="field-label">দামের ভিত্তি<br><span class="sub-txt">Price Quoting Basis</span></td>
+          <td class="field-value" colspan="3">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> সম্পূর্ণ প্রপার্টির মোট দাম (Total Price)</span>
+              <span class="opt"><span class="sq"></span> প্রতি একক (কাঠা/শতক প্রতি)</span>
+              <span class="opt"><span class="sq"></span> প্রতি বর্গফুট (Per Sq. Ft.)</span>
+              <span class="opt"><span class="sq"></span> প্রতি শেয়ার (Per Share)</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">প্রত্যাশিত বিক্রয়মূল্য (টাকা)<br><span class="sub-txt">Expected Asking Price</span></td>
+          <td class="field-value">
+            <strong>টাকা:</strong> <span class="fill-line" style="width:130px;"></span> ৳
+          </td>
+          <td class="field-label">দরদাম আলোচনা সাপেক্ষ?<br><span class="sub-txt">Price Negotiable?</span></td>
+          <td class="field-value">
+            <span class="opt"><span class="sq"></span> হ্যাঁ, আলোচনা সাপেক্ষ</span>
+            <span class="opt"><span class="sq"></span> না, স্থির মূল্য (Fixed)</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">প্রস্তাবিত বায়না (অ্যাডভান্স)<br><span class="sub-txt">Proposed Bayna %</span></td>
+          <td class="field-value">
+            বায়না: <span class="fill-line" style="width:40px;"></span> % &nbsp;|&nbsp; চুক্তির মেয়াদ: <span class="fill-line" style="width:40px;"></span> দিন
+          </td>
+          <td class="field-label">প্রস্তাবিত দলিল রেজিস্ট্রি মূল্য<br><span class="sub-txt">Proposed Deed Value</span></td>
+          <td class="field-value">
+            টাকা: <span class="fill-line" style="width:100px;"></span> ৳ (যদি প্রযোজ্য হয়)
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">মূল্যের অন্তর্ভুক্ত বিষয়াদি<br><span class="sub-txt">Price Inclusions</span></td>
+          <td class="field-value" colspan="3">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> বর্তমান ভবন সহ</span>
+              <span class="opt"><span class="sq"></span> ইউটিলিটি চার্জ সহ</span>
+              <span class="opt"><span class="sq"></span> পার্কিং স্পেস সহ</span>
+              <span class="opt"><span class="sq"></span> রেজিস্ট্রেশন খরচ ক্রেতার</span>
+              <span class="opt"><span class="sq"></span> উৎস কর (AIT) বিক্রেতার</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">বিক্রির প্রত্যাশিত সময়সীমা<br><span class="sub-txt">Sell Timeline</span></td>
+          <td class="field-value">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> ১ মাসের মধ্যে</span>
+              <span class="opt"><span class="sq"></span> ১–৩ মাস</span>
+              <span class="opt"><span class="sq"></span> ৩–৬ মাস</span>
+              <span class="opt"><span class="sq"></span> কোনো তাড়া নেই</span>
+            </div>
+          </td>
+          <td class="field-label">যোগাযোগের উপযুক্ত সময়<br><span class="sub-txt">Best Time to Call</span></td>
+          <td class="field-value"><span class="fill-line" style="width:100%;"></span></td>
+        </tr>
+        <tr>
+          <td class="field-label">GBREL সার্ভিস চার্জ<br><span class="sub-txt">Service Fee Mandate</span></td>
+          <td class="field-value" colspan="3" style="background:#f0fdf4;">
+            <strong>বিক্রয়মূল্যের ২% (2.0%) সার্ভিস চার্জ:</strong> কেবলমাত্র চূড়ান্ত রেজিস্ট্রি ও সফল বিক্রয় সম্পন্ন হওয়ার পর এই চার্জ পরিশোধযোগ্য। পূর্বে কোনো ফি নেই।
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="page-footer">
+      <span>গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL) | কর্পোরেট কার্যালয়: মিরপুর ১২, ডিওএইচএস, ঢাকা-১২১৬ | হটলাইন: ০১৮৩১-৫১২৯১০</span>
+      <span>পৃষ্ঠা ২ / ৪</span>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 3 ==================== -->
+  <div class="page-break"></div>
+  <div>
+    <!-- PAGE 3 HEADER -->
+    <header class="header">
+      <div class="brand-left">
+        <div class="brand-mini-header">
+          <img src="logo-mark.png" alt="GBREL" class="brand-mini-logo" />
+          <div>
+            <div class="company-title-bn">গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL)</div>
+            <div class="company-meta"><strong>কর্পোরেট কার্যালয়:</strong> মিরপুর ১২, ডিওএইচএস এভিনিউ ৬, রোড ৭, বাড়ি ৪৬১, ঢাকা-১২১৬ | <strong>ফোন:</strong> ০১৮৩১-৫১২৯১০</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-badge-box">
+        <div class="form-title-bn">কাগজপত্র ও সুযোগ-সুবিধা</div>
+        <div class="tracking-grid">
+          <span class="lbl">Form No:</span><span class="box"></span>
+          <span class="lbl">Date:</span><span class="box"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- SECTION 7: DOCUMENT CHECKLIST -->
+    <div class="sec">
+      <div class="sec-header">
+        <span>৭. যাচাইয়ের প্রয়োজনীয় কাগজপত্রের চেকলিস্ট (Legal Document Submission Checklist)</span>
+        <span class="sec-sub">দলিল ও নথির কপি</span>
+      </div>
+      <table class="doc-table">
+        <thead>
+          <tr>
+            <th style="width:28px; text-align:center;">জমা</th>
+            <th style="width:23%;">কাগজের বিবরণ (Document Type)</th>
+            <th>ব্যাখ্যা ও বিবরণ (Description & Instructions)</th>
+            <th style="width:68px; text-align:center;">প্রয়োজনীয়তা</th>
+            <th style="width:85px; text-align:center;">যাচাই স্ট্যাটাস</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:center;"><span class="sq"></span></td>
+            <td><strong>মূল দলিল (Original Deed)</strong></td>
+            <td>সাফ কবলা, হেবা বা বণ্টননামা — যে দলিলের মাধ্যমে বর্তমান মালিকানা অর্জিত হয়েছে</td>
+            <td style="text-align:center;"><span class="badge-req">অবশ্যই লাগবে</span></td>
+            <td style="text-align:center;">[ ] Valid &nbsp; [ ] Pend</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><span class="sq"></span></td>
+            <td><strong>বায়া দলিলসমূহ (Bia Deeds)</strong></td>
+            <td>আগের ধারাবাহিক মালিকদের ঐতিহাসিক দলিলের অনুলিপি (Chain of Title)</td>
+            <td style="text-align:center;"><span class="badge-opt">প্রযোজ্য হলে</span></td>
+            <td style="text-align:center;">[ ] Valid &nbsp; [ ] Pend</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><span class="sq"></span></td>
+            <td><strong>খতিয়ানসমূহ (Khatians)</strong></td>
+            <td>সিএস (CS), এসএ (SA), আরএস (RS), বিএস (BS) ও সিটি জরিপ খতিয়ানের কপি</td>
+            <td style="text-align:center;"><span class="badge-req">অবশ্যই লাগবে</span></td>
+            <td style="text-align:center;">[ ] Valid &nbsp; [ ] Pend</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><span class="sq"></span></td>
+            <td><strong>নামজারি ও ডিসিআর</strong></td>
+            <td>বর্তমান মালিকের নামে হালনাগাদ নামজারি খতিয়ান, ডিসিআর ও প্রস্তাব পত্র</td>
+            <td style="text-align:center;"><span class="badge-req">অবশ্যই লাগবে</span></td>
+            <td style="text-align:center;">[ ] Valid &nbsp; [ ] Pend</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><span class="sq"></span></td>
+            <td><strong>খাজনার দাখিলা (Tax Receipt)</strong></td>
+            <td>চলতি বাংলা সনের হালনাগাদ ভূমি উন্নয়ন কর (খাজনা) পরিশোধের দাখিলা</td>
+            <td style="text-align:center;"><span class="badge-req">অবশ্যই লাগবে</span></td>
+            <td style="text-align:center;">[ ] Valid &nbsp; [ ] Pend</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><span class="sq"></span></td>
+            <td><strong>মালিকদের জাতীয় পরিচয়পত্র</strong></td>
+            <td>দলিলভুক্ত সকল জীবিত মালিকের এনআইডি (NID) কার্ডের স্পষ্ট কপি</td>
+            <td style="text-align:center;"><span class="badge-req">অবশ্যই লাগবে</span></td>
+            <td style="text-align:center;">[ ] Valid &nbsp; [ ] Pend</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><span class="sq"></span></td>
+            <td><strong>ওয়ারিশান সনদ (Warishan)</strong></td>
+            <td>উত্তরাধিকারসূত্রে মালিক হলে স্থানীয় কাউন্সিলর/চেয়ারম্যানের ওয়ারিশ সনদ</td>
+            <td style="text-align:center;"><span class="badge-opt">প্রযোজ্য হলে</span></td>
+            <td style="text-align:center;">[ ] Valid &nbsp; [ ] Pend</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><span class="sq"></span></td>
+            <td><strong>আমমোক্তারনামা (POA)</strong></td>
+            <td>মালিকের প্রতিনিধি বা পাওয়ার অব অ্যাটর্নি প্রাপ্ত ব্যক্তির রেজিস্ট্রিকৃত আমমোক্তারনামা</td>
+            <td style="text-align:center;"><span class="badge-opt">প্রযোজ্য হলে</span></td>
+            <td style="text-align:center;">[ ] Valid &nbsp; [ ] Pend</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><span class="sq"></span></td>
+            <td><strong>মৌজা ম্যাপ / সীমানা নকশা</strong></td>
+            <td>নকশা বা প্রজেক্ট লে-আউটে প্লটের চিহ্নিত ডিমার্কেশন নকশা</td>
+            <td style="text-align:center;"><span class="badge-opt">প্রযোজ্য হলে</span></td>
+            <td style="text-align:center;">[ ] Valid &nbsp; [ ] Pend</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><span class="sq"></span></td>
+            <td><strong>অনুমোদিত নকশা / বরাদ্দপত্র</strong></td>
+            <td>রাজউক/সিডিএ অনুমোদিত ভবনের নকশা অথবা বরাদ্দকৃত প্লটের অফিসিয়াল বরাদ্দপত্র</td>
+            <td style="text-align:center;"><span class="badge-opt">প্রযোজ্য হলে</span></td>
+            <td style="text-align:center;">[ ] Valid &nbsp; [ ] Pend</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><span class="sq"></span></td>
+            <td><strong>ইউটিলিটি বিলের অনুলিপি</strong></td>
+            <td>বিদ্যুৎ, গ্যাস অথবা পানির সাম্প্রতিক বিলের কপি</td>
+            <td style="text-align:center;"><span class="badge-opt">প্রযোজ্য হলে</span></td>
+            <td style="text-align:center;">[ ] Valid &nbsp; [ ] Pend</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><span class="sq"></span></td>
+            <td><strong>অন্যান্য কাগজ / ব্যাংক এনওসি</strong></td>
+            <td>পূর্বে বন্ধক থাকলে ঋণ পরিশোধের অনাপত্তিপত্র বা বিশেষ কাগজপত্র</td>
+            <td style="text-align:center;"><span class="badge-opt">প্রযোজ্য হলে</span></td>
+            <td style="text-align:center;">[ ] Valid &nbsp; [ ] Pend</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 8: MEDIA & AMENITIES -->
+    <div class="sec" style="margin-top:6px;">
+      <div class="sec-header">
+        <span>৮. মিডিয়া, ব্রোশিউর ও বিদ্যমান সুবিধাসমূহ (Media, Amenities & Marketing Materials)</span>
+        <span class="sec-sub">মার্কেটিং উপস্থাপনা</span>
+      </div>
+      <table class="form-table">
+        <tr>
+          <td class="field-label">ফটোগ্রাফি ও ভিডিও<br><span class="sub-txt">Photos & Video</span></td>
+          <td class="field-value" colspan="3">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> মালিক ছবি সরবরাহ করেছেন (সংযুক্তি: <span class="fill-line" style="width:30px;"></span> টি)</span>
+              <span class="opt"><span class="sq"></span> GBREL টিম সরেজমিনে গিয়ে ছবি ও ভিডিও তুলবে</span>
+              <span class="opt"><span class="sq"></span> ড্রোন ফুটেজ প্রয়োজন</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">ভিডিও ওয়াকথ্রু লিংক<br><span class="sub-txt">Walkthrough Video Link</span></td>
+          <td class="field-value" colspan="3">
+            YouTube / Vimeo URL: <span class="fill-line" style="width:320px;"></span>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">সুযোগ-সুবিধাসমূহ<br><span class="sub-txt">Infrastructure & Amenities</span></td>
+          <td class="field-value" colspan="3">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> পাকা রাস্তা (Paved Access)</span>
+              <span class="opt"><span class="sq"></span> বিদ্যুৎ সংযোগ (Electricity)</span>
+              <span class="opt"><span class="sq"></span> গ্যাস সংযোগ (Gas Supply)</span>
+              <span class="opt"><span class="sq"></span> ওয়াসা / গভীর নলকূপ (Water)</span>
+              <span class="opt"><span class="sq"></span> বাউন্ডারি ওয়াল ও গেট</span>
+              <span class="opt"><span class="sq"></span> সার্বক্ষণিক নিরাপত্তা / সিসিটিভি</span>
+              <span class="opt"><span class="sq"></span> জেনারেটর ব্যাকআপ</span>
+              <span class="opt"><span class="sq"></span> লিফট (Elevator)</span>
+              <span class="opt"><span class="sq"></span> ড্রেনেজ সুবিধা</span>
+              <span class="opt"><span class="sq"></span> মসজিদ ও খেলার মাঠ সংলগ্ন</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="field-label">বিস্তারিত বিবরণ<br><span class="sub-txt">Property Description</span></td>
+          <td class="field-value" colspan="3">
+            <span class="fill-line-lg"></span>
+            <span class="fill-line-lg"></span>
+            <span class="sub-txt">(রাস্তা, আশপাশের পরিবেশ, যোগাযোগের সুবিধা ও বিশেষ ইতিবাচক দিকসমূহ)</span>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="page-footer">
+      <span>গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL) | কর্পোরেট কার্যালয়: মিরপুর ১২, ডিওএইচএস, ঢাকা-১২১৬ | হটলাইন: ০১৮৩১-৫১২৯১০</span>
+      <span>পৃষ্ঠা ৩ / ৪</span>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 4 ==================== -->
+  <div class="page-break"></div>
+  <div>
+    <!-- PAGE 4 HEADER -->
+    <header class="header">
+      <div class="brand-left">
+        <div class="brand-mini-header">
+          <img src="logo-mark.png" alt="GBREL" class="brand-mini-logo" />
+          <div>
+            <div class="company-title-bn">গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL)</div>
+            <div class="company-meta"><strong>কর্পোরেট কার্যালয়:</strong> মিরপুর ১২, ডিওএইচএস এভিনিউ ৬, রোড ৭, বাড়ি ৪৬১, ঢাকা-১২১৬ | <strong>ফোন:</strong> ০১৮৩১-৫১২৯১০</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-badge-box">
+        <div class="form-title-bn">চুক্তি ও অফিস অনুমোদন</div>
+        <div class="tracking-grid">
+          <span class="lbl">Form No:</span><span class="box"></span>
+          <span class="lbl">Date:</span><span class="box"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- SECTION 9: PRIVACY & BROKERAGE MANDATE -->
+    <div class="sec">
+      <div class="sec-header">
+        <span>৯. গোপনীয়তা নিয়ন্ত্রণ ও ব্রোকারেজ চুক্তি (Client Privacy & Exclusive Representation Mandate)</span>
+        <span class="sec-sub">শর্তাবলি ও সম্মতি</span>
+      </div>
+
+      <!-- PRIVACY CHECKBOXES -->
+      <table class="form-table" style="margin-bottom:8px;">
+        <tr>
+          <td class="field-label">গোপনীয়তা ফিল্টার<br><span class="sub-txt">Client Privacy Controls</span></td>
+          <td class="field-value">
+            <div class="options-row">
+              <span class="opt"><span class="sq"></span> নির্দিষ্ট প্লট/হোল্ডিং গোপন থাকবে (শুধু এলাকা প্রদর্শিত হবে)</span>
+              <span class="opt"><span class="sq"></span> মূল্য গোপন থাকবে (Price on Application দেখানো হবে)</span>
+              <span class="opt"><span class="sq"></span> ক্রেতার সকল যোগাযোগ GBREL কনসিয়ার্জের মাধ্যমে পরিচালিত হবে</span>
+              <span class="opt"><span class="sq"></span> ফ্লোরপ্ল্যান/নকশা সরাসরি ডাউনলোড বন্ধ থাকবে</span>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- TERMS & CONDITIONS -->
+      <div class="terms-box">
+        <strong>প্রপার্টি লিস্টিং ও বিক্রয় প্রতিনিধিত্বের সাধারণ শর্তাবলি (Terms of Mandate):</strong>
+        <ol>
+          <li><strong>একমাত্র বিপণন ও বিক্রয় প্রতিনিধি:</strong> প্রপার্টিটি বিক্রির জন্য আবেদনকারী GBREL (গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড)-কে একমাত্র বিপণন ও বিক্রয় প্রতিনিধি হিসেবে নিয়োগ দিচ্ছেন।</li>
+          <li><strong>ক্রেতার সাথে যোগাযোগ ও মধ্যস্থতা:</strong> ক্রেতা অনুসন্ধান, প্রপার্টি প্রদর্শন, দরদাম আলোচনা ও সাইট ভিজিট সম্পূর্ণভাবে GBREL পরিচালনা করবে। মালিক নিজে ক্রেতার সাথে প্রত্যক্ষ কোনো লেনদেন করবেন না।</li>
+          <li><strong>সার্ভিস চার্জ:</strong> বিক্রয় সফলভাবে সম্পন্ন ও রেজিস্ট্রি হওয়ার পর চূড়ান্ত বিক্রয়মূল্যের ২% (দুই শতাংশ) GBREL-এর সার্ভিস চার্জ হিসেবে প্রদান করা হবে। বিক্রি না হলে কোনো সার্ভিস চার্জ প্রযোজ্য নয়।</li>
+          <li><strong>তথ্যের সত্যতা ও দায়:</strong> ফর্মে প্রদত্ত সকল তথ্য এবং দাখিলকৃত নথিপত্র সম্পূর্ণ সত্য ও সঠিক। কোনো ভুল, গোপন বা বিভ্রান্তিকর তথ্যের কারণে উদ্ভূত আইনি জটিলতার দায় আবেদনকারীর।</li>
+          <li><strong>আইনি যাচাই ও প্রকাশ:</strong> দাখিলকৃত কাগজপত্র GBREL-এর লিগ্যাল টিম কর্তৃক সন্তোষজনকভাবে যাচাই ও লিখিত চুক্তি স্বাক্ষরের পূর্বে প্রপার্টিটি সর্বসাধারণের জন্য প্রকাশ করা হবে না।</li>
+        </ol>
+      </div>
+
+      <!-- SIGNATURE SECTION -->
+      <table class="sig-table">
+        <tr>
+          <td>
+            <div class="sig-title">আবেদনকারী / প্রপার্টি মালিকের ঘোষণা ও সম্মতি</div>
+            <div class="sig-meta">
+              "আমি ঘোষণা করছি যে, উপরে বর্ণিত সকল বিবরণ সত্য এবং আমি GBREL-এর সকল শর্তাবলি পড়ে বুঝে সম্মতি জ্ঞাপন করছি।"<br><br><br>
+              <strong>মালিক/আবেদনকারীর স্বাক্ষর:</strong> ................................................................<br>
+              <strong>পূর্ণ নাম:</strong> <span class="fill-line" style="width:180px;"></span><br>
+              <strong>এনআইডি (NID) নম্বর:</strong> <span class="fill-line" style="width:160px;"></span><br>
+              <strong>মোবাইল নম্বর:</strong> <span class="fill-line" style="width:170px;"></span><br>
+              <strong>তারিখ:</strong> ........................................................
+            </div>
+          </td>
+          <td>
+            <div class="sig-title">GBREL অফিস ব্যবহারের জন্য (For Official Use Only)</div>
+            <div class="sig-meta">
+              <strong>প্রাপ্তির তারিখ:</strong> <span class="fill-line" style="width:105px;"></span> &nbsp;|&nbsp; <strong>রিসিপ্ট নং:</strong> <span class="fill-line" style="width:85px;"></span><br>
+              <strong>দায়িত্বপ্রাপ্ত অ্যাডভাইজার:</strong> <span class="fill-line" style="width:150px;"></span><br>
+              <strong>কাগজপত্র যাচাইয়ের অবস্থা:</strong><br>
+              <span class="opt"><span class="sq"></span> সকল আবশ্যক কাগজ প্রাপ্ত ও সঠিক</span><br>
+              <span class="opt"><span class="sq"></span> অসম্পূর্ণ / অতিরিক্ত কাগজ চাওয়া হয়েছে</span><br><br>
+              <strong>লিগ্যাল ভেরিফিকেশন অফিসার:</strong> .................................................<br>
+              <strong>অনুমোদনকারীর স্বাক্ষর ও সিল:</strong> ...............................................
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- OFFICE AUDIT FOOTER -->
+      <div class="office-box">
+        <div class="office-title">
+          <span>চূড়ান্ত যাচাই ও অনুমোদন রেকর্ড (Final Vetting Record)</span>
+          <span>GBREL Internal Audit Tracking</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:7.2pt; color:#334155;">
+          <span><strong>রাজউক/সিডিএ ক্লিয়ারেন্স:</strong> [ ] হ্যাঁ &nbsp; [ ] প্রযোজ্য নয়</span>
+          <span><strong>সাইট ভিজিট রিপোর্ট:</strong> [ ] সম্পন্ন (তারিখ: ....................)</span>
+          <span><strong>অনুমোদিত লিস্টিং মূল্য:</strong> .................................... ৳</span>
+          <span><strong>ওয়েবসাইট প্রকাশের তারিখ:</strong> ....................................</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL) | কর্পোরেট কার্যালয়: মিরপুর ১২, ডিওএইচএস, ঢাকা-১২১৬ | হটলাইন: ০১৮৩১-৫১২৯১০</span>
+      <span>পৃষ্ঠা ৪ / ৪</span>
+    </div>
+  </div>
+
+</body>
+</html>

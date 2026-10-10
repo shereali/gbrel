@@ -13,6 +13,8 @@ class SiteSettings
     /** Registered office, as printed on the DSCC trade licence. */
     public const OFFICE_ADDRESS = 'স্বজন টাওয়ার-১, রুম ২০১ (২য় তলা), ৪ সেগুন বাগিচা, ঢাকা-১০০০';
 
+    public const CORPORATE_OFFICE_ADDRESS = 'House 461, Road No. 7, Avenue 6, DOHS, Mirpur 12, Dhaka 1216';
+
     /**
      * @return array<string, array{default: mixed, rules: list<mixed>}>
      */
@@ -21,9 +23,10 @@ class SiteSettings
         return [
             'site_name' => ['default' => 'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড', 'rules' => ['nullable', 'string', 'max:150']],
             'site_title' => ['default' => 'গ্রাম বাংলা রিয়েল এস্টেট | জমি, প্লট ও ফ্ল্যাট — GBREL', 'rules' => ['nullable', 'string', 'max:200']],
-            'contact_phone' => ['default' => '', 'rules' => ['nullable', 'string', 'max:40']],
-            'whatsapp_number' => ['default' => '', 'rules' => ['nullable', 'string', 'max:40']],
+            'contact_phone' => ['default' => '01831512910', 'rules' => ['nullable', 'string', 'max:40']],
+            'whatsapp_number' => ['default' => '01831512910', 'rules' => ['nullable', 'string', 'max:40']],
             'contact_email' => ['default' => '', 'rules' => ['nullable', 'email', 'max:150']],
+            'corporate_office_address' => ['default' => self::CORPORATE_OFFICE_ADDRESS, 'rules' => ['nullable', 'string', 'max:300']],
             'office_address' => ['default' => self::OFFICE_ADDRESS, 'rules' => ['nullable', 'string', 'max:300']],
             'map_location' => ['default' => 'Swajan Tower, 4 Segun Bagicha, Dhaka 1000', 'rules' => ['nullable', 'string', 'max:200']],
             'company_registration_no' => ['default' => 'C-185751/2022', 'rules' => ['nullable', 'string', 'max:60']],

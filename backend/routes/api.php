@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BookDownloadController;
 use App\Http\Controllers\LeadAnswersController;
 use App\Http\Controllers\LeadCrmController;
 use App\Http\Controllers\LeadJourneyController;
@@ -32,6 +33,7 @@ use App\Models\Setting;
 use App\Models\TransactionType;
 use App\Models\User;
 use App\Models\Viewing;
+use App\Support\LaunchListings;
 use App\Support\PhoneNumber;
 use App\Support\PropertyBuyerDetails;
 use App\Support\SiteSettings;
@@ -65,13 +67,13 @@ Route::get('/diag', function () {
         $status = 'unknown';
         $error = null;
         try {
-            $pdo = new \PDO("mysql:host={$h};port={$port};dbname={$db}", $user, $pass, [
-                \PDO::ATTR_TIMEOUT => 1,
-                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+            $pdo = new PDO("mysql:host={$h};port={$port};dbname={$db}", $user, $pass, [
+                PDO::ATTR_TIMEOUT => 1,
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             ]);
             $pdo->query('SELECT 1');
             $status = 'connected';
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $status = 'failed';
             $error = $e->getMessage();
         }
@@ -254,149 +256,149 @@ Route::post('/auth/check-permission', function (Request $request) {
 
 // Helper: Dynamically Normalize incoming Property data (supports any camelCase or snake_case, schema-aware)
 if (! function_exists('normalizePropertyData')) {
-function normalizePropertyData(array $input, bool $isCreate = true, ?int $existingId = null): array
-{
-    // 1. Dynamic Key Case Mapping (automatically maps any camelCase to snake_case)
-    $data = [];
-    $customAliases = [
-        'lat' => 'latitude',
-        'lng' => 'longitude',
-        'image_url' => 'feature_image',
-        'cover_image' => 'feature_image',
-        'photos' => 'gallery',
-        'gallery_photos' => 'gallery',
-        'brochure' => 'brochure_url',
-        'brochure_file' => 'brochure_url',
-    ];
+    function normalizePropertyData(array $input, bool $isCreate = true, ?int $existingId = null): array
+    {
+        // 1. Dynamic Key Case Mapping (automatically maps any camelCase to snake_case)
+        $data = [];
+        $customAliases = [
+            'lat' => 'latitude',
+            'lng' => 'longitude',
+            'image_url' => 'feature_image',
+            'cover_image' => 'feature_image',
+            'photos' => 'gallery',
+            'gallery_photos' => 'gallery',
+            'brochure' => 'brochure_url',
+            'brochure_file' => 'brochure_url',
+        ];
 
-    foreach ($input as $rawKey => $value) {
-        $snakeKey = Str::snake($rawKey);
-        $finalKey = $customAliases[$snakeKey] ?? $snakeKey;
-        $data[$finalKey] = $value;
-    }
+        foreach ($input as $rawKey => $value) {
+            $snakeKey = Str::snake($rawKey);
+            $finalKey = $customAliases[$snakeKey] ?? $snakeKey;
+            $data[$finalKey] = $value;
+        }
 
-    if (array_key_exists('buyer_details', $data)) {
-        $data['buyer_details'] = PropertyBuyerDetails::validate($data['buyer_details']);
-    }
+        if (array_key_exists('buyer_details', $data)) {
+            $data['buyer_details'] = PropertyBuyerDetails::validate($data['buyer_details']);
+        }
 
-    // Video: only our own uploads or YouTube / Facebook / Vimeo links; the cover choice falls back to photos.
-    if (array_key_exists('video_url', $data)) {
-        $data['video_url'] = VideoLink::parse(is_string($data['video_url']) ? $data['video_url'] : null) ? trim($data['video_url']) : null;
-    }
-    if (array_key_exists('video_poster', $data)) {
-        $poster = is_string($data['video_poster']) ? trim($data['video_poster']) : '';
-        $data['video_poster'] = $poster !== '' && VideoLink::isPoster($poster) ? $poster : null;
-    }
-    if (array_key_exists('cover_media', $data)) {
-        $data['cover_media'] = $data['cover_media'] === 'video' ? 'video' : 'image';
-    }
+        // Video: only our own uploads or YouTube / Facebook / Vimeo links; the cover choice falls back to photos.
+        if (array_key_exists('video_url', $data)) {
+            $data['video_url'] = VideoLink::parse(is_string($data['video_url']) ? $data['video_url'] : null) ? trim($data['video_url']) : null;
+        }
+        if (array_key_exists('video_poster', $data)) {
+            $poster = is_string($data['video_poster']) ? trim($data['video_poster']) : '';
+            $data['video_poster'] = $poster !== '' && VideoLink::isPoster($poster) ? $poster : null;
+        }
+        if (array_key_exists('cover_media', $data)) {
+            $data['cover_media'] = $data['cover_media'] === 'video' ? 'video' : 'image';
+        }
 
-    // 2. Dynamic Image Pipeline (Feature image & Gallery aggregation)
-    $featureImage = $data['feature_image'] ?? $input['featureImage'] ?? $input['imageUrl'] ?? null;
-    $gallery = $data['gallery'] ?? $input['gallery'] ?? $input['galleryImages'] ?? [];
+        // 2. Dynamic Image Pipeline (Feature image & Gallery aggregation)
+        $featureImage = $data['feature_image'] ?? $input['featureImage'] ?? $input['imageUrl'] ?? null;
+        $gallery = $data['gallery'] ?? $input['gallery'] ?? $input['galleryImages'] ?? [];
 
-    if (is_string($gallery)) {
-        $decoded = json_decode($gallery, true);
-        $gallery = is_array($decoded) ? $decoded : array_filter(array_map('trim', explode(',', $gallery)));
-    } elseif (! is_array($gallery)) {
-        $gallery = [];
-    }
+        if (is_string($gallery)) {
+            $decoded = json_decode($gallery, true);
+            $gallery = is_array($decoded) ? $decoded : array_filter(array_map('trim', explode(',', $gallery)));
+        } elseif (! is_array($gallery)) {
+            $gallery = [];
+        }
 
-    $allImages = [];
-    if (! empty($featureImage) && is_string($featureImage)) {
-        $allImages[] = trim($featureImage);
-    }
+        $allImages = [];
+        if (! empty($featureImage) && is_string($featureImage)) {
+            $allImages[] = trim($featureImage);
+        }
 
-    if (! empty($gallery)) {
-        foreach ($gallery as $img) {
-            if (! empty($img) && is_string($img)) {
-                $trimmed = trim($img);
-                if (! in_array($trimmed, $allImages)) {
-                    $allImages[] = $trimmed;
+        if (! empty($gallery)) {
+            foreach ($gallery as $img) {
+                if (! empty($img) && is_string($img)) {
+                    $trimmed = trim($img);
+                    if (! in_array($trimmed, $allImages)) {
+                        $allImages[] = $trimmed;
+                    }
                 }
             }
         }
-    }
 
-    // Fallback if raw images array was passed directly
-    if (empty($allImages) && isset($data['images'])) {
-        if (is_array($data['images'])) {
-            $allImages = array_values(array_filter(array_map('trim', $data['images'])));
-        } elseif (is_string($data['images'])) {
-            $decoded = json_decode($data['images'], true);
-            $allImages = is_array($decoded) ? $decoded : [trim($data['images'])];
-        }
-    }
-
-    if (! empty($allImages)) {
-        $data['images'] = $allImages;
-    }
-
-    // 3. Dynamic Unique Slug Generation
-    if ($isCreate || (! empty($data['title']) && empty($data['slug']))) {
-        if (empty($data['title']) && $isCreate) {
-            $data['title'] = 'Exclusive Mandate #'.rand(100, 999);
-        }
-
-        if (empty($data['slug']) && ! empty($data['title'])) {
-            $baseSlug = Str::slug($data['title']);
-            $slug = $baseSlug;
-            $counter = 1;
-            while (Property::where('slug', $slug)->when($existingId, fn ($q) => $q->where('id', '!=', $existingId))->exists()) {
-                $slug = $baseSlug.'-'.(++$counter);
-            }
-            $data['slug'] = $slug;
-        }
-    }
-
-    // Defaults for mandatory non-null database fields on create
-    if ($isCreate) {
-        if (! isset($data['images']) || empty($data['images'])) {
-            $data['images'] = [];
-        }
-        if (empty($data['address'])) {
-            $data['address'] = 'Prime Enclave, '.($data['area_name'] ?? $data['city'] ?? 'Dhaka');
-        }
-        if (empty($data['area_name'])) {
-            $data['area_name'] = $data['city'] ?? 'Dhaka';
-        }
-        if (empty($data['city'])) {
-            $data['city'] = 'Dhaka';
-        }
-        if (! isset($data['price'])) {
-            $data['price'] = 0;
-        }
-    }
-
-    // 4. Dynamic Type Casting Enforced by Model Casts
-    $casts = (new Property)->getCasts();
-    foreach ($data as $col => $val) {
-        if (! isset($casts[$col]) || $val === null) {
-            continue;
-        }
-        $castType = $casts[$col];
-
-        if ($castType === 'boolean') {
-            $data[$col] = filter_var($val, FILTER_VALIDATE_BOOLEAN);
-        } elseif ($castType === 'integer') {
-            $data[$col] = ($val === '') ? null : (int) $val;
-        } elseif ($castType === 'float' || $castType === 'decimal') {
-            $data[$col] = ($val === '') ? null : (float) $val;
-        } elseif ($castType === 'array' || $castType === 'json') {
-            if (is_string($val)) {
-                $decoded = json_decode($val, true);
-                $data[$col] = is_array($decoded) ? $decoded : array_filter(array_map('trim', explode(',', $val)));
+        // Fallback if raw images array was passed directly
+        if (empty($allImages) && isset($data['images'])) {
+            if (is_array($data['images'])) {
+                $allImages = array_values(array_filter(array_map('trim', $data['images'])));
+            } elseif (is_string($data['images'])) {
+                $decoded = json_decode($data['images'], true);
+                $allImages = is_array($decoded) ? $decoded : [trim($data['images'])];
             }
         }
+
+        if (! empty($allImages)) {
+            $data['images'] = $allImages;
+        }
+
+        // 3. Dynamic Unique Slug Generation
+        if ($isCreate || (! empty($data['title']) && empty($data['slug']))) {
+            if (empty($data['title']) && $isCreate) {
+                $data['title'] = 'Exclusive Mandate #'.rand(100, 999);
+            }
+
+            if (empty($data['slug']) && ! empty($data['title'])) {
+                $baseSlug = Str::slug($data['title']);
+                $slug = $baseSlug;
+                $counter = 1;
+                while (Property::where('slug', $slug)->when($existingId, fn ($q) => $q->where('id', '!=', $existingId))->exists()) {
+                    $slug = $baseSlug.'-'.(++$counter);
+                }
+                $data['slug'] = $slug;
+            }
+        }
+
+        // Defaults for mandatory non-null database fields on create
+        if ($isCreate) {
+            if (! isset($data['images']) || empty($data['images'])) {
+                $data['images'] = [];
+            }
+            if (empty($data['address'])) {
+                $data['address'] = 'Prime Enclave, '.($data['area_name'] ?? $data['city'] ?? 'Dhaka');
+            }
+            if (empty($data['area_name'])) {
+                $data['area_name'] = $data['city'] ?? 'Dhaka';
+            }
+            if (empty($data['city'])) {
+                $data['city'] = 'Dhaka';
+            }
+            if (! isset($data['price'])) {
+                $data['price'] = 0;
+            }
+        }
+
+        // 4. Dynamic Type Casting Enforced by Model Casts
+        $casts = (new Property)->getCasts();
+        foreach ($data as $col => $val) {
+            if (! isset($casts[$col]) || $val === null) {
+                continue;
+            }
+            $castType = $casts[$col];
+
+            if ($castType === 'boolean') {
+                $data[$col] = filter_var($val, FILTER_VALIDATE_BOOLEAN);
+            } elseif ($castType === 'integer') {
+                $data[$col] = ($val === '') ? null : (int) $val;
+            } elseif ($castType === 'float' || $castType === 'decimal') {
+                $data[$col] = ($val === '') ? null : (float) $val;
+            } elseif ($castType === 'array' || $castType === 'json') {
+                if (is_string($val)) {
+                    $decoded = json_decode($val, true);
+                    $data[$col] = is_array($decoded) ? $decoded : array_filter(array_map('trim', explode(',', $val)));
+                }
+            }
+        }
+
+        // 5. Dynamic Schema Column Whitelist
+        $columns = Property::getTableColumns();
+        $readOnly = ['id', 'created_at', 'updated_at', 'feature_image', 'gallery'];
+        $allowed = array_diff($columns, $readOnly);
+
+        return array_intersect_key($data, array_flip($allowed));
     }
-
-    // 5. Dynamic Schema Column Whitelist
-    $columns = Property::getTableColumns();
-    $readOnly = ['id', 'created_at', 'updated_at', 'feature_image', 'gallery'];
-    $allowed = array_diff($columns, $readOnly);
-
-    return array_intersect_key($data, array_flip($allowed));
-}
 }
 
 // 1. Properties API Endpoints (Realtime MySQL Operations)
@@ -507,11 +509,11 @@ Route::get('/properties', function (Request $request) {
             'count' => $properties->count(),
             'data' => $properties,
         ]);
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         Log::error('Error in GET /api/properties: '.$e->getMessage(), ['exception' => $e]);
 
         // Graceful fallback to cached/baseline listings during database initialization
-        $fallback = \App\Support\LaunchListings::getFallbackPayload();
+        $fallback = LaunchListings::getFallbackPayload();
         if (! empty($fallback)) {
             return response()->json([
                 'success' => true,
@@ -538,7 +540,7 @@ Route::get('/properties/{id}', function ($id) {
             : Property::where('slug', $id)->first();
 
         if (! $property) {
-            $fallback = \App\Support\LaunchListings::findFallback($id);
+            $fallback = LaunchListings::findFallback($id);
             if ($fallback) {
                 return response()->json([
                     'success' => true,
@@ -568,9 +570,9 @@ Route::get('/properties/{id}', function ($id) {
             'success' => true,
             'data' => $data,
         ]);
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         Log::warning('Notice in GET /properties/{id}: '.$e->getMessage());
-        $fallback = \App\Support\LaunchListings::findFallback($id);
+        $fallback = LaunchListings::findFallback($id);
         if ($fallback) {
             return response()->json([
                 'success' => true,
@@ -866,7 +868,10 @@ Route::get('/leads', function (Request $request) {
 Route::post('/leads', [PropertyLeadController::class, 'store'])->middleware('throttle:10,1');
 // Later survey answers from the buyer who just sent the form (public; found by the request id, see LeadAnswersController).
 Route::post('/lead-answers', [LeadAnswersController::class, 'store'])->middleware('throttle:60,1');
-Route::get('/leads/{id}/journey',[LeadJourneyController::class, 'show'])->whereNumber('id');
+// Free e-book on /book: saves the reader as a lead and returns a personal download link (see BookDownloadController).
+Route::post('/book-leads', [BookDownloadController::class, 'store'])->middleware('throttle:10,1');
+Route::get('/book/download', [BookDownloadController::class, 'download'])->middleware('throttle:30,1');
+Route::get('/leads/{id}/journey', [LeadJourneyController::class, 'show'])->whereNumber('id');
 
 // Visitor journey tracking (public/gb-track.js, cookie-consented visitors only)
 Route::post('/t', [TrackController::class, 'collect'])->middleware('throttle:300,1');
