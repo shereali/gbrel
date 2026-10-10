@@ -41,7 +41,7 @@ const props = withDefaults(defineProps<{ placement: string; tone?: 'light' | 'da
 const copied = ref(false)
 const canNativeShare = ref(false)
 const pluginsAllowed = ref(false)
-const pagePluginSrc = `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(BOOK.facebookPage)}&tabs&width=340&height=130&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=true`
+const pagePluginSrc = `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(BOOK.facebookPage)}&tabs=&width=340&height=130&small_header=false&adapt_container_width=true&hide_cover=true&show_facepile=false`
 const sharePluginSrc = `https://www.facebook.com/plugins/share_button.php?href=${encodeURIComponent(bookShareUrl('fb_share_button'))}&layout=button&size=large&width=96&height=30`
 onMounted(() => {
   canNativeShare.value = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
@@ -72,7 +72,7 @@ const copyOrShare = async () => {
 <style scoped>
 .bs-wrap { display: grid; gap: 12px; }
 .bs-fb { display: grid; gap: 8px; justify-items: start; }
-.bs-page { width: 100%; max-width: 340px; height: 130px; border: 0; border-radius: var(--gb-r); overflow: hidden; background: #fff; }
+.bs-page { width: 100%; max-width: 340px; height: 130px; border: 0; border-radius: var(--gb-r); overflow: hidden; background: #fff; box-shadow: 0 4px 14px rgba(0, 0, 0, .12); }
 .bs-fb-share { display: flex; align-items: center; gap: 10px; }
 .bs-fb-share iframe { border: 0; overflow: hidden; flex: none; }
 .bs-fb-share small { font-size: .8rem; color: var(--gb-ink-soft); line-height: 1.4; }
