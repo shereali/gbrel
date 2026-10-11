@@ -7,8 +7,8 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 
 /**
- * The /book download form: the same name, phone and ad fields as a property lead, plus the one question
- * the visitor answers before downloading ("why do you want this book?").
+ * The /book order form: the same name, phone and ad fields as a property lead, plus the optional
+ * "why do you want this book?" answer, which tells the sales team what to call the buyer about.
  */
 class StoreBookLeadRequest extends StorePropertyLeadRequest
 {
@@ -19,7 +19,7 @@ class StoreBookLeadRequest extends StorePropertyLeadRequest
     {
         return [
             ...parent::rules(),
-            'reason' => ['required', 'string', Rule::in(array_keys(BookDownloadController::REASONS))],
+            'reason' => ['nullable', 'string', Rule::in(array_keys(BookDownloadController::REASONS))],
         ];
     }
 }

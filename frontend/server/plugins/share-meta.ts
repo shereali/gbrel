@@ -22,15 +22,15 @@ function toPreviewProperty(d: any) {
   }
 }
 
-// The free-book landing page (/book) is shared on Facebook and WhatsApp a lot, so it gets its own preview.
+// The e-book sales page (/book) is shared on Facebook and WhatsApp a lot, so it gets its own preview.
 const BOOK_TAGS = [
-  `<title>ফ্রি ই-বুক: The Hidden Business of Land | গ্রাম বাংলা রিয়েল এস্টেট</title>`,
-  `<meta name="description" content="জমি, ফ্ল্যাট ও ল্যান্ড শেয়ার নিরাপদে কেনা, ন্যায্য দামে বেচা আর এই ব্যবসায় আয়ের পথ নিয়ে ৩৭ পাতার ফ্রি বাংলা ই-বুক।">`,
+  `<title>The Hidden Business of Land: জমি-ফ্ল্যাট কেনা-বেচার বাংলা গাইড | গ্রাম বাংলা রিয়েল এস্টেট</title>`,
+  `<meta name="description" content="জমি, ফ্ল্যাট ও ল্যান্ড শেয়ার নিরাপদে কেনা, ন্যায্য দামে বেচা আর এই ব্যবসায় আয়ের পথ নিয়ে উৎসসহ বাংলা ই-বুক। ৳১,১০০ নয়, এখন ৳৫০০।">`,
   `<meta property="og:type" content="website">`,
   `<meta property="og:site_name" content="গ্রাম বাংলা রিয়েল এস্টেট">`,
   `<meta property="og:locale" content="bn_BD">`,
-  `<meta property="og:title" content="সোনার হরিণ আপনার পায়ের নিচে: ফ্রি বাংলা ই-বুক">`,
-  `<meta property="og:description" content="জমি, ফ্ল্যাট ও ল্যান্ড শেয়ার কেনা-বেচার আগে পড়ে নিন। ৩৭ পাতা, সম্পূর্ণ ফ্রি।">`,
+  `<meta property="og:title" content="একটা ভুল কাগজে লাখ টাকা যায়: জমি-ফ্ল্যাটের বাংলা গাইড">`,
+  `<meta property="og:description" content="কোন মুখী, কোন তলা, কোন কাগজ: টাকা দেওয়ার আগে পড়ে নিন। ৳১,১০০ নয়, এখন ৳৫০০।">`,
   `<meta property="og:url" content="${SITE_URL}/book">`,
   `<meta property="og:image" content="${SITE_URL}/img/book/og-book.jpg">`,
   `<meta property="og:image:width" content="1200">`,

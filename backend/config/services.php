@@ -35,6 +35,19 @@ return [
         'test_event_code' => env('META_CAPI_TEST_EVENT_CODE'),
     ],
 
+    // EasyPay (bKash/Nagad/Rocket) for the paid e-book on /book. API key: EasyPay Merchant Dashboard → API Settings.
+    'easypay' => [
+        'base_url' => env('EASYPAY_BASE_URL', 'https://www.easypaybd.online/api'),
+        'api_key' => env('EASYPAY_API_KEY'),
+        // Public site address used in the callback and webhook links (defaults to APP_URL).
+        'site_url' => env('EASYPAY_SITE_URL'),
+    ],
+
+    // The e-book's selling price in BDT. The list price is only shown on the page (struck through).
+    'book' => [
+        'price' => (int) env('BOOK_PRICE', 500),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

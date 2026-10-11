@@ -2,18 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreBookLeadRequest;
-use App\Models\Lead;
-use App\Support\VisitorJourney;
+use App\Models\BookOrder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * Free e-book "The Hidden Business of Land" (/book landing page).
- * A visitor gives a name and number, the lead is saved like any other website lead (and sent to Meta through
- * VisitorJourney, with the request id as the event id), and the answer comes back with a personal download link.
- * The PDF lives in resources/books, outside the public folder, so it is only reachable through that link.
+ * Delivers the paid e-book "The Hidden Business of Land" (/book sales page).
+ * The PDF lives in resources/books, outside the public folder, so it is only reachable through a signed link
+ * that belongs to a paid order (see BookOrderController). The buyer's thank-you page hands out a fresh link
+ * whenever it is opened, so the order link itself is the buyer's permanent access.
  */
 class BookDownloadController extends Controller
 {
@@ -35,54 +33,24 @@ class BookDownloadController extends Controller
         'learn' => 'Just learning',
     ];
 
-    /** POST /api/book-leads */
-    public function store(StoreBookLeadRequest $request): JsonResponse
+    /** POST /api/book-leads — the free giveaway has ended; old cached pages get a clear answer. */
+    public function retired(): JsonResponse
     {
-        $input = $request->validated();
-        $reason = $input['reason'];
-
-        $fields = [
-            'property_id' => null,
-            'property_title' => self::BOOK_TITLE,
-            'name' => $input['name'],
-            'phone' => $input['phone'],
-            'email' => $input['email'] ?? null,
-            'lead_type' => 'Book Download',
-            'buyer_category' => self::REASONS[$reason],
-            'preferred_contact' => $input['preferred_contact'] ?? 'WhatsApp',
-            'message' => $input['message'] ?? null,
-            'status' => 'New',
-            'utm_source' => $input['utm_source'] ?? null,
-            'utm_medium' => $input['utm_medium'] ?? null,
-            'utm_campaign' => $input['utm_campaign'] ?? null,
-            'utm_content' => $input['utm_content'] ?? null,
-            'utm_term' => $input['utm_term'] ?? null,
-            'next_step' => $reason === 'learn' ? 'Send book follow-up' : 'Call: '.self::REASONS[$reason],
-            'contact_consented_at' => ! empty($input['contact_consent']) ? now() : null,
-        ];
-
-        $lead = ! empty($input['request_id'])
-            ? Lead::firstOrCreate(['request_id' => $input['request_id']], $fields)
-            : Lead::create($fields);
-        if ($lead->wasRecentlyCreated) {
-            VisitorJourney::record($request, $lead, $input);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => ['id' => $lead->id, 'download_url' => $this->downloadUrl($lead)],
-        ], $lead->wasRecentlyCreated ? 201 : 200);
+        return response()->json(['success' => false, 'message' => 'The free download has ended. Please buy the book at gbrel.com/book.'], 410);
     }
 
-    /** GET /api/book/download?lead=…&expires=…&sig=…  (add &save=1 to save the file instead of opening it) */
+    /** GET /api/book/download?order=…&expires=…&sig=…  (add &save=1 to save the file instead of opening it) */
     public function download(Request $request): BinaryFileResponse|JsonResponse
     {
-        $leadId = (int) $request->query('lead');
+        $orderId = (int) $request->query('order');
         $expires = (int) $request->query('expires');
         $signature = (string) $request->query('sig');
 
-        if ($leadId < 1 || $expires < time() || ! hash_equals($this->signature($leadId, $expires), $signature)) {
-            return response()->json(['success' => false, 'message' => 'This download link has expired. Get a new one at gbrel.com/book.'], 403);
+        if ($orderId < 1 || $expires < time() || ! hash_equals(self::signature($orderId, $expires), $signature)) {
+            return response()->json(['success' => false, 'message' => 'This download link has expired. Open your order link again to get a new one.'], 403);
+        }
+        if (! BookOrder::whereKey($orderId)->where('status', BookOrder::PAID)->exists()) {
+            return response()->json(['success' => false, 'message' => 'This order is not paid.'], 403);
         }
 
         $path = resource_path(self::FILE);
@@ -100,20 +68,20 @@ class BookDownloadController extends Controller
         ]);
     }
 
-    private function downloadUrl(Lead $lead): string
+    public static function downloadUrl(BookOrder $order): string
     {
         $expires = now()->addDays(self::LINK_DAYS)->getTimestamp();
 
         // Relative to the site, so it works behind the proxy and on localhost alike.
         return '/api/book/download?'.http_build_query([
-            'lead' => $lead->id,
+            'order' => $order->id,
             'expires' => $expires,
-            'sig' => $this->signature($lead->id, $expires),
+            'sig' => self::signature($order->id, $expires),
         ]);
     }
 
-    private function signature(int $leadId, int $expires): string
+    private static function signature(int $orderId, int $expires): string
     {
-        return hash_hmac('sha256', 'book|'.$leadId.'|'.$expires, (string) config('app.key'));
+        return hash_hmac('sha256', 'book-order|'.$orderId.'|'.$expires, (string) config('app.key'));
     }
 }

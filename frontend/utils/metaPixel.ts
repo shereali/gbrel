@@ -1,14 +1,16 @@
 // One call sends a conversion event to every tracking tool that is switched on:
 // Meta Pixel (standard events), Google Analytics 4 (recommended event names) and GTM (dataLayer).
 // Safe to call when none of them are loaded.
-const standardEvents = new Set(['PageView', 'ViewContent', 'Lead', 'Contact', 'Schedule', 'CompleteRegistration', 'Search'])
+const standardEvents = new Set(['PageView', 'ViewContent', 'Lead', 'Contact', 'Schedule', 'CompleteRegistration', 'Search', 'InitiateCheckout', 'Purchase'])
 const ga4Names: Record<string, string> = {
   ViewContent: 'view_item',
   Lead: 'generate_lead',
   Contact: 'contact',
   Schedule: 'schedule_visit',
   CompleteRegistration: 'sign_up',
-  Search: 'search'
+  Search: 'search',
+  InitiateCheckout: 'begin_checkout',
+  Purchase: 'purchase'
 }
 
 export const trackPixel = (event: string, params: Record<string, unknown> = {}, eventID?: string) => {

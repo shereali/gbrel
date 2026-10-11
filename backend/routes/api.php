@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BookDownloadController;
+use App\Http\Controllers\BookOrderController;
 use App\Http\Controllers\LeadAnswersController;
 use App\Http\Controllers\LeadCrmController;
 use App\Http\Controllers\LeadJourneyController;
@@ -868,8 +869,11 @@ Route::get('/leads', function (Request $request) {
 Route::post('/leads', [PropertyLeadController::class, 'store'])->middleware('throttle:10,1');
 // Later survey answers from the buyer who just sent the form (public; found by the request id, see LeadAnswersController).
 Route::post('/lead-answers', [LeadAnswersController::class, 'store'])->middleware('throttle:60,1');
-// Free e-book on /book: saves the reader as a lead and returns a personal download link (see BookDownloadController).
-Route::post('/book-leads', [BookDownloadController::class, 'store'])->middleware('throttle:10,1');
+// Paid e-book on /book, paid through EasyPay (see BookOrderController); the free giveaway route now answers 410.
+Route::post('/book-leads', [BookDownloadController::class, 'retired']);
+Route::post('/book-orders/webhook', [BookOrderController::class, 'webhook'])->middleware('throttle:120,1');
+Route::post('/book-orders', [BookOrderController::class, 'store'])->middleware('throttle:10,1');
+Route::get('/book-orders/{publicId}', [BookOrderController::class, 'show'])->where('publicId', '[A-Za-z0-9]{20,40}')->middleware('throttle:60,1');
 Route::get('/book/download', [BookDownloadController::class, 'download'])->middleware('throttle:30,1');
 Route::get('/leads/{id}/journey', [LeadJourneyController::class, 'show'])->whereNumber('id');
 
