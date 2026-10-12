@@ -300,6 +300,9 @@
             </div>
           </div>
           <div class="form-group"><label for="property-total-floors" class="form-label">Total building floors (optional)</label><input id="property-total-floors" v-model.number="propForm.totalFloors" type="number" min="0" max="300" step="1" class="form-input" /></div>
+
+          <!-- Flat Units & Multi-Size Layout Repeater -->
+          <FlatVariantsEditor v-model="flatVariants" />
         </div>
 
         <PropertyBuyerDetailsEditor v-model="propForm.buyerDetails" :property="propForm" />
@@ -757,6 +760,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import PropertyBuyerDetailsEditor from './PropertyBuyerDetailsEditor.vue'
+import FlatVariantsEditor from '~/components/admin/FlatVariantsEditor.vue'
 import { priceDisplay } from '~/utils/priceDisplay'
 import { Film, Image as ImageIcon, Images, Play, Upload, X, Youtube } from 'lucide-vue-next'
 import { parseVideo, videoProviderLabel } from '~/utils/videoEmbed'
@@ -858,6 +862,13 @@ const propForm = reactive({
   agentId: 0
 })
 const publicPrice = computed(() => priceDisplay(propForm))
+
+const flatVariants = computed({
+  get: () => Array.isArray(propForm.buyerDetails?.flatVariants) ? (propForm.buyerDetails.flatVariants as any[]) : [],
+  set: (val: any[]) => {
+    propForm.buyerDetails = { ...propForm.buyerDetails, flatVariants: val }
+  }
+})
 
 // Photos & video
 const videoSource = computed(() => parseVideo(propForm.videoUrl))

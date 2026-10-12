@@ -702,7 +702,7 @@ const propertiesData = ref<PropertyItem[]>([
     lng: 90.3752,
     images: [
       '/img/properties/dhaur-kamarpara-8-5-katha-building.jpg',
-      '/img/properties/dhaur-kamarpara-8-5-katha-map.png',
+      '/img/properties/dhaur-kamarpara-8-5-katha-map.jpg',
       '/img/properties/dhaur-kamarpara-1250-sqft-floorplan.jpg'
     ],
     featureImage: '/img/properties/dhaur-kamarpara-8-5-katha-building.jpg',
@@ -940,6 +940,35 @@ export const useProperties = () => {
   }
 
   const fetchPropertyById = async (idOrSlug: string | number, options: { strict?: boolean } = {}): Promise<PropertyItem | null> => {
+    // Check for server-inlined property data (instant 0ms render on landing/direct visit)
+    if (process.client && typeof document !== 'undefined') {
+      const el = document.getElementById('__GBREL_INITIAL_PROPERTY__')
+      if (el && el.textContent) {
+        try {
+          const inlineData = JSON.parse(el.textContent)
+          if (inlineData && (String(inlineData.id) === String(idOrSlug) || inlineData.slug === String(idOrSlug))) {
+            el.textContent = ''
+            const mapped = mapDbItemToPropertyItem(inlineData, options.strict)
+            const idx = propertiesData.value.findIndex(p => p.id === mapped.id)
+            if (idx >= 0) {
+              propertiesData.value[idx] = mapped
+            } else {
+              propertiesData.value.push(mapped)
+            }
+            if (inlineData.agent && typeof inlineData.agent === 'object') {
+              const mappedAgent = mapDbItemToAgentItem(inlineData.agent)
+              const aIdx = agentsData.value.findIndex(a => a.id === mappedAgent.id)
+              if (aIdx >= 0) agentsData.value[aIdx] = mappedAgent
+              else agentsData.value.push(mappedAgent)
+            }
+            return mapped
+          }
+        } catch (e) {
+          console.warn('Failed parsing inlined property data:', e)
+        }
+      }
+    }
+
     try {
       const res = await fetch(useApiUrl(`/properties/${idOrSlug}`))
       if (res.ok) {
@@ -951,6 +980,12 @@ export const useProperties = () => {
             propertiesData.value[idx] = mapped
           } else {
             propertiesData.value.push(mapped)
+          }
+          if (json.data.agent && typeof json.data.agent === 'object') {
+            const mappedAgent = mapDbItemToAgentItem(json.data.agent)
+            const aIdx = agentsData.value.findIndex(a => a.id === mappedAgent.id)
+            if (aIdx >= 0) agentsData.value[aIdx] = mappedAgent
+            else agentsData.value.push(mappedAgent)
           }
           return mapped
         }

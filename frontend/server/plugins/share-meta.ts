@@ -38,8 +38,14 @@ const BOOK_TAGS = [
   `<meta name="twitter:card" content="summary_large_image">`
 ].join('')
 
+// In-memory cache for fast SSR tag generation & data injection (60s TTL)
+const propertyCache = new Map<string, { data: any; expires: number }>()
+
 export default defineNitroPlugin(nitroApp => {
   nitroApp.hooks.hook('render:html', async (html, { event }) => {
+    // Strip speculative prefetch links from initial head to prevent saturating mobile bandwidth
+    html.head = html.head.map(chunk => chunk.replace(/<link rel="prefetch"[^>]*>/g, ''))
+
     const path = getRequestURL(event).pathname
     if (/^\/book\/?$/.test(path)) {
       html.head = html.head.map(chunk => chunk.replace(REPLACED, '').replace(/<meta[^>]+property="og:image:(?:width|height)"[^>]*>/g, ''))
@@ -48,21 +54,34 @@ export default defineNitroPlugin(nitroApp => {
     }
     const match = /^\/properties\/(\d+)\/?$/.exec(path)
     if (!match) return
+    const propId = match[1]
     const base = String(useRuntimeConfig().apiBaseServer || '').replace(/\/$/, '')
     if (!base) return
-    let data: any
-    try {
-      const res: any = await $fetch(`${base}/properties/${match[1]}`, { timeout: 2500 })
-      data = res?.success ? res.data : null
-    } catch {
-      return // Unknown, unpublished or backend busy: keep the site-wide tags.
+
+    let data: any = null
+    const now = Date.now()
+    const cached = propertyCache.get(propId)
+    if (cached && cached.expires > now) {
+      data = cached.data
+    } else {
+      try {
+        const res: any = await $fetch(`${base}/properties/${propId}`, { timeout: 2500 })
+        data = res?.success ? res.data : null
+        if (data) {
+          propertyCache.set(propId, { data, expires: now + 60000 })
+        }
+      } catch {
+        return // Unknown, unpublished or backend busy: keep the site-wide tags.
+      }
     }
     if (!data) return
 
     const p = toPreviewProperty(data)
     const title = `${p.title} | GBREL`
     const description = propertyShareDescription(p)
-    const url = `${SITE_URL}/properties/${match[1]}`
+    const url = `${SITE_URL}/properties/${propId}`
+    const heroImg = absoluteImage(p.image)
+
     const tags = [
       `<title>${esc(title)}</title>`,
       `<meta name="description" content="${esc(description)}">`,
@@ -72,9 +91,14 @@ export default defineNitroPlugin(nitroApp => {
       `<meta property="og:title" content="${esc(p.title)}">`,
       `<meta property="og:description" content="${esc(description)}">`,
       `<meta property="og:url" content="${esc(url)}">`,
-      `<meta property="og:image" content="${esc(absoluteImage(p.image))}">`,
-      `<meta name="twitter:card" content="summary_large_image">`
-    ].join('')
+      `<meta property="og:image" content="${esc(heroImg)}">`,
+      `<meta name="twitter:card" content="summary_large_image">`,
+      // Preload hero image to ensure immediate LCP on mobile
+      heroImg ? `<link rel="preload" as="image" href="${esc(heroImg)}" fetchpriority="high">` : '',
+      // Inline initial data so client hydration needs 0 network roundtrips
+      `<script id="__GBREL_INITIAL_PROPERTY__" type="application/json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`
+    ].filter(Boolean).join('')
+
     html.head = html.head.map(chunk => chunk.replace(REPLACED, ''))
     html.head.push(tags)
   })

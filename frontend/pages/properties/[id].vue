@@ -37,9 +37,9 @@
             </button>
           </template>
           <button v-else-if="slides[0].kind === 'image'" class="gallery-primary" aria-label="বড় করে ছবি দেখুন" @click="openPhoto(0)"><img :src="slides[0].src" :alt="property.title" fetchpriority="high" decoding="async" @error="imageFailed" /><span class="gallery-caption"><Expand :size="16" /> {{ images.length }}টি ছবি দেখুন</span></button>
-          <template v-if="slides[1]">
+          <template v-if="slides[1] && isDesktop">
             <button v-if="slides[1].kind === 'video'" class="gallery-secondary gallery-video" aria-label="প্রপার্টির ভিডিও দেখুন" @click="openPhoto(1)"><img v-if="videoPoster" :src="videoPoster" alt="" loading="lazy" @error="imageFailed" /><span class="play-disc" aria-hidden="true"><Play :size="26" fill="currentColor" /></span></button>
-            <button v-else class="gallery-secondary" aria-label="দ্বিতীয় ছবি বড় করে দেখুন" @click="openPhoto(1)"><img :src="slides[1].src" :alt="`${property.title} — ছবি ২`" loading="lazy" @error="imageFailed" /></button>
+            <button v-else class="gallery-secondary" aria-label="দ্বিতীয় ছবি বড় করে দেখুন" @click="openPhoto(1)"><img :src="slides[1].src" :alt="`${property.title} — ছবি ২`" loading="lazy" decoding="async" @error="imageFailed" /></button>
           </template>
           <div v-if="!heroPlaying && (videoIndex > 0 || (videoIndex === 0 && images.length))" class="gallery-chips">
             <button v-if="videoIndex > 0" type="button" class="gallery-chip gallery-chip--video" @click="openPhoto(videoIndex)"><Play :size="15" fill="currentColor" /> ভিডিও দেখুন</button>
@@ -49,7 +49,7 @@
         <PropertyPlotSheet v-else :property="property" />
       </section>
       <div class="property-at-a-glance">
-        <div><Ruler :size="20" /><span>আয়তন<strong>{{ areaLabel(property.squareFootage, property.landSize, property.landUnit) || 'জেনে নিন' }}</strong></span></div>
+        <div><Ruler :size="20" /><span>আয়তন<strong>{{ areaGlanceText }}</strong></span></div>
         <div><Building2 :size="20" /><span>ধরন<strong>{{ typeLabel(property.propertyType) }}</strong></span></div>
         <div v-if="glanceThird"><Compass :size="20" /><span>{{ glanceThird.label }}<strong>{{ glanceThird.value }}</strong></span></div>
         <div><CircleCheck :size="20" /><span>অবস্থা<strong>{{ statusLabel(property.status) }}</strong></span></div>
@@ -57,8 +57,23 @@
       <div ref="inlineStart"><PropertySurveyStart :property-type="property.propertyType" @choose="purpose => openInquiry('inline_first_question', purpose)" /></div>
       <div class="property-body">
         <div class="property-information">
-          <nav class="section-nav" aria-label="প্রপার্টির বিভাগ"><a href="#property-overview">বিস্তারিত</a><a v-if="hasBuyerDetails" href="#property-buyer-details">মূল্য ও শর্ত</a><a href="#property-documents">কাগজপত্র</a><a href="#property-location">লোকেশন</a><a href="#property-questions">আপনার প্রশ্ন</a></nav>
+          <nav class="section-nav" aria-label="প্রপার্টির বিভাগ">
+            <a href="#property-overview">বিস্তারিত</a>
+            <a v-if="flatVariants.length" href="#property-flat-variants">ফ্ল্যাট সাইজ</a>
+            <a v-if="hasBuyerDetails" href="#property-buyer-details">মূল্য ও শর্ত</a>
+            <a href="#property-documents">কাগজপত্র</a>
+            <a href="#property-location">লোকেশন</a>
+            <a href="#property-questions">আপনার প্রশ্ন</a>
+          </nav>
           <section id="property-overview" class="detail-section"><p class="eyebrow">এক নজরে প্রপার্টি</p><h2>এখানে কী পাচ্ছেন?</h2><p v-if="property.tagline" class="property-tagline">{{ property.tagline }}</p><p class="description">{{ property.description }}</p><dl class="property-specs"><div v-for="item in specifications" :key="item.label"><dt>{{ item.label }}</dt><dd>{{ item.value }}</dd></div></dl><template v-if="property.amenities?.length"><h3>সুবিধাসমূহ</h3><ul class="amenity-list"><li v-for="amenity in property.amenities" :key="amenity"><Check :size="16" />{{ amenity }}</li></ul></template></section>
+          <PropertyFlatVariants 
+            v-if="flatVariants.length" 
+            :variants="flatVariants" 
+            :property="property" 
+            :whatsapp="leadWhatsapp" 
+            @select="onVariantSelect"
+            @inquire="v => openInquiry('flat_variant_' + v.name, v.name)"
+          />
           <PropertyBuyerDetails :property="property" :cta-label="ctaLabel" @inquire="openInquiry('sale_terms')" />
           <section id="property-documents" class="detail-section">
             <p class="eyebrow">সিদ্ধান্তের আগে পরিষ্কার ধারণা</p><h2>কাগজপত্র ও খরচ বুঝে নিন</h2><p>মালিকানা, অনুমোদন, রেজিস্ট্রেশন ও প্রযোজ্য খরচ নিয়ে প্রশ্ন করুন। তালিকায় থাকা তথ্যের সঙ্গে মূল নথি মিলিয়ে দেখুন।</p>
@@ -153,6 +168,8 @@ import { absoluteImage, propertyShareDescription } from '~/utils/shareMeta'
 import { useSettings } from '~/composables/useSettings'
 import PropertySurveyStart from '~/components/PropertySurveyStart.vue'
 import PropertyPlotSheet from '~/components/PropertyPlotSheet.vue'
+import PropertyFlatVariants, { type FlatVariant } from '~/components/PropertyFlatVariants.vue'
+import { getFlatVariants, flatVariantsSummary } from '~/utils/buyerDetails.mjs'
 import { areaLabel, completionLabels, facingLabel, listingLabels, statusLabel, toBn, typeLabel } from '~/utils/propertyLabels'
 const route = useRoute()
 const { fetchPropertyById, fetchAgents, agents } = useProperties()
@@ -302,7 +319,27 @@ const trustFacts = computed(() => {
   ].filter(Boolean) as string[]
   return facts.slice(0, 3)
 })
-const waLink = computed(() => whatsappLink(leadWhatsapp.value, `আসসালামু আলাইকুম, "${property.value?.title}" (GBR-${property.value?.id}) নিয়ে জানতে চাই।`))
+const selectedVariant = ref<FlatVariant | null>(null)
+const flatVariants = computed<FlatVariant[]>(() => getFlatVariants(property.value))
+const variantsSummary = computed(() => flatVariantsSummary(flatVariants.value))
+const onVariantSelect = (v: FlatVariant) => { selectedVariant.value = v }
+
+const areaGlanceText = computed(() => {
+  if (variantsSummary.value?.minSqft && variantsSummary.value?.maxSqft) {
+    if (variantsSummary.value.minSqft === variantsSummary.value.maxSqft) {
+      return `${toBn(variantsSummary.value.minSqft)} বর্গফুট`
+    }
+    return `${toBn(variantsSummary.value.minSqft)} – ${toBn(variantsSummary.value.maxSqft)} বর্গফুট`
+  }
+  return areaLabel(property.value?.squareFootage, property.value?.landSize, property.value?.landUnit) || 'জেনে নিন'
+})
+
+const waLink = computed(() => {
+  const p = property.value
+  if (!p) return ''
+  const variantNote = selectedVariant.value ? ` (${selectedVariant.value.name})` : ''
+  return whatsappLink(leadWhatsapp.value, `আসসালামু আলাইকুম, "${p.title}" (GBR-${p.id})${variantNote} নিয়ে জানতে চাই।`)
+})
 const openInquiry = (source: string, purpose = '') => { if (!inquiryOpen.value) track('SurveyOpen', { cta: source }); inquirySource.value = source; if (purpose) startPurpose.value = purpose; inquiryOpen.value = true }
 // The survey sends the Lead pixel event itself (with a dedup event ID).
 const leadSaved = (_id: number) => {}
@@ -318,7 +355,7 @@ const loadProperty = async () => {
   if (version !== loadVersion) return
   property.value = result; loading.value = false
   if (result) { track('ViewContent'); startHeroAutoplay() }
-  await fetchAgents()
+  if (!agent.value) { await fetchAgents() }
 }
 watch(() => route.params.id, loadProperty, { immediate: true })
 useSeoMeta({ title: () => property.value ? `${property.value.title} | GBREL` : 'Property | GBREL', description: () => metaDescription.value, ogDescription: () => metaDescription.value, ogTitle: () => property.value?.title || 'GBREL', ogImage: () => absoluteImage(images.value[0] || videoPoster.value) })

@@ -4,6 +4,9 @@
 gbrel.com, www.gbrel.com, gangchil.softcredible.com {
     encode gzip zstd
 
+    # Rewrite legacy map PNG (742KB) to optimized JPG (68KB)
+    rewrite /img/properties/dhaur-kamarpara-8-5-katha-map.png /img/properties/dhaur-kamarpara-8-5-katha-map.jpg
+
     # Backend API routing
     handle /api/* {
         reverse_proxy gbrel-backend-1:8000
@@ -11,6 +14,7 @@ gbrel.com, www.gbrel.com, gangchil.softcredible.com {
 
     # Uploaded media storage routing
     handle /storage/* {
+        header Cache-Control "public, max-age=2592000, stale-while-revalidate=86400"
         reverse_proxy gbrel-backend-1:8000
     }
 
@@ -18,6 +22,12 @@ gbrel.com, www.gbrel.com, gangchil.softcredible.com {
     handle {
         reverse_proxy gbrel-frontend-1:3000
     }
+
+    # Static media caching headers
+    @static_assets {
+        path /img/* *.jpg *.jpeg *.png *.webp *.svg *.ico *.woff2
+    }
+    header @static_assets Cache-Control "public, max-age=2592000, stale-while-revalidate=86400"
 
     # Production security headers
     header {

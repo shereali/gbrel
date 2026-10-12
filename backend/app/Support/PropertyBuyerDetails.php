@@ -23,7 +23,8 @@ class PropertyBuyerDetails
         $texts = ['buildingDescription', 'utilities', 'priceIncludes', 'agreementDuration', 'paymentSchedule', 'paymentMethod', 'registrationCost', 'buyerCosts', 'sellerCosts', 'transferTimeline', 'transferTrigger', 'saleAuthority', 'ownershipNotes', 'taxPaidThrough', 'serviceChargeStatus', 'approvalDetails', 'documentSummary'];
         $numbers = ['roadWidth' => 1000, 'shareLandSize' => 100000, 'depositPercent' => 100, 'ownerCount' => 10000, 'registrationValue' => 1000000000000];
         $dates = ['sourceDate', 'updatedOn'];
-        $keys = array_merge(array_keys($choices), $texts, array_keys($numbers), $dates);
+        $arrays = ['flatVariants'];
+        $keys = array_merge(array_keys($choices), $texts, array_keys($numbers), $dates, $arrays);
         $rules = ['buyer_details' => ['nullable', 'array:'.implode(',', $keys)]];
         foreach ($choices as $key => $options) {
             $rules['buyer_details.'.$key] = ['nullable', Rule::in($options)];
@@ -37,6 +38,19 @@ class PropertyBuyerDetails
         foreach ($dates as $key) {
             $rules['buyer_details.'.$key] = ['nullable', 'date_format:Y-m-d'];
         }
+        $rules['buyer_details.flatVariants'] = ['nullable', 'array', 'max:20'];
+        $rules['buyer_details.flatVariants.*.name'] = ['nullable', 'string', 'max:100'];
+        $rules['buyer_details.flatVariants.*.sqft'] = ['nullable', 'numeric', 'min:0'];
+        $rules['buyer_details.flatVariants.*.bedrooms'] = ['nullable', 'integer', 'min:0'];
+        $rules['buyer_details.flatVariants.*.bathrooms'] = ['nullable', 'integer', 'min:0'];
+        $rules['buyer_details.flatVariants.*.balconies'] = ['nullable', 'integer', 'min:0'];
+        $rules['buyer_details.flatVariants.*.price'] = ['nullable', 'numeric', 'min:0'];
+        $rules['buyer_details.flatVariants.*.price_per_sqft'] = ['nullable', 'numeric', 'min:0'];
+        $rules['buyer_details.flatVariants.*.floor_available'] = ['nullable', 'string', 'max:150'];
+        $rules['buyer_details.flatVariants.*.facing'] = ['nullable', 'string', 'max:50'];
+        $rules['buyer_details.flatVariants.*.floor_plan_image'] = ['nullable', 'string', 'max:500'];
+        $rules['buyer_details.flatVariants.*.is_available'] = ['nullable', 'boolean'];
+
         if (is_array($details)) {
             $details = array_map(fn ($value) => is_string($value) ? (trim($value) === '' ? null : trim($value)) : $value, $details);
         }

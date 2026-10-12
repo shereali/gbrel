@@ -101,3 +101,26 @@ export function detailGroups(property) {
     .filter(f => f.display !== '')
   })).filter(group => group.fields.length)
 }
+
+export function getFlatVariants(property) {
+  const list = property?.buyerDetails?.flatVariants
+  if (!Array.isArray(list)) return []
+  return list.filter(item => item && typeof item === 'object' && item.name)
+}
+
+export function flatVariantsSummary(variants) {
+  if (!variants || !variants.length) return null
+  const sqfts = variants.map(v => Number(v.sqft)).filter(n => n > 0)
+  const prices = variants.map(v => Number(v.price)).filter(n => n > 0)
+  const minSqft = sqfts.length ? Math.min(...sqfts) : null
+  const maxSqft = sqfts.length ? Math.max(...sqfts) : null
+  const minPrice = prices.length ? Math.min(...prices) : null
+  const maxPrice = prices.length ? Math.max(...prices) : null
+  return {
+    count: variants.length,
+    minSqft,
+    maxSqft,
+    minPrice,
+    maxPrice
+  }
+}

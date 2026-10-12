@@ -536,6 +536,18 @@ Route::get('/properties', function (Request $request) {
 
 Route::get('/properties/{id}', function ($id) {
     try {
+        $viewer = request()->user();
+        $cacheKey = "property_pub_{$id}";
+        if (! $viewer) {
+            $cached = Cache::get($cacheKey);
+            if ($cached) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $cached,
+                ]);
+            }
+        }
+
         $property = is_numeric($id)
             ? (Property::find($id) ?: Property::where('slug', $id)->first())
             : Property::where('slug', $id)->first();
@@ -552,7 +564,6 @@ Route::get('/properties/{id}', function ($id) {
 
             return response()->json(['success' => false, 'message' => 'Property not found in database'], 404);
         }
-        $viewer = request()->user();
         $canSeePrivate = $viewer && ($viewer->isStaff() || ($property->owner_id && $property->owner_id === $viewer->id));
         if (! $property->isVisibleToPublic() && ! $canSeePrivate) {
             return response()->json(['success' => false, 'message' => 'Property not found in database'], 404);
@@ -566,6 +577,13 @@ Route::get('/properties/{id}', function ($id) {
 
         $data = $property->toArray();
         $data['brochures_vault'] = $brochures;
+
+        if (! $viewer) {
+            Cache::put($cacheKey, $data, 300);
+            if ($property->slug && $property->slug !== (string) $id) {
+                Cache::put("property_pub_{$property->slug}", $data, 300);
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -612,6 +630,8 @@ Route::put('/properties/{id}', function (Request $request, $id) {
         && in_array($property->review_status, ['approved', 'update_submitted'], true)) {
         $property->update(['published_at' => now()]);
     }
+    Cache::forget("property_pub_{$id}");
+    if ($property->slug) Cache::forget("property_pub_{$property->slug}");
 
     return response()->json([
         'success' => true,
@@ -624,6 +644,8 @@ Route::patch('/properties/{id}/toggle-feature', function ($id) {
     $property = Property::findOrFail($id);
     $property->is_featured = ! $property->is_featured;
     $property->save();
+    Cache::forget("property_pub_{$id}");
+    if ($property->slug) Cache::forget("property_pub_{$property->slug}");
 
     return response()->json([
         'success' => true,
@@ -637,6 +659,8 @@ Route::patch('/properties/{id}/toggle-rajuk', function ($id) {
     $property = Property::findOrFail($id);
     $property->is_rajuk_approved = ! $property->is_rajuk_approved;
     $property->save();
+    Cache::forget("property_pub_{$id}");
+    if ($property->slug) Cache::forget("property_pub_{$property->slug}");
 
     return response()->json([
         'success' => true,
@@ -652,6 +676,8 @@ Route::patch('/properties/{id}/status', function (Request $request, $id) {
     $status = is_array($raw) && isset($raw['status']) ? $raw['status'] : $request->input('status', 'Active');
     $property->status = $status;
     $property->save();
+    Cache::forget("property_pub_{$id}");
+    if ($property->slug) Cache::forget("property_pub_{$property->slug}");
 
     return response()->json([
         'success' => true,
@@ -663,6 +689,8 @@ Route::patch('/properties/{id}/status', function (Request $request, $id) {
 
 Route::delete('/properties/{id}', function ($id) {
     $property = Property::findOrFail($id);
+    Cache::forget("property_pub_{$id}");
+    if ($property->slug) Cache::forget("property_pub_{$property->slug}");
     $property->delete();
 
     return response()->json([
