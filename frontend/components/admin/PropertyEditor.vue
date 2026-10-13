@@ -31,6 +31,25 @@
           <span>Status: <strong>{{ propForm.status }}</strong></span>
         </div>
 
+        <!-- Auto-save Status Indicator -->
+        <div class="auto-save-pill" :title="autoSaveTooltip">
+          <span v-if="autoSaveStatus === 'saving'" class="save-status save-status--saving">
+            <span class="save-spinner">◌</span>
+            <span>Auto-saving draft…</span>
+          </span>
+          <span v-else-if="autoSaveStatus === 'saved'" class="save-status save-status--saved">
+            <span class="save-check">✓</span>
+            <span>Draft auto-saved {{ lastSavedTime ? `at ${lastSavedTime}` : '' }}</span>
+          </span>
+          <span v-else-if="autoSaveStatus === 'unsaved'" class="save-status save-status--unsaved">
+            <span class="save-dot"></span>
+            <span>Unsaved draft changes</span>
+          </span>
+          <span v-else-if="autoSaveStatus === 'error'" class="save-status save-status--error">
+            <span>⚠ Draft auto-save failed</span>
+          </span>
+        </div>
+
         <button type="button" class="btn btn-sm btn-outline-white" :disabled="isSaving" @click="handleGoBack">
           Cancel
         </button>
@@ -720,6 +739,14 @@
           </div>
         </div>
 
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <span class="text-xs text-muted" style="font-size:0.75rem; color:var(--admin-text-muted);">
+            <template v-if="autoSaveStatus === 'saving'">◌ Auto-saving draft…</template>
+            <template v-else-if="autoSaveStatus === 'saved'">✓ Draft auto-saved {{ lastSavedTime ? `at ${lastSavedTime}` : '' }}</template>
+            <template v-else-if="autoSaveStatus === 'unsaved'">● Unsaved changes</template>
+            <template v-else-if="autoSaveStatus === 'error'">⚠ Auto-save failed</template>
+          </span>
+        </div>
         <div class="flex gap-2">
           <button type="button" class="btn btn-sm btn-outline-white flex-1" @click="saveProperty('Draft')">Save Draft</button>
           <button type="button" class="btn btn-sm btn-emerald flex-1" @click="saveProperty('Active')">Publish Live</button>
@@ -817,10 +844,17 @@ const brochureFileInput = ref<HTMLInputElement | null>(null)
 const route = useRoute()
 // Set when this listing was submitted by a property owner: publishing then goes through the review page.
 const ownerSource = ref<{ ownerId: number; reviewStatus: string; live: boolean } | null>(null)
-const ownerNotApproved = computed(() => !!ownerSource.value && !['approved', 'update_submitted'].includes(ownerSource.value.reviewStatus))
-const isEditing = computed(() => Boolean(props.propertyId || route.params.id || route.query.id))
-const propId = computed(() => Number(props.propertyId || route.params.id || route.query.id) || null)
-const isLoading = ref(isEditing.value)
+const currentPropId = ref<number | null>(Number(props.propertyId || route.params.id || route.query.id) || null)
+const isEditing = computed(() => Boolean(currentPropId.value))
+const propId = computed(() => currentPropId.value)
+const isLoading = ref(Boolean(props.propertyId || route.params.id || route.query.id))
+
+type AutoSaveStatus = 'idle' | 'unsaved' | 'saving' | 'saved' | 'error'
+const autoSaveStatus = ref<AutoSaveStatus>('idle')
+const isAutoSaving = ref(false)
+const lastSavedTime = ref('')
+let autoSaveTimeout: ReturnType<typeof setTimeout> | null = null
+let isInitialLoad = true
 
 const propForm = reactive({
   title: '',
@@ -910,6 +944,7 @@ function onPicked(items: MediaItem[]) {
     propForm.coverMedia = 'video'
     if (!propForm.videoPoster && items[0].thumbnail_url) propForm.videoPoster = items[0].thumbnail_url
   }
+  scheduleAutoSave(200)
 }
 function useVideoLink() {
   if (!parseVideo(videoLinkDraft.value)) {
@@ -922,11 +957,13 @@ function useVideoLink() {
   propForm.coverMedia = 'video'
   videoLinkDraft.value = ''
   toast.success('Video added', 'Buyers will see this video first. Switch to "Main photo" above to change that.')
+  scheduleAutoSave(200)
 }
 function clearVideo() {
   propForm.videoUrl = ''
   propForm.videoPoster = ''
   propForm.coverMedia = 'image'
+  scheduleAutoSave(200)
 }
 const advisorOptions = ref<Array<{ id: number, name: string }>>([])
 const advisorError = ref(false)
@@ -1130,6 +1167,7 @@ const onFeatureFileSelected = async (e: Event) => {
     const url = await uploadImage(target.files[0])
     propForm.featureImage = url
     toast.success('Cover Uploaded', 'Hero cover image saved.')
+    scheduleAutoSave(200)
   } catch (err: any) {
     toast.error('Upload Error', err.message || 'Could not upload cover image.')
   } finally {
@@ -1146,6 +1184,7 @@ const onGalleryFilesSelected = async (e: Event) => {
     const urls = await uploadMultipleImages(target.files)
     propForm.gallery.push(...urls)
     toast.success('Gallery Updated', `${urls.length} photo(s) added to gallery.`)
+    scheduleAutoSave(200)
   } catch (err: any) {
     toast.error('Upload Error', err.message || 'Could not upload gallery images.')
   } finally {
@@ -1162,6 +1201,7 @@ const onBrochureFileSelected = async (e: Event) => {
     const url = await uploadBrochure(target.files[0])
     propForm.brochureUrl = url
     toast.success('Brochure Uploaded', 'Document saved successfully.')
+    scheduleAutoSave(200)
   } catch (err: any) {
     toast.error('Upload Error', err.message || 'Could not upload brochure.')
   } finally {
@@ -1220,6 +1260,7 @@ const onVideoFileSelected = async (e: Event) => {
       propForm.videoPoster = propForm.featureImage
     }
     toast.success('Video Uploaded', 'Video saved and attached to listing.')
+    scheduleAutoSave(200)
   } catch (err: any) {
     toast.error('Upload Error', err.message || 'Could not upload video.')
   } finally {
@@ -1234,12 +1275,14 @@ const addGalleryUrl = () => {
   if (!propForm.gallery.includes(val)) {
     propForm.gallery.push(val)
     toast.info('Photo Added', 'Image appended to gallery.')
+    scheduleAutoSave(200)
   }
   newGalleryUrl.value = ''
 }
 
 const removeGalleryItem = (index: number) => {
   propForm.gallery.splice(index, 1)
+  scheduleAutoSave(200)
 }
 
 const makeCover = (index: number) => {
@@ -1252,6 +1295,7 @@ const makeCover = (index: number) => {
     propForm.gallery.splice(index, 1)
   }
   toast.success('Cover Changed', 'Selected photo set as primary cover.')
+  scheduleAutoSave(200)
 }
 
 
@@ -1334,17 +1378,158 @@ onMounted(async () => {
 
   isLoading.value = false
   setTimeout(() => {
+    isInitialLoad = false
     setupScrollSpy()
-  }, 300)
+  }, 500)
 })
 
 onUnmounted(() => {
   sectionObserver?.disconnect()
+  if (autoSaveTimeout) {
+    clearTimeout(autoSaveTimeout)
+    autoSaveTimeout = null
+  }
 })
+
+// Auto-Draft Saving
+const hasMeaningfulContent = () => {
+  return Boolean(
+    propForm.title.trim() ||
+    propForm.description.trim() ||
+    propForm.areaName.trim() ||
+    propForm.address.trim() ||
+    propForm.featureImage.trim() ||
+    propForm.videoUrl.trim() ||
+    propForm.gallery.length > 0 ||
+    (Number(propForm.price) > 0) ||
+    amenitiesText.value.trim() ||
+    documentsText.value.trim() ||
+    propForm.brochureUrl.trim()
+  )
+}
+
+const buildDraftPayload = () => {
+  const featureCover = propForm.featureImage.trim()
+  const validGallery = propForm.gallery.map(g => g.trim()).filter(Boolean)
+  const allImages = [featureCover, ...validGallery].filter(Boolean)
+
+  const draftTitle = propForm.title.trim() || 'Untitled Draft Property'
+  const draftArea = propForm.areaName.trim() || 'Unspecified Location'
+  const draftAddress = propForm.address.trim() || 'Draft Address'
+
+  return {
+    title: draftTitle,
+    tagline: propForm.tagline,
+    description: propForm.description,
+    propertyType: propForm.propertyType as any,
+    status: (currentPropId.value && propForm.status !== 'Draft') ? propForm.status : 'Draft',
+    listingType: propForm.listingType as any,
+    state: propForm.state,
+    areaName: draftArea,
+    address: draftAddress,
+    city: propForm.city,
+    priceUnit: propForm.priceUnit,
+    buyerDetails: propForm.buyerDetails,
+    agentId: (propForm.agentId || null) as any,
+    facing: propForm.facing as any,
+    completionStatus: propForm.completionStatus as any,
+    yearBuilt: (propForm.yearBuilt === '' ? null : Number(propForm.yearBuilt)) as any,
+    lat: (propForm.lat === '' ? null : Number(propForm.lat)) as any,
+    lng: (propForm.lng === '' ? null : Number(propForm.lng)) as any,
+    amenities: splitLines(amenitiesText.value),
+    documentsVerified: splitLines(documentsText.value),
+    price: propForm.price,
+    bedrooms: propForm.bedrooms,
+    bathrooms: propForm.bathrooms,
+    parking: propForm.parking,
+    totalFloors: (propForm.totalFloors === '' ? null : Number(propForm.totalFloors)) as any,
+    squareFootage: propForm.squareFootage,
+    landSize: propForm.landSize,
+    landUnit: propForm.landUnit as any,
+    isRajukApproved: propForm.isRajukApproved,
+    isFeatured: propForm.isFeatured,
+    featureImage: featureCover,
+    gallery: validGallery,
+    images: allImages,
+    brochureUrl: propForm.brochureUrl.trim(),
+    videoUrl: propForm.videoUrl.trim() || null,
+    videoPoster: propForm.videoPoster.trim() || null,
+    coverMedia: propForm.videoUrl.trim() ? propForm.coverMedia : 'image',
+    hidePrice: propForm.hidePrice,
+    priceDisplayText: propForm.priceDisplayText,
+    hideAgentPhoto: propForm.hideAgentPhoto,
+    hideAgentContact: propForm.hideAgentContact,
+    hideExactAddress: propForm.hideExactAddress,
+    hideFloorPlan: propForm.hideFloorPlan,
+    hideMortgageCalculator: propForm.hideMortgageCalculator
+  }
+}
+
+const autoSaveDraft = async () => {
+  if (isInitialLoad || isLoading.value || isSaving.value || isAutoSaving.value) return
+  if (!hasMeaningfulContent()) return
+
+  isAutoSaving.value = true
+  autoSaveStatus.value = 'saving'
+
+  try {
+    const payload = buildDraftPayload()
+    if (currentPropId.value) {
+      await updateProperty(currentPropId.value, payload)
+    } else {
+      const created = await addProperty(payload)
+      if (created?.id) {
+        currentPropId.value = created.id
+        if (import.meta.client) {
+          window.history.replaceState(window.history.state, '', `/admin/properties/${created.id}/edit`)
+        }
+      }
+    }
+    autoSaveStatus.value = 'saved'
+    lastSavedTime.value = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  } catch (err: any) {
+    console.error('Auto-save draft error:', err)
+    autoSaveStatus.value = 'error'
+  } finally {
+    isAutoSaving.value = false
+  }
+}
+
+const scheduleAutoSave = (delayMs = 2500) => {
+  if (isInitialLoad || isLoading.value || isSaving.value) return
+  if (!hasMeaningfulContent()) return
+  autoSaveStatus.value = 'unsaved'
+  if (autoSaveTimeout) clearTimeout(autoSaveTimeout)
+  autoSaveTimeout = setTimeout(() => {
+    autoSaveDraft()
+  }, delayMs)
+}
+
+const autoSaveTooltip = computed(() => {
+  if (autoSaveStatus.value === 'saving') return 'Saving draft changes to the database...'
+  if (autoSaveStatus.value === 'saved') return `Changes automatically saved as draft in database at ${lastSavedTime.value}`
+  if (autoSaveStatus.value === 'unsaved') return 'You have changes waiting to auto-save as draft'
+  if (autoSaveStatus.value === 'error') return 'Auto-save failed. Check your network connection or use Save Draft button.'
+  return 'Draft auto-saves automatically while you work'
+})
+
+watch(
+  [propForm, amenitiesText, documentsText],
+  () => {
+    if (!isInitialLoad) {
+      scheduleAutoSave()
+    }
+  },
+  { deep: true }
+)
 
 // Save & Publish
 const saveProperty = async (targetStatus?: 'Draft' | 'Active') => {
   if (isLoading.value || isSaving.value) return
+  if (autoSaveTimeout) {
+    clearTimeout(autoSaveTimeout)
+    autoSaveTimeout = null
+  }
   if (targetStatus) {
     propForm.status = targetStatus
   }
@@ -1457,6 +1642,10 @@ const saveProperty = async (targetStatus?: 'Draft' | 'Active') => {
         coverMedia: propForm.videoUrl.trim() ? propForm.coverMedia : 'image'
       })
 
+      if (created?.id) {
+        currentPropId.value = created.id
+      }
+
       if (propForm.status === 'Draft') {
         toast.success('💾 Draft Saved', `New property saved as Draft #${created?.id || ''}.`)
       } else {
@@ -1479,4 +1668,14 @@ const saveProperty = async (targetStatus?: 'Draft' | 'Active') => {
 .empty-cover{display:grid;place-items:center;min-height:150px;color:var(--admin-text-muted);padding:20px;text-align:center}
 .property-editor-main-col{min-width:0}.guide-step-item:focus-visible{outline:2px solid #10b981;outline-offset:2px}
 @media(max-width:640px){.property-editor-topbar{position:static;margin:0 0 20px;padding:16px 0}.property-editor-topbar>div{flex-wrap:wrap;min-width:0}.property-editor-topbar h2{overflow-wrap:anywhere}.property-editor-card{padding:16px}.property-editor-container :deep(.grid-2),.property-editor-container :deep(.grid-3){grid-template-columns:minmax(0,1fr)}.property-card-header,.property-card-title{flex-wrap:wrap}.property-editor-container :deep(.form-input),.property-editor-container :deep(.form-select),.property-editor-container :deep(.form-textarea){font-size:16px!important}}
+.auto-save-pill{display:inline-flex;align-items:center;font-size:0.78rem;font-weight:600;padding:4px 10px;border-radius:9999px;background:rgba(255,255,255,0.06);border:1px solid var(--admin-border-subtle,rgba(255,255,255,0.12))}
+.save-status{display:inline-flex;align-items:center;gap:6px}
+.save-status--saving{color:#F59E0B}
+.save-status--saved{color:#10B981}
+.save-status--unsaved{color:var(--admin-text-muted,#94A3B8)}
+.save-status--error{color:#EF4444}
+.save-spinner{display:inline-block;animation:spin 1s linear infinite}
+.save-dot{width:7px;height:7px;border-radius:50%;background:#F59E0B}
+.save-check{font-weight:800;color:#10B981}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 </style>

@@ -1035,12 +1035,18 @@ export const useProperties = () => {
     }
   }
 
+  const authHeader = (): Record<string, string> => {
+    if (typeof useCookie !== 'function') return {}
+    const token = useCookie<string | null>('gbrel_token').value
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  }
+
   const addProperty = async (newProp: any) => {
     isPropertiesLoading.value = true
     try {
       const res = await fetch(useApiUrl('/properties'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
         body: JSON.stringify(newProp)
       })
 
@@ -1074,7 +1080,7 @@ export const useProperties = () => {
     try {
       const res = await fetch(useApiUrl(`/properties/${id}`), {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
         body: JSON.stringify(data)
       })
 
@@ -1108,7 +1114,8 @@ export const useProperties = () => {
 
     try {
       const res = await fetch(useApiUrl(`/properties/${id}/toggle-feature`), {
-        method: 'PATCH'
+        method: 'PATCH',
+        headers: { ...authHeader() }
       })
       if (!res.ok) throw new Error('Toggle feature request failed')
       const json = await res.json()
@@ -1132,7 +1139,8 @@ export const useProperties = () => {
 
     try {
       const res = await fetch(useApiUrl(`/properties/${id}/toggle-rajuk`), {
-        method: 'PATCH'
+        method: 'PATCH',
+        headers: { ...authHeader() }
       })
       if (!res.ok) throw new Error('Toggle RAJUK request failed')
       const json = await res.json()
@@ -1157,7 +1165,7 @@ export const useProperties = () => {
     try {
       const res = await fetch(useApiUrl(`/properties/${id}/status`), {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
         body: JSON.stringify({ status })
       })
       if (!res.ok) throw new Error('Update status request failed')
@@ -1182,7 +1190,8 @@ export const useProperties = () => {
 
     try {
       const res = await fetch(useApiUrl(`/properties/${id}`), {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { ...authHeader() }
       })
       if (!res.ok) {
         const errorJson = await res.json().catch(() => null)
@@ -1203,6 +1212,7 @@ export const useProperties = () => {
     formData.append('image', file)
     const res = await fetch(useApiUrl('/upload'), {
       method: 'POST',
+      headers: { ...authHeader() },
       body: formData
     })
     if (!res.ok) {
@@ -1223,6 +1233,7 @@ export const useProperties = () => {
     }
     const res = await fetch(useApiUrl('/upload'), {
       method: 'POST',
+      headers: { ...authHeader() },
       body: formData
     })
     if (!res.ok) {
@@ -1241,6 +1252,7 @@ export const useProperties = () => {
     formData.append('brochure', file)
     const res = await fetch(useApiUrl('/upload'), {
       method: 'POST',
+      headers: { ...authHeader() },
       body: formData
     })
     if (!res.ok) {
@@ -1259,6 +1271,7 @@ export const useProperties = () => {
     formData.append('video', file)
     const res = await fetch(useApiUrl('/upload'), {
       method: 'POST',
+      headers: { ...authHeader() },
       body: formData
     })
     if (!res.ok) {
