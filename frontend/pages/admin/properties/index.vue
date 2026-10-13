@@ -479,3 +479,48 @@ const handleStatusChange = async (id: number, event: Event) => {
   }
 }
 </script>
+
+<style scoped>
+.admin-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .admin-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .admin-header-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px !important;
+    width: 100%;
+  }
+  .admin-header-actions .btn {
+    justify-content: center;
+    min-height: 44px;
+    font-size: 13.5px;
+    padding: 8px 12px;
+  }
+  .admin-header-actions .btn-emerald {
+    grid-column: span 2;
+    font-weight: 700;
+  }
+}
+
+@media (max-width: 640px) {
+  .panel-card .form-select {
+    width: 100% !important;
+  }
+  .table-responsive {
+    border-radius: var(--radius-md, 12px);
+    -webkit-overflow-scrolling: touch;
+  }
+}
+</style>

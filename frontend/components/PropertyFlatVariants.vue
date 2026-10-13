@@ -336,14 +336,49 @@ const whatsappUrl = computed(() => {
   flex-wrap: wrap;
 }
 .variant-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 16px;
+  font-weight: 700;
   min-height: 48px;
-  padding: 10px 20px;
+  padding: 12px 24px;
+  border: 0;
+  border-radius: 999px;
+  background: #E2651C;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 8px 20px -6px rgba(226, 101, 28, 0.45);
+  transition: transform 0.15s ease, background 0.15s ease;
+  font-family: 'Anek Bangla', 'Noto Sans Bengali', sans-serif;
+}
+.variant-cta:hover {
+  background: #C2530F;
+}
+.variant-cta:active {
+  transform: scale(0.98);
 }
 .variant-wa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-height: 48px;
-  padding: 10px 18px;
-  font-size: 13px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1.5px solid #1FA855;
+  border-radius: 999px;
+  color: #137A3D;
+  background: #fff;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+.variant-wa:hover {
+  background: #EAF7EF;
+}
+.variant-wa:active {
+  transform: scale(0.98);
 }
 
 /* Media Box */
@@ -400,23 +435,33 @@ const whatsappUrl = computed(() => {
 @media (max-width: 768px) {
   .variant-detail-card {
     grid-template-columns: 1fr;
-    padding: 20px;
-    gap: 20px;
+    padding: 16px;
+    gap: 16px;
+    border-radius: 14px;
   }
   .variant-title-row {
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    padding-bottom: 14px;
+    margin-bottom: 14px;
   }
   .current-price-badge {
     text-align: left;
   }
+  .variant-specs-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 12px;
+  }
   .variant-actions {
     flex-direction: column;
+    gap: 10px;
   }
   .variant-actions button,
   .variant-actions a {
     width: 100%;
     text-align: center;
+    min-height: 48px;
   }
   .floorplan-box {
     height: 200px;

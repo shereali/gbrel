@@ -82,9 +82,10 @@ const place = computed(() => {
 .pc-video { position: absolute; left: 14px; bottom: 14px; display: inline-flex; align-items: center; gap: 5px; background: #E2651C; color: #fff; font-weight: 700; font-size: .78rem; padding: 4px 10px; border-radius: 999px; }
 .pc-type { position: absolute; left: 14px; top: 14px; background: var(--gb-paper); color: var(--gb-paddy); font-family: var(--gb-display); font-weight: 600; font-size: .9rem; padding: 3px 12px; border-radius: 999px; }
 .pc-tools { position: absolute; right: 12px; top: 12px; display: flex; gap: 6px; z-index: 2; }
-.pc-tools button { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: rgba(251, 252, 247, .92); color: var(--gb-paddy); cursor: pointer; }
-.pc-tools button:hover { background: #fff; }
-.pc-tools button[aria-pressed="true"] { background: var(--gb-sun); color: #fff; }
+.pc-tools button { width: 38px; height: 38px; border: 0; outline: none; border-radius: 50%; display: grid; place-items: center; background: rgba(251, 252, 247, .94); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: var(--gb-paddy); cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, .14); transition: transform .15s ease, background .15s ease, box-shadow .15s ease; touch-action: manipulation; }
+.pc-tools button:hover { background: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, .18); }
+.pc-tools button:active { transform: scale(.92); }
+.pc-tools button[aria-pressed="true"] { background: var(--gb-sun); color: #fff; box-shadow: 0 3px 10px rgba(226, 101, 28, .35); }
 
 .pc-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
 .pc-place { display: flex; align-items: center; gap: 6px; font-size: .88rem; color: var(--gb-ink-soft); }

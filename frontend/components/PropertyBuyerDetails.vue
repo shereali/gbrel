@@ -7,7 +7,7 @@
       <summary>{{ group.bn }}</summary>
       <dl><div v-for="field in group.fields" :key="field.key"><dt>{{ field.bn }}</dt><dd>{{ field.display ?? field.value }}</dd></div></dl>
     </details>
-    <button type="button" @click="$emit('inquire')">{{ ctaLabel || 'ক্রয় তথ্য ও সাইট ভিজিট' }}</button>
+    <button type="button" class="buyer-inquiry-btn" @click="$emit('inquire')">{{ ctaLabel || 'ক্রয় তথ্য ও সাইট ভিজিট' }}</button>
   </section>
 </template>
 <script setup lang="ts">
@@ -20,5 +20,10 @@ const total = computed(() => totalAskingPrice(props.property))
 const unitPrice = computed(() => unitAskingPrice(props.property))
 </script>
 <style scoped>
-.public-buyer-details{padding:32px 0;scroll-margin-top:100px;min-width:0}.kicker{color:#16654d;font-size:12px;font-weight:700}.public-buyer-details h2{font-size:25px;margin:8px 0 12px}.source-note{color:#64736a;line-height:1.8;font-size:14px}.total-price{background:#eff7f1;border:1px solid #d8e7dd;border-radius:14px;padding:20px;margin:20px 0;display:grid;gap:6px}.total-price strong{font-size:28px;color:#174d3b}.total-price small{line-height:1.7;color:#506259}details{border-bottom:1px solid #dce6df}summary{padding:20px 4px;min-height:48px;box-sizing:border-box;cursor:pointer;font-weight:700}dl{margin:0 0 20px}dl>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px;padding:12px 4px;border-top:1px solid #edf1ee;line-height:1.8}dt{color:#63736a}dd{margin:0;white-space:pre-line;overflow-wrap:anywhere}button{padding:14px 18px;min-height:48px;border:0;border-radius:10px;background:#17543f;color:white;font:inherit;font-weight:700;margin-top:24px;cursor:pointer}summary:focus-visible,button:focus-visible{outline:3px solid #268366;outline-offset:3px}@media(max-width:480px){dl>div{grid-template-columns:1fr;gap:3px}.public-buyer-details h2{font-size:22px}button{width:100%}}
+.public-buyer-details{padding:32px 0;scroll-margin-top:100px;min-width:0}.kicker{color:#16654d;font-size:12px;font-weight:700}.public-buyer-details h2{font-size:25px;margin:8px 0 12px}.source-note{color:#64736a;line-height:1.8;font-size:14px}.total-price{background:#eff7f1;border:1px solid #d8e7dd;border-radius:14px;padding:20px;margin:20px 0;display:grid;gap:6px}.total-price strong{font-size:28px;color:#174d3b}.total-price small{line-height:1.7;color:#506259}details{border-bottom:1px solid #dce6df}summary{padding:20px 4px;min-height:48px;box-sizing:border-box;cursor:pointer;font-weight:700}dl{margin:0 0 20px}dl>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px;padding:12px 4px;border-top:1px solid #edf1ee;line-height:1.8}dt{color:#63736a}dd{margin:0;white-space:pre-line;overflow-wrap:anywhere}
+.buyer-inquiry-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 26px;min-height:50px;border:0;border-radius:999px;background:linear-gradient(135deg,#E2651C 0%,#C2530F 100%);color:#fff;font-family:'Anek Bangla','Noto Sans Bengali',sans-serif;font-size:16px;font-weight:700;margin-top:24px;cursor:pointer;box-shadow:0 8px 20px -6px rgba(226,101,28,.45);transition:transform .15s ease,box-shadow .15s ease,background .15s ease}
+.buyer-inquiry-btn:hover{background:#C2530F;box-shadow:0 10px 24px -4px rgba(194,83,15,.55)}
+.buyer-inquiry-btn:active{transform:scale(.98)}
+summary:focus-visible,.buyer-inquiry-btn:focus-visible{outline:3px solid #E2651C;outline-offset:3px}
+@media(max-width:600px){dl>div{grid-template-columns:1fr;gap:3px}.public-buyer-details h2{font-size:22px}.buyer-inquiry-btn{width:100%;min-height:50px;font-size:16px}}
 </style>
