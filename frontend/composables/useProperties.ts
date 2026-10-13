@@ -1254,6 +1254,24 @@ export const useProperties = () => {
     throw new Error(json?.message || 'Failed to upload brochure file')
   }
 
+  const uploadVideo = async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append('video', file)
+    const res = await fetch(useApiUrl('/upload'), {
+      method: 'POST',
+      body: formData
+    })
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => null)
+      throw new Error(errJson?.message || `Video upload failed with status ${res.status}`)
+    }
+    const json = await res.json()
+    if (json && json.success && json.url) {
+      return json.url
+    }
+    throw new Error(json?.message || 'Failed to upload video file')
+  }
+
   const isAgentsLoadingRef = computed(() => isAgentsLoading.value)
 
   const fetchAgents = async (force = false) => {
@@ -1385,6 +1403,7 @@ export const useProperties = () => {
     deleteAgent,
     uploadImage,
     uploadMultipleImages,
-    uploadBrochure
+    uploadBrochure,
+    uploadVideo
   }
 }

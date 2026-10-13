@@ -84,7 +84,8 @@ class Property extends Model
                     'total_floors', 'facing', 'completion_status', 'year_built', 'is_featured',
                     'is_rajuk_approved', 'is_verified', 'has_open_house', 'latitude', 'longitude',
                     'agent_id', 'hide_agent_photo', 'hide_agent_contact', 'hide_exact_address', 'hide_floor_plan', 'hide_mortgage_calculator',
-                    'images', 'amenities', 'documents_verified', 'brochure_url', 'created_at', 'updated_at',
+                    'images', 'video_url', 'video_poster', 'cover_media', 'amenities', 'documents_verified', 'brochure_url',
+                    'owner_id', 'review_status', 'published_at', 'created_at', 'updated_at',
                 ];
             }
         }

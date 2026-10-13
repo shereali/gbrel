@@ -284,11 +284,26 @@ if (! function_exists('normalizePropertyData')) {
 
         // Video: only our own uploads or YouTube / Facebook / Vimeo links; the cover choice falls back to photos.
         if (array_key_exists('video_url', $data)) {
-            $data['video_url'] = VideoLink::parse(is_string($data['video_url']) ? $data['video_url'] : null) ? trim($data['video_url']) : null;
+            $videoVal = is_string($data['video_url']) ? trim($data['video_url']) : null;
+            if ($videoVal && VideoLink::parse($videoVal)) {
+                if (preg_match('~^(?:https?://[^/]+)(/storage/.*)$~i', $videoVal, $m)) {
+                    $videoVal = $m[1];
+                }
+                $data['video_url'] = $videoVal;
+            } else {
+                $data['video_url'] = null;
+            }
         }
         if (array_key_exists('video_poster', $data)) {
             $poster = is_string($data['video_poster']) ? trim($data['video_poster']) : '';
-            $data['video_poster'] = $poster !== '' && VideoLink::isPoster($poster) ? $poster : null;
+            if ($poster !== '' && VideoLink::isPoster($poster)) {
+                if (preg_match('~^(?:https?://[^/]+)(/storage/.*)$~i', $poster, $m)) {
+                    $poster = $m[1];
+                }
+                $data['video_poster'] = $poster;
+            } else {
+                $data['video_poster'] = null;
+            }
         }
         if (array_key_exists('cover_media', $data)) {
             $data['cover_media'] = $data['cover_media'] === 'video' ? 'video' : 'image';
@@ -331,8 +346,21 @@ if (! function_exists('normalizePropertyData')) {
             }
         }
 
-        if (! empty($allImages)) {
-            $data['images'] = $allImages;
+        $normalizedImages = [];
+        foreach ($allImages as $img) {
+            if (is_string($img) && trim($img) !== '') {
+                $t = trim($img);
+                if (preg_match('~^(?:https?://[^/]+)(/storage/.*)$~i', $t, $m)) {
+                    $t = $m[1];
+                }
+                if (! in_array($t, $normalizedImages, true)) {
+                    $normalizedImages[] = $t;
+                }
+            }
+        }
+
+        if (! empty($normalizedImages) || isset($input['images']) || isset($input['gallery']) || isset($input['featureImage'])) {
+            $data['images'] = $normalizedImages;
         }
 
         // 3. Dynamic Unique Slug Generation
@@ -631,7 +659,9 @@ Route::put('/properties/{id}', function (Request $request, $id) {
         $property->update(['published_at' => now()]);
     }
     Cache::forget("property_pub_{$id}");
-    if ($property->slug) Cache::forget("property_pub_{$property->slug}");
+    if ($property->slug) {
+        Cache::forget("property_pub_{$property->slug}");
+    }
 
     return response()->json([
         'success' => true,
@@ -645,7 +675,9 @@ Route::patch('/properties/{id}/toggle-feature', function ($id) {
     $property->is_featured = ! $property->is_featured;
     $property->save();
     Cache::forget("property_pub_{$id}");
-    if ($property->slug) Cache::forget("property_pub_{$property->slug}");
+    if ($property->slug) {
+        Cache::forget("property_pub_{$property->slug}");
+    }
 
     return response()->json([
         'success' => true,
@@ -660,7 +692,9 @@ Route::patch('/properties/{id}/toggle-rajuk', function ($id) {
     $property->is_rajuk_approved = ! $property->is_rajuk_approved;
     $property->save();
     Cache::forget("property_pub_{$id}");
-    if ($property->slug) Cache::forget("property_pub_{$property->slug}");
+    if ($property->slug) {
+        Cache::forget("property_pub_{$property->slug}");
+    }
 
     return response()->json([
         'success' => true,
@@ -677,7 +711,9 @@ Route::patch('/properties/{id}/status', function (Request $request, $id) {
     $property->status = $status;
     $property->save();
     Cache::forget("property_pub_{$id}");
-    if ($property->slug) Cache::forget("property_pub_{$property->slug}");
+    if ($property->slug) {
+        Cache::forget("property_pub_{$property->slug}");
+    }
 
     return response()->json([
         'success' => true,
@@ -690,7 +726,9 @@ Route::patch('/properties/{id}/status', function (Request $request, $id) {
 Route::delete('/properties/{id}', function ($id) {
     $property = Property::findOrFail($id);
     Cache::forget("property_pub_{$id}");
-    if ($property->slug) Cache::forget("property_pub_{$property->slug}");
+    if ($property->slug) {
+        Cache::forget("property_pub_{$property->slug}");
+    }
     $property->delete();
 
     return response()->json([
@@ -2214,10 +2252,38 @@ Route::post('/upload', function (Request $request) {
         'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
         'images' => ['nullable', 'array', 'max:20'],
         'images.*' => ['file', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+        'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/quicktime', 'max:102400'],
         'brochure' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:25600'],
-        'file' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:25600'],
+        'file' => ['nullable', 'file', 'mimes:pdf,doc,docx,video/mp4,video/webm,video/quicktime', 'max:102400'],
         'document' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:25600'],
     ]);
+
+    // 0. Video file upload
+    if ($request->hasFile('video') || ($request->hasFile('file') && str_starts_with((string) $request->file('file')->getMimeType(), 'video/'))) {
+        $file = $request->file('video') ?: $request->file('file');
+        $ext = $file->guessExtension() ?: 'mp4';
+        $filename = 'prop_vid_'.time().'_'.rand(1000, 9999).'.'.$ext;
+        $path = $file->storeAs('media/'.now()->format('Y/m'), $filename, 'public');
+        $url = '/storage/'.$path;
+        if ($request->user()?->isStaff()) {
+            Media::firstOrCreate(['url' => $url], [
+                'type' => 'video',
+                'source' => 'upload',
+                'path' => $path,
+                'title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'uploaded_by' => $request->user()?->id,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Video uploaded successfully',
+            'url' => $url,
+            'urls' => [$url],
+        ]);
+    }
 
     // 1. Single image file upload
     if ($request->hasFile('image')) {

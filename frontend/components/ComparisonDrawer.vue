@@ -44,7 +44,7 @@
               <tr>
                 <th style="padding: 12px; text-align: left; width: 200px; color: #64748B; font-size: 0.85rem; text-transform: uppercase;">Attribute</th>
                 <th v-for="prop in comparedProperties" :key="prop.id" style="padding: 12px; text-align: left; min-width: 220px; vertical-align: top;">
-                  <img :src="prop.images[0]" style="width: 100%; height: 130px; object-fit: cover; border-radius: var(--radius-md); margin-bottom: 8px;" />
+                  <img :src="resolveMediaUrl(prop.featureImage || prop.images?.[0] || prop.videoPoster) || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800'" style="width: 100%; height: 130px; object-fit: cover; border-radius: var(--radius-md); margin-bottom: 8px;" />
                   <div style="font-size: 0.95rem; font-weight: 800; color: #0F172A; line-height: 1.3;">{{ prop.title }}</div>
                   <button @click="toggleCompare(prop.id)" style="background: none; border: none; color: #E11D48; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-top: 4px;">
                     Remove from comparison ✕

@@ -171,10 +171,11 @@
                 <div class="flex items-center gap-3">
                   <div style="position:relative; flex-shrink:0;">
                     <img 
-                      :src="prop.featureImage || prop.images[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=200&auto=format&fit=crop'" 
+                      :src="resolveMediaUrl(prop.featureImage || prop.images?.[0] || prop.videoPoster) || defaultPlaceholder" 
                       class="table-thumb" 
                       alt="thumb" 
                       loading="lazy"
+                      @error="onImageError"
                     />
                     <span 
                       v-if="prop.images && prop.images.length > 1" 
@@ -182,6 +183,13 @@
                       title="Gallery photos attached"
                     >
                       📷 {{ prop.images.length }}
+                    </span>
+                    <span 
+                      v-if="prop.videoUrl" 
+                      style="position:absolute; top:2px; right:2px; background:rgba(226, 101, 28, 0.9); color:#FFF; font-size:0.68rem; font-weight:700; padding:1px 4px; border-radius:3px; border:1px solid rgba(255,255,255,0.2);"
+                      title="Video attached"
+                    >
+                      ▶ Video
                     </span>
                   </div>
                   <div>
@@ -194,7 +202,7 @@
                       </span>
                       <a 
                         v-if="prop.brochureUrl" 
-                        :href="prop.brochureUrl" 
+                        :href="resolveMediaUrl(prop.brochureUrl)" 
                         target="_blank" 
                         style="font-size:0.7rem; font-weight:700; color:#38BDF8; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); padding:1px 6px; border-radius:3px; text-decoration:none; display:inline-flex; align-items:center; gap:3px;"
                         title="Download attached brochure PDF"
@@ -345,6 +353,14 @@ const {
 } = usePropertyOptions()
 
 const toast = useToast()
+
+const defaultPlaceholder = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=200&auto=format&fit=crop'
+const onImageError = (e: Event) => {
+  const target = e.target as HTMLImageElement
+  if (target && target.src !== defaultPlaceholder) {
+    target.src = defaultPlaceholder
+  }
+}
 
 const inventorySearch = ref('')
 const inventoryTypeFilter = ref('')

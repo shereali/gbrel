@@ -25,21 +25,21 @@
         <template v-if="slides.length">
           <template v-if="slides[0].kind === 'video' && video">
             <div v-if="heroPlaying" class="gallery-primary gallery-player">
-              <video v-if="video.kind === 'file'" ref="heroVideoEl" :src="video.src" :poster="videoPoster || undefined" autoplay :muted="heroMuted" loop controls playsinline></video>
+              <video v-if="video.kind === 'file'" ref="heroVideoEl" :src="resolveMediaUrl(video.src)" :poster="resolveMediaUrl(videoPoster) || undefined" autoplay :muted="heroMuted" loop controls playsinline></video>
               <iframe v-else ref="heroFrame" :src="heroEmbed?.src" title="প্রপার্টির ভিডিও" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
               <button v-if="heroMuted && video.kind !== 'facebook'" type="button" class="unmute-btn" @click="unmuteHero"><Volume2 :size="18" aria-hidden="true" /> শব্দ চালু করুন</button>
             </div>
             <button v-else class="gallery-primary gallery-video" aria-label="প্রপার্টির ভিডিও চালু করুন" @click="playHeroVideo">
-              <img v-if="videoPoster" :src="videoPoster" :alt="property.title" fetchpriority="high" decoding="async" @error="imageFailed" />
-              <video v-else-if="video.kind === 'file'" :src="video.src + '#t=0.5'" preload="metadata" muted playsinline aria-hidden="true"></video>
+              <img v-if="videoPoster" :src="resolveMediaUrl(videoPoster)" :alt="property.title" fetchpriority="high" decoding="async" @error="imageFailed" />
+              <video v-else-if="video.kind === 'file'" :src="resolveMediaUrl(video.src) + '#t=0.5'" preload="metadata" muted playsinline aria-hidden="true"></video>
               <span class="play-disc" aria-hidden="true"><Play :size="30" fill="currentColor" /></span>
               <span class="gallery-caption"><Play :size="16" /> ভিডিও দেখুন</span>
             </button>
           </template>
-          <button v-else-if="slides[0].kind === 'image'" class="gallery-primary" aria-label="বড় করে ছবি দেখুন" @click="openPhoto(0)"><img :src="slides[0].src" :alt="property.title" fetchpriority="high" decoding="async" @error="imageFailed" /><span class="gallery-caption"><Expand :size="16" /> {{ images.length }}টি ছবি দেখুন</span></button>
+          <button v-else-if="slides[0].kind === 'image'" class="gallery-primary" aria-label="বড় করে ছবি দেখুন" @click="openPhoto(0)"><img :src="resolveMediaUrl(slides[0].src)" :alt="property.title" fetchpriority="high" decoding="async" @error="imageFailed" /><span class="gallery-caption"><Expand :size="16" /> {{ images.length }}টি ছবি দেখুন</span></button>
           <template v-if="slides[1] && isDesktop">
-            <button v-if="slides[1].kind === 'video'" class="gallery-secondary gallery-video" aria-label="প্রপার্টির ভিডিও দেখুন" @click="openPhoto(1)"><img v-if="videoPoster" :src="videoPoster" alt="" loading="lazy" @error="imageFailed" /><span class="play-disc" aria-hidden="true"><Play :size="26" fill="currentColor" /></span></button>
-            <button v-else class="gallery-secondary" aria-label="দ্বিতীয় ছবি বড় করে দেখুন" @click="openPhoto(1)"><img :src="slides[1].src" :alt="`${property.title} — ছবি ২`" loading="lazy" decoding="async" @error="imageFailed" /></button>
+            <button v-if="slides[1].kind === 'video'" class="gallery-secondary gallery-video" aria-label="প্রপার্টির ভিডিও দেখুন" @click="openPhoto(1)"><img v-if="videoPoster" :src="resolveMediaUrl(videoPoster)" alt="" loading="lazy" @error="imageFailed" /><span class="play-disc" aria-hidden="true"><Play :size="26" fill="currentColor" /></span></button>
+            <button v-else class="gallery-secondary" aria-label="দ্বিতীয় ছবি বড় করে দেখুন" @click="openPhoto(1)"><img :src="resolveMediaUrl(slides[1].src)" :alt="`${property.title} — ছবি ২`" loading="lazy" decoding="async" @error="imageFailed" /></button>
           </template>
           <div v-if="!heroPlaying && (videoIndex > 0 || (videoIndex === 0 && images.length))" class="gallery-chips">
             <button v-if="videoIndex > 0" type="button" class="gallery-chip gallery-chip--video" @click="openPhoto(videoIndex)"><Play :size="15" fill="currentColor" /> ভিডিও দেখুন</button>
@@ -79,7 +79,7 @@
             <p class="eyebrow">সিদ্ধান্তের আগে পরিষ্কার ধারণা</p><h2>কাগজপত্র ও খরচ বুঝে নিন</h2><p>মালিকানা, অনুমোদন, রেজিস্ট্রেশন ও প্রযোজ্য খরচ নিয়ে প্রশ্ন করুন। তালিকায় থাকা তথ্যের সঙ্গে মূল নথি মিলিয়ে দেখুন।</p>
             <ul v-if="property.documentsVerified?.length" class="document-list"><li v-for="document in property.documentsVerified" :key="document"><FileText :size="18" /><span>{{ document }} <small>তালিকায় উল্লেখিত</small></span></li></ul>
             <div v-if="property.propertyType === 'Land Share'" class="land-share-note"><strong>জমির শেয়ার কিনছেন?</strong><p>এই মূল্যে জমির কতটুকু অংশ পাবেন, নির্মাণ খরচ আলাদা কি না, এবং হস্তান্তরের শর্ত—সবগুলো আলাদা করে নিশ্চিত করুন।</p></div>
-            <div v-if="brochures.length" class="brochure-list"><a v-for="doc in brochures" :key="doc.url" :href="doc.url" target="_blank" rel="noopener noreferrer"><FileDown :size="20" /><span>{{ doc.title }}</span><ArrowUpRight :size="18" /></a></div>
+            <div v-if="brochures.length" class="brochure-list"><a v-for="doc in brochures" :key="doc.url" :href="resolveMediaUrl(doc.url)" target="_blank" rel="noopener noreferrer"><FileDown :size="20" /><span>{{ doc.title }}</span><ArrowUpRight :size="18" /></a></div>
             <p v-else class="muted-note">এই পেজে ব্রোশিওর প্রকাশ করা হয়নি। উপলব্ধ কাগজপত্র সম্পর্কে টিমকে জিজ্ঞেস করতে পারেন।</p><button class="text-action" @click="openInquiry('documents')">{{ ctaLabel }} <ArrowRight :size="16" /></button>
           </section>
           <section id="property-location" class="detail-section"><p class="eyebrow">নিজে দেখে সিদ্ধান্ত নিন</p><h2>লোকেশন ও সাইট ভিজিট</h2><p class="property-location"><MapPin :size="20" />{{ location }}</p><p>সাইট ভিজিটের আগে সঠিক লোকেশন, যাতায়াতের পথ ও সময় টিমের সঙ্গে মিলিয়ে নিন।</p><a v-if="!property.hideExactAddress && property.lat && property.lng" class="text-action" :href="`https://www.google.com/maps/search/?api=1&query=${property.lat},${property.lng}`" target="_blank" rel="noopener noreferrer">ম্যাপে লোকেশন দেখুন <ArrowUpRight :size="16" /></a><button class="secondary" @click="openInquiry('site_visit')">{{ ctaLabel }} <ArrowRight :size="16" /></button></section>
@@ -146,7 +146,7 @@
       <aside v-if="!inquiryOpen && !lightboxOpen" class="mobile-inquiry-bar" :class="{ shown: !heroCtaVisible && !bottomCtaVisible }" aria-label="প্রপার্টি সম্পর্কে যোগাযোগ"><div><strong>{{ price.amount }}</strong><small>{{ price.hidden ? 'বিস্তারিত জেনে নিন' : price.per }}</small></div><a v-if="waLink" class="bar-wa" :href="waLink" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp-এ জিজ্ঞেস করুন" @click="track('Contact', { method: 'WhatsApp', placement: 'sticky' })"><MessageCircle :size="22" /></a><button class="cta-sun" @click="openInquiry('mobile_sticky')">{{ ctaLabel }}</button></aside>
       <PropertyInquiry :key="property.id" :open="inquiryOpen" :property="property" :source="inquirySource" :start-purpose="startPurpose" :whatsapp="leadWhatsapp" @close="inquiryOpen = false" @saved="leadSaved" />
     </div>
-    <Teleport to="body"><div v-if="lightboxOpen && currentSlide" ref="lightboxRoot" class="photo-overlay" role="dialog" aria-modal="true" aria-label="প্রপার্টির ছবি ও ভিডিও" @click.self="lightboxOpen = false" @keydown.left="previousPhoto" @keydown.right="nextPhoto"><button class="photo-close" aria-label="বন্ধ করুন" @click="lightboxOpen = false"><X :size="25" /></button><img v-if="currentSlide.kind === 'image'" :src="currentSlide.src" :alt="`${property?.title} — ছবি ${photoIndex + 1}`" /><div v-else-if="video" class="photo-video"><video v-if="video.kind === 'file'" :key="video.src" :src="video.src" :poster="videoPoster || undefined" autoplay loop controls playsinline></video><iframe v-else :key="video.src" :src="video.src" title="প্রপার্টির ভিডিও" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div><div class="photo-controls"><button :disabled="slides.length < 2" aria-label="আগেরটি" @click="previousPhoto"><ChevronLeft /></button><span aria-live="polite">{{ photoIndex + 1 }} / {{ slides.length }}</span><button :disabled="slides.length < 2" aria-label="পরেরটি" @click="nextPhoto"><ChevronRight /></button></div></div></Teleport>
+    <Teleport to="body"><div v-if="lightboxOpen && currentSlide" ref="lightboxRoot" class="photo-overlay" role="dialog" aria-modal="true" aria-label="প্রপার্টির ছবি ও ভিডিও" @click.self="lightboxOpen = false" @keydown.left="previousPhoto" @keydown.right="nextPhoto"><button class="photo-close" aria-label="বন্ধ করুন" @click="lightboxOpen = false"><X :size="25" /></button><img v-if="currentSlide.kind === 'image'" :src="resolveMediaUrl(currentSlide.src)" :alt="`${property?.title} — ছবি ${photoIndex + 1}`" /><div v-else-if="video" class="photo-video"><video v-if="video.kind === 'file'" :key="video.src" :src="resolveMediaUrl(video.src)" :poster="resolveMediaUrl(videoPoster) || undefined" autoplay loop controls playsinline></video><iframe v-else :key="video.src" :src="video.src" title="প্রপার্টির ভিডিও" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div><div class="photo-controls"><button :disabled="slides.length < 2" aria-label="আগেরটি" @click="previousPhoto"><ChevronLeft /></button><span aria-live="polite">{{ photoIndex + 1 }} / {{ slides.length }}</span><button :disabled="slides.length < 2" aria-label="পরেরটি" @click="nextPhoto"><ChevronRight /></button></div></div></Teleport>
   </div>
 </template>
 
@@ -161,6 +161,7 @@ import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
 import { detailGroups } from '~/utils/buyerDetails.mjs'
 import { priceDisplay } from '~/utils/priceDisplay'
 import { parseVideo, unmuteEmbed } from '~/utils/videoEmbed'
+import { resolveMediaUrl } from '~/utils/mediaUrl'
 import { safeBrochureUrl } from '~/utils/propertyInquiry.mjs'
 import { trackPixel } from '~/utils/metaPixel'
 import { telHref, whatsappLink } from '~/utils/contact'
@@ -188,10 +189,10 @@ const agent = computed(() => agents.value.find(item => item.id === property.valu
 const { settings, fetchSettings } = useSettings()
 fetchSettings()
 const leadWhatsapp = computed(() => (!property.value?.hideAgentContact && agent.value?.whatsapp) || settings.value.whatsapp_number || '')
-const images = computed(() => [...new Set((property.value?.images || []).filter(Boolean))])
+const images = computed(() => [...new Set((property.value?.images || []).filter(Boolean))].map(url => resolveMediaUrl(url)))
 // Video: the listing chooses whether buyers land on the video or the main photo. Nothing autoplays; a tap plays it.
 const video = computed(() => parseVideo(property.value?.videoUrl))
-const videoPoster = computed(() => property.value?.videoPoster || video.value?.thumbnail || images.value[0] || '')
+const videoPoster = computed(() => resolveMediaUrl(property.value?.videoPoster || video.value?.thumbnail || images.value[0] || ''))
 type Slide = { kind: 'image'; src: string } | { kind: 'video' }
 const slides = computed<Slide[]>(() => {
   const photos: Slide[] = images.value.map(src => ({ kind: 'image', src }))

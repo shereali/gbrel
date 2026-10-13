@@ -435,7 +435,7 @@
 
       <div v-if="dynamicComparables.length > 0" class="comparables-grid">
         <div v-for="comp in dynamicComparables" :key="comp.id" class="comparable-card">
-          <img :src="comp.images && comp.images.length > 0 ? comp.images[0] : 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800'" :alt="comp.title" class="comparable-img" />
+          <img :src="resolveMediaUrl(comp.featureImage || (comp.images && comp.images.length > 0 ? comp.images[0] : comp.videoPoster)) || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800'" :alt="comp.title" class="comparable-img" />
           <div class="comparable-info">
             <div class="comparable-badge">{{ comp.areaName || comp.city }} • {{ comp.propertyType }}</div>
             <h4 class="comparable-title">

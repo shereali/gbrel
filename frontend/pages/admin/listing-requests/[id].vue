@@ -84,7 +84,7 @@
 
         <section class="rv-card" aria-labelledby="rv-photos">
           <h2 id="rv-photos">Owner's photos</h2>
-          <div v-if="p.images?.length" class="rv-photos"><img v-for="(url, i) in p.images" :key="url" :src="url" :alt="`Photo ${i + 1}`" loading="lazy" /></div>
+          <div v-if="p.images?.length" class="rv-photos"><img v-for="(url, i) in p.images" :key="url" :src="resolveMediaUrl(url)" :alt="`Photo ${i + 1}`" loading="lazy" /></div>
           <p v-else class="rv-muted">No photos. Plan a site visit to take them.</p>
         </section>
 

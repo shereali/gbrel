@@ -379,7 +379,7 @@
               </div>
             </div>
             <div class="pm-cover">
-              <img v-if="propForm.featureImage" :src="propForm.featureImage" alt="Main photo preview" />
+              <img v-if="propForm.featureImage" :src="resolveMediaUrl(propForm.featureImage)" alt="Main photo preview" />
               <p v-else class="empty-cover">Add a recent photo of the property. It is also the image Facebook shows when the page is shared.</p>
               <button v-if="propForm.featureImage" type="button" class="pm-remove" aria-label="Remove main photo" @click="propForm.featureImage = ''"><X :size="16" /></button>
             </div>
@@ -396,7 +396,7 @@
             </div>
             <div v-if="propForm.gallery.length > 0" class="gallery-grid">
               <div v-for="(imgUrl, idx) in propForm.gallery" :key="imgUrl + idx" class="gallery-item-card">
-                <img :src="imgUrl" :alt="'Photo ' + (idx + 2)" loading="lazy" />
+                <img :src="resolveMediaUrl(imgUrl)" :alt="'Photo ' + (idx + 2)" loading="lazy" />
                 <div class="gallery-item-overlay">
                   <div class="flex justify-between items-center">
                     <span class="pm-num">{{ idx + 2 }}</span>
@@ -420,14 +420,16 @@
               <h3>Video</h3>
               <div class="pm-btns">
                 <button type="button" class="pm-btn pm-btn--solid" @click="openPicker('video')"><Film :size="15" aria-hidden="true" /> {{ videoSource ? 'Change video' : 'Choose video' }}</button>
+                <input ref="videoFileInput" type="file" accept="video/mp4,video/webm,video/quicktime" hidden @change="onVideoFileSelected" />
+                <button type="button" class="pm-btn" :disabled="isUploadingVideo" @click="triggerVideoUpload"><Upload :size="15" aria-hidden="true" /> {{ isUploadingVideo ? 'Uploading…' : 'Upload video' }}</button>
                 <button v-if="videoSource" type="button" class="pm-btn" @click="clearVideo">Remove</button>
               </div>
             </div>
             <div v-if="videoSource" class="pm-video-row">
               <div class="pm-video-frame">
-                <video v-if="videoSource.kind === 'file'" :src="videoSource.src" :poster="videoPosterPreview || undefined" controls preload="metadata" playsinline></video>
+                <video v-if="videoSource.kind === 'file'" :src="resolveMediaUrl(videoSource.src)" :poster="resolveMediaUrl(videoPosterPreview) || undefined" controls preload="metadata" playsinline></video>
                 <template v-else>
-                  <img v-if="videoPosterPreview" :src="videoPosterPreview" alt="Video cover preview" />
+                  <img v-if="videoPosterPreview" :src="resolveMediaUrl(videoPosterPreview)" alt="Video cover preview" />
                   <span v-else class="pm-video-blank"><Film :size="28" aria-hidden="true" /></span>
                   <span class="pm-play" aria-hidden="true"><Play :size="20" /></span>
                 </template>
@@ -803,11 +805,13 @@ const {
 const isSaving = ref(false)
 const isUploadingFeature = ref(false)
 const isUploadingGallery = ref(false)
+const isUploadingVideo = ref(false)
 const isUploadingBrochure = ref(false)
 const newGalleryUrl = ref('')
 
 const featureFileInput = ref<HTMLInputElement | null>(null)
 const galleryFileInput = ref<HTMLInputElement | null>(null)
+const videoFileInput = ref<HTMLInputElement | null>(null)
 const brochureFileInput = ref<HTMLInputElement | null>(null)
 
 const route = useRoute()
@@ -1115,6 +1119,7 @@ const setupScrollSpy = () => {
 // Media upload helpers
 const triggerFeatureUpload = () => featureFileInput.value?.click()
 const triggerGalleryUpload = () => galleryFileInput.value?.click()
+const triggerVideoUpload = () => videoFileInput.value?.click()
 const triggerBrochureUpload = () => brochureFileInput.value?.click()
 
 const onFeatureFileSelected = async (e: Event) => {
@@ -1161,6 +1166,64 @@ const onBrochureFileSelected = async (e: Event) => {
     toast.error('Upload Error', err.message || 'Could not upload brochure.')
   } finally {
     isUploadingBrochure.value = false
+    target.value = ''
+  }
+}
+
+const captureVideoFrame = async (file: File): Promise<File | null> => {
+  if (typeof document === 'undefined') return null
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(file)
+    const v = document.createElement('video')
+    const done = (result: File | null) => { v.removeAttribute('src'); v.load(); URL.revokeObjectURL(url); resolve(result) }
+    const timer = setTimeout(() => done(null), 8000)
+    v.muted = true
+    v.playsInline = true
+    v.preload = 'auto'
+    v.src = url
+    v.onloadedmetadata = () => { v.currentTime = Math.min(1, (v.duration || 2) / 3) }
+    v.onseeked = () => {
+      clearTimeout(timer)
+      const width = Math.min(1600, v.videoWidth || 1280)
+      const height = Math.round(width * ((v.videoHeight || 720) / (v.videoWidth || 1280)))
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      canvas.getContext('2d')?.drawImage(v, 0, 0, width, height)
+      canvas.toBlob(blob => done(blob ? new File([blob], file.name.replace(/\.[^.]+$/, '') + ' - cover.jpg', { type: 'image/jpeg' }) : null), 'image/jpeg', 0.85)
+    }
+    v.onerror = () => { clearTimeout(timer); done(null) }
+  })
+}
+
+const onVideoFileSelected = async (e: Event) => {
+  const target = e.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+  const file = target.files[0]
+  isUploadingVideo.value = true
+  try {
+    const { upload: uploadToMedia, update: updateMedia } = useMediaLibrary()
+    let item = await uploadToMedia(file)
+    try {
+      const frame = await captureVideoFrame(file)
+      if (frame) {
+        const cover = await uploadToMedia(frame)
+        item = await updateMedia(item.id, { thumbnail_url: cover.url })
+      }
+    } catch { /* optional frame capture */ }
+
+    propForm.videoUrl = item.url
+    propForm.coverMedia = 'video'
+    if (item.thumbnail_url) {
+      propForm.videoPoster = item.thumbnail_url
+    } else if (propForm.featureImage) {
+      propForm.videoPoster = propForm.featureImage
+    }
+    toast.success('Video Uploaded', 'Video saved and attached to listing.')
+  } catch (err: any) {
+    toast.error('Upload Error', err.message || 'Could not upload video.')
+  } finally {
+    isUploadingVideo.value = false
     target.value = ''
   }
 }

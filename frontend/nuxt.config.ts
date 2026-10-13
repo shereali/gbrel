@@ -70,11 +70,21 @@ export default defineNuxtConfig({
       metaPixelId: process.env.NUXT_PUBLIC_META_PIXEL_ID || ''
     }
   },
+  vite: {
+    server: {
+      proxy: {
+        '/storage': {
+          target: (process.env.NUXT_API_BASE_SERVER || process.env.NUXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000').replace(/\/api\/?$/, '').replace(/\/$/, '') || 'http://127.0.0.1:8000',
+          changeOrigin: true
+        }
+      }
+    }
+  },
   nitro: {
     compressPublicAssets: true,
     routeRules: {
-      '/api/**': { proxy: 'http://127.0.0.1:8000/api/**' },
-      '/storage/**': { proxy: 'http://127.0.0.1:8000/storage/**' }
+      '/api/**': { proxy: `${(process.env.NUXT_API_BASE_SERVER || process.env.NUXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000').replace(/\/api\/?$/, '').replace(/\/$/, '') || 'http://127.0.0.1:8000'}/api/**` },
+      '/storage/**': { proxy: `${(process.env.NUXT_API_BASE_SERVER || process.env.NUXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000').replace(/\/api\/?$/, '').replace(/\/$/, '') || 'http://127.0.0.1:8000'}/storage/**` }
     }
   }
 })

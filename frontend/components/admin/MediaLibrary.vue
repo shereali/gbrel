@@ -50,8 +50,8 @@
           <li v-for="item in items" :key="item.id">
             <button type="button" class="ml-tile" :class="{ selected: isSelected(item), active: activeId === item.id }" :aria-pressed="mode === 'pick' ? isSelected(item) : undefined" @click="onTile(item)">
               <span class="ml-thumb">
-                <img v-if="thumbOf(item)" :src="thumbOf(item)!" :alt="''" loading="lazy" />
-                <video v-else-if="item.type === 'video' && item.source === 'upload'" :src="item.url + '#t=0.5'" preload="metadata" muted playsinline></video>
+                <img v-if="thumbOf(item)" :src="resolveMediaUrl(thumbOf(item))!" :alt="''" loading="lazy" />
+                <video v-else-if="item.type === 'video' && item.source === 'upload'" :src="resolveMediaUrl(item.url) + '#t=0.5'" preload="metadata" muted playsinline></video>
                 <span v-else class="ml-thumb-blank"><Film :size="26" aria-hidden="true" /></span>
                 <span v-if="item.type === 'video'" class="ml-play" aria-hidden="true"><Play :size="16" /></span>
                 <span v-if="mode === 'pick' && isSelected(item)" class="ml-check" aria-hidden="true"><Check :size="16" /></span>
@@ -72,8 +72,8 @@
           <button type="button" class="ml-icon" aria-label="Close details" @click="activeId = null"><X :size="18" /></button>
         </div>
         <div class="ml-preview">
-          <video v-if="active.type === 'video' && active.source === 'upload'" :src="active.url" controls preload="metadata" playsinline></video>
-          <img v-else-if="thumbOf(active)" :src="thumbOf(active)!" alt="" />
+          <video v-if="active.type === 'video' && active.source === 'upload'" :src="resolveMediaUrl(active.url)" controls preload="metadata" playsinline></video>
+          <img v-else-if="thumbOf(active)" :src="resolveMediaUrl(thumbOf(active))!" alt="" />
           <span v-else class="ml-thumb-blank"><Film :size="30" aria-hidden="true" /></span>
         </div>
         <label class="ml-field">

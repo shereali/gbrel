@@ -1,7 +1,7 @@
 <template>
   <article class="pc" :class="{ 'pc--wide': wide }">
     <div class="pc-media">
-      <img v-if="image && !imageBroken" :src="image" :alt="property.title" loading="lazy" decoding="async" @error="imageBroken = true" />
+      <img v-if="image && !imageBroken" :src="resolveMediaUrl(image)" :alt="property.title" loading="lazy" decoding="async" @error="imageBroken = true" />
       <div v-else class="pc-noimg" aria-hidden="true">
         <svg viewBox="0 0 120 60"><path d="M0 60 C30 30 60 36 120 20 V60Z" /><path d="M0 60 C40 44 80 48 120 38 V60Z" /></svg>
       </div>
@@ -56,7 +56,7 @@ const { isPropertySaved, toggleSaveProperty } = useAuth()
 const { isInCompare, toggleCompare } = useCompare()
 
 const imageBroken = ref(false)
-const image = computed(() => props.property.featureImage || props.property.images?.[0] || '')
+const image = computed(() => props.property.featureImage || props.property.images?.[0] || props.property.videoPoster || '')
 const hasVideo = computed(() => Boolean(parseVideo(props.property.videoUrl)))
 const price = computed(() => priceDisplay(props.property))
 const area = computed(() => areaLabel(props.property.squareFootage, props.property.landSize, props.property.landUnit))

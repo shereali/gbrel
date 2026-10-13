@@ -36,7 +36,7 @@
               <tr style="background: #F1F5F9;">
                 <th style="padding: 20px; text-align: left; width: 220px; color: #475569; font-size: 0.85rem; text-transform: uppercase;">Specifications</th>
                 <th v-for="prop in comparedProperties" :key="prop.id" style="padding: 20px; text-align: left; min-width: 240px; vertical-align: top;">
-                  <img :src="prop.images[0]" :alt="prop.title" style="width: 100%; height: 150px; object-fit: cover; border-radius: var(--radius-md); margin-bottom: 10px;" />
+                  <img :src="resolveMediaUrl(prop.featureImage || prop.images?.[0] || prop.videoPoster) || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800'" :alt="prop.title" style="width: 100%; height: 150px; object-fit: cover; border-radius: var(--radius-md); margin-bottom: 10px;" />
                   <NuxtLink :to="`/properties/${prop.id}`">
                     <h3 style="font-size: 1.05rem; font-weight: 800; color: #0A1128; line-height: 1.3;">{{ prop.title }}</h3>
                   </NuxtLink>

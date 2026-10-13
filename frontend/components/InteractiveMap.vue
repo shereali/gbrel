@@ -102,9 +102,8 @@ const renderMarkers = (L: any) => {
 
       const marker = L.marker([lat, lng], { icon: customIcon })
 
-      const firstImage = (prop.images && prop.images.length > 0)
-        ? prop.images[0]
-        : 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600&auto=format&fit=crop'
+      const firstImage = resolveMediaUrl(prop.featureImage || (prop.images && prop.images.length > 0 ? prop.images[0] : prop.videoPoster))
+        || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600&auto=format&fit=crop'
 
       // Popup Content Card on Click/Hover
       const popupHtml = `

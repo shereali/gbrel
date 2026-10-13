@@ -144,7 +144,7 @@
             <p class="ow-lead">সামনে থেকে, রাস্তা, চারপাশ আর ভেতরের ছবি দিন। প্রথম ছবিটি প্রধান ছবি হিসেবে দেখানো হবে। পরে আমাদের টিম পেশাদার ছবিও তুলতে পারে।</p>
             <div class="ow-photos">
               <figure v-for="(url, i) in form.images" :key="url">
-                <img :src="url" :alt="`ছবি ${toBn(i + 1)}`" />
+                <img :src="resolveMediaUrl(url)" :alt="`ছবি ${toBn(i + 1)}`" />
                 <figcaption>
                   <span v-if="i === 0">প্রধান ছবি</span>
                   <button v-else-if="!readOnly" type="button" @click="makeCover(i)">প্রধান করুন</button>

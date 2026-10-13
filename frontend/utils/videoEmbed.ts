@@ -30,14 +30,15 @@ export function youtubeId(url?: string | null): string | null {
 export function parseVideo(url?: string | null, options: EmbedOptions = {}): VideoSource | null {
   const value = (url || '').trim()
   if (!value) return null
-  // Our own uploads only: /storage/media/2026/09/<name>.mp4, no ".." or other folders.
-  if (/^\/storage\/media\/(?:[\w-]+\/)*[\w-]+\.(mp4|webm|mov|m4v)$/i.test(value)) return { kind: 'file', src: value }
-  if (!/^https:\/\//i.test(value)) return null
+  // Our own uploads: /storage/media/..., /storage/properties/..., or absolute URLs pointing to /storage/
+  const storageMatch = value.match(/^(?:https?:\/\/[^\/]+)?(\/storage\/(?:media|properties)\/(?:[\w-]+\/)*[\w-]+\.(mp4|webm|mov|m4v|ogg))(?:\?.*)?$/i)
+  if (storageMatch) return { kind: 'file', src: resolveMediaUrl(value) }
+  if (!/^https?:\/\//i.test(value)) return null
   const yt = youtubeId(value)
   if (yt) return { kind: 'youtube', id: yt, src: youtubeSrc(yt, options), thumbnail: `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` }
-  const vimeo = value.match(/^https:\/\/(?:www\.)?vimeo\.com\/(\d{6,12})/i)
+  const vimeo = value.match(/^(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(\d{6,12})/i)
   if (vimeo) return { kind: 'vimeo', id: vimeo[1], src: `https://player.vimeo.com/video/${vimeo[1]}?autoplay=1&loop=1&playsinline=1${options.muted ? '&muted=1' : ''}` }
-  if (/^https:\/\/(?:www\.|m\.|web\.)?(?:facebook\.com|fb\.watch)\//i.test(value)) {
+  if (/^(?:https?:\/\/)?(?:www\.|m\.|web\.)?(?:facebook\.com|fb\.watch)\//i.test(value)) {
     return { kind: 'facebook', src: `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(value)}&show_text=false&autoplay=true${options.muted ? '&mute=true' : ''}` }
   }
   return null
