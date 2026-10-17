@@ -71,7 +71,7 @@
 
           <!-- Action Buttons -->
           <div class="flex items-center gap-2">
-            <NuxtLink :to="`/agents/${agent.id}`" class="btn btn-primary btn-sm flex-1">
+            <NuxtLink :to="`/advisors/${agent.id}`" class="btn btn-primary btn-sm flex-1">
               <span>View Portfolio</span>
             </NuxtLink>
             <a 

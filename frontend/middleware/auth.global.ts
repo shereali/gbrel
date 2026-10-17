@@ -60,7 +60,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       if (!hasPermission('listings.review') && !hasPermission('properties.edit') && !isSuperAdmin.value) {
         return navigateTo('/admin?forbidden=listing-requests')
       }
-    } else if (to.path.startsWith('/admin/agents')) {
+    } else if (to.path.startsWith('/admin/advisors')) {
       if (!hasPermission('agents.manage') && !isSuperAdmin.value) {
         return navigateTo('/admin?forbidden=agents')
       }

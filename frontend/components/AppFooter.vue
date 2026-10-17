@@ -28,7 +28,7 @@
           <ul>
             <li><NuxtLink to="/directors">পরিচালনা পর্ষদ</NuxtLink></li>
             <li><NuxtLink to="/legal">নিবন্ধন ও ট্রেড লাইসেন্স</NuxtLink></li>
-            <li><NuxtLink to="/agents">আমাদের এজেন্ট</NuxtLink></li>
+            <li><NuxtLink to="/advisors">আমাদের এজেন্ট</NuxtLink></li>
             <li><NuxtLink to="/list-property">প্রপার্টি বিক্রি করুন</NuxtLink></li>
             <li><NuxtLink to="/compare">প্রপার্টি তুলনা</NuxtLink></li>
           </ul>

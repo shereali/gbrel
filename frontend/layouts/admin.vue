@@ -107,7 +107,7 @@
         <NuxtLink v-if="hasPermission('properties.verify_rajuk') || hasPermission('properties.edit') || isSuperAdmin" to="/admin/approvals" class="quick-nav-chip" active-class="active">Approvals ({{ sidebarCounts.pending }})</NuxtLink>
         <NuxtLink v-if="hasPermission('viewings.view') || isSuperAdmin" to="/admin/viewings" class="quick-nav-chip" active-class="active">Tours ({{ sidebarCounts.tours }})</NuxtLink>
         <NuxtLink v-if="hasPermission('leads.view') || isSuperAdmin" to="/admin/leads" class="quick-nav-chip" active-class="active">Leads ({{ sidebarCounts.leads }})</NuxtLink>
-        <NuxtLink v-if="hasPermission('agents.manage') || isSuperAdmin" to="/admin/agents" class="quick-nav-chip" active-class="active">Advisors</NuxtLink>
+        <NuxtLink v-if="hasPermission('agents.manage') || isSuperAdmin" to="/admin/advisors" class="quick-nav-chip" active-class="active">Advisors</NuxtLink>
         <NuxtLink v-if="hasPermission('users.view') || hasPermission('users.manage') || isSuperAdmin" to="/admin/users" class="quick-nav-chip" active-class="active">Users</NuxtLink>
         <NuxtLink v-if="hasPermission('financials.view') || isSuperAdmin" to="/admin/financials" class="quick-nav-chip" active-class="active">Financials</NuxtLink>
         <NuxtLink v-if="hasPermission('settings.manage') || isSuperAdmin" to="/admin/settings" class="quick-nav-chip" active-class="active">Settings</NuxtLink>
@@ -273,7 +273,7 @@
             <div class="sidebar-section-divider"></div>
             <div v-if="!sidebarCollapsed" class="sidebar-section-title">Administration</div>
 
-            <NuxtLink v-if="hasPermission('agents.manage') || isSuperAdmin" to="/admin/agents" class="sidebar-link" active-class="active" title="Agents & Advisors">
+            <NuxtLink v-if="hasPermission('agents.manage') || isSuperAdmin" to="/admin/advisors" class="sidebar-link" active-class="active" title="Agents & Advisors">
               <svg class="sidebar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <circle cx="12" cy="8" r="4"/>
                 <path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
@@ -477,7 +477,7 @@
             <div class="sidebar-section-divider"></div>
             <div class="sidebar-section-title" style="padding-left: 14px; margin-top: 4px;">Administration</div>
 
-            <NuxtLink v-if="hasPermission('agents.manage') || isSuperAdmin" to="/admin/agents" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
+            <NuxtLink v-if="hasPermission('agents.manage') || isSuperAdmin" to="/admin/advisors" class="drawer-link" active-class="active" @click="mobileNavOpen = false">
               <svg class="sidebar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="8" r="4"/>
                 <path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>

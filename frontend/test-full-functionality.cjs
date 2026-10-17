@@ -98,10 +98,10 @@ async function runAudit() {
   // 5. Test All 21 Frontend Routes
   console.log('[5/5] Testing All 21 Public and Admin Frontend Routes...');
   const routes = [
-    '/', '/properties', '/properties/1', '/agents', '/agents/1',
+    '/', '/properties', '/properties/1', '/advisors', '/advisors/1',
     '/compare', '/dashboard', '/list-property', '/contact', '/login', '/signup',
     '/admin', '/admin/login', '/admin/properties', '/admin/approvals',
-    '/admin/viewings', '/admin/agents', '/admin/users', '/admin/leads',
+    '/admin/viewings', '/admin/advisors', '/admin/users', '/admin/leads',
     '/admin/financials', '/admin/settings'
   ];
   let allOk = true;

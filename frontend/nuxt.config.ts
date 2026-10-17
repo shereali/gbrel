@@ -83,6 +83,9 @@ export default defineNuxtConfig({
   nitro: {
     compressPublicAssets: true,
     routeRules: {
+      '/agents': { redirect: { to: '/advisors', statusCode: 301 } },
+      '/agents/**': { redirect: { to: '/advisors/**', statusCode: 301 } },
+      '/admin/agents': { redirect: { to: '/admin/advisors', statusCode: 301 } },
       '/api/**': { proxy: `${(process.env.NUXT_API_BASE_SERVER || process.env.NUXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000').replace(/\/api\/?$/, '').replace(/\/$/, '') || 'http://127.0.0.1:8000'}/api/**` },
       '/storage/**': { proxy: `${(process.env.NUXT_API_BASE_SERVER || process.env.NUXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000').replace(/\/api\/?$/, '').replace(/\/$/, '') || 'http://127.0.0.1:8000'}/storage/**` }
     }

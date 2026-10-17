@@ -91,8 +91,18 @@
             </div>
 
             <div class="form-group" style="margin-bottom:12px;">
-              <label class="form-label">Avatar Photo URL</label>
-              <input v-model="agentForm.photo" type="url" class="form-input" />
+              <label class="form-label">Advisor Photo</label>
+              <div class="flex items-center gap-3">
+                <img :src="agentForm.photo" alt="Preview" style="width:64px; height:64px; border-radius:50%; object-fit:cover; border:2px solid var(--color-gold);" />
+                <div style="flex:1;">
+                  <input ref="photoInput" type="file" accept="image/jpeg,image/png,image/webp" style="display:none;" @change="onPhotoSelected" />
+                  <button type="button" class="btn btn-sm btn-outline-white" :disabled="isUploading" @click="photoInput?.click()">
+                    {{ isUploading ? 'Uploading...' : 'Upload Image' }}
+                  </button>
+                  <div class="text-subtle" style="font-size:0.75rem; margin-top:4px;">JPG, PNG or WebP, up to 10MB.</div>
+                </div>
+              </div>
+              <input v-model="agentForm.photo" type="text" placeholder="Or paste an image URL" class="form-input" style="margin-top:8px;" />
             </div>
 
             <div class="form-group">
@@ -103,7 +113,7 @@
 
           <div class="admin-modal-footer">
             <button type="button" class="btn btn-sm btn-outline-white" :disabled="isSubmitting" @click="closeAgentModal">Cancel</button>
-            <button type="submit" class="btn btn-sm btn-emerald" :disabled="isSubmitting">
+            <button type="submit" class="btn btn-sm btn-emerald" :disabled="isSubmitting || isUploading">
               <span v-if="isSubmitting">Saving to Database...</span>
               <span v-else>Save Advisor Record</span>
             </button>
@@ -151,7 +161,7 @@ definePageMeta({
   layout: 'admin'
 })
 
-const { agents, isAgentsLoading, fetchAgents, addAgent, updateAgent, deleteAgent } = useProperties()
+const { agents, isAgentsLoading, fetchAgents, addAgent, updateAgent, deleteAgent, uploadImage } = useProperties()
 const toast = useToast()
 
 const agentsList = computed(() => agents.value)
@@ -162,6 +172,27 @@ const agentModalRoot = ref<HTMLElement | null>(null)
 const deleteAgentTarget = ref<AgentItem | null>(null)
 const isSubmitting = ref(false)
 const isDeleting = ref(false)
+const isUploading = ref(false)
+const photoInput = ref<HTMLInputElement | null>(null)
+
+const onPhotoSelected = async (e: Event) => {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  if (file.size > 10 * 1024 * 1024) {
+    toast.error('Upload Failed', 'Image must be 10MB or smaller.')
+    return
+  }
+  isUploading.value = true
+  try {
+    agentForm.photo = await uploadImage(file)
+  } catch (err: any) {
+    toast.error('Upload Failed', err?.message || 'Could not upload image.')
+  } finally {
+    isUploading.value = false
+  }
+}
 
 onMounted(async () => {
   await fetchAgents(true)

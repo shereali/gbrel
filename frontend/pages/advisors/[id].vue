@@ -5,7 +5,7 @@
       <div class="flex items-center gap-2" style="font-size: 0.85rem; color: #64748B; margin-bottom: 24px;">
         <NuxtLink to="/" style="color: #64748B;">Home</NuxtLink>
         <span>/</span>
-        <NuxtLink to="/agents" style="color: #64748B;">Agents</NuxtLink>
+        <NuxtLink to="/advisors" style="color: #64748B;">Advisors</NuxtLink>
         <span>/</span>
         <span style="color: #0F172A; font-weight: 600;">{{ agent.name }}</span>
       </div>
