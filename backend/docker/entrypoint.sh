@@ -55,6 +55,7 @@ php artisan migrate --force || echo "Migration encountered an issue; proceeding 
 
 # Seed baseline data safely: insert once if missing, update if existing. User data is never deleted.
 php artisan db:seed --force || true
+rm -rf public/storage 2>/dev/null || true
 php artisan storage:link || true
 mkdir -p storage/app/public/properties && chmod -R 775 storage/app/public 2>/dev/null || true
 
