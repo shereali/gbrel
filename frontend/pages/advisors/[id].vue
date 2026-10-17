@@ -14,7 +14,7 @@
       <div style="background: #FFFFFF; border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: 36px; margin-bottom: 48px; box-shadow: var(--shadow-md);">
         <div style="display: grid; grid-template-columns: 140px 1fr auto; gap: 32px; align-items: center;" class="agent-banner-grid">
           <!-- Photo -->
-          <img :src="agent.photo" :alt="agent.name" style="width: 140px; height: 140px; border-radius: var(--radius-lg); object-fit: cover; border: 3px solid var(--color-gold); box-shadow: var(--shadow-md);" />
+          <img :src="resolveMediaUrl(agent.photo)" :alt="agent.name" style="width: 140px; height: 140px; border-radius: var(--radius-lg); object-fit: cover; border: 3px solid var(--color-gold); box-shadow: var(--shadow-md);" />
 
           <!-- Details -->
           <div>

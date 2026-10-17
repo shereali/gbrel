@@ -19,7 +19,7 @@
     <div class="grid grid-3">
       <div v-for="agent in agentsList" :key="agent.id" class="panel-card" style="display:flex; flex-direction:column;">
         <div class="flex items-center gap-3" style="margin-bottom:16px;">
-          <img :src="agent.photo" :alt="agent.name" style="width:62px; height:62px; border-radius:50%; object-fit:cover; border:2px solid var(--color-gold);" />
+          <img :src="resolveMediaUrl(agent.photo)" :alt="agent.name" style="width:62px; height:62px; border-radius:50%; object-fit:cover; border:2px solid var(--color-gold);" />
           <div>
             <span class="badge-admin active" style="font-size:0.7rem; margin-bottom:4px;">{{ agent.state }}</span>
             <h3 style="font-size:1.15rem; font-weight:800; line-height:1.2;">{{ agent.name }}</h3>
@@ -93,7 +93,7 @@
             <div class="form-group" style="margin-bottom:12px;">
               <label class="form-label">Advisor Photo</label>
               <div class="flex items-center gap-3">
-                <img :src="agentForm.photo" alt="Preview" style="width:64px; height:64px; border-radius:50%; object-fit:cover; border:2px solid var(--color-gold);" />
+                <img :src="resolveMediaUrl(agentForm.photo)" alt="Preview" style="width:64px; height:64px; border-radius:50%; object-fit:cover; border:2px solid var(--color-gold);" />
                 <div style="flex:1;">
                   <input ref="photoInput" type="file" accept="image/jpeg,image/png,image/webp" style="display:none;" @change="onPhotoSelected" />
                   <button type="button" class="btn btn-sm btn-outline-white" :disabled="isUploading" @click="photoInput?.click()">

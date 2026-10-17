@@ -34,7 +34,7 @@
           style="padding: 24px; display: flex; flex-direction: column;"
         >
           <div class="flex items-center gap-4" style="margin-bottom: 16px;">
-            <img :src="agent.photo" :alt="agent.name" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2px solid var(--color-gold);" />
+            <img :src="resolveMediaUrl(agent.photo)" :alt="agent.name" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2px solid var(--color-gold);" />
             <div>
               <span class="badge badge-rajuk" style="margin-bottom: 4px;">{{ agent.state }}</span>
               <h3 style="font-size: 1.25rem; font-weight: 800; color: #0F172A; line-height: 1.2;">{{ agent.name }}</h3>
