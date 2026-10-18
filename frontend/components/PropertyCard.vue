@@ -72,8 +72,8 @@ const place = computed(() => {
 .pc { position: relative; display: flex; flex-direction: column; background: var(--gb-sheet); border-radius: var(--gb-r-lg); overflow: hidden; border: 1px solid var(--gb-silt); transition: border-color .2s ease; }
 .pc:hover { border-color: var(--gb-leaf); }
 .pc:focus-within { border-color: var(--gb-paddy); }
-.pc-media { position: relative; aspect-ratio: 4 / 3; background: #DDE5D2; overflow: hidden; }
-.pc-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+.pc-media { position: relative; aspect-ratio: 16 / 10; background: #DDE5D2; overflow: hidden; }
+.pc-media img { width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform .5s ease; }
 .pc:hover .pc-media img { transform: scale(1.03); }
 .pc-noimg { position: absolute; inset: 0; display: flex; align-items: flex-end; }
 .pc-noimg svg { width: 100%; height: 60%; }
@@ -102,13 +102,43 @@ const place = computed(() => {
 .pc-facts li { font-size: .85rem; color: var(--gb-ink); background: rgba(168, 197, 123, .22); padding: 2px 10px; border-radius: 999px; }
 .pc-facts .pc-status { background: #FBE3D4; color: #8A3A0F; }
 
-/* Wide variant: image beside text on larger screens */
+/* Wide featured lead card on mobile/tablet: standard cinematic aspect ratio */
+.pc--wide .pc-media {
+  aspect-ratio: 16 / 9;
+  max-height: 280px;
+}
+
+/* Wide featured lead card on desktop: standard horizontal banner with fixed height */
 @media (min-width: 900px) {
-  .pc--wide { flex-direction: row; }
-  .pc--wide .pc-media { aspect-ratio: auto; flex: 1.35; min-height: 380px; }
-  .pc--wide .pc-body { flex: 1; padding: 32px; justify-content: center; }
-  .pc--wide .pc-title { font-size: 1.8rem; -webkit-line-clamp: 3; }
-  .pc--wide .pc-price { margin-top: 18px; }
-  .pc--wide .pc-price strong { font-size: 2.2rem; }
+  .pc--wide {
+    flex-direction: row;
+    height: 360px;
+    max-height: 360px;
+  }
+  .pc--wide .pc-media {
+    aspect-ratio: auto;
+    flex: 1.2;
+    width: 54%;
+    max-width: 54%;
+    height: 100%;
+    max-height: 360px;
+  }
+  .pc--wide .pc-body {
+    flex: 1;
+    padding: 24px 30px;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .pc--wide .pc-title {
+    font-size: 1.55rem;
+    -webkit-line-clamp: 2;
+  }
+  .pc--wide .pc-price {
+    margin-top: 14px;
+    padding-top: 8px;
+  }
+  .pc--wide .pc-price strong {
+    font-size: 1.95rem;
+  }
 }
 </style>
