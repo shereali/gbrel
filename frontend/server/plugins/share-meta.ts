@@ -1,6 +1,7 @@
 // The site renders in the browser (ssr: false), and Facebook/WhatsApp crawlers do not run JavaScript.
 // So for /properties/:id the server fills in the title, description and image before sending the page shell.
 import { absoluteImage, propertyShareDescription, SITE_URL } from '~/utils/shareMeta'
+import { getOrganizationSchema } from '~/utils/structuredData'
 
 const esc = (v: string) => v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 const REPLACED = /<title>[\s\S]*?<\/title>|<meta[^>]+(?:name="description"|property="og:[^"]*"|name="twitter:[^"]*")[^>]*>/g
@@ -47,11 +48,38 @@ export default defineNitroPlugin(nitroApp => {
     html.head = html.head.map(chunk => chunk.replace(/<link rel="prefetch"[^>]*>/g, ''))
 
     const path = getRequestURL(event).pathname
+
+    // Global injection: Schema.org structured data for Google Search & AI Search engines (GEO)
+    const orgSchemaJson = JSON.stringify(getOrganizationSchema()).replace(/</g, '\\u003c')
+    html.head.push(`<script type="application/ld+json">${orgSchemaJson}</script>`)
+
     if (/^\/book\/?$/.test(path)) {
       html.head = html.head.map(chunk => chunk.replace(REPLACED, '').replace(/<meta[^>]+property="og:image:(?:width|height)"[^>]*>/g, ''))
       html.head.push(BOOK_TAGS)
       return
     }
+
+    if (path === '/' || path === '') {
+      const homeTags = [
+        `<title>Gram Bangla Real Estate Limited | Gram Bangla Real Estate — GBREL</title>`,
+        `<meta name="description" content="Gram Bangla Real Estate Limited (GBREL) is a premier registered real estate company in Bangladesh. Official site: www.gbrel.com. Discover verified land, plots, land shares, and apartments in Dhaka. Call: +8809658510748 | মিরপুর ডিওএইচএস, ঢাকা।">`,
+        `<meta name="keywords" content="Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, GBREL, www.gbrel.com, gbrel, গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড, গ্রাম বাংলা রিয়েল এস্টেট, গ্রাম বাংলা, Real Estate Bangladesh, Mirpur DOHS Real Estate, Plots in Dhaka, Land Share Dhaka">`,
+        `<meta property="og:type" content="website">`,
+        `<meta property="og:site_name" content="Gram Bangla Real Estate Limited">`,
+        `<meta property="og:locale" content="bn_BD">`,
+        `<meta property="og:title" content="Gram Bangla Real Estate Limited | জমি দেখে, কাগজ বুঝে, তারপর কিনুন — GBREL">`,
+        `<meta property="og:description" content="Gram Bangla Real Estate Limited (GBREL) — জমি, প্লট, জমি শেয়ার ও ফ্ল্যাট খুঁজুন। দাম, কাগজপত্র ও লোকেশন দেখে নিন। Official: www.gbrel.com | ফোন: +8809658510748">`,
+        `<meta property="og:url" content="${SITE_URL}/">`,
+        `<meta property="og:image" content="${SITE_URL}/og-default.jpg">`,
+        `<meta name="twitter:card" content="summary_large_image">`,
+        `<meta name="twitter:title" content="Gram Bangla Real Estate Limited | Gram Bangla Real Estate — GBREL">`,
+        `<meta name="twitter:description" content="Gram Bangla Real Estate Limited (GBREL) — জমি, প্লট, জমি শেয়ার ও ফ্ল্যাট। www.gbrel.com | ফোন: +8809658510748">`
+      ].join('')
+      html.head = html.head.map(chunk => chunk.replace(REPLACED, ''))
+      html.head.push(homeTags)
+      return
+    }
+
     const match = /^\/properties\/(\d+)\/?$/.exec(path)
     if (!match) return
     const propId = match[1]

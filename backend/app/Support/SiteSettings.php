@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Cache;
 class SiteSettings
 {
     /** Registered office, as printed on the DSCC trade licence. */
-    public const OFFICE_ADDRESS = 'স্বজন টাওয়ার-১, রুম ২০১ (২য় তলা), ৪ সেগুন বাগিচা, ঢাকা-১০০০';
+    public const OFFICE_ADDRESS = 'House 461, Road No. 7, Avenue 6, Mirpur DOHS, Mirpur 12, Dhaka 1216';
 
-    public const CORPORATE_OFFICE_ADDRESS = 'House 461, Road No. 7, Avenue 6, DOHS, Mirpur 12, Dhaka 1216';
+    public const CORPORATE_OFFICE_ADDRESS = 'House 461, Road No. 7, Avenue 6, Mirpur DOHS, Mirpur 12, Dhaka 1216';
 
     /**
      * @return array<string, array{default: mixed, rules: list<mixed>}>
@@ -22,18 +22,18 @@ class SiteSettings
     {
         return [
             'site_name' => ['default' => 'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড', 'rules' => ['nullable', 'string', 'max:150']],
-            'site_title' => ['default' => 'গ্রাম বাংলা রিয়েল এস্টেট | জমি, প্লট ও ফ্ল্যাট — GBREL', 'rules' => ['nullable', 'string', 'max:200']],
-            'contact_phone' => ['default' => '01831512910', 'rules' => ['nullable', 'string', 'max:40']],
-            'whatsapp_number' => ['default' => '01831512910', 'rules' => ['nullable', 'string', 'max:40']],
-            'contact_email' => ['default' => '', 'rules' => ['nullable', 'email', 'max:150']],
+            'site_title' => ['default' => 'Gram Bangla Real Estate Limited | গ্রাম বাংলা রিয়েল এস্টেট — GBREL', 'rules' => ['nullable', 'string', 'max:200']],
+            'contact_phone' => ['default' => '+8809658510748', 'rules' => ['nullable', 'string', 'max:40']],
+            'whatsapp_number' => ['default' => '+8809658510748', 'rules' => ['nullable', 'string', 'max:40']],
+            'contact_email' => ['default' => 'grambanglarealestateltd@gmail.com', 'rules' => ['nullable', 'email', 'max:150']],
             'corporate_office_address' => ['default' => self::CORPORATE_OFFICE_ADDRESS, 'rules' => ['nullable', 'string', 'max:300']],
             'office_address' => ['default' => self::OFFICE_ADDRESS, 'rules' => ['nullable', 'string', 'max:300']],
-            'map_location' => ['default' => 'Swajan Tower, 4 Segun Bagicha, Dhaka 1000', 'rules' => ['nullable', 'string', 'max:200']],
+            'map_location' => ['default' => 'House 461, Road 7, Avenue 6, Mirpur DOHS, Dhaka 1216', 'rules' => ['nullable', 'string', 'max:200']],
             'company_registration_no' => ['default' => 'C-185751/2022', 'rules' => ['nullable', 'string', 'max:60']],
             'company_registration_date' => ['default' => '2022-12-11', 'rules' => ['nullable', 'date_format:Y-m-d']],
             'trade_license_no' => ['default' => 'TRAD/DSCC/026884/2022', 'rules' => ['nullable', 'string', 'max:60']],
             'trade_license_valid_until' => ['default' => '2027-06-30', 'rules' => ['nullable', 'date_format:Y-m-d']],
-            'working_hours' => ['default' => '', 'rules' => ['nullable', 'string', 'max:150']],
+            'working_hours' => ['default' => 'শনি–বৃহস্পতি, সকাল ৯টা–সন্ধ্যা ৬টা', 'rules' => ['nullable', 'string', 'max:150']],
             // Tracking: loaded only on public pages. Empty = off.
             'meta_pixel_id' => ['default' => '1390835626467163', 'rules' => ['nullable', 'string', 'regex:/^\d{10,20}\z/']],
             'gtm_container_id' => ['default' => '', 'rules' => ['nullable', 'string', 'regex:/^GTM-[A-Z0-9]{4,12}\z/']],

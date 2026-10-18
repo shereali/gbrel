@@ -109,4 +109,13 @@ const filteredAgents = computed(() => {
   if (!selectedRegion.value) return agents.value
   return agents.value.filter(a => a.state === selectedRegion.value)
 })
+
+useSeoMeta({
+  title: 'Real Estate Advisors | Gram Bangla Real Estate Limited',
+  description: 'Connect with verified real estate specialists and property advisors at Gram Bangla Real Estate Limited (GBREL) in Bangladesh.',
+  keywords: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, Real Estate Advisors, Property Specialists, Dhaka'
+})
+useHead({
+  link: [{ rel: 'canonical', href: 'https://www.gbrel.com/advisors' }]
+})
 </script>

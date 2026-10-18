@@ -85,8 +85,12 @@ const documents = computed(() => [
 ])
 
 useHead({
-  title: 'নিবন্ধন ও ট্রেড লাইসেন্স | গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড',
-  meta: [{ name: 'description', content: 'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেডের RJSC কোম্পানি নিবন্ধন সনদ ও ঢাকা দক্ষিণ সিটি কর্পোরেশনের ট্রেড লাইসেন্স, অফিসের ঠিকানা ও ম্যাপ।' }]
+  title: 'নিবন্ধন ও ট্রেড লাইসেন্স | Gram Bangla Real Estate Limited',
+  meta: [
+    { name: 'description', content: 'Gram Bangla Real Estate Limited (GBREL) RJSC কোম্পানি নিবন্ধন সনদ ও ঢাকা দক্ষিণ সিটি কর্পোরেশনের ট্রেড লাইসেন্স, অফিসের ঠিকানা ও ম্যাপ।' },
+    { name: 'keywords', content: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, RJSC, Trade License, নিবন্ধন' }
+  ],
+  link: [{ rel: 'canonical', href: 'https://www.gbrel.com/legal' }]
 })
 </script>
 

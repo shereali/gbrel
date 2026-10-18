@@ -130,9 +130,11 @@ const sections = computed(() => [
 ])
 
 useHead({
-  title: 'কুকি নীতি | গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড',
+  title: 'কুকি নীতি | Gram Bangla Real Estate Limited',
   meta: [
-    { name: 'description', content: 'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL) ওয়েবসাইটে কুকির ব্যবহার, প্রকারভেদ এবং আপনার নিয়ন্ত্রণ সংক্রান্ত পূর্ণাঙ্গ কুকি নীতি।' }
-  ]
+    { name: 'description', content: 'Gram Bangla Real Estate Limited (GBREL) ওয়েবসাইটে কুকির ব্যবহার, প্রকারভেদ এবং আপনার নিয়ন্ত্রণ সংক্রান্ত পূর্ণাঙ্গ কুকি নীতি।' },
+    { name: 'keywords', content: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, Cookie Policy, কুকি নীতি' }
+  ],
+  link: [{ rel: 'canonical', href: 'https://www.gbrel.com/cookie-policy' }]
 })
 </script>

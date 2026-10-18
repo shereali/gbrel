@@ -149,7 +149,11 @@ const sections = computed(() => [
 ])
 
 useHead({
-  title: 'গোপনীয়তা নীতি | গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড',
-  meta: [{ name: 'description', content: 'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড কোন তথ্য সংগ্রহ করে, কীভাবে ব্যবহার ও সুরক্ষিত রাখে, এবং আপনার অধিকার।' }]
+  title: 'গোপনীয়তা নীতি | Gram Bangla Real Estate Limited',
+  meta: [
+    { name: 'description', content: 'Gram Bangla Real Estate Limited (GBREL) কোন তথ্য সংগ্রহ করে, কীভাবে ব্যবহার ও সুরক্ষিত রাখে, এবং আপনার অধিকার।' },
+    { name: 'keywords', content: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, Privacy Policy, গোপনীয়তা নীতি' }
+  ],
+  link: [{ rel: 'canonical', href: 'https://www.gbrel.com/privacy-policy' }]
 })
 </script>

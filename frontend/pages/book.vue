@@ -225,8 +225,12 @@ import { trackPixel } from '~/utils/metaPixel'
 
 // Share previews for crawlers come from server/plugins/share-meta.ts; this sets the tab title in the browser.
 useHead({
-  title: 'The Hidden Business of Land: জমি-ফ্ল্যাট কেনা-বেচার বাংলা গাইড | গ্রাম বাংলা রিয়েল এস্টেট',
-  meta: [{ name: 'description', content: 'জমি, ফ্ল্যাট ও ল্যান্ড শেয়ার নিরাপদে কেনা, ন্যায্য দামে বেচা, কোন মুখী ও কোন তলা নেবেন, আর এই ব্যবসায় আয়ের পথ। উৎসসহ বাংলা ই-বুক, ৳১,১০০ নয়, এখন ৳৫০০।' }]
+  title: 'The Hidden Business of Land: জমি-ফ্ল্যাট কেনা-বেচার বাংলা গাইড | Gram Bangla Real Estate Limited',
+  meta: [
+    { name: 'description', content: 'জমি, ফ্ল্যাট ও ল্যান্ড শেয়ার নিরাপদে কেনা, ন্যায্য দামে বেচা, কোন মুখী ও কোন তলা নেবেন, আর এই ব্যবসায় আয়ের পথ। Gram Bangla Real Estate Limited (GBREL) প্রকাশিত বাংলা ই-বুক।' },
+    { name: 'keywords', content: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, জমি কেনা বেচার বই, The Hidden Business of Land, GBREL' }
+  ],
+  link: [{ rel: 'canonical', href: 'https://www.gbrel.com/book' }]
 })
 
 const riskStats = [

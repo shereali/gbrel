@@ -9,26 +9,34 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'bn' },
-      title: 'গ্রাম বাংলা রিয়েল এস্টেট | জমি, প্লট ও ফ্ল্যাট — GBREL',
+      title: 'Gram Bangla Real Estate Limited | Gram Bangla Real Estate — GBREL',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
-        { name: 'description', content: 'জমি, প্লট, জমি শেয়ার ও ফ্ল্যাট খুঁজুন। দাম, কাগজপত্র ও লোকেশন দেখে নিন, তারপর গ্রাম বাংলা রিয়েল এস্টেট টিমের সঙ্গে কথা বলুন।' },
+        { name: 'description', content: 'Gram Bangla Real Estate Limited (GBREL) is a premier registered real estate company in Bangladesh. Official site: www.gbrel.com. Discover verified land, plots, land shares, and apartments in Dhaka. Call: +8809658510748 | মিরপুর ডিওএইচএস, ঢাকা।' },
+        { name: 'keywords', content: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, GBREL, www.gbrel.com, gbrel, গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড, গ্রাম বাংলা রিয়েল এস্টেট, গ্রাম বাংলা, Real Estate Bangladesh, Mirpur DOHS Real Estate, Plots in Dhaka, Land Share Dhaka' },
+        { name: 'author', content: 'Gram Bangla Real Estate Limited' },
+        { name: 'robots', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
         { name: 'theme-color', content: '#1D4A2A' },
         // Site-wide share preview. Property pages get their own from server/plugins/share-meta.ts.
         { property: 'og:type', content: 'website' },
-        { property: 'og:site_name', content: 'গ্রাম বাংলা রিয়েল এস্টেট' },
+        { property: 'og:site_name', content: 'Gram Bangla Real Estate Limited' },
         { property: 'og:locale', content: 'bn_BD' },
-        { property: 'og:title', content: 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন — গ্রাম বাংলা রিয়েল এস্টেট' },
-        { property: 'og:description', content: 'জমি, প্লট, জমি শেয়ার ও ফ্ল্যাট খুঁজুন। দাম, কাগজপত্র ও লোকেশন দেখে নিন, তারপর গ্রাম বাংলা রিয়েল এস্টেট টিমের সঙ্গে কথা বলুন।' },
-        { property: 'og:image', content: 'https://gbrel.com/og-default.jpg' },
+        { property: 'og:title', content: 'Gram Bangla Real Estate Limited | জমি দেখে, কাগজ বুঝে, তারপর কিনুন — GBREL' },
+        { property: 'og:description', content: 'Gram Bangla Real Estate Limited (GBREL) — জমি, প্লট, জমি শেয়ার ও ফ্ল্যাট খুঁজুন। দাম, কাগজপত্র ও লোকেশন দেখে নিন। Official: www.gbrel.com | ফোন: +8809658510748' },
+        { property: 'og:url', content: 'https://www.gbrel.com/' },
+        { property: 'og:image', content: 'https://www.gbrel.com/og-default.jpg' },
         { property: 'og:image:width', content: '1200' },
         { property: 'og:image:height', content: '630' },
-        { name: 'twitter:card', content: 'summary_large_image' }
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:title', content: 'Gram Bangla Real Estate Limited | Gram Bangla Real Estate — GBREL' },
+        { name: 'twitter:description', content: 'Gram Bangla Real Estate Limited (GBREL) — জমি, প্লট, জমি শেয়ার ও ফ্ল্যাট। www.gbrel.com | ফোন: +8809658510748' },
+        { name: 'twitter:image', content: 'https://www.gbrel.com/og-default.jpg' }
       ],
       // Visitor journey tracker. Waits for cookie consent by itself; /gb-track.js?v= is bumped when the file changes.
       script: [{ src: '/gb-track.js?v=3', defer: true }],
       link: [
+        { rel: 'canonical', href: 'https://www.gbrel.com/' },
         { rel: 'icon', type: 'image/png', href: '/favicon.png' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },

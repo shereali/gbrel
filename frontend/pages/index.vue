@@ -4,7 +4,10 @@
     <section class="hero" aria-labelledby="hero-title">
       <div class="gb-wrap hero-top">
         <div class="hero-copy">
-          <h1 id="hero-title" class="hero-title"><template v-for="(line, i) in headlineLines" :key="i"><br v-if="i" />{{ line }}</template></h1>
+          <h1 id="hero-title" class="hero-title">
+            <span class="hero-brand-kicker">Gram Bangla Real Estate Limited</span>
+            <template v-for="(line, i) in headlineLines" :key="i"><br v-if="i" />{{ line }}</template>
+          </h1>
           <p class="hero-lead">{{ settings.home_subtitle }}</p>
 
           <form class="hero-search" role="search" @submit.prevent="runSearch">
@@ -172,6 +175,7 @@ import PropertyCard from '~/components/PropertyCard.vue'
 import { toBn } from '~/utils/propertyLabels'
 import { areaNameBn } from '~/utils/areaNames'
 import { telHref, whatsappLink } from '~/utils/contact'
+import { getOrganizationSchema } from '~/utils/structuredData'
 
 definePageMeta({ layout: 'default' })
 
@@ -244,14 +248,28 @@ const steps = [
   { title: 'চুক্তি ও রেজিস্ট্রি', text: 'বায়নানামা থেকে দলিল রেজিস্ট্রি ও নামজারি পর্যন্ত প্রতিটি ধাপে পাশে থাকি।' }
 ]
 
-const homeDescription = 'প্লট, জমি শেয়ার ও ফ্ল্যাটের তালিকা। দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য দেখে গ্রাম বাংলা রিয়েল এস্টেট টিমের সঙ্গে কথা বলুন।'
+const homeDescription = 'Gram Bangla Real Estate Limited (GBREL) is a premier registered real estate company in Bangladesh. Official website: www.gbrel.com. Discover verified land, plots, land shares, and apartments in Dhaka. Contact: +8809658510748, Mirpur DOHS, Dhaka.'
 useSeoMeta({
-  title: 'গ্রাম বাংলা রিয়েল এস্টেট | জমি, প্লট ও ফ্ল্যাট — GBREL',
+  title: 'Gram Bangla Real Estate Limited | Gram Bangla Real Estate — GBREL',
   description: homeDescription,
-  ogTitle: 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন — গ্রাম বাংলা রিয়েল এস্টেট',
+  keywords: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, GBREL, www.gbrel.com, gbrel, গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড, গ্রাম বাংলা রিয়েল এস্টেট, গ্রাম বাংলা, Real Estate Bangladesh, Mirpur DOHS Real Estate, Plots in Dhaka, Land Share Dhaka',
+  ogTitle: 'Gram Bangla Real Estate Limited | জমি দেখে, কাগজ বুঝে, তারপর কিনুন — GBREL',
   ogDescription: homeDescription,
-  ogImage: 'https://gbrel.com/og-default.jpg',
-  ogUrl: 'https://gbrel.com/'
+  ogImage: 'https://www.gbrel.com/og-default.jpg',
+  ogUrl: 'https://www.gbrel.com/',
+  twitterTitle: 'Gram Bangla Real Estate Limited | Gram Bangla Real Estate — GBREL',
+  twitterDescription: homeDescription,
+  twitterImage: 'https://www.gbrel.com/og-default.jpg'
+})
+
+useHead({
+  link: [{ rel: 'canonical', href: 'https://www.gbrel.com/' }],
+  script: [
+    {
+      type: 'application/ld+json',
+      children: JSON.stringify(getOrganizationSchema())
+    }
+  ]
 })
 </script>
 
@@ -267,6 +285,16 @@ useSeoMeta({
   line-height: 1.08;
   color: var(--gb-paddy);
   margin-bottom: 24px;
+}
+.hero-brand-kicker {
+  display: block;
+  font-family: var(--gb-display);
+  font-size: clamp(0.95rem, 1.8vw, 1.3rem);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--gb-leaf);
+  margin-bottom: 8px;
+  text-transform: uppercase;
 }
 .hero-lead { font-size: var(--gb-t-lead); color: var(--gb-ink-soft); max-width: 58ch; margin-bottom: 30px; }
 

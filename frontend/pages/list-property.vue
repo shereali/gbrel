@@ -115,8 +115,12 @@ const faq = [
 ]
 
 useSeoMeta({
-  title: 'প্রপার্টি বিক্রি করুন | গ্রাম বাংলা রিয়েল এস্টেট',
-  description: 'জমি, প্লট বা ফ্ল্যাটের তথ্য ও কাগজপত্র জমা দিন। GBREL যাচাই করে প্রকাশ করে, ক্রেতা খোঁজে ও বিক্রি সম্পন্ন করে।'
+  title: 'প্রপার্টি বিক্রি করুন | Gram Bangla Real Estate Limited',
+  description: 'জমি, প্লট বা ফ্ল্যাটের তথ্য ও কাগজপত্র জমা দিন। Gram Bangla Real Estate Limited (GBREL) যাচাই করে প্রকাশ করে, ক্রেতা খোঁজে ও বিক্রি সম্পন্ন করে।',
+  keywords: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, প্রপার্টি বিক্রি, List Property Dhaka, GBREL'
+})
+useHead({
+  link: [{ rel: 'canonical', href: 'https://www.gbrel.com/list-property' }]
 })
 </script>
 

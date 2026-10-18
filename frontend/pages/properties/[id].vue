@@ -259,6 +259,17 @@ const glanceThird = computed(() => {
 const buildCostApplies = computed(() => property.value?.propertyType === 'Land Share' || ['Under Construction', 'Upcoming Project'].includes(property.value?.completionStatus || ''))
 // Same sentence the server puts in link previews (server/plugins/share-meta.ts), so the tab and the preview agree.
 const metaDescription = computed(() => propertyShareDescription(property.value))
+
+useSeoMeta({
+  title: () => property.value ? `${property.value.title} | Gram Bangla Real Estate Limited` : 'প্রপার্টি | Gram Bangla Real Estate Limited',
+  description: () => metaDescription.value,
+  ogTitle: () => property.value?.title || '',
+  ogDescription: () => metaDescription.value
+})
+
+useHead({
+  link: () => [{ rel: 'canonical', href: `https://www.gbrel.com/properties/${route.params.id}` }]
+})
 const hasBuyerDetails = computed(() => property.value && detailGroups(property.value).length > 0)
 // Button text and the promise under it are edited in Admin → Settings → Property page.
 const ctaLabel = computed(() => property.value?.hidePrice ? (settings.value.property_cta_label_hidden_price || 'সর্বশেষ দাম ও সাইট ভিজিট') : (settings.value.property_cta_label || 'ক্রয় তথ্য ও সাইট ভিজিট'))

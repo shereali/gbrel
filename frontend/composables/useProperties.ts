@@ -785,6 +785,140 @@ const propertiesData = ref<PropertyItem[]>([
       amenitiesOverview: 'কামারপাড়া ও ধউর বাস স্ট্যান্ড, স্কুল, কলেজ, মাদ্রাসা, কাঁচাবাজার ও সুপারশপ হাঁটা দূরত্বে।',
       transitOverview: 'কামারপাড়া-দিয়াবাড়ী মেইন রোডের ১০০ ফুট ভেতরে ২১ ফুট প্রশস্ত পাকা রাস্তা এবং ঢাকা-ময়মনসিংহ হাইওয়ে ও এলিভেটেড এক্সপ্রেসওয়ে দ্রুত সংযোগ।'
     }
+  },
+  {
+    id: 6,
+    title: 'উত্তরা সেক্টর ১২, রোড ১৮ — ৩ কাঠা জমিতে ১৮২০ বর্গফুটের এক্সক্লুসিভ রেডি ফ্ল্যাট',
+    slug: 'uttara-sector-12-road-18-1820-sqft-flat',
+    tagline: '৩ কাঠা জমিতে নির্মিত সুদৃশ্য ভবনে ১৮২০ বর্গফুটের রেডি ফ্ল্যাট | ৪র্থ তলা | উত্তরা সেক্টর ১২',
+    description: 'উত্তরা সেক্টর ১২, রোড ১৮, বাড়ি ০৩-এ ৩ কাঠা জমিতে নির্মিত সুদৃশ্য আবাসিক ভবনের ৪র্থ তলায় ১৮২০ বর্গফুটের একটি এক্সক্লুসিভ রেডি ফ্ল্যাট বিক্রয়ের প্রস্তাব। মোট ইউনিট ৬টি, যার মধ্যে একটি মাত্র প্রিমিয়াম ইউনিট বিক্রয়ের জন্য উপলব্ধ।\n\nফ্ল্যাটের বিবরণ:\n* আয়তন: ১৮২০ বর্গফুট\n* অবস্থান: ৪র্থ তলা (উত্তরমুখী / North Facing)\n* বেডরুম ও বাথরুম: ২ টি প্রশস্ত বেডরুম ও ৩ টি আধুনিক বাথরুম\n* বারান্দা: ১ টি খোলামেলা বারান্দা\n* ড্রয়িং ও ডাইনিং: আলাদা সুপরিসর ড্রয়িং ও ডাইনিং স্পেস\n* রান্নাঘর: ১ টি আধুনিক কিচেন\n* পার্কিং: ১টি ডেডিকেটেড সুরক্ষিত কার পার্কিং\n* ভবন সুবিধা: আধুনিক প্যাসেঞ্জার লিফট, ফুল জেনারেটর ব্যাকআপ, ইন্টারকম ও সার্বক্ষণিক সিসিটিভি সিকিউরিটি ব্যবস্থা।\n* বর্তমান অবস্থা: সম্পূর্ণ রেডি ফ্ল্যাট, অবিলম্বে ব্যবহার ও বসবাস উপযোগী। ব্যাংক লোন সুবিধা উপলব্ধ।\n\nআশপাশের সুযোগ-সুবিধা ও পরিবেশ:\n* পার্ক ও প্রকৃতি: ১২ নম্বর সেক্টর পার্ক (৩-৫ মিনিট হাঁটা পথ), লেকসাইড ওয়াকওয়ে।\n* যোগাযোগ: উত্তরা নর্থ মেট্রো রেল স্টেশন (৫-৭ মিনিট)।\n* শিক্ষা প্রতিষ্ঠান: রাজউক উত্তরা মডেল কলেজ, মাইলস্টোন কলেজ, স্কলাস্টিকা, মাস্টারমাইন্ড ও IUBAT বিশ্ববিদ্যালয়।\n* হাসপাতাল: আহছানিয়া মিশন ক্যান্সার হাসপাতাল, লুবানা জেনারেল হাসপাতাল, পপুলার ডায়াগনস্টিক সেন্টার ও কুয়েত-বাংলাদেশ মৈত্রী হাসপাতাল।\n* বাজার ও সুপারশপ: সেক্টর ১২ সোসাইটি বাজার, স্বপ্ন, মীনা বাজার ও ডেলি শপিং।',
+    address: 'বাড়ি ০৩, রোড ১৮, সেক্টর ১২, উত্তরা, ঢাকা-১২৩০',
+    city: 'Dhaka',
+    state: 'Dhaka North',
+    areaName: 'Uttara Sector 12',
+    price: 0,
+    priceUnit: 'মূল্য আলোচনা সাপেক্ষ',
+    hidePrice: true,
+    priceDisplayText: 'মূল্য আলোচনা সাপেক্ষ',
+    listingType: 'Sale',
+    propertyType: 'Flat',
+    status: 'Active',
+    bedrooms: 2,
+    bathrooms: 3,
+    balconies: 1,
+    squareFootage: 1820,
+    landSize: 3.0,
+    landUnit: 'Katha',
+    parking: 1,
+    floorNumber: 4,
+    totalFloors: 7,
+    facing: 'North',
+    completionStatus: 'Ready',
+    yearBuilt: 2024,
+    isFeatured: true,
+    isRajukApproved: true,
+    isVerified: true,
+    hasOpenHouse: true,
+    openHouseDate: 'Daily, 10:00 AM - 5:00 PM (By Appointment)',
+    lat: 23.8805,
+    lng: 90.3860,
+    images: [
+      '/img/properties/uttara-sector-12-living-hall.jpg',
+      '/img/properties/uttara-sector-12-bedroom-1.jpg',
+      '/img/properties/uttara-sector-12-kitchen.jpg',
+      '/img/properties/uttara-sector-12-bedroom-2.jpg',
+      '/img/properties/uttara-sector-12-corridor.jpg'
+    ],
+    featureImage: '/img/properties/uttara-sector-12-living-hall.jpg',
+    gallery: [
+      '/img/properties/uttara-sector-12-bedroom-1.jpg',
+      '/img/properties/uttara-sector-12-kitchen.jpg',
+      '/img/properties/uttara-sector-12-bedroom-2.jpg',
+      '/img/properties/uttara-sector-12-corridor.jpg'
+    ],
+    amenities: [
+      '১৮২০ বর্গফুটের খোলামেলা রেডি ফ্ল্যাট (৪র্থ তলা)',
+      '৩ কাঠা জমির ওপর নির্মিত একক ইউনিট বিশিষ্ট ভবন',
+      '২টি প্রশস্ত বেডরুম ও ৩টি আধুনিক বাথরুম',
+      'আলাদা ড্রয়িং ও ডাইনিং স্পেস এবং ১টি খোলামেলা বারান্দা',
+      'আধুনিক প্যাসেঞ্জার লিফট সুবিধা',
+      'সার্বক্ষণিক স্ট্যান্ডবাই জেনারেটর ব্যাকআপ',
+      '১টি ডেডিকেটেড সুরক্ষিত কার পার্কিং',
+      'সিসিটিভি ক্যামেরা ও সার্বক্ষণিক নিরাপত্তা প্রহরী',
+      'উত্তরা নর্থ মেট্রোরেল স্টেশন (৫-৭ মিনিট দূরত্ব)',
+      '১২ নম্বর সেক্টর পার্ক ও লেকসাইড ওয়াকওয়ে (৩-৫ মিনিট)',
+      'ব্যাংক লোন সুবিধা উপলব্ধ',
+      'রাজউক উত্তরা মডেল কলেজ, মাইলস্টোন ও স্কলাস্টিকা সন্নিকটে',
+      'আহছানিয়া মিশন, লুবানা ও কুয়েত-মৈত্রী হাসপাতাল সন্নিকটে'
+    ],
+    documentsVerified: [
+      'জমির মূল মালিকানা দলিল ও বায়া দলিল (Title Deed)',
+      'রাজউক অনুমোদিত ভবনের স্থাপত্য নকশা ও প্ল্যান',
+      'হালনাগাদ নামজারি ও জমাভাগ খতিয়ান (Updated Mutation)',
+      'অনলাইন ভূমি উন্নয়ন কর ও খাজনা হালনাগাদ রশিদ',
+      'ভবনের অকুপেন্সি ও ইউটিলিটি অনুমোদন পত্র',
+      'নিষ্কণ্টক মালিকানা সনদ (Clear Title Verification)'
+    ],
+    agentId: 1,
+    buyerDetails: {
+      landUse: 'Residential',
+      cornerPlot: 'No',
+      roadWidth: 25,
+      buildingDescription: '৩ কাঠা জমির উপর নির্মিত জি+৬ ভবনের ৪র্থ তলায় ১৮২০ বর্গফুটের একক ইউনিট রেডি ফ্ল্যাট। ভবনে মোট ৬টি ইউনিট।',
+      utilities: 'বিদ্যুৎ সংযোগ, সার্বক্ষণিক পানি সরবরাহ ও স্ট্যান্ডবাই জেনারেটর ব্যাকআপ রয়েছে।',
+      priceBasis: 'Total',
+      negotiable: 'Yes',
+      priceIncludes: '১৮২০ বর্গফুটের ফ্ল্যাট, ১টি কার পার্কিং এবং লিফট ও জেনারেটরের আনুপাতিক শেয়ারসহ মোট মূল্য।',
+      depositPercent: 20,
+      agreementDuration: 'পারস্পরিক চুক্তি সাপেক্ষে',
+      paymentSchedule: 'আলোচনা সাপেক্ষে বায়না ও হস্তান্তরকালে পরিশোধযোগ্য।',
+      paymentMethod: 'ব্যাংক পে-অর্ডার / একাউন্ট ট্রান্সফার',
+      registrationCost: 'সরকারি নিয়ম অনুযায়ী প্রযোজ্য রেজিস্ট্রেশন ফি ক্রেতা বহন করবেন।',
+      transferTimeline: 'রেডি ফ্ল্যাট, চুক্তি ও পেমেন্ট সম্পন্ন সাপেক্ষে অবিলম্বে হস্তান্তরযোগ্য।',
+      ownershipSource: 'Purchase',
+      possession: 'Owner',
+      bankLoan: 'None declared',
+      existingAgreement: 'None declared',
+      saleAuthority: 'মালিক / অনুমোদিত প্রতিনিধির মাধ্যমে',
+      ownershipNotes: 'সম্পূর্ণ নিষ্কণ্টক, একক মালিকানাধীন ও বৈধ কাগজপত্র সম্পন্ন।',
+      mutationStatus: 'Available',
+      taxPaidThrough: 'হালনাগাদ পরিশোধিত',
+      approvalDetails: 'রাজউক অনুমোদিত আবাসিক ভবন ও প্ল্যান পাস।',
+      documentSummary: 'নিষ্কণ্টক ও প্রস্তুত কাগজপত্র। ব্যাংক ঋণ নেওয়ার উপযোগী।',
+      sourceDate: '2026-10-18',
+      updatedOn: '2026-10-18'
+    },
+    history: [
+      { id: 1, date: 'Oct 2026', event: 'Listed on GBREL Platform', price: 0, status: 'Active', notes: 'উত্তরা সেক্টর ১২ রোড ১৮ রেডি ফ্ল্যাট তালিকাভুক্তকরণ' }
+    ],
+    estimates: {
+      marketEstimate: 0,
+      lowEstimate: 0,
+      highEstimate: 0,
+      annualGrowthPct: 11.8,
+      monthlyRentEstimate: 45000,
+      annualRoiPct: 6.8,
+      pricePerSqftArea: 0
+    },
+    comparables: [],
+    schools: [
+      { name: 'রাজউক উত্তরা মডেল কলেজ (RAJUK Uttara Model College)', type: 'College & School', rating: 4.95, distanceKm: 1.2, travelMins: 5, grades: 'Class 6 to 12' },
+      { name: 'মাইলস্টোন কলেজ (Milestone College)', type: 'College & School', rating: 4.9, distanceKm: 1.0, travelMins: 5, grades: 'Primary to HSC' },
+      { name: 'স্কলাস্টিকা উত্তরা (Scholastica)', type: 'English Medium', rating: 4.9, distanceKm: 1.5, travelMins: 6, grades: 'Playgroup to A Levels' },
+      { name: 'মাস্টারমাইন্ড স্কুল (Mastermind School)', type: 'English Medium', rating: 4.85, distanceKm: 1.8, travelMins: 7, grades: 'Playgroup to A Levels' },
+      { name: 'IUBAT বিশ্ববিদ্যালয় (IUBAT University)', type: 'University', rating: 4.8, distanceKm: 2.2, travelMins: 8, grades: 'Undergraduate & Graduate' }
+    ],
+    community: {
+      neighborhood: 'উত্তরা সেক্টর ১২, রোড ১৮, ঢাকা',
+      metroDistanceKm: 1.1,
+      nearestMetroStation: 'উত্তরা নর্থ (Sector 12 / Diabari) মেট্রো রেল স্টেশন (৫-৭ মিনিট)',
+      hospitalDistanceKm: 0.9,
+      nearestHospital: 'আহছানিয়া মিশন ক্যান্সার হাসপাতাল, লুবানা জেনারেল হাসপাতাল, পপুলার ডায়াগনস্টিক ও কুয়েত-বাংলাদেশ মৈত্রী হাসপাতাল',
+      airportDistanceKm: 5.5,
+      safetyRating: 'উত্তরা সেক্টর ১২ ওয়েলফেয়ার সোসাইটি নিরাপত্তা ও সার্বক্ষণিক সিসিটিভি নজরদারি',
+      amenitiesOverview: '১২ নম্বর সেক্টর পার্ক (৩-৫ মিনিট হাঁটা পথ), লেকসাইড ওয়াকওয়ে, সেক্টর ১২ সোসাইটি বাজার, স্বপ্ন, মীনা বাজার ও ডেলি শপিং অতি নিকটে।',
+      transitOverview: 'উত্তরা নর্থ মেট্রোরেল স্টেশন (৫-৭ মিনিট), দিয়াবাড়ী মেইন রোড ও এলিভেটেড এক্সপ্রেসওয়ে দিয়ে বিমানবন্দর ও গুলশানে দ্রুত যোগাযোগ।'
+    }
   }
 ])
 
@@ -821,6 +955,7 @@ const mapDbItemToPropertyItem = (apiItem: any, strict = false): PropertyItem => 
   const areaName = apiItem.area_name || apiItem.areaName || 'Dhaka Hub'
   const sqft = Number(apiItem.square_footage) || Number(apiItem.squareFootage) || 0
   const landSize = Number(apiItem.land_size) || Number(apiItem.landSize) || 0
+  const localItem = propertiesData.value.find(p => p.id === Number(apiItem.id) || (p.slug && apiItem.slug && p.slug === apiItem.slug))
 
   return {
     id: Number(apiItem.id),
@@ -887,10 +1022,10 @@ const mapDbItemToPropertyItem = (apiItem: any, strict = false): PropertyItem => 
     ownerId: apiItem.owner_id ? Number(apiItem.owner_id) : null,
     reviewStatus: apiItem.review_status || null,
     publishedAt: apiItem.published_at || null,
-    history: Array.isArray(apiItem.history) && apiItem.history.length > 0 ? apiItem.history : [
+    history: Array.isArray(apiItem.history) && apiItem.history.length > 0 ? apiItem.history : (localItem?.history || [
       { id: 1, date: 'Recent', event: 'Listed on GBREL Portal', price: price, status: 'Active', notes: 'Database Synced' }
-    ],
-    estimates: apiItem.estimates || {
+    ]),
+    estimates: apiItem.estimates || localItem?.estimates || {
       marketEstimate: price,
       lowEstimate: price * 0.95,
       highEstimate: price * 1.05,
@@ -899,11 +1034,11 @@ const mapDbItemToPropertyItem = (apiItem: any, strict = false): PropertyItem => 
       annualRoiPct: 6.2,
       pricePerSqftArea: sqft > 0 ? Math.round(price / sqft) : 8500
     },
-    comparables: apiItem.comparables || [],
-    schools: apiItem.schools || [
+    comparables: apiItem.comparables || localItem?.comparables || [],
+    schools: apiItem.schools || localItem?.schools || [
       { name: 'International School Dhaka (ISD)', type: 'English Medium', rating: 4.9, distanceKm: 2.5, travelMins: 10, grades: 'Playgroup to IB' }
     ],
-    community: apiItem.community || {
+    community: apiItem.community || localItem?.community || {
       neighborhood: areaName,
       metroDistanceKm: 2.0,
       nearestMetroStation: 'MRT Line-6 Station',

@@ -4,10 +4,10 @@
     <div class="om-card">
       <MapPin :size="20" aria-hidden="true" />
       <div>
-        <strong>আমাদের অফিস</strong>
+        <strong>গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL)</strong>
         <p>{{ address }}</p>
         <div class="om-links">
-          <a :href="mapDirectionsUrl(location)" target="_blank" rel="noopener noreferrer" class="om-go">পথ দেখুন</a>
+          <a :href="mapDirectionsUrl(location)" target="_blank" rel="noopener noreferrer" class="om-go">ম্যাপে পথ দেখুন (Directions)</a>
           <a :href="mapOpenUrl(location)" target="_blank" rel="noopener noreferrer">Google Maps-এ খুলুন</a>
         </div>
       </div>

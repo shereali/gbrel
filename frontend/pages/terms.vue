@@ -133,7 +133,11 @@ const sections = computed(() => [
 ])
 
 useHead({
-  title: 'শর্তাবলি | গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড',
-  meta: [{ name: 'description', content: 'gbrel.com ব্যবহার, প্রপার্টির তথ্য, ক্রেতা ও মালিকের দায়িত্ব, পেমেন্ট ও সার্ভিস চার্জ সংক্রান্ত শর্তাবলি।' }]
+  title: 'শর্তাবলি | Gram Bangla Real Estate Limited',
+  meta: [
+    { name: 'description', content: 'www.gbrel.com ব্যবহার, প্রপার্টির তথ্য, ক্রেতা ও মালিকের দায়িত্ব, পেমেন্ট ও সার্ভিস চার্জ সংক্রান্ত শর্তাবলি।' },
+    { name: 'keywords', content: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, Terms and Conditions, শর্তাবলি' }
+  ],
+  link: [{ rel: 'canonical', href: 'https://www.gbrel.com/terms' }]
 })
 </script>

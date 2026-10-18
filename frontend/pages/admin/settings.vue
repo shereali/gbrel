@@ -23,7 +23,7 @@
         <label class="st-field"><span>WhatsApp number</span><input v-model="form.whatsapp_number" placeholder="+8801XXXXXXXXX" /></label>
         <label class="st-field"><span>Email</span><input v-model="form.contact_email" type="email" /></label>
         <label class="st-field st-span2"><span>Office address</span><input v-model="form.office_address" /></label>
-        <label class="st-field st-span2"><span>Map location (what Google Maps should search)</span><input v-model="form.map_location" maxlength="200" placeholder="Swajan Tower, 4 Segun Bagicha, Dhaka 1000" /></label>
+        <label class="st-field st-span2"><span>Map location (what Google Maps should search)</span><input v-model="form.map_location" maxlength="200" placeholder="House 461, Road 7, Avenue 6, Mirpur DOHS, Dhaka 1216" /></label>
         <label class="st-field st-span2"><span>Office hours</span><input v-model="form.working_hours" placeholder="শনি–বৃহস্পতি, সকাল ১০টা–সন্ধ্যা ৭টা" /></label>
       </div>
     </section>

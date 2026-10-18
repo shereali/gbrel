@@ -169,8 +169,13 @@ useHead({
     {
       name: 'description',
       content: 'Board of Directors at Gram Bangla Real Estate Limited. Leadership guiding land verification, planning, finance, and civil construction in Bangladesh.'
+    },
+    {
+      name: 'keywords',
+      content: 'Board of Directors, Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, Leadership, Dhaka Real Estate'
     }
-  ]
+  ],
+  link: [{ rel: 'canonical', href: 'https://www.gbrel.com/directors' }]
 })
 
 const directors = [

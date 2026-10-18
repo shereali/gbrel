@@ -1,6 +1,6 @@
 import { priceDisplay } from '~/utils/priceDisplay'
 
-export const SITE_URL = 'https://gbrel.com'
+export const SITE_URL = 'https://www.gbrel.com'
 export const DEFAULT_SHARE_IMAGE = `${SITE_URL}/og-default.jpg`
 
 // One sentence for link previews and search results: title, the price as the page leads with it, and why to click.

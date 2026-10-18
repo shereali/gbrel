@@ -166,4 +166,12 @@ const handleQuickAdd = (event: Event) => {
     select.value = ''
   }
 }
+
+useSeoMeta({
+  title: 'প্রপার্টি তুলনা | Gram Bangla Real Estate Limited',
+  description: 'Compare verified properties, land, plots, and apartments side-by-side with Gram Bangla Real Estate Limited (GBREL).'
+})
+useHead({
+  link: [{ rel: 'canonical', href: 'https://www.gbrel.com/compare' }]
+})
 </script>
