@@ -1,5 +1,6 @@
 // Staff media library: photos and videos reused across listings (Admin → Media library).
 import { useApiUrl } from '~/composables/useApi'
+import { compressImage } from '~/utils/imageCompressor'
 
 // kind 'property': a listing (id is the property). kind 'media': another library item uses it as its cover.
 export interface MediaUsage { id: number; title: string; as: string; kind?: 'property' | 'media' }
@@ -12,6 +13,10 @@ export interface MediaItem {
   title: string | null
   mime_type: string | null
   size: number | null
+  original_size?: number | null
+  saved_bytes?: number | null
+  saved_percent?: number | null
+  compression_status?: 'pending' | 'processing' | 'completed' | 'skipped' | 'failed' | null
   created_at: string | null
   used_in: MediaUsage[]
 }
@@ -47,31 +52,54 @@ export const useMediaLibrary = () => {
   }
 
   // XHR so the library can show upload progress for large videos.
-  const upload = (file: File, onProgress?: (fraction: number) => void) => new Promise<MediaItem>((resolve, reject) => {
-    const form = new FormData()
-    form.append('file', file)
-    const xhr = new XMLHttpRequest()
-    xhr.open('POST', useApiUrl('/admin/media'))
-    xhr.setRequestHeader('Accept', 'application/json')
-    const auth = authHeader().Authorization
-    if (auth) xhr.setRequestHeader('Authorization', auth)
-    xhr.upload.onprogress = e => { if (e.lengthComputable) onProgress?.(e.loaded / e.total) }
-    xhr.onload = () => {
-      let body: any = null
-      try { body = JSON.parse(xhr.responseText) } catch {}
-      if (xhr.status >= 200 && xhr.status < 300 && body?.data) return resolve(body.data)
-      const first = body?.errors ? Object.values(body.errors).flat()[0] : null
-      reject(new Error(String(first || body?.message || (xhr.status === 413 ? 'The file is larger than the server accepts.' : `Upload failed (${xhr.status})`))))
+  const upload = async (file: File, onProgress?: (fraction: number) => void) => {
+    const fileToUpload = file.type.startsWith('image/') ? await compressImage(file) : file
+    return new Promise<MediaItem>((resolve, reject) => {
+      const form = new FormData()
+      form.append('file', fileToUpload)
+      const xhr = new XMLHttpRequest()
+      xhr.open('POST', useApiUrl('/admin/media'))
+      xhr.setRequestHeader('Accept', 'application/json')
+      const auth = authHeader().Authorization
+      if (auth) xhr.setRequestHeader('Authorization', auth)
+      xhr.upload.onprogress = e => { if (e.lengthComputable) onProgress?.(e.loaded / e.total) }
+      xhr.onload = () => {
+        let body: any = null
+        try { body = JSON.parse(xhr.responseText) } catch {}
+        if (xhr.status >= 200 && xhr.status < 300 && body?.data) return resolve(body.data)
+        const first = body?.errors ? Object.values(body.errors).flat()[0] : null
+        reject(new Error(String(first || body?.message || (xhr.status === 413 ? 'The file is larger than the server accepts.' : `Upload failed (${xhr.status})`))))
+      }
+      xhr.onerror = () => reject(new Error('Upload stopped. Check the connection and try again.'))
+      xhr.send(form)
+    })
+  }
+
+  const getStatus = (id: number) =>
+    request<{ data: { id: number; url: string; thumbnail_url: string | null; type: string; size: number; original_size: number; saved_bytes: number; saved_percent: number; compression_status: string } }>(`/admin/media/${id}/status`).then(r => r.data)
+
+  const compress = (id: number) =>
+    request<{ data: MediaItem; result: any }>(`/admin/media/${id}/compress`, { method: 'POST' }).then(r => r.data)
+
+  const pollCompression = async (id: number, onUpdate?: (data: any) => void, maxAttempts = 30): Promise<any> => {
+    for (let i = 0; i < maxAttempts; i++) {
+      try {
+        const info = await getStatus(id)
+        onUpdate?.(info)
+        if (info.compression_status && !['pending', 'processing'].includes(info.compression_status)) {
+          return info
+        }
+      } catch { /* ignore transient polling errors */ }
+      await new Promise(r => setTimeout(r, 1500))
     }
-    xhr.onerror = () => reject(new Error('Upload stopped. Check the connection and try again.'))
-    xhr.send(form)
-  })
+    return null
+  }
 
   const addLink = (url: string, title?: string) => request<{ data: MediaItem }>('/admin/media/link', { method: 'POST', body: JSON.stringify({ url, title }) }).then(r => r.data)
   const update = (id: number, changes: { title?: string | null; thumbnail_url?: string | null }) => request<{ data: MediaItem }>(`/admin/media/${id}`, { method: 'PATCH', body: JSON.stringify(changes) }).then(r => r.data)
   const remove = (id: number) => request<{ success: boolean }>(`/admin/media/${id}`, { method: 'DELETE' })
 
-  return { list, upload, addLink, update, remove }
+  return { list, upload, getStatus, compress, pollCompression, addLink, update, remove }
 }
 
 export const formatBytes = (bytes?: number | null) => {

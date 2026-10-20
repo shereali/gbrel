@@ -12,5 +12,9 @@ class Media extends Model
 
     protected $hidden = ['path'];
 
-    protected $casts = ['size' => 'integer'];
+    protected $casts = [
+        'size' => 'integer',
+        'original_size' => 'integer',
+        'saved_bytes' => 'integer',
+    ];
 }

@@ -444,6 +444,48 @@
                 <button v-if="videoSource" type="button" class="pm-btn" @click="clearVideo">Remove</button>
               </div>
             </div>
+
+            <!-- Real-time Video Upload & Compression Progress Box -->
+            <div v-if="videoUploadStage !== 'idle'" class="pm-video-progress" :class="[`is-${videoUploadStage}`]">
+              <div class="pm-vp-header">
+                <div class="pm-vp-status">
+                  <span v-if="videoUploadStage === 'uploading'" class="pm-vp-title">
+                    <span class="pm-vp-spinner"></span>
+                    Uploading video: <strong>{{ videoUploadProgress }}%</strong>
+                    <small>({{ formatBytes(videoUploadDetails.uploadedBytes) }} / {{ formatBytes(videoUploadDetails.totalBytes) }})</small>
+                  </span>
+                  <span v-else-if="videoUploadStage === 'compressing'" class="pm-vp-title is-amber">
+                    <span class="pm-vp-spinner is-amber"></span>
+                    Optimizing with FFmpeg... <small>(Compressing H.264 &amp; faststart web streaming)</small>
+                  </span>
+                  <span v-else-if="videoUploadStage === 'completed'" class="pm-vp-title is-emerald">
+                    ✓ Video uploaded &amp; processed successfully!
+                  </span>
+                  <span v-else-if="videoUploadStage === 'error'" class="pm-vp-title is-rose">
+                    ✕ {{ videoUploadError || 'Upload failed' }}
+                  </span>
+                </div>
+                <button v-if="videoUploadStage === 'completed' || videoUploadStage === 'error'" type="button" class="pm-vp-dismiss" @click="videoUploadStage = 'idle'">✕</button>
+              </div>
+
+              <div v-if="videoUploadStage === 'uploading' || videoUploadStage === 'compressing'" class="pm-vp-track">
+                <div class="pm-vp-bar" :class="{ 'is-pulsing': videoUploadStage === 'compressing' }" :style="{ width: videoUploadStage === 'compressing' ? '100%' : (videoUploadProgress + '%') }"></div>
+              </div>
+
+              <!-- Optimization Stats Badge -->
+              <div v-if="videoCompressionStats && videoCompressionStats.savedBytes > 0" class="pm-vp-stats">
+                <span class="pm-vp-pill">
+                  Original: <strong>{{ formatBytes(videoCompressionStats.originalBytes) }}</strong>
+                </span>
+                <span class="pm-vp-arrow">→</span>
+                <span class="pm-vp-pill is-compressed">
+                  Compressed: <strong>{{ formatBytes(videoCompressionStats.compressedBytes) }}</strong>
+                </span>
+                <span class="pm-vp-savings">
+                  ⚡ {{ videoCompressionStats.savedPercent }}% smaller (Saved {{ formatBytes(videoCompressionStats.savedBytes) }})
+                </span>
+              </div>
+            </div>
             <div v-if="videoSource" class="pm-video-row">
               <div class="pm-video-frame">
                 <video v-if="videoSource.kind === 'file'" :src="resolveMediaUrl(videoSource.src)" :poster="resolveMediaUrl(videoPosterPreview) || undefined" controls preload="metadata" playsinline></video>
@@ -793,7 +835,7 @@ import FlatVariantsEditor from '~/components/admin/FlatVariantsEditor.vue'
 import { priceDisplay } from '~/utils/priceDisplay'
 import { Film, Image as ImageIcon, Images, Play, Upload, X, Youtube } from 'lucide-vue-next'
 import { parseVideo, videoProviderLabel } from '~/utils/videoEmbed'
-import { useMediaLibrary, type MediaItem } from '~/composables/useMediaLibrary'
+import { useMediaLibrary, formatBytes, type MediaItem } from '~/composables/useMediaLibrary'
 import { useRouter, useRoute } from 'vue-router'
 import { useProperties, type PropertyItem } from '~/composables/useProperties'
 import { usePropertyOptions } from '~/composables/usePropertyOptions'
@@ -833,6 +875,17 @@ const isSaving = ref(false)
 const isUploadingFeature = ref(false)
 const isUploadingGallery = ref(false)
 const isUploadingVideo = ref(false)
+const videoUploadStage = ref<'idle' | 'uploading' | 'compressing' | 'completed' | 'error'>('idle')
+const videoUploadProgress = ref(0)
+const videoUploadDetails = ref({ fileName: '', totalBytes: 0, uploadedBytes: 0 })
+const videoUploadError = ref('')
+const videoCompressionStats = ref<{
+  originalBytes: number
+  compressedBytes: number
+  savedBytes: number
+  savedPercent: number
+  status: string
+} | null>(null)
 const isUploadingBrochure = ref(false)
 const newGalleryUrl = ref('')
 
@@ -1240,17 +1293,25 @@ const onVideoFileSelected = async (e: Event) => {
   const target = e.target as HTMLInputElement
   if (!target.files || target.files.length === 0) return
   const file = target.files[0]
+  
   isUploadingVideo.value = true
+  videoUploadStage.value = 'uploading'
+  videoUploadProgress.value = 0
+  videoUploadDetails.value = { fileName: file.name, totalBytes: file.size, uploadedBytes: 0 }
+  videoUploadError.value = ''
+  videoCompressionStats.value = null
+
   try {
-    const { upload: uploadToMedia, update: updateMedia } = useMediaLibrary()
-    let item = await uploadToMedia(file)
-    try {
-      const frame = await captureVideoFrame(file)
-      if (frame) {
-        const cover = await uploadToMedia(frame)
-        item = await updateMedia(item.id, { thumbnail_url: cover.url })
-      }
-    } catch { /* optional frame capture */ }
+    const { upload: uploadToMedia, update: updateMedia, pollCompression } = useMediaLibrary()
+    
+    let item = await uploadToMedia(file, fraction => {
+      videoUploadProgress.value = Math.min(99, Math.round(fraction * 100))
+      videoUploadDetails.value.uploadedBytes = Math.round(file.size * fraction)
+    })
+
+    videoUploadProgress.value = 100
+    videoUploadDetails.value.uploadedBytes = file.size
+    videoUploadStage.value = 'compressing'
 
     propForm.videoUrl = item.url
     propForm.coverMedia = 'video'
@@ -1259,9 +1320,48 @@ const onVideoFileSelected = async (e: Event) => {
     } else if (propForm.featureImage) {
       propForm.videoPoster = propForm.featureImage
     }
-    toast.success('Video Uploaded', 'Video saved and attached to listing.')
+
+    try {
+      const frame = await captureVideoFrame(file)
+      if (frame && !propForm.videoPoster) {
+        const cover = await uploadToMedia(frame)
+        item = await updateMedia(item.id, { thumbnail_url: cover.url })
+        propForm.videoPoster = cover.url
+      }
+    } catch { /* optional frame capture */ }
+
+    // Poll background compression worker for real size reduction stats
+    const compInfo = await pollCompression(item.id, update => {
+      if (update && update.compression_status === 'completed') {
+        videoCompressionStats.value = {
+          originalBytes: update.original_size || file.size,
+          compressedBytes: update.size,
+          savedBytes: update.saved_bytes,
+          savedPercent: update.saved_percent,
+          status: update.compression_status
+        }
+        if (update.thumbnail_url) propForm.videoPoster = update.thumbnail_url
+      }
+    }, 25)
+
+    if (compInfo && compInfo.compression_status === 'completed' && compInfo.saved_bytes > 0) {
+      videoCompressionStats.value = {
+        originalBytes: compInfo.original_size || file.size,
+        compressedBytes: compInfo.size,
+        savedBytes: compInfo.saved_bytes,
+        savedPercent: compInfo.saved_percent,
+        status: compInfo.compression_status
+      }
+      toast.success('Video Optimized', `Reduced from ${formatBytes(compInfo.original_size)} to ${formatBytes(compInfo.size)} (${compInfo.saved_percent}% smaller).`)
+    } else {
+      toast.success('Video Uploaded', 'Video attached. Server compression queued.')
+    }
+
+    videoUploadStage.value = 'completed'
     scheduleAutoSave(200)
   } catch (err: any) {
+    videoUploadStage.value = 'error'
+    videoUploadError.value = err.message || 'Could not upload video.'
     toast.error('Upload Error', err.message || 'Could not upload video.')
   } finally {
     isUploadingVideo.value = false
@@ -1678,4 +1778,120 @@ const saveProperty = async (targetStatus?: 'Draft' | 'Active') => {
 .save-dot{width:7px;height:7px;border-radius:50%;background:#F59E0B}
 .save-check{font-weight:800;color:#10B981}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+.pm-video-progress {
+  margin: 12px 0 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--admin-border-subtle, rgba(255, 255, 255, 0.1));
+  display: grid;
+  gap: 8px;
+}
+.pm-video-progress.is-uploading {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.04);
+}
+.pm-video-progress.is-compressing {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.05);
+}
+.pm-video-progress.is-completed {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.04);
+}
+.pm-video-progress.is-error {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.04);
+}
+.pm-vp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.pm-vp-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--admin-text-primary, #fff);
+}
+.pm-vp-title.is-amber { color: #F59E0B; }
+.pm-vp-title.is-emerald { color: #10B981; }
+.pm-vp-title.is-rose { color: #EF4444; }
+.pm-vp-title small { font-weight: 400; color: var(--admin-text-muted, #94A3B8); }
+.pm-vp-dismiss {
+  border: 0;
+  background: none;
+  color: var(--admin-text-muted, #94A3B8);
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 0.82rem;
+  border-radius: 4px;
+}
+.pm-vp-dismiss:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
+.pm-vp-track {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.pm-vp-bar {
+  height: 100%;
+  background: #3B82F6;
+  border-radius: 3px;
+  transition: width 0.2s ease;
+}
+.pm-vp-bar.is-pulsing {
+  background: linear-gradient(90deg, #F59E0B 0%, #D97706 50%, #F59E0B 100%);
+  background-size: 200% 100%;
+  animation: pulse-shimmer 1.5s infinite;
+}
+.pm-vp-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  padding-top: 4px;
+}
+.pm-vp-pill {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--admin-text-primary, #fff);
+}
+.pm-vp-pill.is-compressed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+}
+.pm-vp-arrow { color: var(--admin-text-muted, #94A3B8); font-weight: 700; }
+.pm-vp-savings {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.pm-vp-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #3B82F6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.pm-vp-spinner.is-amber {
+  border-top-color: #F59E0B;
+}
+@keyframes pulse-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 </style>

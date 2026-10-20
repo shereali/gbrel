@@ -13,6 +13,7 @@ RUN apk add --no-cache \
         unzip \
         curl \
         nginx \
+        ffmpeg \
     && docker-php-ext-install pdo pdo_mysql \
     && docker-php-ext-enable pdo_mysql
 

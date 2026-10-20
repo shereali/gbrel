@@ -68,6 +68,8 @@ php artisan view:clear >/dev/null 2>&1 || true
 if [ $# -gt 0 ]; then
     exec "$@"
 else
+    echo "Starting background queue worker for media compression & jobs..."
+    php artisan queue:work --sleep=3 --tries=3 --timeout=600 >/dev/null 2>&1 &
     echo "Starting PHP-FPM daemon and Nginx on port 8000..."
     php-fpm -D
     exec nginx -g 'daemon off;'

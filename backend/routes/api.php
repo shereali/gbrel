@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BookDownloadController;
 use App\Http\Controllers\BookOrderController;
+use App\Jobs\CompressVideoJob;
 use App\Http\Controllers\LeadAnswersController;
 use App\Http\Controllers\LeadCrmController;
 use App\Http\Controllers\LeadJourneyController;
@@ -2252,9 +2253,9 @@ Route::post('/upload', function (Request $request) {
         'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
         'images' => ['nullable', 'array', 'max:20'],
         'images.*' => ['file', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
-        'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/quicktime', 'max:102400'],
+        'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/quicktime', 'max:204800'],
         'brochure' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:25600'],
-        'file' => ['nullable', 'file', 'mimes:pdf,doc,docx,video/mp4,video/webm,video/quicktime', 'max:102400'],
+        'file' => ['nullable', 'file', 'mimes:pdf,doc,docx,video/mp4,video/webm,video/quicktime', 'max:204800'],
         'document' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:25600'],
     ]);
 
@@ -2265,23 +2266,29 @@ Route::post('/upload', function (Request $request) {
         $filename = 'prop_vid_'.time().'_'.rand(1000, 9999).'.'.$ext;
         $path = $file->storeAs('media/'.now()->format('Y/m'), $filename, 'public');
         $url = '/storage/'.$path;
+        $media = null;
         if ($request->user()?->isStaff()) {
-            Media::firstOrCreate(['url' => $url], [
+            $media = Media::firstOrCreate(['url' => $url], [
                 'type' => 'video',
                 'source' => 'upload',
                 'path' => $path,
                 'title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
                 'mime_type' => $file->getMimeType(),
                 'size' => $file->getSize(),
+                'original_size' => $file->getSize(),
+                'compression_status' => 'pending',
                 'uploaded_by' => $request->user()?->id,
             ]);
         }
+
+        CompressVideoJob::dispatch($path, $media?->id);
 
         return response()->json([
             'success' => true,
             'message' => 'Video uploaded successfully',
             'url' => $url,
             'urls' => [$url],
+            'media_id' => $media?->id,
         ]);
     }
 
@@ -2421,6 +2428,8 @@ Route::middleware('staff:properties.edit,properties.create')->prefix('admin/medi
     Route::get('/', [MediaLibraryController::class, 'index']);
     Route::post('/', [MediaLibraryController::class, 'upload'])->middleware('throttle:30,1');
     Route::post('/link', [MediaLibraryController::class, 'addLink']);
+    Route::get('/{id}/status', [MediaLibraryController::class, 'status'])->whereNumber('id');
+    Route::post('/{id}/compress', [MediaLibraryController::class, 'compress'])->whereNumber('id');
     Route::patch('/{id}', [MediaLibraryController::class, 'update'])->whereNumber('id');
     Route::delete('/{id}', [MediaLibraryController::class, 'destroy'])->whereNumber('id');
 });

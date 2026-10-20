@@ -31,7 +31,11 @@
       <li v-for="u in uploads" :key="u.key" :class="{ failed: u.error }">
         <span class="ml-queue-name">{{ u.name }}</span>
         <span v-if="u.error" class="ml-queue-err">{{ u.error }}</span>
-        <span v-else class="ml-queue-bar"><span :style="{ width: Math.round(u.progress * 100) + '%' }"></span></span>
+        <span v-else-if="u.note" class="ml-queue-note">{{ u.note }}</span>
+        <span v-else class="ml-queue-bar">
+          <span :style="{ width: Math.round(u.progress * 100) + '%' }"></span>
+          <span class="ml-queue-pct">{{ Math.round(u.progress * 100) }}%</span>
+        </span>
         <button v-if="u.error" type="button" aria-label="Dismiss" @click="dismissUpload(u.key)"><X :size="14" /></button>
       </li>
     </ul>
@@ -86,7 +90,22 @@
         </div>
         <dl class="ml-facts">
           <div><dt>Source</dt><dd>{{ sourceLabel(active) }}</dd></div>
-          <div v-if="active.size"><dt>Size</dt><dd>{{ formatBytes(active.size) }}</dd></div>
+          <div v-if="active.size">
+            <dt>Size</dt>
+            <dd>
+              {{ formatBytes(active.size) }}
+              <span v-if="active.saved_bytes && active.saved_bytes > 0" class="ml-savings-badge" :title="`Original: ${formatBytes(active.original_size)}`">(-{{ active.saved_percent }}%)</span>
+            </dd>
+          </div>
+          <div v-if="active.type === 'video' && active.compression_status">
+            <dt>Optimization</dt>
+            <dd>
+              <span v-if="active.compression_status === 'completed'" style="color: #2E7D32; font-weight: 700;">✓ Stream-ready (H.264)</span>
+              <span v-else-if="active.compression_status === 'processing'" style="color: #E2651C; font-weight: 700;">⚡ Compressing...</span>
+              <span v-else-if="active.compression_status === 'skipped'" style="color: #6B7280;">Original video</span>
+              <span v-else>{{ active.compression_status }}</span>
+            </dd>
+          </div>
           <div v-if="active.created_at"><dt>Added</dt><dd>{{ new Date(active.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) }}</dd></div>
         </dl>
         <div class="ml-usage">
@@ -133,7 +152,7 @@ const props = withDefaults(defineProps<{
 }>(), { mode: 'manage', accept: 'any', multiple: false, pickLabel: 'Use selected' })
 defineEmits<{ pick: [items: MediaItem[]] }>()
 
-const { list, upload, addLink, update, remove } = useMediaLibrary()
+const { list, upload, addLink, update, remove, pollCompression } = useMediaLibrary()
 
 type Filter = 'all' | 'image' | 'video'
 const filter = ref<Filter>(props.accept === 'any' ? 'all' : props.accept)
@@ -161,7 +180,7 @@ const linkInput = ref<HTMLInputElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const dragging = ref(false)
 let dragDepth = 0
-const uploads = ref<{ key: string; name: string; progress: number; error: string }[]>([])
+const uploads = ref<{ key: string; name: string; progress: number; note?: string; error: string }[]>([])
 
 const visibleTabs = computed(() => ([
   { key: 'all', label: 'All' }, { key: 'image', label: 'Photos' }, { key: 'video', label: 'Videos' }
@@ -262,13 +281,37 @@ async function uploadFiles(files: File[]) {
     const entry = () => uploads.value.find(u => u.key === key)!
     if (file.size > limitMb * 1048576) { entry().error = `Larger than ${limitMb} MB`; continue }
     try {
-      let item = await upload(file, p => { entry().progress = p })
-      if (item.type === 'video') item = await attachVideoCover(item, file)
+      const isVid = kindOf(file) === 'video'
+      let item = await upload(file, p => {
+        const ent = entry()
+        if (ent) {
+          ent.progress = p
+          if (p >= 0.99 && isVid) {
+            ent.note = 'Optimizing & compressing with FFmpeg…'
+          }
+        }
+      })
+      if (item.type === 'video') {
+        const ent = entry()
+        if (ent) ent.note = 'Generating video cover…'
+        item = await attachVideoCover(item, file)
+      }
       items.value = [item, ...items.value.filter(i => i.id !== item.id)]
       counts.value = { ...counts.value, all: counts.value.all + 1, [item.type]: counts.value[item.type] + 1 }
       uploads.value = uploads.value.filter(u => u.key !== key)
       total.value += 1
       if (!unmounted && props.mode === 'pick' && (props.accept === 'any' || props.accept === item.type)) onTile(item)
+
+      if (item.type === 'video') {
+        pollCompression(item.id, update => {
+          if (update && update.compression_status === 'completed') {
+            const idx = items.value.findIndex(i => i.id === item.id)
+            if (idx !== -1) {
+              items.value[idx] = { ...items.value[idx], ...update }
+            }
+          }
+        }).catch(() => {})
+      }
     } catch (e: any) {
       entry().error = e.message || 'Upload failed'
     }
@@ -410,8 +453,11 @@ defineExpose({ reload: load })
 .ml-queue { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .ml-queue li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, 2fr) auto; align-items: center; gap: 10px; font-size: .82rem; }
 .ml-queue-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ml-queue-bar { height: 6px; border-radius: 3px; background: var(--admin-bg-surface-alt, #EEF2E9); overflow: hidden; }
+.ml-queue-bar { height: 6px; border-radius: 3px; background: var(--admin-bg-surface-alt, #EEF2E9); overflow: hidden; display: flex; align-items: center; }
 .ml-queue-bar span { display: block; height: 100%; background: #3F7A35; transition: width .2s; }
+.ml-queue-pct { font-size: .72rem; color: var(--admin-text-muted); margin-left: 6px; font-weight: 700; }
+.ml-queue-note { font-size: .78rem; color: #E2651C; font-weight: 600; }
+.ml-savings-badge { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; background: #E8F5E9; color: #2E7D32; font-size: .75rem; font-weight: 700; }
 .ml-queue-err { color: #A0361B; font-weight: 600; }
 .ml-queue button { border: 0; background: none; cursor: pointer; color: var(--admin-text-muted); }
 .ml-error { margin: 0; padding: 10px 12px; border-radius: 8px; background: #FBE9DF; color: #8A3A0F; font-size: .86rem; }

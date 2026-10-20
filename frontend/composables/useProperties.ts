@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { compressImage, compressMultipleImages } from '~/utils/imageCompressor'
 
 export interface PropertyItem {
   id: number
@@ -1343,8 +1344,9 @@ export const useProperties = () => {
   }
 
   const uploadImage = async (file: File): Promise<string> => {
+    const fileToUpload = await compressImage(file)
     const formData = new FormData()
-    formData.append('image', file)
+    formData.append('image', fileToUpload)
     const res = await fetch(useApiUrl('/upload'), {
       method: 'POST',
       headers: { ...authHeader() },
@@ -1362,9 +1364,10 @@ export const useProperties = () => {
   }
 
   const uploadMultipleImages = async (files: File[] | FileList): Promise<string[]> => {
+    const optimizedFiles = await compressMultipleImages(files)
     const formData = new FormData()
-    for (let i = 0; i < files.length; i++) {
-      formData.append('images[]', files[i])
+    for (let i = 0; i < optimizedFiles.length; i++) {
+      formData.append('images[]', optimizedFiles[i])
     }
     const res = await fetch(useApiUrl('/upload'), {
       method: 'POST',

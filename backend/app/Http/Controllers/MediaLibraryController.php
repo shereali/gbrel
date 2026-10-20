@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\CompressVideoJob;
 use App\Models\Media;
 use App\Models\Property;
+use App\Services\VideoCompressorService;
 use App\Support\VideoLink;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,7 +19,7 @@ class MediaLibraryController extends Controller
 {
     public const IMAGE_MAX_KB = 10240;
 
-    public const VIDEO_MAX_KB = 102400;
+    public const VIDEO_MAX_KB = 204800;
 
     public const PER_PAGE = 60;
 
@@ -87,8 +89,14 @@ class MediaLibraryController extends Controller
             'title' => $request->input('title') ?: Str::limit($originalName, 190, ''),
             'mime_type' => $file->getMimeType(),
             'size' => $file->getSize(),
+            'original_size' => $file->getSize(),
+            'compression_status' => $isVideo ? 'pending' : 'completed',
             'uploaded_by' => $request->user()?->id,
         ]);
+
+        if ($isVideo) {
+            CompressVideoJob::dispatch($path, $media->id);
+        }
 
         return response()->json(['success' => true, 'data' => $this->present($media, [])], 201);
     }
@@ -214,12 +222,58 @@ class MediaLibraryController extends Controller
         return $usage;
     }
 
+    public function status(int $id): JsonResponse
+    {
+        $media = Media::findOrFail($id);
+        $originalSize = (int) ($media->original_size ?: $media->size);
+        $currentSize = (int) $media->size;
+        $savedBytes = (int) ($media->saved_bytes ?: max(0, $originalSize - $currentSize));
+        $savedPercent = ($originalSize > 0 && $savedBytes > 0) ? (int) round(($savedBytes / $originalSize) * 100) : 0;
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $media->id,
+                'url' => $media->url,
+                'thumbnail_url' => $media->thumbnail_url,
+                'type' => $media->type,
+                'size' => $currentSize,
+                'original_size' => $originalSize,
+                'saved_bytes' => $savedBytes,
+                'saved_percent' => $savedPercent,
+                'compression_status' => $media->compression_status ?: 'completed',
+            ],
+        ]);
+    }
+
+    public function compress(int $id, VideoCompressorService $compressor): JsonResponse
+    {
+        $media = Media::findOrFail($id);
+        if ($media->type !== 'video' || ! $media->path) {
+            return response()->json(['success' => false, 'message' => 'Not an uploaded video.'], 422);
+        }
+
+        $result = $compressor->compress($media->path, $media->id);
+        $media->refresh();
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->present($media, $this->usageFor([$media])),
+            'result' => $result,
+        ]);
+    }
+
     /**
      * @param  array<string, list<array{id: int, title: string, as: string, kind: string}>>  $usage
      * @return array<string, mixed>
      */
     private function present(Media $media, array $usage): array
     {
+        $originalSize = (int) ($media->original_size ?: $media->size);
+        $currentSize = (int) $media->size;
+        $savedBytes = (int) ($media->saved_bytes ?: max(0, $originalSize - $currentSize));
+        $savedPercent = ($originalSize > 0 && $savedBytes > 0) ? (int) round(($savedBytes / $originalSize) * 100) : 0;
+
         return [
             'id' => $media->id,
             'type' => $media->type,
@@ -228,7 +282,11 @@ class MediaLibraryController extends Controller
             'thumbnail_url' => $media->thumbnail_url,
             'title' => $media->title,
             'mime_type' => $media->mime_type,
-            'size' => $media->size,
+            'size' => $currentSize,
+            'original_size' => $originalSize,
+            'saved_bytes' => $savedBytes,
+            'saved_percent' => $savedPercent,
+            'compression_status' => $media->compression_status ?: ($media->type === 'video' ? 'pending' : 'completed'),
             'created_at' => $media->created_at?->toIso8601String(),
             'used_in' => $usage[$media->url] ?? [],
         ];
