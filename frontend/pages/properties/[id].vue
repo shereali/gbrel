@@ -11,97 +11,171 @@
           <button :aria-pressed="isInCompare(property.id)" @click="toggleCompare(property.id)"><Copy :size="16" /> তুলনা</button>
         </div>
       </div>
-      <header class="property-heading">
-        <div><div class="property-badges"><span>{{ typeLabel(property.propertyType) }}</span><span>{{ listingLabels[property.listingType] || property.listingType }}</span><span v-if="property.completionStatus">{{ completionLabels[property.completionStatus] || property.completionStatus }}</span></div><h1>{{ property.title }}</h1><p class="property-location"><MapPin :size="17" /> {{ location }}</p></div>
-        <div class="asking-price"><span>{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span><strong>{{ price.amount }}</strong><small v-if="price.note">{{ price.note }}</small>
-          <ul v-if="trustFacts.length" class="trust-facts" aria-label="বিক্রেতার দেওয়া তথ্য"><li v-for="fact in trustFacts" :key="fact"><Check :size="15" aria-hidden="true" />{{ fact }}</li></ul><small v-if="trustFacts.length" class="trust-source">বিক্রেতার দেওয়া তথ্য · কাগজ দেখে মিলিয়ে নিন</small>
-          <div ref="heroCta" class="hero-cta"><button class="cta-sun" @click="openInquiry('hero_button')">{{ ctaLabel }}</button><a v-if="waLink" class="cta-wa" :href="waLink" target="_blank" rel="noopener noreferrer" @click="track('Contact', { method: 'WhatsApp', placement: 'hero' })"><MessageCircle :size="18" aria-hidden="true" /> WhatsApp-এ কথা বলুন</a></div>
-          <small v-if="settings.property_cta_note" class="cta-note">{{ settings.property_cta_note }}</small>
-          <NuxtLink to="/legal" class="trust-line"><ShieldCheck :size="15" aria-hidden="true" /> সরকারি নিবন্ধিত কোম্পানি · লাইসেন্স দেখুন</NuxtLink>
-        </div>
-      </header>
-      <section class="property-gallery" aria-label="প্রপার্টির ছবি" :class="{ single: slides.length < 2 }">
-        <NuxtLink to="/properties" class="gallery-back" aria-label="সব প্রপার্টিতে ফিরে যান"><ChevronLeft :size="20" /></NuxtLink>
-        <div class="gallery-tools">
-          <button :aria-pressed="isInCompare(property.id)" aria-label="তুলনা করুন" :title="isInCompare(property.id) ? 'তুলনা থেকে সরান' : 'তুলনা করুন'" @click="toggleCompare(property.id)"><Copy :size="18" /></button>
-          <button :aria-label="'শেয়ার করুন'" @click="shareProperty"><Share2 :size="18" /></button>
-          <button :aria-pressed="isPropertySaved(property.id)" aria-label="সেভ করুন" @click="toggleSaveProperty(property.id)"><Heart :size="18" :fill="isPropertySaved(property.id) ? 'currentColor' : 'none'" /></button>
-        </div>
-        <template v-if="slides.length">
-          <template v-if="slides[0].kind === 'video' && video">
-            <div v-if="heroPlaying" class="gallery-primary gallery-player">
-              <video v-if="video.kind === 'file'" ref="heroVideoEl" :src="resolveMediaUrl(video.src)" :poster="resolveMediaUrl(videoPoster) || undefined" autoplay :muted="heroMuted" loop controls playsinline></video>
-              <iframe v-else ref="heroFrame" :src="heroEmbed?.src" title="প্রপার্টির ভিডিও" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
-              <button v-if="heroMuted && video.kind !== 'facebook'" type="button" class="unmute-btn" @click="unmuteHero"><Volume2 :size="18" aria-hidden="true" /> শব্দ চালু করুন</button>
+      <div class="property-main-layout">
+        <!-- Left Primary Column: Title, Main Showcase Media, Gallery Thumbs, Specs, and Information Sections (All sharing same width) -->
+        <main class="property-primary-col">
+          <header class="property-heading-block">
+            <div class="property-badges">
+              <span>{{ typeLabel(property.propertyType) }}</span>
+              <span>{{ listingLabels[property.listingType] || property.listingType }}</span>
+              <span v-if="property.completionStatus">{{ completionLabels[property.completionStatus] || property.completionStatus }}</span>
             </div>
-            <button v-else class="gallery-primary gallery-video" aria-label="প্রপার্টির ভিডিও চালু করুন" @click="playHeroVideo">
-              <img v-if="videoPoster" :src="resolveMediaUrl(videoPoster)" :alt="property.title" fetchpriority="high" decoding="async" @error="imageFailed" />
-              <video v-else-if="video.kind === 'file'" :src="resolveMediaUrl(video.src) + '#t=0.5'" preload="metadata" muted playsinline aria-hidden="true"></video>
-              <span class="play-disc" aria-hidden="true"><Play :size="30" fill="currentColor" /></span>
-              <span class="gallery-caption"><Play :size="16" /> ভিডিও দেখুন</span>
-            </button>
-          </template>
-          <button v-else-if="slides[0].kind === 'image'" class="gallery-primary" aria-label="বড় করে ছবি দেখুন" @click="openPhoto(0)"><img :src="resolveMediaUrl(slides[0].src)" :alt="property.title" fetchpriority="high" decoding="async" @error="imageFailed" /><span class="gallery-caption"><Expand :size="16" /> {{ images.length }}টি ছবি দেখুন</span></button>
-          <template v-if="slides[1] && isDesktop">
-            <button v-if="slides[1].kind === 'video'" class="gallery-secondary gallery-video" aria-label="প্রপার্টির ভিডিও দেখুন" @click="openPhoto(1)"><img v-if="videoPoster" :src="resolveMediaUrl(videoPoster)" alt="" loading="lazy" @error="imageFailed" /><span class="play-disc" aria-hidden="true"><Play :size="26" fill="currentColor" /></span></button>
-            <button v-else class="gallery-secondary" aria-label="দ্বিতীয় ছবি বড় করে দেখুন" @click="openPhoto(1)"><img :src="resolveMediaUrl(slides[1].src)" :alt="`${property.title} — ছবি ২`" loading="lazy" decoding="async" @error="imageFailed" /></button>
-          </template>
-          <div v-if="!heroPlaying && (videoIndex > 0 || (videoIndex === 0 && images.length))" class="gallery-chips">
-            <button v-if="videoIndex > 0" type="button" class="gallery-chip gallery-chip--video" @click="openPhoto(videoIndex)"><Play :size="15" fill="currentColor" /> ভিডিও দেখুন</button>
-            <button v-else type="button" class="gallery-chip" @click="openPhoto(1)"><Expand :size="15" /> {{ images.length }}টি ছবি</button>
-          </div>
-        </template>
-        <PropertyPlotSheet v-else :property="property" />
-      </section>
-      <div class="property-at-a-glance">
-        <div><Ruler :size="20" /><span>আয়তন<strong>{{ areaGlanceText }}</strong></span></div>
-        <div><Building2 :size="20" /><span>ধরন<strong>{{ typeLabel(property.propertyType) }}</strong></span></div>
-        <div v-if="glanceThird"><Compass :size="20" /><span>{{ glanceThird.label }}<strong>{{ glanceThird.value }}</strong></span></div>
-        <div><CircleCheck :size="20" /><span>অবস্থা<strong>{{ statusLabel(property.status) }}</strong></span></div>
-      </div>
-      <div ref="inlineStart"><PropertySurveyStart :property-type="property.propertyType" @choose="purpose => openInquiry('inline_first_question', purpose)" /></div>
-      <div class="property-body">
-        <div class="property-information">
-          <nav class="section-nav" aria-label="প্রপার্টির বিভাগ">
-            <a href="#property-overview">বিস্তারিত</a>
-            <a v-if="flatVariants.length" href="#property-flat-variants">ফ্ল্যাট সাইজ</a>
-            <a v-if="hasBuyerDetails" href="#property-buyer-details">মূল্য ও শর্ত</a>
-            <a href="#property-documents">কাগজপত্র</a>
-            <a href="#property-location">লোকেশন</a>
-            <a href="#property-questions">আপনার প্রশ্ন</a>
-          </nav>
-          <section id="property-overview" class="detail-section"><p class="eyebrow">এক নজরে প্রপার্টি</p><h2>এখানে কী পাচ্ছেন?</h2><p v-if="property.tagline" class="property-tagline">{{ property.tagline }}</p><p class="description">{{ property.description }}</p><dl class="property-specs"><div v-for="item in specifications" :key="item.label"><dt>{{ item.label }}</dt><dd>{{ item.value }}</dd></div></dl><template v-if="property.amenities?.length"><h3>সুবিধাসমূহ</h3><ul class="amenity-list"><li v-for="amenity in property.amenities" :key="amenity"><Check :size="16" />{{ amenity }}</li></ul></template></section>
-          <PropertyFlatVariants 
-            v-if="flatVariants.length" 
-            :variants="flatVariants" 
-            :property="property" 
-            :whatsapp="leadWhatsapp" 
-            @select="onVariantSelect"
-            @inquire="v => openInquiry('flat_variant_' + v.name, v.name)"
-          />
-          <PropertyBuyerDetails :property="property" :cta-label="ctaLabel" @inquire="openInquiry('sale_terms')" />
-          <section id="property-documents" class="detail-section">
-            <p class="eyebrow">সিদ্ধান্তের আগে পরিষ্কার ধারণা</p><h2>কাগজপত্র ও খরচ বুঝে নিন</h2><p>মালিকানা, অনুমোদন, রেজিস্ট্রেশন ও প্রযোজ্য খরচ নিয়ে প্রশ্ন করুন। তালিকায় থাকা তথ্যের সঙ্গে মূল নথি মিলিয়ে দেখুন।</p>
-            <ul v-if="property.documentsVerified?.length" class="document-list"><li v-for="document in property.documentsVerified" :key="document"><FileText :size="18" /><span>{{ document }} <small>তালিকায় উল্লেখিত</small></span></li></ul>
-            <div v-if="property.propertyType === 'Land Share'" class="land-share-note"><strong>জমির শেয়ার কিনছেন?</strong><p>এই মূল্যে জমির কতটুকু অংশ পাবেন, নির্মাণ খরচ আলাদা কি না, এবং হস্তান্তরের শর্ত—সবগুলো আলাদা করে নিশ্চিত করুন।</p></div>
-            <div v-if="brochures.length" class="brochure-list"><a v-for="doc in brochures" :key="doc.url" :href="resolveMediaUrl(doc.url)" target="_blank" rel="noopener noreferrer"><FileDown :size="20" /><span>{{ doc.title }}</span><ArrowUpRight :size="18" /></a></div>
-            <p v-else class="muted-note">এই পেজে ব্রোশিওর প্রকাশ করা হয়নি। উপলব্ধ কাগজপত্র সম্পর্কে টিমকে জিজ্ঞেস করতে পারেন।</p><button class="text-action" @click="openInquiry('documents')">{{ ctaLabel }} <ArrowRight :size="16" /></button>
+            <h1>{{ property.title }}</h1>
+            <p class="property-location"><MapPin :size="17" /> {{ location }}</p>
+          </header>
+
+          <!-- Main Showcase (Feature Image or Uncropped Video Player) -->
+          <section class="property-media-showcase" aria-label="প্রপার্টির মূল মিডিয়া">
+            <NuxtLink to="/properties" class="gallery-back" aria-label="সব প্রপার্টিতে ফিরে যান"><ChevronLeft :size="20" /></NuxtLink>
+            <div class="gallery-tools">
+              <button :aria-pressed="isInCompare(property.id)" aria-label="তুলনা করুন" :title="isInCompare(property.id) ? 'তুলনা থেকে সরান' : 'তুলনা করুন'" @click="toggleCompare(property.id)"><Copy :size="18" /></button>
+              <button :aria-label="'শেয়ার করুন'" @click="shareProperty"><Share2 :size="18" /></button>
+              <button :aria-pressed="isPropertySaved(property.id)" aria-label="সেভ করুন" @click="toggleSaveProperty(property.id)"><Heart :size="18" :fill="isPropertySaved(property.id) ? 'currentColor' : 'none'" /></button>
+            </div>
+
+            <template v-if="images.length || video">
+              <!-- Video Player: Uncropped, Full Aspect Ratio, Cinematic Ambient Backdrop -->
+              <div v-if="activeMediaTab === 'video' && video" class="showcase-player">
+                <div v-if="videoPoster" class="showcase-player-backdrop" :style="{ backgroundImage: `url(${resolveMediaUrl(videoPoster)})` }" aria-hidden="true"></div>
+                <video v-if="video.kind === 'file'" ref="heroVideoEl" :src="resolveMediaUrl(video.src)" :poster="resolveMediaUrl(videoPoster) || undefined" autoplay :muted="heroMuted" loop controls playsinline></video>
+                <iframe v-else ref="heroFrame" :src="heroEmbed?.src" title="প্রপার্টির ভিডিও" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
+                <button v-if="heroMuted && video.kind !== 'facebook'" type="button" class="unmute-btn" @click="unmuteHero"><Volume2 :size="18" aria-hidden="true" /> শব্দ চালু করুন</button>
+                <button type="button" class="player-photos-back-btn" @click="switchToPhotos"><ImageIcon :size="15" /> ছবি দেখুন</button>
+              </div>
+
+              <!-- Main Feature Photo Showcase -->
+              <div v-else-if="images.length" class="showcase-photo-wrapper">
+                <img :src="resolveMediaUrl(activePhotoSrc)" :alt="property.title" class="showcase-img" fetchpriority="high" decoding="async" @click="openImageAt(activePhotoIndex)" @error="imageFailed" />
+                <span v-if="activePhotoIndex === 0" class="showcase-badge"><ImageIcon :size="13" /> ফিচার ছবি</span>
+                <span v-else class="showcase-badge"><ImageIcon :size="13" /> ছবি {{ toBn(activePhotoIndex + 1) }} / {{ toBn(images.length) }}</span>
+
+                <!-- Prev / Next Navigation Arrows -->
+                <button v-if="images.length > 1" type="button" class="showcase-arrow showcase-arrow--prev" aria-label="পূর্ববর্তী ছবি" @click.stop="prevShowcasePhoto">
+                  <ChevronLeft :size="22" />
+                </button>
+                <button v-if="images.length > 1" type="button" class="showcase-arrow showcase-arrow--next" aria-label="পরবর্তী ছবি" @click.stop="nextShowcasePhoto">
+                  <ChevronRight :size="22" />
+                </button>
+
+                <!-- Expand Button -->
+                <button type="button" class="showcase-expand-btn" aria-label="সব ছবি বড় করে দেখুন" @click.stop="openImageAt(activePhotoIndex)">
+                  <Expand :size="15" /> বড় করে দেখুন
+                </button>
+              </div>
+            </template>
+            <PropertyPlotSheet v-else :property="property" />
           </section>
-          <section id="property-location" class="detail-section"><p class="eyebrow">নিজে দেখে সিদ্ধান্ত নিন</p><h2>লোকেশন ও সাইট ভিজিট</h2><p class="property-location"><MapPin :size="20" />{{ location }}</p><p>সাইট ভিজিটের আগে সঠিক লোকেশন, যাতায়াতের পথ ও সময় টিমের সঙ্গে মিলিয়ে নিন।</p><a v-if="!property.hideExactAddress && property.lat && property.lng" class="text-action" :href="`https://www.google.com/maps/search/?api=1&query=${property.lat},${property.lng}`" target="_blank" rel="noopener noreferrer">ম্যাপে লোকেশন দেখুন <ArrowUpRight :size="16" /></a><button class="secondary" @click="openInquiry('site_visit')">{{ ctaLabel }} <ArrowRight :size="16" /></button></section>
-          <section id="property-questions" class="detail-section faq-section"><p class="eyebrow">সহজ উত্তর</p><h2>আপনার মনে হতে পারে</h2><details><summary>ফর্ম পূরণ করলে কি বুকিং হয়ে যাবে?</summary><p>না। এটি শুধু এই প্রপার্টি সম্পর্কে তথ্য ও যোগাযোগের অনুরোধ। কোনো টাকা বা বুকিংয়ের অঙ্গীকার প্রয়োজন নেই।</p></details><details><summary>তালিকাভুক্ত দামের বাইরে খরচ আছে?</summary><p>রেজিস্ট্রেশন, কর, সার্ভিস চার্জ{{ buildCostApplies ? ' এবং নির্মাণ খরচ' : '' }} মূল্যের মধ্যে আছে কি না, টিমের কাছে পূর্ণ হিসাব চেয়ে নিন। প্রকাশিত খরচের বিবরণ দেখুন; কোনো খরচ উল্লেখ না থাকলে তা অন্তর্ভুক্ত ধরে নেবেন না।</p></details><details><summary>এখনই কিনব না, তবু কথা বলা যাবে?</summary><p>অবশ্যই। ফর্মে আপনার আসল সময়সীমা বেছে নিন। আপনার প্রস্তুতি অনুযায়ী আলোচনা করা যাবে।</p></details><details><summary>ফর্ম জমা দেওয়ার পর কী হবে?</summary><p>GBREL টিম আপনার দেওয়া নম্বরে, পছন্দের মাধ্যমে যোগাযোগ করবে। ঐচ্ছিকভাবে সময় বা আগে জানতে চাওয়া বিষয়ও জানাতে পারবেন।</p></details></section>
-        </div>
-        <aside class="inquiry-sidebar" :class="{ 'is-resting': bottomCtaVisible }" :aria-hidden="(bottomCtaVisible && isDesktop) || undefined">
-          <div v-if="inlineVisible" class="sidebar-sticky-cta">
-            <div class="sidebar-sticky-price">
-              <span>{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span>
-              <strong>{{ price.amount }}</strong>
-              <small v-if="price.note">{{ price.note }}</small>
-            </div>
-            <button class="cta-sun sidebar-cta-btn" @click="openInquiry('sidebar_sticky_cta')">
-              {{ ctaLabel }}
+
+          <!-- Gallery Images Positioned at the Bottom of Main Image -->
+          <div v-if="images.length > 1 || video" class="gallery-thumbs-strip" aria-label="প্রপার্টির গ্যালারি ছবিসমূহ">
+            <!-- Video Thumbnail (if property has video) -->
+            <button
+              v-if="video"
+              type="button"
+              class="thumb-box thumb-box--video"
+              :class="{ 'is-active': activeMediaTab === 'video' }"
+              aria-label="ভিডিও ট্যুর দেখুন"
+              @click="switchToVideo"
+            >
+              <img v-if="videoPoster" :src="resolveMediaUrl(videoPoster)" alt="ভিডিও পোস্টার" loading="lazy" />
+              <span class="thumb-play-overlay"><Play :size="18" fill="currentColor" /></span>
+              <span class="thumb-tag">ভিডিও</span>
+            </button>
+
+            <!-- Photo Thumbnails -->
+            <button
+              v-for="(imgSrc, idx) in images"
+              :key="imgSrc"
+              type="button"
+              class="thumb-box"
+              :class="{ 'is-active': activeMediaTab === 'photos' && activePhotoIndex === idx }"
+              :aria-label="`ছবি ${idx + 1}`"
+              @click="selectThumb(idx)"
+            >
+              <img :src="resolveMediaUrl(imgSrc)" :alt="`ছবি ${idx + 1}`" loading="lazy" decoding="async" @error="imageFailed" />
+              <span v-if="idx === 0" class="thumb-feature-tag">ফিচার</span>
+            </button>
+
+            <!-- View All Photos button -->
+            <button
+              type="button"
+              class="thumb-all-btn"
+              aria-label="সব ছবি একসাথে দেখুন"
+              @click="openImageAt(activePhotoIndex)"
+            >
+              <Expand :size="16" />
+              <span>সকল ছবি ({{ toBn(images.length) }})</span>
             </button>
           </div>
-          <PropertySurveyStart v-show="!inlineVisible" side :property-type="property.propertyType" class="side-start" @choose="purpose => openInquiry('sidebar_first_question', purpose)" />
+
+          <!-- Specs Glance Cards (Same Width as Title & Main Image) -->
+          <div class="property-at-a-glance" role="region" aria-label="প্রপার্টির মূল বৈশিষ্ট্য">
+            <div v-for="item in glanceItems" :key="item.label" class="glance-card">
+              <component :is="item.icon" :size="22" class="glance-icon" aria-hidden="true" />
+              <div class="glance-info">
+                <span class="glance-label">{{ item.label }}</span>
+                <strong class="glance-val">{{ item.value }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div ref="inlineStart"><PropertySurveyStart :property-type="property.propertyType" @choose="purpose => openInquiry('inline_first_question', purpose)" /></div>
+
+          <div class="property-information">
+            <nav class="section-nav" aria-label="প্রপার্টির বিভাগ">
+              <a href="#property-overview">বিস্তারিত</a>
+              <a v-if="flatVariants.length" href="#property-flat-variants">ফ্ল্যাট সাইজ</a>
+              <a v-if="hasBuyerDetails" href="#property-buyer-details">মূল্য ও শর্ত</a>
+              <a href="#property-documents">কাগজপত্র</a>
+              <a href="#property-location">লোকেশন</a>
+              <a href="#property-questions">আপনার প্রশ্ন</a>
+            </nav>
+            <section id="property-overview" class="detail-section"><p class="eyebrow">এক নজরে প্রপার্টি</p><h2>এখানে কী পাচ্ছেন?</h2><p v-if="property.tagline" class="property-tagline">{{ property.tagline }}</p><p class="description">{{ property.description }}</p><dl class="property-specs"><div v-for="item in specifications" :key="item.label"><dt>{{ item.label }}</dt><dd>{{ item.value }}</dd></div></dl><template v-if="property.amenities?.length"><h3>সুবিধাসমূহ</h3><ul class="amenity-list"><li v-for="amenity in property.amenities" :key="amenity"><Check :size="16" />{{ amenity }}</li></ul></template></section>
+            <PropertyFlatVariants 
+              v-if="flatVariants.length" 
+              :variants="flatVariants" 
+              :property="property" 
+              :whatsapp="leadWhatsapp" 
+              @select="onVariantSelect"
+              @inquire="v => openInquiry('flat_variant_' + v.name, v.name)"
+            />
+            <PropertyBuyerDetails :property="property" :cta-label="ctaLabel" @inquire="openInquiry('sale_terms')" />
+            <section id="property-documents" class="detail-section">
+              <p class="eyebrow">সিদ্ধান্তের আগে পরিষ্কার ধারণা</p><h2>কাগজপত্র ও খরচ বুঝে নিন</h2><p>মালিকানা, অনুমোদন, রেজিস্ট্রেশন ও প্রযোজ্য খরচ নিয়ে প্রশ্ন করুন। তালিকায় থাকা তথ্যের সঙ্গে মূল নথি মিলিয়ে দেখুন।</p>
+              <ul v-if="property.documentsVerified?.length" class="document-list"><li v-for="document in property.documentsVerified" :key="document"><FileText :size="18" /><span>{{ document }} <small>তালিকায় উল্লেখিত</small></span></li></ul>
+              <div v-if="property.propertyType === 'Land Share'" class="land-share-note"><strong>জমির শেয়ার কিনছেন?</strong><p>এই মূল্যে জমির কতটুকু অংশ পাবেন, নির্মাণ খরচ আলাদা কি না, এবং হস্তান্তরের শর্ত—সবগুলো আলাদা করে নিশ্চিত করুন।</p></div>
+              <div v-if="brochures.length" class="brochure-list"><a v-for="doc in brochures" :key="doc.url" :href="resolveMediaUrl(doc.url)" target="_blank" rel="noopener noreferrer"><FileDown :size="20" /><span>{{ doc.title }}</span><ArrowUpRight :size="18" /></a></div>
+              <p v-else class="muted-note">এই পেজে ব্রোশিওর প্রকাশ করা হয়নি। উপলব্ধ কাগজপত্র সম্পর্কে টিমকে জিজ্ঞেস করতে পারেন।</p><button class="text-action" @click="openInquiry('documents')">{{ ctaLabel }} <ArrowRight :size="16" /></button>
+            </section>
+            <section id="property-location" class="detail-section"><p class="eyebrow">নিজে দেখে সিদ্ধান্ত নিন</p><h2>লোকেশন ও সাইট ভিজিট</h2><p class="property-location"><MapPin :size="20" />{{ location }}</p><p>সাইট ভিজিটের আগে সঠিক লোকেশন, যাতায়াতের পথ ও সময় টিমের সঙ্গে মিলিয়ে নিন।</p><a v-if="!property.hideExactAddress && property.lat && property.lng" class="text-action" :href="`https://www.google.com/maps/search/?api=1&query=${property.lat},${property.lng}`" target="_blank" rel="noopener noreferrer">ম্যাপে লোকেশন দেখুন <ArrowUpRight :size="16" /></a><button class="secondary" @click="openInquiry('site_visit')">{{ ctaLabel }} <ArrowRight :size="16" /></button></section>
+            <section id="property-questions" class="detail-section faq-section"><p class="eyebrow">সহজ উত্তর</p><h2>আপনার মনে হতে পারে</h2><details><summary>ফর্ম পূরণ করলে কি বুকিং হয়ে যাবে?</summary><p>না। এটি শুধু এই প্রপার্টি সম্পর্কে তথ্য ও যোগাযোগের অনুরোধ। কোনো টাকা বা বুকিংয়ের অঙ্গীকার প্রয়োজন নেই।</p></details><details><summary>তালিকাভুক্ত দামের বাইরে খরচ আছে?</summary><p>রেজিস্ট্রেশন, কর, সার্ভিস চার্জ{{ buildCostApplies ? ' এবং নির্মাণ খরচ' : '' }} মূল্যের মধ্যে আছে কি না, টিমের কাছে পূর্ণ হিসাব চেয়ে নিন। প্রকাশিত খরচের বিবরণ দেখুন; কোনো খরচ উল্লেখ না থাকলে তা অন্তর্ভুক্ত ধরে নেবেন না।</p></details><details><summary>এখনই কিনব না, তবু কথা বলা যাবে?</summary><p>অবশ্যই। ফর্মে আপনার আসল সময়সীমা বেছে নিন। আপনার প্রস্তুতি অনুযায়ী আলোচনা করা যাবে।</p></details><details><summary>ফর্ম জমা দেওয়ার পর কী হবে?</summary><p>GBREL টিম আপনার দেওয়া নম্বরে, পছন্দের মাধ্যমে যোগাযোগ করবে। ঐচ্ছিকভাবে সময় বা আগে জানতে চাওয়া বিষয়ও জানাতে পারবেন।</p></details></section>
+          </div>
+        </main>
+
+        <!-- Right Sticky Sidebar: Asking Price Card & Direct Advisory -->
+        <aside class="property-sidebar-col" :class="{ 'is-resting': bottomCtaVisible }" :aria-hidden="(bottomCtaVisible && isDesktop) || undefined">
+          <!-- Price & Hero Action Card -->
+          <div class="asking-price-card">
+            <div class="price-header">
+              <span class="price-type">{{ price.hidden ? 'তালিকাভুক্ত মূল্য' : price.per }}</span>
+              <strong class="price-number">{{ price.amount }}</strong>
+              <small v-if="price.note" class="price-subnote">{{ price.note }}</small>
+            </div>
+            <ul v-if="trustFacts.length" class="trust-facts" aria-label="বিক্রেতার দেওয়া তথ্য">
+              <li v-for="fact in trustFacts" :key="fact"><Check :size="15" aria-hidden="true" />{{ fact }}</li>
+            </ul>
+            <small v-if="trustFacts.length" class="trust-source">বিক্রেতার দেওয়া তথ্য · কাগজ দেখে মিলিয়ে নিন</small>
+            <div ref="heroCta" class="hero-cta">
+              <button class="cta-sun" @click="openInquiry('hero_button')">{{ ctaLabel }}</button>
+              <a v-if="waLink" class="cta-wa" :href="waLink" target="_blank" rel="noopener noreferrer" @click="track('Contact', { method: 'WhatsApp', placement: 'hero' })">
+                <MessageCircle :size="18" aria-hidden="true" /> WhatsApp-এ কথা বলুন
+              </a>
+            </div>
+            <small v-if="settings.property_cta_note" class="cta-note">{{ settings.property_cta_note }}</small>
+            <NuxtLink to="/legal" class="trust-line"><ShieldCheck :size="15" aria-hidden="true" /> সরকারি নিবন্ধিত কোম্পানি · লাইসেন্স দেখুন</NuxtLink>
+          </div>
+
+          <!-- Direct Phone / WhatsApp Advisor -->
           <div v-if="waLink || agentTel" class="advisor-direct">
             <span>প্রশ্ন ছাড়াই সরাসরি কথা বলতে চান?</span>
             <div>
@@ -109,6 +183,9 @@
               <a v-if="agentTel" :href="agentTel" @click="track('Contact', { method: 'Phone', placement: 'sidebar' })"><Phone :size="15" /> কল করুন</a>
             </div>
           </div>
+
+          <!-- Survey widget in sidebar -->
+          <PropertySurveyStart v-show="!inlineVisible" side :property-type="property.propertyType" class="side-start" @choose="purpose => openInquiry('sidebar_first_question', purpose)" />
         </aside>
       </div>
 
@@ -170,7 +247,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { ArrowRight, ArrowUpRight, Building2, Check, ChevronLeft, ChevronRight, CircleCheck, Compass, Copy, Expand, FileDown, FileText, Heart, Image as ImageIcon, MapPin, MessageCircle, MessagesSquare, Phone, Play, ShieldCheck, Volume2, Ruler, Share2, X } from 'lucide-vue-next'
+import { ArrowRight, ArrowUpRight, Bath, Bed, Building2, Check, ChevronLeft, ChevronRight, CircleCheck, Compass, Copy, Expand, FileDown, FileText, Film, Heart, Image as ImageIcon, MapPin, MessageCircle, MessagesSquare, Phone, Play, ShieldCheck, Volume2, Ruler, Share2, X } from 'lucide-vue-next'
 import { useProperties, type PropertyItem } from '~/composables/useProperties'
 import { formatBDT, formatArea } from '~/composables/useCurrency'
 import { useAuth } from '~/composables/useAuth'
@@ -220,6 +297,51 @@ const slides = computed<Slide[]>(() => {
 })
 const videoIndex = computed(() => slides.value.findIndex(slide => slide.kind === 'video'))
 const currentSlide = computed(() => slides.value[photoIndex.value])
+
+// Media Showcase & Tabs
+const activeMediaTab = ref<'photos' | 'video'>('photos')
+const activePhotoIndex = ref(0)
+const activePhotoSrc = computed(() => images.value[activePhotoIndex.value] || images.value[0] || '')
+
+const selectThumb = (idx: number) => {
+  activePhotoIndex.value = idx
+  activeMediaTab.value = 'photos'
+  if (heroVideoEl.value) {
+    heroVideoEl.value.pause()
+  }
+}
+
+const prevShowcasePhoto = () => {
+  if (!images.value.length) return
+  activePhotoIndex.value = (activePhotoIndex.value + images.value.length - 1) % images.value.length
+}
+
+const nextShowcasePhoto = () => {
+  if (!images.value.length) return
+  activePhotoIndex.value = (activePhotoIndex.value + 1) % images.value.length
+}
+
+const secondaryImages = computed(() => images.value.slice(1, 5))
+
+const openImageAt = (imgIdx: number) => {
+  const targetSrc = images.value[imgIdx]
+  const slideIdx = slides.value.findIndex(s => s.kind === 'image' && s.src === targetSrc)
+  photoIndex.value = slideIdx >= 0 ? slideIdx : 0
+  lightboxOpen.value = true
+}
+
+const switchToVideo = () => {
+  activeMediaTab.value = 'video'
+  if (!heroPlaying.value) playHeroVideo()
+}
+
+const switchToPhotos = () => {
+  activeMediaTab.value = 'photos'
+  if (heroVideoEl.value) {
+    heroVideoEl.value.pause()
+  }
+}
+
 const heroPlaying = ref(false)
 // Autoplay only works with the sound off, so the hero starts muted with a clear "sound on" button.
 const heroMuted = ref(false)
@@ -246,16 +368,32 @@ const startHeroAutoplay = () => {
 const price = computed(() => priceDisplay(property.value))
 // "No advance fee" is always true; "no hidden fee" is only honest because the buyer's charge sits next to the price.
 const bottomPromise = computed(() => `দাম, কাগজপত্র আর সাইট ভিজিট নিয়ে আপনার সব প্রশ্নের উত্তর দেবে GBREL টিম। বিক্রির পুরো প্রক্রিয়া আমরাই পরিচালনা করি। কোনো অগ্রিম ফি নেই।${price.value.fee && !price.value.fee.includes('নেই') ? ` ${price.value.fee}, দামের পাশেই লেখা।` : ''}`)
-// Third fact in the strip under the photos: the most useful thing this listing actually has, never a blank "find out".
-const glanceThird = computed(() => {
+// Facts strip under the photos (Responsive cards, never empty slots)
+const glanceItems = computed(() => {
   const p = property.value
-  if (!p) return null
-  if (p.bedrooms) return { label: 'বেডরুম', value: toBn(p.bedrooms) }
-  if (p.facing) return { label: 'অভিমুখ', value: facingLabel(p.facing) }
-  if (p.totalFloors) return { label: 'ভবন', value: `${toBn(p.totalFloors)} তলা` }
-  if (p.parking) return { label: 'পার্কিং', value: `${toBn(p.parking)}টি` }
-  return null
+  if (!p) return []
+  const list: Array<{ icon: any; label: string; value: string }> = [
+    { icon: Ruler, label: 'আয়তন', value: areaGlanceText.value },
+    { icon: Building2, label: 'ধরন', value: typeLabel(p.propertyType) }
+  ]
+  if (p.bedrooms) {
+    list.push({ icon: Bed, label: 'বেডরুম', value: `${toBn(p.bedrooms)}টি` })
+  }
+  if (p.bathrooms) {
+    list.push({ icon: Bath, label: 'বাথরুম', value: `${toBn(p.bathrooms)}টি` })
+  } else if (p.facing) {
+    list.push({ icon: Compass, label: 'অভিমুখ', value: facingLabel(p.facing) })
+  } else if (p.totalFloors) {
+    list.push({ icon: Building2, label: 'মোট তলা', value: `${toBn(p.totalFloors)} তলা` })
+  } else if (p.parking) {
+    list.push({ icon: Building2, label: 'পার্কিং', value: `${toBn(p.parking)}টি` })
+  }
+  if (p.status) {
+    list.push({ icon: CircleCheck, label: 'অবস্থা', value: statusLabel(p.status) })
+  }
+  return list.filter(item => Boolean(item.value && String(item.value).trim()))
 })
+const glanceThird = computed(() => glanceItems.value[2] || null)
 const buildCostApplies = computed(() => property.value?.propertyType === 'Land Share' || ['Under Construction', 'Upcoming Project'].includes(property.value?.completionStatus || ''))
 // Same sentence the server puts in link previews (server/plugins/share-meta.ts), so the tab and the preview agree.
 const metaDescription = computed(() => propertyShareDescription(property.value))
@@ -381,10 +519,19 @@ let loadVersion = 0
 const loadProperty = async () => {
   const version = ++loadVersion
   loading.value = true; property.value = null; inquiryOpen.value = false; lightboxOpen.value = false; heroPlaying.value = false
+  activePhotoIndex.value = 0
   const result = await fetchPropertyById(String(route.params.id), { strict: true })
   if (version !== loadVersion) return
   property.value = result; loading.value = false
-  if (result) { track('ViewContent'); startHeroAutoplay() }
+  if (result) {
+    if (result.coverMedia === 'video' && video.value) {
+      activeMediaTab.value = 'video'
+      startHeroAutoplay()
+    } else {
+      activeMediaTab.value = 'photos'
+    }
+    track('ViewContent')
+  }
   if (!agent.value) { await fetchAgents() }
 }
 watch(() => route.params.id, loadProperty, { immediate: true })
@@ -403,45 +550,133 @@ const shareProperty = async () => {
 .property-page button { cursor:pointer; font-family:inherit; }
 .property-page :focus-visible { outline:3px solid #b88322; outline-offset:4px; }
 .property-topline { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; font-size:12px; color:#65736b; }
-.property-topline nav a { color:#477465; }.property-tools { display:flex; gap:6px; }
+.property-topline nav a { color:#477465; }
+.property-tools { display:flex; gap:6px; }
 .property-tools button { display:flex; align-items:center; justify-content:center; gap:7px; border:1px solid #dce4dc; background:#fff; border-radius:9px; padding:10px 12px; min-height:44px; color:#455e52; font-size:12px; }
 .property-tools button[aria-pressed=true] { color:#126448; background:#e3f0e5; }
-.property-heading { display:grid; grid-template-columns:minmax(0,1fr) 285px; gap:42px; align-items:center; margin-bottom:24px; }
-.property-badges { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:12px; }.property-badges span { background:#e8efe7; color:#416653; font-size:11px; padding:5px 10px; border-radius:5px; font-weight:600; }
-.property-heading h1 { font-family:'Outfit',sans-serif; font-size:clamp(27px,3.2vw,42px); line-height:1.15; letter-spacing:-.8px; font-weight:600; margin-bottom:16px; overflow-wrap:anywhere; }
-.property-location { display:flex; align-items:flex-start; gap:7px; font-size:13px; line-height:1.6; color:#647269; }.property-location svg { flex-shrink:0; margin-top:2px; }
-.asking-price { border-left:1px solid #dce4dc; padding:12px 0 12px 28px; display:flex; flex-direction:column; gap:5px; }.asking-price > span { font-size:12px; color:#65736b; }.asking-price strong { font-family:'Outfit','Noto Sans Bengali',sans-serif; font-size:32px; line-height:1.4; font-weight:600; }.asking-price small { font-size:12px; color:#647269; }
-.text-action { display:inline-flex; align-items:center; gap:7px; background:transparent; border:0; color:#16684b; font-size:13px; padding:12px 0; min-height:44px; text-align:left; text-decoration:none; line-height:1.6; }
-.property-gallery { display:grid; grid-template-columns:1.65fr 1fr; gap:10px; height:360px; border-radius:18px; overflow:hidden; background:#e5ebe3; }.property-gallery.single { grid-template-columns:1fr; }.property-gallery button { border:0; padding:0; position:relative; overflow:hidden; background:#dfe7dc; min-width:0; }.property-gallery img { display:block; width:100%; height:100%; object-fit:cover; transition:transform .25s; }.property-gallery button:hover img { transform:scale(1.025); }
-.gallery-caption { position:absolute; bottom:16px; left:16px; display:flex; gap:8px; align-items:center; background:#fff; border-radius:8px; padding:11px 14px; color:#264c3d; font-size:12px; box-shadow:0 3px 15px #0001; }.gallery-empty { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; font-size:14px; }
-.property-at-a-glance { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); border-bottom:1px solid #dee5dc; padding:24px 0; margin-bottom:28px; }.property-at-a-glance > div { display:flex; align-items:center; justify-content:center; gap:13px; padding:0 15px; border-right:1px solid #dee5dc; }.property-at-a-glance > div:last-child { border:0; }.property-at-a-glance svg { color:#76917c; flex-shrink:0; }.property-at-a-glance span { font-size:11px; color:#6a786c; }.property-at-a-glance strong { display:block; font-size:15px; color:#254a3c; font-family:'Outfit',sans-serif; font-weight:500; margin-top:4px; }
-.interest-banner { display:flex; align-items:center; justify-content:space-between; gap:26px; padding:25px 30px; background:#eaf1e7; border:1px solid #dbe6d5; border-radius:14px; margin-bottom:32px; }.eyebrow { display:block; font-size:11px; color:#597954; font-weight:600; margin-bottom:9px; }.interest-banner h2 { font-size:21px; line-height:1.65; margin-bottom:6px; }.interest-banner p { font-size:13px; color:#5b6f5c; line-height:1.7; }
-.primary,.secondary { display:inline-flex; align-items:center; justify-content:center; gap:12px; min-height:52px; padding:13px 22px; border-radius:10px; font-size:14px; line-height:1.6; font-weight:600; border:1px solid #165c43; background:#165c43; color:#fff; text-decoration:none; }.primary:hover { background:#0d4531; }.interest-banner .primary { flex-shrink:0; }.secondary { background:#fff; color:#165c43; margin-top:12px; }
-.property-body { display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:40px; align-items:start; }.property-information { min-width:0; }.section-nav { display:flex; overflow-x:auto; gap:22px; border-bottom:1px solid #dce4dc; }.section-nav a { padding:15px 0; color:#456454; font-size:13px; white-space:nowrap; min-height:48px; }
-.detail-section { padding:32px 0; border-bottom:1px solid #dce4dc; scroll-margin-top:100px; }.detail-section h2 { font-size:24px; line-height:1.5; margin-bottom:16px; }.detail-section h3 { font-size:17px; margin:25px 0 14px; }.detail-section p { font-size:14px; color:#53665b; line-height:1.9; margin-bottom:14px; }.description { white-space:pre-line; overflow-wrap:anywhere; }.property-tagline { font-weight:600; }
-.property-specs { display:grid; grid-template-columns:1fr 1fr; gap:0 28px; margin-top:22px; }.property-specs > div { display:flex; justify-content:space-between; gap:14px; border-bottom:1px solid #e4eae0; padding:13px 0; font-size:12px; }.property-specs dt { color:#69786d; }.property-specs dd { text-align:right; color:#2d4d3d; font-weight:600; overflow-wrap:anywhere; }
-.amenity-list { display:grid; grid-template-columns:1fr 1fr; gap:14px; list-style:none; padding:0; }.amenity-list li { display:flex; align-items:flex-start; gap:9px; font-size:13px; color:#53665b; }.amenity-list svg { flex-shrink:0; margin-top:2px; color:#377e57; }
-.document-list { display:flex; flex-direction:column; gap:14px; list-style:none; padding:0; margin:20px 0; }.document-list li { display:flex; align-items:center; gap:12px; font-size:13px; }.document-list small { display:block; color:#768575; font-size:10px; margin-top:3px; }
-.land-share-note { padding:17px 20px; border-left:3px solid #b29e61; background:#f4f0e4; border-radius:0 10px 10px 0; margin:20px 0; }.land-share-note strong { font-size:14px; }.land-share-note p { margin:6px 0 0; font-size:13px; }
-.brochure-list a { display:flex; gap:12px; align-items:center; border:1px solid #d9e3d8; padding:15px; border-radius:9px; margin-top:10px; color:#1b6346; font-size:14px; }.brochure-list span { flex:1; }.detail-section .muted-note { font-size:12px; color:#6f7b70; }
-.faq-section details { border-bottom:1px solid #e0e7dc; padding:8px 0; }.faq-section summary { cursor:pointer; padding:14px 0; font-size:14px; font-weight:600; min-height:48px; }.faq-section details p { padding:0 12px 0 0; }
-.inquiry-sidebar { position:sticky; top:105px; transition:opacity .25s ease, transform .25s ease; }
-@media (min-width:768px) { .inquiry-sidebar.is-resting { opacity:0; transform:translateY(-8px); pointer-events:none; } }
-@media (prefers-reduced-motion:reduce) { .inquiry-sidebar { transition:none; } }
-.sidebar-sticky-cta { background:#fff; border:1px solid #dbe4d7; border-radius:16px; padding:20px 22px; box-shadow:0 8px 24px rgba(32,59,40,.08); display:flex; flex-direction:column; gap:12px; margin-bottom:14px; }
-.sidebar-sticky-price { display:flex; flex-direction:column; gap:2px; }
-.sidebar-sticky-price span { font-size:12px; color:#647269; }
-.sidebar-sticky-price strong { font-family:'Outfit','Noto Sans Bengali',sans-serif; font-size:24px; font-weight:700; color:#1D4A2A; }
-.sidebar-sticky-price small { font-size:11px; color:#71836b; }
-.sidebar-cta-btn { width:100%; font-size:17px; }
-.advisor-card { padding:28px; border:1px solid #dbe4d7; border-radius:17px; background:#fff; box-shadow:0 8px 24px #203b2810; }.advisor-symbol { display:inline-flex; padding:12px; background:#eaf2e8; border-radius:13px; margin-bottom:22px; color:#336947; }.advisor-card h2 { font-size:26px; line-height:1.6; margin-bottom:12px; }.advisor-card > p:not(.eyebrow) { font-size:13px; line-height:1.9; color:#687967; }.advisor-card ul { padding:0; list-style:none; display:grid; gap:12px; margin:24px 0; }.advisor-card li { display:flex; gap:9px; font-size:12px; align-items:center; }.advisor-card li svg { flex-shrink:0; color:#548459; }.advisor-card .primary { width:100%; padding:14px 10px; }.advisor-card > small { display:block; text-align:center; font-size:10px; margin-top:12px; color:#71836b; }
-.advisor-direct { border:1px solid #dbe4d7; border-radius:14px; background:#fff; padding:14px 18px 6px; margin-top:14px; }.advisor-direct > span { display:block; font-size:11px; color:#71836b; margin-bottom:8px; }.advisor-direct > div { display:flex; justify-content:space-between; }.advisor-direct a { display:inline-flex; align-items:center; gap:5px; min-height:44px; font-size:13px; color:#386b45; }
-.mobile-inquiry-bar { display:none; }
-.trust-facts { list-style:none; padding:0; margin:10px 0 2px; display:flex; flex-direction:column; gap:5px; }.trust-facts li { display:flex; align-items:center; gap:7px; font-size:13px; color:#1D4A2A; font-weight:600; }.trust-facts svg { color:#3F7A35; flex-shrink:0; }
+
+/* 2-Column Main Layout: Left = Title, Showcase, Thumbs, Specs, Info (shared width) | Right = Sticky Asking Price & Advisor */
+.property-main-layout { display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:36px; align-items:start; }
+.property-primary-col { min-width:0; width:100%; display:flex; flex-direction:column; }
+.property-sidebar-col { position:sticky; top:96px; display:flex; flex-direction:column; gap:16px; transition:opacity .25s ease, transform .25s ease; }
+@media (min-width:768px) { .property-sidebar-col.is-resting { opacity:0; transform:translateY(-8px); pointer-events:none; } }
+@media (prefers-reduced-motion:reduce) { .property-sidebar-col { transition:none; } }
+
+/* Title & Header Block */
+.property-heading-block { width:100%; margin-bottom:18px; }
+.property-badges { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:12px; }
+.property-badges span { background:#e8efe7; color:#416653; font-size:11px; padding:5px 10px; border-radius:5px; font-weight:600; }
+.property-heading-block h1 { font-family:'Outfit','Noto Sans Bengali',sans-serif; font-size:clamp(24px,2.6vw,38px); line-height:1.25; letter-spacing:-.5px; font-weight:700; color:#173c34; margin-bottom:12px; overflow-wrap:anywhere; }
+.property-location { display:flex; align-items:flex-start; gap:7px; font-size:13.5px; line-height:1.5; color:#647269; }
+.property-location svg { flex-shrink:0; margin-top:2px; color:#1D4A2A; }
+
+/* Main Media Showcase (Shares exact width with Title & Specs) */
+.property-media-showcase { position:relative; width:100%; aspect-ratio:16/10; max-height:480px; border-radius:16px; overflow:hidden; background:#0e1813; box-shadow:0 8px 24px rgba(22,60,52,.07); }
+.showcase-photo-wrapper { position:relative; width:100%; height:100%; cursor:pointer; }
+.showcase-img { display:block; width:100%; height:100%; object-fit:cover; transition:transform .35s ease; }
+.showcase-photo-wrapper:hover .showcase-img { transform:scale(1.02); }
+.showcase-badge { position:absolute; top:14px; left:14px; z-index:2; display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:999px; background:rgba(14,42,30,.82); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.2); color:#fff; font-size:11.5px; font-weight:600; pointer-events:none; }
+.showcase-expand-btn { position:absolute; bottom:14px; left:14px; z-index:2; display:inline-flex; align-items:center; gap:7px; padding:8px 16px; border-radius:999px; background:rgba(255,255,255,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.8); color:#173c34; font-size:12.5px; font-weight:700; box-shadow:0 4px 14px rgba(0,0,0,.2); cursor:pointer; transition:transform .15s, background .15s; }
+.showcase-expand-btn:hover { background:#fff; transform:scale(1.03); }
+.showcase-arrow { position:absolute; top:50%; transform:translateY(-50%); z-index:3; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.92); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.8); color:#1D4A2A; display:grid; place-items:center; box-shadow:0 4px 16px rgba(0,0,0,.2); cursor:pointer; transition:transform .15s, background .15s; }
+.showcase-arrow:hover { background:#fff; transform:translateY(-50%) scale(1.08); }
+.showcase-arrow--prev { left:14px; }
+.showcase-arrow--next { right:14px; }
+
+/* Uncropped Video Player Showcase with Ambient Blur Backdrop */
+.showcase-player { position:relative; width:100%; height:100%; background:#08110d; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.showcase-player-backdrop { position:absolute; inset:-20px; background-size:cover; background-position:center; filter:blur(28px) brightness(0.35); opacity:.65; transform:scale(1.1); pointer-events:none; }
+.showcase-player video, .showcase-player iframe { position:relative; z-index:1; width:100%; height:100%; max-width:100%; max-height:100%; border:0; object-fit:contain !important; background:transparent; }
+.player-photos-back-btn { position:absolute; top:14px; left:14px; z-index:4; display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:999px; background:rgba(255,255,255,.94); color:#173c34; border:1px solid rgba(255,255,255,.8); font-size:12px; font-weight:700; box-shadow:0 4px 14px rgba(0,0,0,.25); cursor:pointer; transition:transform .15s, background .15s; }
+.player-photos-back-btn:hover { background:#fff; transform:scale(1.03); }
+.unmute-btn { position:absolute; left:16px; bottom:16px; z-index:4; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 16px; border:0; border-radius:999px; background:#E2651C; color:#fff; font:inherit; font-size:14px; font-weight:700; box-shadow:0 4px 16px rgba(0,0,0,.3); cursor:pointer; }
+
+/* Gallery Thumbnails Strip directly at the bottom of the main image */
+.gallery-thumbs-strip { display:flex; align-items:center; gap:10px; margin-top:12px; margin-bottom:20px; overflow-x:auto; padding:4px 2px; scrollbar-width:thin; scrollbar-color:#c4d4c7 transparent; width:100%; }
+.gallery-thumbs-strip::-webkit-scrollbar { height:5px; }
+.gallery-thumbs-strip::-webkit-scrollbar-thumb { background:#c4d4c7; border-radius:999px; }
+.thumb-box { position:relative; flex:0 0 94px; height:68px; border-radius:10px; overflow:hidden; border:2px solid transparent; background:#16241a; padding:0; cursor:pointer; transition:transform .15s, border-color .15s, box-shadow .15s; }
+.thumb-box img { display:block; width:100%; height:100%; object-fit:cover; }
+.thumb-box:hover { transform:translateY(-2px); border-color:#8da693; }
+.thumb-box.is-active { border-color:#1D4A2A; box-shadow:0 0 0 2px #fff, 0 4px 12px rgba(29,74,42,.35); transform:translateY(-2px); }
+.thumb-box--video { background:#111e15; }
+.thumb-box--video.is-active { border-color:#E2651C; box-shadow:0 0 0 2px #fff, 0 4px 12px rgba(226,101,28,.4); }
+.thumb-play-overlay { position:absolute; inset:0; background:rgba(0,0,0,.35); display:grid; place-items:center; color:#fff; transition:background .15s; }
+.thumb-box:hover .thumb-play-overlay { background:rgba(226,101,28,.5); }
+.thumb-tag { position:absolute; bottom:4px; left:4px; background:#E2651C; color:#fff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px; }
+.thumb-feature-tag { position:absolute; top:4px; left:4px; background:rgba(14,42,30,.85); color:#fff; font-size:9.5px; font-weight:600; padding:1px 5px; border-radius:3px; }
+.thumb-all-btn { flex:0 0 auto; display:inline-flex; align-items:center; gap:7px; height:68px; padding:0 16px; border-radius:10px; border:1.5px dashed #c4d4c7; background:#fff; color:#1D4A2A; font-size:12.5px; font-weight:700; cursor:pointer; white-space:nowrap; transition:background .15s, border-color .15s; }
+.thumb-all-btn:hover { background:#eaf2e9; border-color:#1D4A2A; }
+
+/* Specs Glance Cards (Same Width as Title & Main Showcase) */
+.property-at-a-glance { display:grid; grid-template-columns:repeat(auto-fit,minmax(135px,1fr)); gap:12px; padding:0 0 22px; margin-bottom:26px; border-bottom:1px solid #dee5dc; width:100%; }
+.glance-card { display:flex; align-items:center; gap:12px; padding:14px 16px; background:#fff; border:1px solid #dce5dc; border-radius:12px; box-shadow:0 2px 6px rgba(22,60,52,.03); transition:border-color .2s,box-shadow .2s; min-width:0; }
+.glance-card:hover { border-color:#b7cab8; box-shadow:0 4px 12px rgba(22,60,52,.06); }
+.glance-icon { color:#1D4A2A; flex-shrink:0; }
+.glance-info { display:flex; flex-direction:column; min-width:0; }
+.glance-label { font-size:11.5px; color:#6a786c; line-height:1.25; }
+.glance-val { display:block; font-size:15px; color:#173c34; font-family:'Outfit','Noto Sans Bengali',sans-serif; font-weight:600; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* Asking Price Card in Sticky Sidebar */
+.asking-price-card { background:#fff; border:1px solid #dce5dc; border-radius:16px; padding:22px 24px; box-shadow:0 6px 20px rgba(22,60,52,.06); display:flex; flex-direction:column; }
+.asking-price-card .price-header { display:flex; flex-direction:column; gap:2px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #eef2ed; }
+.asking-price-card .price-type { font-size:12px; color:#65736b; }
+.asking-price-card .price-number { font-family:'Outfit','Noto Sans Bengali',sans-serif; font-size:28px; line-height:1.25; font-weight:700; color:#1D4A2A; }
+.asking-price-card .price-subnote { font-size:11.5px; color:#647269; }
+
+.trust-facts { list-style:none; padding:0; margin:10px 0 2px; display:flex; flex-direction:column; gap:6px; }
+.trust-facts li { display:flex; align-items:center; gap:7px; font-size:13px; color:#1D4A2A; font-weight:600; }
+.trust-facts svg { color:#3F7A35; flex-shrink:0; }
+.trust-source { display:block; font-size:11px; color:#647269; margin-top:4px; }
 .hero-cta { display:flex; flex-direction:column; gap:8px; margin-top:14px; }
-.cta-sun { display:inline-flex; align-items:center; justify-content:center; min-height:54px; padding:12px 22px; border:0; border-radius:999px; background:#E2651C; color:#fff; font-family:'Anek Bangla','Noto Sans Bengali',sans-serif; font-size:18px; font-weight:700; cursor:pointer; box-shadow:0 10px 22px -12px rgba(194,83,15,.9); }.cta-sun:hover { background:#C2530F; }
-.cta-wa { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px; border:1.5px solid #1FA855; border-radius:999px; color:#137A3D; font-size:14px; font-weight:600; text-decoration:none; background:#fff; }.cta-wa:hover { background:#EAF7EF; }
+.cta-sun { display:inline-flex; align-items:center; justify-content:center; min-height:54px; padding:12px 22px; border:0; border-radius:999px; background:#E2651C; color:#fff; font-family:'Anek Bangla','Noto Sans Bengali',sans-serif; font-size:18px; font-weight:700; cursor:pointer; box-shadow:0 10px 22px -12px rgba(194,83,15,.9); }
+.cta-sun:hover { background:#C2530F; }
+.cta-wa { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px; border:1.5px solid #1FA855; border-radius:999px; color:#137A3D; font-size:14px; font-weight:600; text-decoration:none; background:#fff; }
+.cta-wa:hover { background:#EAF7EF; }
 .cta-note { display:block; text-align:center; font-size:11px; color:#647269; margin-top:6px; }
+.trust-line { display:flex; align-items:center; justify-content:center; gap:6px; margin-top:10px; font-size:12px; font-weight:600; color:#3F7A35; text-decoration:underline; text-underline-offset:3px; }
+
+.advisor-direct { border:1px solid #dbe4d7; border-radius:14px; background:#fff; padding:14px 18px 6px; }
+.advisor-direct > span { display:block; font-size:11px; color:#71836b; margin-bottom:8px; }
+.advisor-direct > div { display:flex; justify-content:space-between; }
+.advisor-direct a { display:inline-flex; align-items:center; gap:5px; min-height:44px; font-size:13px; color:#386b45; }
+
+/* Information Sections */
+.property-information { min-width:0; width:100%; }
+.section-nav { display:flex; overflow-x:auto; gap:22px; border-bottom:1px solid #dce4dc; }
+.section-nav a { padding:15px 0; color:#456454; font-size:13px; white-space:nowrap; min-height:48px; }
+.detail-section { padding:32px 0; border-bottom:1px solid #dce4dc; scroll-margin-top:100px; }
+.detail-section h2 { font-size:24px; line-height:1.5; margin-bottom:16px; }
+.detail-section h3 { font-size:17px; margin:25px 0 14px; }
+.detail-section p { font-size:14px; color:#53665b; line-height:1.9; margin-bottom:14px; }
+.description { white-space:pre-line; overflow-wrap:anywhere; }
+.property-tagline { font-weight:600; }
+.eyebrow { display:block; font-size:11px; color:#597954; font-weight:600; margin-bottom:9px; }
+.property-specs { display:grid; grid-template-columns:1fr 1fr; gap:0 28px; margin-top:22px; }
+.property-specs > div { display:flex; justify-content:space-between; gap:14px; border-bottom:1px solid #e4eae0; padding:13px 0; font-size:12px; }
+.property-specs dt { color:#69786d; }
+.property-specs dd { text-align:right; color:#2d4d3d; font-weight:600; overflow-wrap:anywhere; }
+.amenity-list { display:grid; grid-template-columns:1fr 1fr; gap:14px; list-style:none; padding:0; }
+.amenity-list li { display:flex; align-items:flex-start; gap:9px; font-size:13px; color:#53665b; }
+.amenity-list svg { flex-shrink:0; margin-top:2px; color:#377e57; }
+.document-list { display:flex; flex-direction:column; gap:14px; list-style:none; padding:0; margin:20px 0; }
+.document-list li { display:flex; align-items:center; gap:12px; font-size:13px; }
+.document-list small { display:block; color:#768575; font-size:10px; margin-top:3px; }
+.land-share-note { padding:17px 20px; border-left:3px solid #b29e61; background:#f4f0e4; border-radius:0 10px 10px 0; margin:20px 0; }
+.land-share-note strong { font-size:14px; }
+.land-share-note p { margin:6px 0 0; font-size:13px; }
+.brochure-list a { display:flex; gap:12px; align-items:center; border:1px solid #d9e3d8; padding:15px; border-radius:9px; margin-top:10px; color:#1b6346; font-size:14px; }
+.brochure-list span { flex:1; }
+.detail-section .muted-note { font-size:12px; color:#6f7b70; }
+.faq-section details { border-bottom:1px solid #e0e7dc; padding:8px 0; }
+.faq-section summary { cursor:pointer; padding:14px 0; font-size:14px; font-weight:600; min-height:48px; }
+.faq-section details p { padding:0 12px 0 0; }
+.text-action { display:inline-flex; align-items:center; gap:7px; background:transparent; border:0; color:#16684b; font-size:13px; padding:12px 0; min-height:44px; text-align:left; text-decoration:none; line-height:1.6; }
+.primary,.secondary { display:inline-flex; align-items:center; justify-content:center; gap:12px; min-height:52px; padding:13px 22px; border-radius:10px; font-size:14px; line-height:1.6; font-weight:600; border:1px solid #165c43; background:#165c43; color:#fff; text-decoration:none; }
+.primary:hover { background:#0d4531; }
+.secondary { background:#fff; color:#165c43; margin-top:12px; }
+
+/* Bottom Banner CTA */
 .property-bottom-cta { margin:48px 0 28px; }
 .bottom-cta-card { background:linear-gradient(135deg, #0e2a1e 0%, #153e2c 60%, #1a4a35 100%); border-radius:20px; padding:38px 44px; color:#fff; display:grid; grid-template-columns:1.35fr 1fr; gap:36px; align-items:center; box-shadow:0 18px 42px -12px rgba(14,42,30,.4); border:1px solid rgba(226,101,28,.3); position:relative; overflow:hidden; }
 .bottom-cta-card::after { content:''; position:absolute; top:-50%; right:-20%; width:380px; height:380px; background:radial-gradient(circle, rgba(226,101,28,.14) 0%, transparent 70%); pointer-events:none; }
@@ -461,80 +696,65 @@ const shareProperty = async () => {
 .bottom-phone-pill { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-size:12px; color:#b9d7cb; text-decoration:none; padding:6px 0; transition:color .2s; }
 .bottom-phone-pill span { color:#fff; font-weight:700; }
 .bottom-phone-pill:hover { color:#38c172; }
-.gallery-back, .gallery-tools { display:none; }.property-gallery { position:relative; }.property-state { max-width:650px; margin:auto; padding:80px 24px; text-align:center; }.property-state h1 { font-size:24px; }.property-state p { margin:20px 0; }.property-state a { display:block; margin-top:24px; }.loading-block { height:180px; background:#e9efe6; border-radius:20px; margin-bottom:24px; }
-.photo-overlay { position:fixed; inset:0; z-index:11000; background:#07130ef5; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:60px 20px 25px; }.photo-overlay > img { max-width:100%; max-height:calc(100dvh - 155px); object-fit:contain; }.photo-overlay button { background:#fff2; border:1px solid #ffffff40; color:white; width:48px; height:48px; display:grid; place-items:center; border-radius:50%; cursor:pointer; }.photo-overlay button:focus-visible { outline:3px solid #e0bc68; }.photo-close { position:absolute; top:14px; right:18px; }.photo-controls { display:flex; align-items:center; gap:24px; color:white; margin-top:16px; }.photo-controls button:disabled { opacity:.3; }
 
-/* Gallery, Video & Trust base styles */
-.property-gallery .gallery-video { background:#16241A; }
-.gallery-video img, .gallery-video video { opacity:.88; }
-.play-disc { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:78px; height:78px; border-radius:50%; display:grid; place-items:center; padding-left:5px; background:#E2651C; color:#fff; box-shadow:0 10px 30px rgba(0,0,0,.35), 0 0 0 10px rgba(226,101,28,.25); transition:transform .2s; }
-.gallery-secondary .play-disc { width:60px; height:60px; box-shadow:0 8px 22px rgba(0,0,0,.35), 0 0 0 7px rgba(226,101,28,.25); }
-.gallery-video:hover .play-disc { transform:translate(-50%,-50%) scale(1.06); }
-.gallery-player { position:relative; background:#000; }
-.gallery-player video, .gallery-player iframe { position:absolute; inset:0; width:100%; height:100%; border:0; object-fit:contain; background:#000; }
-.gallery-player video { object-fit:cover; }
-.gallery-chips { position:absolute; right:16px; bottom:16px; z-index:2; display:flex; gap:8px; }
-.property-gallery .gallery-chip { display:inline-flex; overflow:visible; align-items:center; gap:7px; min-height:40px; padding:0 14px; border:0; border-radius:999px; background:#fff; color:#1D4A2A; font:inherit; font-size:13px; font-weight:700; box-shadow:0 3px 15px rgba(0,0,0,.15); cursor:pointer; }
-.property-gallery .gallery-chip--video { background:#E2651C; color:#fff; }
+/* Lightbox & Overlay */
+.gallery-back, .gallery-tools { display:none; }
+.property-state { max-width:650px; margin:auto; padding:80px 24px; text-align:center; }
+.property-state h1 { font-size:24px; }
+.property-state p { margin:20px 0; }
+.property-state a { display:block; margin-top:24px; }
+.loading-block { height:180px; background:#e9efe6; border-radius:20px; margin-bottom:24px; }
+.photo-overlay { position:fixed; inset:0; z-index:11000; background:#07130ef5; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:60px 20px 25px; }
+.photo-overlay > img { max-width:100%; max-height:calc(100dvh - 155px); object-fit:contain; }
+.photo-overlay button { background:#fff2; border:1px solid #ffffff40; color:white; width:48px; height:48px; display:grid; place-items:center; border-radius:50%; cursor:pointer; }
+.photo-overlay button:focus-visible { outline:3px solid #e0bc68; }
+.photo-close { position:absolute; top:14px; right:18px; }
+.photo-controls { display:flex; align-items:center; gap:24px; color:white; margin-top:16px; }
+.photo-controls button:disabled { opacity:.3; }
 .photo-video { width:min(1100px,100%); aspect-ratio:16/9; max-height:calc(100dvh - 155px); background:#000; border-radius:10px; overflow:hidden; }
-.photo-video video, .photo-video iframe { width:100%; height:100%; border:0; display:block; }
-.unmute-btn { position:absolute; left:16px; bottom:16px; z-index:3; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 16px; border:0; border-radius:999px; background:#E2651C; color:#fff; font:inherit; font-size:14px; font-weight:700; box-shadow:0 4px 16px rgba(0,0,0,.3); cursor:pointer; }
-.property-gallery .unmute-btn { position:absolute; left:16px; bottom:16px; padding:0 16px; background:#E2651C; overflow:visible; }
-.price-fee { display:block; font-size:12px; font-weight:600; color:#8A4B12; }
-.sidebar-sticky-price .price-fee { font-size:11px; }
-.bottom-price-tag .price-fee { color:#f7c9a4; }
-.trust-source { display:block; font-size:11px; color:#647269; margin-top:2px; }
-.trust-line { display:flex; align-items:center; justify-content:center; gap:6px; margin-top:10px; font-size:12px; font-weight:600; color:#3F7A35; text-decoration:underline; text-underline-offset:3px; }
+.photo-video video, .photo-video iframe { width:100%; height:100%; border:0; display:block; object-fit:contain; }
 
-@media (max-width:1024px) { .property-body { grid-template-columns:minmax(0,1fr) 300px; gap:24px; }.advisor-card { padding:22px; }.property-heading { gap:24px; grid-template-columns:minmax(0,1fr) 250px; }.asking-price { padding-left:20px; }.property-specs { grid-template-columns:1fr; } }
+.mobile-inquiry-bar { display:none; }
+
+@media (max-width:1024px) {
+  .property-main-layout { grid-template-columns:minmax(0,1fr) 290px; gap:24px; }
+  .property-specs { grid-template-columns:1fr; }
+}
+
 @media (max-width:767px) {
   .property-page { padding:14px 0 100px; }
   .property-shell { display:flex; flex-direction:column; padding:0 16px; }
   .property-topline { display:none; }
-  .property-gallery { order:-1; margin:-14px -16px 14px; border-radius:0; height:clamp(205px,54vw,280px); }
+  .property-main-layout { grid-template-columns:1fr; gap:18px; }
+
   .gallery-back { display:flex; position:absolute; top:12px; left:12px; z-index:4; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:#1D4A2A; display:grid; place-items:center; box-shadow:0 3px 12px rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.7); transition:transform .15s; text-decoration:none; }
   .gallery-back:active { transform:scale(.92); }
   .gallery-tools { display:flex; position:absolute; top:12px; right:12px; gap:7px; z-index:4; }
   .gallery-tools button { width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:#1D4A2A; display:grid; place-items:center; box-shadow:0 3px 12px rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.7); transition:transform .15s, background .15s; cursor:pointer; }
   .gallery-tools button:active { transform:scale(.92); }
   .gallery-tools button[aria-pressed=true] { background:#E2651C; color:#fff; border-color:#E2651C; }
-  .gallery-secondary { display:none; }
-  .gallery-caption { bottom:12px; left:12px; border-radius:999px; background:rgba(14,42,30,.85); color:#fff; border:1px solid rgba(255,255,255,.25); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); padding:6px 12px; font-size:11.5px; font-weight:600; max-width:145px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .gallery-chips { right:12px; bottom:12px; z-index:3; gap:6px; }
-  .property-gallery .gallery-chip { min-height:32px; padding:0 12px; font-size:11.5px; font-weight:600; background:rgba(14,42,30,.85); color:#fff; border:1px solid rgba(255,255,255,.25); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); box-shadow:0 2px 8px rgba(0,0,0,.2); }
-  .property-gallery .gallery-chip--video { background:#E2651C; border-color:rgba(255,255,255,.3); }
-  .property-gallery:has(.gallery-chips) .gallery-caption { display:none; }
-  .play-disc { width:62px; height:62px; }
 
-  .property-heading { grid-template-columns:1fr; gap:12px; margin-bottom:14px; }
-  .property-heading h1 { font-size:23px; line-height:1.25; letter-spacing:0; margin-bottom:6px; }
+  .property-heading-block h1 { font-size:22px; line-height:1.25; letter-spacing:0; margin-bottom:6px; }
   .property-badges { margin-bottom:8px; gap:6px; }
   .property-badges span { font-size:10.5px; padding:4px 9px; }
   .property-location { font-size:12px; line-height:1.5; }
 
-  .asking-price { border-left:0; padding:16px 18px; background:#fff; border:1px solid #dce5dc; border-radius:16px; box-shadow:0 4px 18px rgba(22,60,52,.05); gap:4px; }
-  .asking-price strong { font-size:28px; line-height:1.3; }
-  .asking-price .hero-cta { order:1; margin-top:10px; gap:8px; }
-  .asking-price .cta-note { order:2; }
-  .asking-price .trust-facts { order:3; flex-direction:row; flex-wrap:wrap; gap:6px; margin-top:8px; }
-  .asking-price .trust-source { order:4; }
-  .asking-price .trust-line { order:5; }
+  .property-media-showcase { aspect-ratio:16/10; border-radius:12px; }
+  .gallery-thumbs-strip { margin-top:8px; margin-bottom:16px; }
+  .thumb-box { flex:0 0 78px; height:56px; border-radius:8px; }
+  .thumb-all-btn { height:56px; padding:0 12px; font-size:11.5px; }
+
+  .property-at-a-glance { grid-template-columns:1fr 1fr; gap:10px; padding-bottom:18px; margin-bottom:20px; }
+  .glance-card { padding:12px 14px; gap:10px; }
+  .glance-val { font-size:14px; margin-top:2px; }
+
+  .asking-price-card { padding:18px 20px; border-radius:16px; }
+  .asking-price-card .price-number { font-size:26px; }
   .hero-cta .cta-sun { width:100%; min-height:50px; font-size:16px; padding:10px 18px; }
   .hero-cta .cta-wa { width:100%; min-height:46px; font-size:14px; background:#f0fbf4; border:1.5px solid #25d366; color:#128c46; }
   .hero-cta .cta-wa:active { background:#e2f7ea; transform:scale(.99); }
-  .trust-facts li { background:#f4f7f2; border:1px solid #e1e9df; border-radius:999px; padding:4px 11px; font-size:11.5px; color:#1D4A2A; font-weight:600; }
+  .trust-facts li { font-size:12.5px; }
 
-  .property-at-a-glance { display:grid; grid-auto-flow:row; grid-template-columns:1fr 1fr; gap:10px; padding:16px 0; margin-bottom:20px; border-bottom:1px solid #dee5dc; }
-  .property-at-a-glance > div { background:#fff; border:1px solid #e2eae1; border-radius:12px; padding:12px 14px; gap:10px; justify-content:flex-start; box-shadow:0 2px 8px rgba(0,0,0,.02); }
-  .property-at-a-glance > div:nth-child(2) { border:1px solid #e2eae1; }
-  .property-at-a-glance strong { font-size:14px; margin-top:2px; }
-
-  .interest-banner { flex-direction:column; align-items:stretch; padding:20px; gap:14px; margin-bottom:20px; }
-  .interest-banner h2 { font-size:20px; }
-  .interest-banner p { font-size:12px; }
-  .interest-banner .primary { width:100%; }
-
-  .property-body { grid-template-columns:minmax(0,1fr); gap:20px; }
   .section-nav { gap:18px; }
   .section-nav a { font-size:12px; padding:12px 0; min-height:44px; }
   .detail-section { padding:24px 0; }
@@ -543,11 +763,6 @@ const shareProperty = async () => {
   .property-specs { grid-template-columns:1fr; }
   .amenity-list { grid-template-columns:1fr; }
   .secondary { width:100%; border-radius:999px; min-height:48px; font-size:14px; }
-
-  .inquiry-sidebar { position:static; }
-  .advisor-card h2 br { display:none; }
-  .advisor-card { padding:20px; }
-  .advisor-symbol { margin-bottom:14px; }
 
   .bottom-cta-card { grid-template-columns:1fr; padding:24px 18px; gap:20px; border-radius:16px; }
   .bottom-cta-actions { padding:18px 16px; gap:10px; }
@@ -570,7 +785,6 @@ const shareProperty = async () => {
   .mobile-inquiry-bar { padding:8px 12px max(10px,env(safe-area-inset-bottom)); gap:7px; }
   .mobile-inquiry-bar .bar-wa { width:40px; height:40px; }
   .mobile-inquiry-bar .bar-cta-btn { font-size:13px; padding:8px 12px; max-width:145px; }
-  .asking-price strong { font-size:24px; }
 }
-@media (prefers-reduced-motion:reduce) { .mobile-inquiry-bar { transition:none; } .property-gallery img { transition:none; } .play-disc { transition:none; } }
+@media (prefers-reduced-motion:reduce) { .mobile-inquiry-bar { transition:none; } .showcase-img { transition:none; } }
 </style>
