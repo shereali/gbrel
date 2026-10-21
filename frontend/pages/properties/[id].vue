@@ -26,7 +26,6 @@
 
           <!-- Main Showcase (Feature Image or Uncropped Video Player) -->
           <section class="property-media-showcase" aria-label="প্রপার্টির মূল মিডিয়া">
-            <NuxtLink to="/properties" class="gallery-back" aria-label="সব প্রপার্টিতে ফিরে যান"><ChevronLeft :size="20" /></NuxtLink>
             <div class="gallery-tools">
               <button :aria-pressed="isInCompare(property.id)" aria-label="তুলনা করুন" :title="isInCompare(property.id) ? 'তুলনা থেকে সরান' : 'তুলনা করুন'" @click="toggleCompare(property.id)"><Copy :size="18" /></button>
               <button :aria-label="'শেয়ার করুন'" @click="shareProperty"><Share2 :size="18" /></button>
@@ -698,7 +697,7 @@ const shareProperty = async () => {
 .bottom-phone-pill:hover { color:#38c172; }
 
 /* Lightbox & Overlay */
-.gallery-back, .gallery-tools { display:none; }
+.gallery-tools { display:none; }
 .property-state { max-width:650px; margin:auto; padding:80px 24px; text-align:center; }
 .property-state h1 { font-size:24px; }
 .property-state p { margin:20px 0; }
@@ -739,8 +738,6 @@ const shareProperty = async () => {
   .property-location { font-size: 12px; line-height: 1.5; }
 
   .property-media-showcase { order: 2; aspect-ratio: 16/10; border-radius: 12px; }
-  .gallery-back { display:flex; position:absolute; top:12px; left:12px; z-index:4; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:#1D4A2A; display:grid; place-items:center; box-shadow:0 3px 12px rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.7); transition:transform .15s; text-decoration:none; }
-  .gallery-back:active { transform:scale(.92); }
   .gallery-tools { display:flex; position:absolute; top:12px; right:12px; gap:7px; z-index:4; }
   .gallery-tools button { width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:#1D4A2A; display:grid; place-items:center; box-shadow:0 3px 12px rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.7); transition:transform .15s, background .15s; cursor:pointer; }
   .gallery-tools button:active { transform:scale(.92); }
