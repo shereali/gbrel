@@ -22,7 +22,8 @@
         <label class="st-field"><span>Phone number</span><input v-model="form.contact_phone" placeholder="+880 1XXX-XXXXXX" /></label>
         <label class="st-field"><span>WhatsApp number</span><input v-model="form.whatsapp_number" placeholder="+8801XXXXXXXXX" /></label>
         <label class="st-field"><span>Email</span><input v-model="form.contact_email" type="email" /></label>
-        <label class="st-field st-span2"><span>Office address</span><input v-model="form.office_address" /></label>
+        <label class="st-field st-span2"><span>কর্পোরেট অফিস (Corporate Office)</span><input v-model="form.corporate_office_address" placeholder="House 461, Road No. 7, Avenue 6, Mirpur DOHS, Mirpur 12, Dhaka 1216" /></label>
+        <label class="st-field st-span2"><span>নিবন্ধিত অফিস (Registered Office)</span><input v-model="form.office_address" placeholder="House 461, Road No. 7, Avenue 6, Mirpur DOHS, Mirpur 12, Dhaka 1216" /></label>
         <label class="st-field st-span2"><span>Map location (what Google Maps should search)</span><input v-model="form.map_location" maxlength="200" placeholder="House 461, Road 7, Avenue 6, Mirpur DOHS, Dhaka 1216" /></label>
         <label class="st-field st-span2"><span>Office hours</span><input v-model="form.working_hours" placeholder="শনি–বৃহস্পতি, সকাল ১০টা–সন্ধ্যা ৭টা" /></label>
       </div>
@@ -153,7 +154,7 @@ definePageMeta({ layout: 'admin' })
 
 const toast = useToast()
 const { settings, isSaving, fetchSettings, updateSettings } = useSettings()
-const editable = ['site_name', 'site_title', 'contact_phone', 'whatsapp_number', 'contact_email', 'office_address', 'map_location', 'company_registration_no', 'company_registration_date', 'trade_license_no', 'trade_license_valid_until', 'meta_pixel_id', 'gtm_container_id', 'ga4_measurement_id', 'clarity_project_id', 'working_hours', 'home_headline', 'home_subtitle', 'property_cta_label', 'property_cta_label_hidden_price', 'property_cta_note', 'owner_commission_percent', 'owner_terms', 'listing_document_types'] as const
+const editable = ['site_name', 'site_title', 'contact_phone', 'whatsapp_number', 'contact_email', 'corporate_office_address', 'office_address', 'map_location', 'company_registration_no', 'company_registration_date', 'trade_license_no', 'trade_license_valid_until', 'meta_pixel_id', 'gtm_container_id', 'ga4_measurement_id', 'clarity_project_id', 'working_hours', 'home_headline', 'home_subtitle', 'property_cta_label', 'property_cta_label_hidden_price', 'property_cta_note', 'owner_commission_percent', 'owner_terms', 'listing_document_types'] as const
 
 const sections = [
   { id: 'contact', label: 'Contact' }, { id: 'tracking', label: 'Tracking' }, { id: 'legal', label: 'Licence' }, { id: 'homepage', label: 'Homepage' }, { id: 'property-page', label: 'Property button' }, { id: 'owners', label: 'Owner terms' },

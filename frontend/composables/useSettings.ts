@@ -15,6 +15,7 @@ export interface SiteSettings {
   contact_phone: string
   whatsapp_number: string
   contact_email: string
+  corporate_office_address: string
   office_address: string
   map_location: string
   meta_pixel_id: string
