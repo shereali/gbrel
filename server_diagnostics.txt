@@ -1,0 +1,580 @@
+=== ALL DOCKER CONTAINERS ===
+CONTAINER ID   IMAGE                                                                                COMMAND                  CREATED          STATUS                             PORTS                                                                                             NAMES
+db823d1cf430   gbrel-backend                                                                        "/usr/local/bin/entr…"   26 seconds ago   Up 11 seconds (healthy)            9000/tcp, 127.0.0.1:8004->8000/tcp                                                                gbrel-backend-1
+7d7d1133d22b   mysql:8.0                                                                            "docker-entrypoint.s…"   27 seconds ago   Up 23 seconds (healthy)            3306/tcp, 33060/tcp                                                                               gbrel-db-1
+22d17c8867f2   f5180dbcdb2c                                                                         "docker-entrypoint.s…"   6 hours ago      Up 6 hours (healthy)               127.0.0.1:3004->3000/tcp                                                                          gbrel-frontend-1
+12f7f540ea65   dorjidokan-frontend                                                                  "docker-entrypoint.s…"   7 hours ago      Up 7 hours                         3000/tcp                                                                                          dorjidokan-frontend-1
+3e8c5f6f4e0f   ghcr.io/shereali/deshicoder/frontend:b6c8c8623138ff166e945fb9433f8574360837c7        "docker-entrypoint.s…"   11 hours ago     Up 11 hours                        3000/tcp                                                                                          deshicoder-frontend-1
+35967a04ddee   ghcr.io/shereali/deshicoder/backend:b6c8c8623138ff166e945fb9433f8574360837c7         "/usr/local/bin/entr…"   11 hours ago     Up 11 hours                        8000/tcp, 9000/tcp                                                                                deshicoder-backend-1
+e0c9b3692766   1149ef52bf69                                                                         "/entrypoint.sh"         27 hours ago     Up 27 hours                        80/tcp, 9000/tcp                                                                                  dorjidokan-backend-1
+b07fe7638f2d   mysql:8                                                                              "docker-entrypoint.s…"   40 hours ago     Up 40 hours (healthy)              3306/tcp, 33060/tcp                                                                               dorjidokan-db-1
+15107ccc5696   mysql:8.0                                                                            "docker-entrypoint.s…"   2 days ago       Up 2 days                          3306/tcp, 33060/tcp                                                                               deshicoder-db-1
+a3d94bc50ecd   dressnio-backend                                                                     "/entrypoint.sh"         7 days ago       Up 5 days                          80/tcp, 9000/tcp                                                                                  dressnio-backend-1
+b40f7bd39f56   dressnio-frontend                                                                    "dumb-init -- node .…"   7 days ago       Up 5 days                          3000/tcp                                                                                          dressnio-frontend-1
+18fcecc68cbc   mysql:8.0                                                                            "docker-entrypoint.s…"   9 days ago       Up 5 days (healthy)                3306/tcp, 33060/tcp                                                                               dressnio-db-1
+ba1a8b0101d4   obiram-asterisk                                                                      "/entrypoint.sh"         11 days ago      Up 5 days                                                                                                                            obiram-asterisk-1
+10dc7698d644   obiram-edge                                                                          "caddy run --config …"   11 days ago      Up 5 days                          443/tcp, 2019/tcp, 443/udp, 127.0.0.1:8089->80/tcp                                                obiram-edge-1
+fd14437a1a2c   obiram-agent                                                                         "python -m obiram_ag…"   11 days ago      Up 5 days                                                                                                                            obiram-agent-1
+c78c3d17487e   obiram-backend                                                                       "docker-php-entrypoi…"   11 days ago      Up 5 days (healthy)                80/tcp, 443/tcp, 2019/tcp, 8000/tcp, 443/udp                                                      obiram-app-1
+df57d841685a   obiram-backend                                                                       "docker-php-entrypoi…"   11 days ago      Up 10 seconds (health: starting)   80/tcp, 443/tcp, 2019/tcp, 8000/tcp, 443/udp                                                      obiram-queue-1
+27fc83174ca5   obiram-backend                                                                       "docker-php-entrypoi…"   11 days ago      Up 5 days (unhealthy)              80/tcp, 443/tcp, 2019/tcp, 8000/tcp, 443/udp                                                      obiram-scheduler-1
+110372297e1a   livekit/sip:latest                                                                   "livekit-sip --confi…"   11 days ago      Up 5 days                                                                                                                            obiram-livekit-sip-1
+97e4435425e0   pgvector/pgvector:pg16                                                               "docker-entrypoint.s…"   11 days ago      Up 5 days (healthy)                5432/tcp                                                                                          obiram-postgres-1
+3cb85b344c20   obiram-tts                                                                           "uvicorn obiram_tts.…"   11 days ago      Up 5 days                          8002/tcp                                                                                          obiram-tts-1
+7106f57d3a2f   obiram-asr                                                                           "uvicorn server:app …"   11 days ago      Up 5 days                          8001/tcp                                                                                          obiram-asr-1
+0021c5de8a84   valkey/valkey:8                                                                      "tini -- docker-entr…"   11 days ago      Up 5 days                          127.0.0.1:6379->6379/tcp                                                                          obiram-valkey-1
+00d452ac7ca4   ghcr.io/ggml-org/llama.cpp:server                                                    "/app/llama-server -…"   11 days ago      Up 5 days (unhealthy)                                                                                                                obiram-llm-1
+ede1d709b893   livekit/livekit-server:latest                                                        "/livekit-server"        11 days ago      Up 5 days                                                                                                                            obiram-livekit-1
+76f046831a76   kokkhopoth-backend                                                                   "/entrypoint.sh"         2 weeks ago      Up 5 days                          8000/tcp, 9000/tcp                                                                                56225ea17d09_kokkhopoth-backend-1
+203eaac90e99   mysql:8                                                                              "docker-entrypoint.s…"   2 weeks ago      Up 5 days (healthy)                3306/tcp, 33060/tcp                                                                               kokkhopoth-db-1
+9b4a17e8a3ff   attashil-frontend                                                                    "docker-entrypoint.s…"   2 weeks ago      Up 5 days (healthy)                127.0.0.1:3005->3000/tcp                                                                          attashil-frontend-1
+56789a1c3d7d   attashil-backend                                                                     "docker-php-entrypoi…"   2 weeks ago      Up 5 days (healthy)                9000/tcp, 127.0.0.1:8005->8000/tcp                                                                attashil-backend-1
+7c0807c54c7e   mysql:8                                                                              "docker-entrypoint.s…"   2 weeks ago      Up 5 days (healthy)                3306/tcp, 33060/tcp                                                                               attashil-db-1
+62aa6a51de12   dscc_management-backend                                                              "/entrypoint.sh"         2 weeks ago      Up 5 days                          8000/tcp, 9000/tcp                                                                                dscc_management-backend-1
+8a554931dbf6   mysql:8                                                                              "docker-entrypoint.s…"   2 weeks ago      Up 5 days (healthy)                3306/tcp, 33060/tcp                                                                               dscc_management-db-1
+b119bae3a898   virtualexpo-backend                                                                  "/entrypoint.sh"         2 weeks ago      Up 5 days                          8000/tcp, 9000/tcp                                                                                virtualexpo-backend-1
+544c31bf76d3   mysql:8                                                                              "docker-entrypoint.s…"   2 weeks ago      Up 5 days (healthy)                3306/tcp, 33060/tcp                                                                               virtualexpo-db-1
+c9ddf9364821   ifiruled-backend                                                                     "entrypoint.sh sh -c…"   2 weeks ago      Up 5 days (healthy)                9000/tcp, 127.0.0.1:8006->8000/tcp                                                                ifiruled-backend-1
+667dc8edfa88   97187c9da295                                                                         "dumb-init -- node .…"   2 weeks ago      Up 5 days (healthy)                127.0.0.1:3006->3000/tcp                                                                          ifiruled-frontend-1
+9af4b2b66aba   mysql:8                                                                              "docker-entrypoint.s…"   2 weeks ago      Up 5 days (healthy)                3306/tcp, 33060/tcp                                                                               ifiruled-db-1
+d5303f6ff44b   ghcr.io/shereali/bms-pos/frontend:e1952818655523715c26aaa8862435ac37e2f7a7           "docker-entrypoint.s…"   6 weeks ago      Up 5 days (healthy)                127.0.0.1:3002->3000/tcp                                                                          bms-pos-frontend-1
+2d6bc8b2505f   ghcr.io/shereali/bms-pos/backend:e1952818655523715c26aaa8862435ac37e2f7a7            "docker-entrypoint.s…"   6 weeks ago      Up 5 days (healthy)                9000/tcp, 127.0.0.1:8008->80/tcp                                                                  bms-pos-backend-1
+93ff641b8d74   ghcr.io/shereali/bms-pos/backend:e1952818655523715c26aaa8862435ac37e2f7a7            "docker-entrypoint.s…"   6 weeks ago      Up 5 days                          80/tcp, 9000/tcp                                                                                  bms-pos-schedule-1
+dd56806b31a3   ghcr.io/shereali/bms-pos/backend:e1952818655523715c26aaa8862435ac37e2f7a7            "docker-entrypoint.s…"   6 weeks ago      Up 55 minutes                      80/tcp, 9000/tcp                                                                                  bms-pos-queue-1
+a6a475f9ed3b   ghcr.io/shereali/bms-pos/accounts-service:e1952818655523715c26aaa8862435ac37e2f7a7   "docker-entrypoint.s…"   6 weeks ago      Up 5 days                          127.0.0.1:8002->8002/tcp                                                                          bms-pos-accounts-service-1
+aa0ef40ec926   ghcr.io/shereali/bms-pos/hrm-service:e1952818655523715c26aaa8862435ac37e2f7a7        "docker-entrypoint.s…"   6 weeks ago      Up 5 days                          127.0.0.1:8003->8001/tcp                                                                          bms-pos-hrm-service-1
+426032bbc0d8   mysql:8.0                                                                            "docker-entrypoint.s…"   6 weeks ago      Up 5 days (healthy)                3306/tcp, 33060/tcp                                                                               bms-pos-db-1
+1e2858150867   ghcr.io/shereali/bms-pos/whatsapp-server:e1952818655523715c26aaa8862435ac37e2f7a7    "docker-entrypoint.s…"   6 weeks ago      Up 5 days (healthy)                127.0.0.1:3003->3001/tcp                                                                          bms-pos-whatsapp-1
+9c4bdd4785c4   mysql:8                                                                              "docker-entrypoint.s…"   6 weeks ago      Up 5 days (healthy)                3306/tcp, 33060/tcp                                                                               nmffurniture-db-1
+d49f17e49576   7d1be3e2f873                                                                         "entrypoint.sh sh -c…"   6 weeks ago      Up 5 days (healthy)                9000/tcp, 127.0.0.1:8001->8000/tcp                                                                nmffurniture-backend-1
+9ea9ddb682ee   25fdc7a8c921                                                                         "docker-entrypoint.s…"   6 weeks ago      Up 5 days (healthy)                127.0.0.1:3001->3000/tcp                                                                          nmffurniture-frontend-1
+6b74b3e7c66e   softcredible-frontend                                                                "docker-entrypoint.s…"   6 weeks ago      Up 5 days (healthy)                127.0.0.1:3000->3000/tcp                                                                          softcredible-frontend-1
+65ef492d3a9f   softcredible-backend                                                                 "entrypoint.sh sh -c…"   6 weeks ago      Up 5 days (unhealthy)              127.0.0.1:8000->8000/tcp, 9000/tcp                                                                softcredible-backend-1
+7db362bf44c5   mysql:8                                                                              "docker-entrypoint.s…"   6 weeks ago      Up 5 days (healthy)                3306/tcp, 33060/tcp                                                                               softcredible-db-1
+07090799145c   caddy:2-alpine                                                                       "caddy run --config …"   6 weeks ago      Up 5 days                          0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp, 443/udp, 2019/tcp   caddy-caddy-1
+
+=== DOCKER COMPOSE PS ===
+NAME               IMAGE                                                                     COMMAND                  SERVICE    CREATED          STATUS                    PORTS
+gbrel-backend-1    gbrel-backend                                                             "/usr/local/bin/entr…"   backend    27 seconds ago   Up 12 seconds (healthy)   9000/tcp, 127.0.0.1:8004->8000/tcp
+gbrel-db-1         mysql:8.0                                                                 "docker-entrypoint.s…"   db         28 seconds ago   Up 24 seconds (healthy)   3306/tcp, 33060/tcp
+gbrel-frontend-1   sha256:f5180dbcdb2c9f9b5a4031079f8117fcda680587053722d11b0c7e33f3413e93   "docker-entrypoint.s…"   frontend   6 hours ago      Up 6 hours (healthy)      127.0.0.1:3004->3000/tcp
+
+=== BACKEND LOGS ===
+backend-1  | Waiting for MySQL at gbrel-db:3306...
+backend-1  | MySQL connection check completed.
+backend-1  | 
+backend-1  |    INFO  Nothing to migrate.  
+backend-1  | 
+backend-1  | 
+backend-1  |    INFO  Seeding database.  
+backend-1  | 
+backend-1  |   Database\Seeders\RolePermissionSeeder .............................. RUNNING  
+backend-1  |   Database\Seeders\RolePermissionSeeder .......................... 133 ms DONE  
+backend-1  | 
+backend-1  |   Database\Seeders\UserSeeder ........................................ RUNNING  
+backend-1  |   Database\Seeders\UserSeeder .................................. 1,441 ms DONE  
+backend-1  | 
+backend-1  |   Database\Seeders\AgentSeeder ....................................... RUNNING  
+backend-1  |   Database\Seeders\AgentSeeder .................................... 19 ms DONE  
+backend-1  | 
+backend-1  |   Database\Seeders\PropertySeeder .................................... RUNNING  
+backend-1  |   Database\Seeders\PropertySeeder ................................ 232 ms DONE  
+backend-1  | 
+backend-1  |   Database\Seeders\SettingSeeder ..................................... RUNNING  
+backend-1  |   Database\Seeders\SettingSeeder .................................. 72 ms DONE  
+backend-1  | 
+backend-1  |   Database\Seeders\DemoDataSeeder .................................... RUNNING  
+backend-1  |   Database\Seeders\DemoDataSeeder .................................. 0 ms DONE  
+backend-1  | 
+backend-1  | 
+backend-1  |    INFO  The [public/storage] link has been connected to [storage/app/public].  
+backend-1  | 
+backend-1  | Starting background queue worker for media compression & jobs...
+backend-1  | Starting scheduler (Meta lead form sync every 2 minutes)...
+backend-1  | Starting PHP-FPM daemon and Nginx on port 8000...
+backend-1  | [24-Oct-2026 13:26:45] NOTICE: fpm is running, pid 73
+backend-1  | [24-Oct-2026 13:26:45] NOTICE: ready to handle connections
+backend-1  | 127.0.0.1 -  24/Oct/2026:13:26:47 +0000 "GET /index.php" 200
+backend-1  | Waiting for MySQL at gbrel-db:3306...
+backend-1  | MySQL connection check completed.
+backend-1  | 
+backend-1  |    INFO  Nothing to migrate.  
+backend-1  | 
+backend-1  | 
+backend-1  |    INFO  Seeding database.  
+backend-1  | 
+backend-1  |   Database\Seeders\RolePermissionSeeder .............................. RUNNING  
+backend-1  |   Database\Seeders\RolePermissionSeeder .......................... 103 ms DONE  
+backend-1  | 
+backend-1  |   Database\Seeders\UserSeeder ........................................ RUNNING  
+backend-1  |   Database\Seeders\UserSeeder .................................. 1,382 ms DONE  
+backend-1  | 
+backend-1  |   Database\Seeders\AgentSeeder ....................................... RUNNING  
+backend-1  |   Database\Seeders\AgentSeeder ..................................... 8 ms DONE  
+backend-1  | 
+backend-1  |   Database\Seeders\PropertySeeder .................................... RUNNING  
+backend-1  |   Database\Seeders\PropertySeeder ................................ 265 ms DONE  
+backend-1  | 
+backend-1  |   Database\Seeders\SettingSeeder ..................................... RUNNING  
+backend-1  |   Database\Seeders\SettingSeeder ................................. 113 ms DONE  
+backend-1  | 
+backend-1  |   Database\Seeders\DemoDataSeeder .................................... RUNNING  
+backend-1  |   Database\Seeders\DemoDataSeeder .................................. 0 ms DONE  
+backend-1  | 
+backend-1  | 
+backend-1  |    INFO  The [public/storage] link has been connected to [storage/app/public].  
+backend-1  | 
+backend-1  | Starting background queue worker for media compression & jobs...
+backend-1  | Starting scheduler (Meta lead form sync every 2 minutes)...
+backend-1  | Starting PHP-FPM daemon and Nginx on port 8000...
+backend-1  | [24-Oct-2026 13:26:53] NOTICE: fpm is running, pid 37
+backend-1  | [24-Oct-2026 13:26:53] NOTICE: ready to handle connections
+backend-1  | 127.0.0.1 -  24/Oct/2026:13:26:54 +0000 "GET /index.php" 200
+backend-1  | 127.0.0.1 -  24/Oct/2026:13:26:54 +0000 "GET /index.php" 200
+backend-1  | 127.0.0.1 -  24/Oct/2026:13:26:55 +0000 "GET /index.php" 404
+
+=== DB LOGS ===
+db-1  | 2026-10-24 13:26:36+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.46-1.el9 started.
+db-1  | 2026-10-24 13:26:37+00:00 [Note] [Entrypoint]: Switching to dedicated user 'mysql'
+db-1  | 2026-10-24 13:26:37+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.46-1.el9 started.
+db-1  | '/var/lib/mysql/mysql.sock' -> '/var/run/mysqld/mysqld.sock'
+db-1  | 2026-10-24T13:26:38.961857Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+db-1  | 2026-10-24T13:26:38.972753Z 0 [System] [MY-010116] [Server] /usr/sbin/mysqld (mysqld 8.0.46) starting as process 1
+db-1  | 2026-10-24T13:26:39.006241Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+db-1  | 2026-10-24T13:26:39.794298Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+db-1  | 2026-10-24T13:26:40.331887Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+db-1  | 2026-10-24T13:26:40.331965Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+db-1  | 2026-10-24T13:26:40.338487Z 0 [Warning] [MY-011810] [Server] Insecure configuration for --pid-file: Location '/var/run/mysqld' in the path is accessible to all OS users. Consider choosing a different directory.
+db-1  | 2026-10-24T13:26:40.425830Z 0 [System] [MY-011323] [Server] X Plugin ready for connections. Bind-address: '::' port: 33060, socket: /var/run/mysqld/mysqlx.sock
+db-1  | 2026-10-24T13:26:40.425865Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.46'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server - GPL.
+
+=== INTERNAL CURL HOST PORTS ===
+HTTP/1.1 200 OK
+Server: nginx
+Content-Type: text/html; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Powered-By: PHP/8.4.26
+Cache-Control: no-cache, private
+Date: Sat, 24 Oct 2026 13:27:02 GMT
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>GBREL</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
+
+    <!-- Styles -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'Figtree', 'ui-sans-serif', 'system-ui', 'sans-serif', "Apple Color Emoji", "Segoe UI Emoji";
+        }
+    </style>
+</head>
+<body class="antialiased">
+<div class="relative flex justify-center items-center min-h-screen bg-gray-100 selection:bg-red-500 selection:text-white">
+    <div class="w-full sm:w-3/4 xl:w-1/2 mx-auto p-6">
+        <div class="px-6 py-4 bg-white from-gray-700/50 via-transparent rounded-lg shadow-2xl shadow-gray-500/20 flex items-center focus:outline focus:outline-2 focus:outline-red-500">
+            <div class="relative flex h-3 w-3 group ">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 group-[.status-down]:bg-red-600 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-green-400 group-[.status-down]:bg-red-600"></span>
+            </div>
+
+            <div class="ml-6">
+                <h2 class="text-xl font-semibold text-gray-900">Application up</h2>
+
+                <p class="mt-2 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+                    HTTP request received.
+
+                                            Response rendered in 31ms.
+                                    </p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+HTTP/1.1 200 OK
+content-type: text/html;charset=utf-8
+x-powered-by: Nuxt
+Date: Sat, 24 Oct 2026 13:27:02 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Content-Length: 6966
+
+<!DOCTYPE html><html  lang="bn"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&family=Outfit:wght@500;600;700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="/_nuxt/entry.CqoYHCyD.css" crossorigin>
+<link rel="modulepreload" as="script" crossorigin href="/_nuxt/wcpzxOWT.js">
+<script src="/gb-track.js?v=3" defer></script>
+<script type="module" src="/_nuxt/wcpzxOWT.js" crossorigin></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<meta name="keywords" content="Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, GBREL, www.gbrel.com, gbrel, গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড, গ্রাম বাংলা রিয়েল এস্টেট, গ্রাম বাংলা, Real Estate Bangladesh, Mirpur DOHS Real Estate, Plots in Dhaka, Land Share Dhaka">
+<meta name="author" content="Gram Bangla Real Estate Limited">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<meta name="theme-color" content="#1D4A2A">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="canonical" href="https://www.gbrel.com/">
+<link rel="icon" type="image/png" href="/favicon.png">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&family=Outfit:wght@500;600;700&display=swap"></noscript>
+<script id="unhead:payload" type="application/json">{"title":"Gram Bangla Real Estate Limited | Gram Bangla Real Estate — GBREL"}</script><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":["RealEstateAgent","LocalBusiness","Organization"],"@id":"https://www.gbrel.com/#organization","name":"Gram Bangla Real Estate Limited","alternateName":["Gram Bangla Real Estate","Gram Bangla","GBREL","গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড","গ্রাম বাংলা রিয়েল এস্টেট","গ্রাম বাংলা"],"legalName":"Gram Bangla Real Estate Limited","url":"https://www.gbrel.com/","logo":{"@type":"ImageObject","@id":"https://www.gbrel.com/#logo","url":"https://www.gbrel.com/logo.png","contentUrl":"https://www.gbrel.com/logo.png","caption":"Gram Bangla Real Estate Limited"},"image":"https://www.gbrel.com/og-default.jpg","email":"grambanglarealestateltd@gmail.com","telephone":"+8809658510748","priceRange":"৳৳৳","address":{"@type":"PostalAddress","streetAddress":"Mirpur DOHS Avenue 6, Road 7, House 461","addressLocality":"Mirpur 12, Dhaka","addressRegion":"Dhaka Division","postalCode":"1216","addressCountry":"BD"},"geo":{"@type":"GeoCoordinates","latitude":23.8368,"longitude":90.3685},"hasMap":"https://www.google.com/maps/search/?api=1&query=House+461,+Road+7,+Avenue+6,+Mirpur+DOHS,+Dhaka+1216","openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday"],"opens":"09:00","closes":"19:00"}],"areaServed":[{"@type":"City","name":"Dhaka"},{"@type":"AdministrativeArea","name":"Dhaka Division"},{"@type":"Country","name":"Bangladesh"}],"description":"Gram Bangla Real Estate Limited (GBREL) is a trusted, RJSC-registered real estate company in Dhaka, Bangladesh (RJSC: C-185751/2022, Trade License: TRAD/DSCC/026884/2022). Offering verified plots, land shares, duplexes, and flats in Dhaka with complete legal verification.","sameAs":["https://www.facebook.com/grambanglarealestate","https://www.gbrel.com"]},{"@type":"WebSite","@id":"https://www.gbrel.com/#website","url":"https://www.gbrel.com/","name":"Gram Bangla Real Estate Limited","alternateName":["Gram Bangla Real Estate","Gram Bangla","GBREL","www.gbrel.com"],"description":"Official portal of Gram Bangla Real Estate Limited — Verified land, plots, land shares, and apartments in Bangladesh.","publisher":{"@id":"https://www.gbrel.com/#organization"},"potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://www.gbrel.com/properties?q={search_term_string}"},"query-input":"required name=search_term_string"}}]}</script><title>Gram Bangla Real Estate Limited | Gram Bangla Real Estate — GBREL</title><meta name="description" content="Gram Bangla Real Estate Limited (GBREL) is a premier registered real estate company in Bangladesh. Official site: www.gbrel.com. Discover verified land, plots, land shares, and apartments in Dhaka. Call: +8809658510748 | মিরপুর ডিওএইচএস, ঢাকা।"><meta name="keywords" content="Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, GBREL, www.gbrel.com, gbrel, গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড, গ্রাম বাংলা রিয়েল এস্টেট, গ্রাম বাংলা, Real Estate Bangladesh, Mirpur DOHS Real Estate, Plots in Dhaka, Land Share Dhaka"><meta property="og:type" content="website"><meta property="og:site_name" content="Gram Bangla Real Estate Limited"><meta property="og:locale" content="bn_BD"><meta property="og:title" content="Gram Bangla Real Estate Limited | জমি দেখে, কাগজ বুঝে, তারপর কিনুন — GBREL"><meta property="og:description" content="Gram Bangla Real Estate Limited (GBREL) — জমি, প্লট, জমি শেয়ার ও ফ্ল্যাট খুঁজুন। দাম, কাগজপত্র ও লোকেশন দেখে নিন। Official: www.gbrel.com | ফোন: +8809658510748"><meta property="og:url" content="https://www.gbrel.com/"><meta property="og:image" content="https://www.gbrel.com/og-default.jpg"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Gram Bangla Real Estate Limited | Gram Bangla Real Estate — GBREL"><meta name="twitter:description" content="Gram Bangla Real Estate Limited (GBREL) — জমি, প্লট, জমি শেয়ার ও ফ্ল্যাট। www.gbrel.com | ফোন: +8809658510748"></head><body><div id="__nuxt"></div><div id="teleports"></div><script>window.__NUXT__={};window.__NUXT__.config={public:{apiBase:"/api",metaPixelId:1390835626467163},app:{baseURL:"/",buildId:"29cf1e0b-e226-494c-ba86-331ef187250c",buildAssetsDir:"/_nuxt/",cdnURL:""}}</script>
+<script type="application/json" data-nuxt-data="nuxt-app" data-ssr="false" id="__NUXT_DATA__">[{"serverRendered":1},false]</script></body></html>
+=== CADDY STATUS & CONFIG ===
+total 64
+drwxr-xr-x 2 root       root       4096 Oct 15 12:06 .
+drwxr-xr-x 3 root       root       4096 Sep  7 14:35 ..
+-rw-r--r-- 1 root       root         75 Sep  7 14:36 00-default.caddy
+-rw-r--r-- 1 root       root        640 Oct  8 16:10 attashil.caddy
+-rw-rw-r-- 1 deshicoder deshicoder  387 Oct 24 04:03 deshicoder.caddy
+-rw-r--r-- 1 root       root        564 Sep  8 15:23 dokandari.caddy
+-rw-r--r-- 1 root       root        772 Sep 23 11:45 dorjidokan.caddy
+-rw-r--r-- 1 root       root        887 Oct 15 12:06 dressnio.caddy
+-rw-r--r-- 1 root       root       1473 Oct  8 02:46 dscc_management.caddy
+-rw-r--r-- 1 root       root        648 Sep 17 06:18 gbrel.caddy
+-rw-r--r-- 1 root       root        504 Oct  7 19:00 ifiruled.caddy
+-rw-r--r-- 1 root       root        601 Oct  8 18:35 kokkhopoth.caddy
+-rw-r--r-- 1 root       root        467 Sep  7 21:03 nmffurniture.caddy
+-rw-r--r-- 1 root       root        468 Sep  7 14:36 softcredible.caddy
+-rw-r--r-- 1 root       root        383 Oct 13 06:17 sworika.caddy
+-rw-r--r-- 1 root       root       1336 Oct  8 01:41 virtualexpo.caddy
+gbrel.com, www.gbrel.com, gangchil.softcredible.com {
+    encode gzip zstd
+
+    # Backend API routing
+    handle /api/* {
+        reverse_proxy gbrel-backend-1:8000
+    }
+
+    # Uploaded media storage routing
+    handle /storage/* {
+        reverse_proxy gbrel-backend-1:8000
+    }
+
+    # Frontend application routing
+    handle {
+        reverse_proxy gbrel-frontend-1:3000
+    }
+
+    # Production security headers
+    header {
+        -Server
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+    }
+}
+=== MAIN CADDYFILE ===
+{
+    email admin@softcredible.com
+}
+
+import /etc/caddy/conf.d/*.caddy
+
+=== CADDY_NET NETWORK INSPECT ===
+[
+    {
+        "Name": "caddy_net",
+        "Id": "2986008a430b30d91157b46ba41e5c8b33a7e5cc68f1fa2ed5b3e900c9a4fc46",
+        "Created": "2026-09-07T14:28:37.171910345+02:00",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv4": true,
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "172.18.0.0/16",
+                    "Gateway": "172.18.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Options": {},
+        "Labels": {},
+        "Containers": {
+            "07090799145c57244b6ae2ca5918af03091bdf6aba8b284c791fd3e0cc7b4d20": {
+                "Name": "caddy-caddy-1",
+                "EndpointID": "3e1080d48858cdf80924afbdae07933e79e920ec79b0d89345aa9285e7e44509",
+                "MacAddress": "2e:f8:7a:f2:d0:b4",
+                "IPv4Address": "172.18.0.12/16",
+                "IPv6Address": ""
+            },
+            "10dc7698d644ec04d2eba46855d706eeabade347ca0b1cb62083ff5880ed24be": {
+                "Name": "obiram-edge-1",
+                "EndpointID": "dd92d90ee980e0134f13e680d6495e43d8fda2484a3e262a058f2ba3416e55c8",
+                "MacAddress": "9e:c7:42:65:16:3e",
+                "IPv4Address": "172.18.0.10/16",
+                "IPv6Address": ""
+            },
+            "12f7f540ea653397d99494a23b07ac76d9fd464d0099b01457d690be07489a80": {
+                "Name": "dorjidokan-frontend-1",
+                "EndpointID": "a04b4318a0a4a6c5035169223c50b89bd9ba8bc04904772cb377ce5a57ed6035",
+                "MacAddress": "b2:e0:c5:3c:77:f7",
+                "IPv4Address": "172.18.0.18/16",
+                "IPv6Address": ""
+            },
+            "1e28581508676effcf2c748f9f2a139ed0e6727125cf1d32ee4129f259a7f474": {
+                "Name": "bms-pos-whatsapp-1",
+                "EndpointID": "22a23d5ff01443af2792a928f9fc0cff067670c81e7718cb908e74b74bb48b21",
+                "MacAddress": "da:8a:98:ba:ed:49",
+                "IPv4Address": "172.18.0.20/16",
+                "IPv6Address": ""
+            },
+            "22d17c8867f20f9ddbf146e05c231bd1739042fb00d58f734e6a11bebc62362d": {
+                "Name": "gbrel-frontend-1",
+                "EndpointID": "ad0a44e4065b34bae3d102ffb4f9d313e43fe5b475aa50923ce7e43ba9657a6e",
+                "MacAddress": "da:8e:1b:98:99:9e",
+                "IPv4Address": "172.18.0.24/16",
+                "IPv6Address": ""
+            },
+            "2d6bc8b2505f74b9d5a1d1e36785ff994e1c59cddbc477bcb42437fde894190b": {
+                "Name": "bms-pos-backend-1",
+                "EndpointID": "9a70960d6748e873a16b3657bddb11bd7031ef94423c8044179e09fd1ad35730",
+                "MacAddress": "1a:ba:77:ac:c5:fe",
+                "IPv4Address": "172.18.0.22/16",
+                "IPv6Address": ""
+            },
+            "3e8c5f6f4e0f37899c4f6248b1b1185d7fa840800dfae91ec0d4b4c82ab503a3": {
+                "Name": "deshicoder-frontend-1",
+                "EndpointID": "d3866fcfba84ddcda9f8e9bd509c53a57d86c5cf9b2436ffdb9769009ed9d2f5",
+                "MacAddress": "82:02:a7:8f:4d:1b",
+                "IPv4Address": "172.18.0.14/16",
+                "IPv6Address": ""
+            },
+            "426032bbc0d85e0cf602f5f77d1abce6067544c6864a62a36a8f40af30de9ada": {
+                "Name": "bms-pos-db-1",
+                "EndpointID": "020f08765b7ba3fc066f7e1c94f180de3a8f08a3e3c429fda82bf824f206700e",
+                "MacAddress": "aa:35:1c:b3:9c:ab",
+                "IPv4Address": "172.18.0.9/16",
+                "IPv6Address": ""
+            },
+            "56789a1c3d7d552fccc50adc9478a52469c5c485e506daca239db60518a73084": {
+                "Name": "attashil-backend-1",
+                "EndpointID": "98e2e0844ac30bceff957d04cfde447f5fcf9f5dcf3c1f3fe4d525df044d255f",
+                "MacAddress": "46:b4:f8:aa:0c:5d",
+                "IPv4Address": "172.18.0.4/16",
+                "IPv6Address": ""
+            },
+            "62aa6a51de12eb6cac43b39dbee698f1641a3d43acbe1bf491975cfb3e91cfb2": {
+                "Name": "dscc_management-backend-1",
+                "EndpointID": "7899931e96e825c31000137a4798adf6233c5505f4c51747b3a3bf8a8d044732",
+                "MacAddress": "16:5f:b8:9e:60:61",
+                "IPv4Address": "172.18.0.21/16",
+                "IPv6Address": ""
+            },
+            "65ef492d3a9f7f7fb2b0462a0fc1d620b9164006210200f537e723195c3b0a21": {
+                "Name": "softcredible-backend-1",
+                "EndpointID": "5887685f13d76846d7ad768fab7e65bd684e3f2c3142ffd1478d9e1f1bf016d2",
+                "MacAddress": "c6:83:89:77:23:14",
+                "IPv4Address": "172.18.0.19/16",
+                "IPv6Address": ""
+            },
+            "667dc8edfa886937c225bc12d7d4a63150f695cb0e3dfb794991772f92ae7c9f": {
+                "Name": "ifiruled-frontend-1",
+                "EndpointID": "45cc0dff7d7132a655f86c51e11c912439822d8202bbf63797d1a8e9a19b271b",
+                "MacAddress": "96:76:41:6f:af:9a",
+                "IPv4Address": "172.18.0.6/16",
+                "IPv6Address": ""
+            },
+            "6b74b3e7c66ea1ee9ed531398a624f8fb01b84e2e533c0669b524fee328d0d1c": {
+                "Name": "softcredible-frontend-1",
+                "EndpointID": "0cc28fa198cdfcaef2a9d4e18c90a0c32eba22eaa016590cd6ec3f75eba8972f",
+                "MacAddress": "2e:da:79:f5:f5:72",
+                "IPv4Address": "172.18.0.13/16",
+                "IPv6Address": ""
+            },
+            "76f046831a7606e641e4634ab1f98cbd35e688d9711144c7ebc6d160769effab": {
+                "Name": "56225ea17d09_kokkhopoth-backend-1",
+                "EndpointID": "a46e6a72b6bdc05ea21d6baee5ed95a7bad743a3f51c17bb760c5698bf27b0f1",
+                "MacAddress": "66:bc:6c:2e:c0:78",
+                "IPv4Address": "172.18.0.29/16",
+                "IPv6Address": ""
+            },
+            "93ff641b8d741ec68531923edf16b28512e69916d28b185af0ea95f27e338f9e": {
+                "Name": "bms-pos-schedule-1",
+                "EndpointID": "0a1928f063b441603e725d5ada7c8c6277a685836db79fa32f3b006f4282e281",
+                "MacAddress": "86:30:64:00:12:71",
+                "IPv4Address": "172.18.0.16/16",
+                "IPv6Address": ""
+            },
+            "9b4a17e8a3ff3752675165e42305839d08bcb71f0e4d374f424cce3788dc8a1b": {
+                "Name": "attashil-frontend-1",
+                "EndpointID": "25b933a41eea6108b60e09ada0dab140116aa8849c28fa5162bae247d5028521",
+                "MacAddress": "ee:1c:07:11:6e:82",
+                "IPv4Address": "172.18.0.25/16",
+                "IPv6Address": ""
+            },
+            "9ea9ddb682eeba5976f64a2796b70c26cb2d4bd3ccf3b87b0b1eec1681d4ce6c": {
+                "Name": "nmffurniture-frontend-1",
+                "EndpointID": "d29c023da4d65c869e528ad5d3b766abde874ff0060c5dec1d3a9c4ab413a383",
+                "MacAddress": "0e:d0:e0:0b:6d:91",
+                "IPv4Address": "172.18.0.2/16",
+                "IPv6Address": ""
+            },
+            "a3d94bc50ecd5614a41148bd7206c6985944dfa053147c4d3b9b20828a035ffe": {
+                "Name": "dressnio-backend-1",
+                "EndpointID": "f696673312e8f0684dd5db3ff7650863b0d96cf4deefa86f29513d5ae6104c3e",
+                "MacAddress": "e6:20:4c:fe:54:4e",
+                "IPv4Address": "172.18.0.28/16",
+                "IPv6Address": ""
+            },
+            "a6a475f9ed3b6e5c98932af7aa6e0ec54244deaedd7d04e1ae8a1450ff15f6b5": {
+                "Name": "bms-pos-accounts-service-1",
+                "EndpointID": "f692640c71cbf8a08223a8cbf2af063e96a0cd2e2b4f8374d965cbe9f2e9d211",
+                "MacAddress": "06:cb:08:4b:03:3e",
+                "IPv4Address": "172.18.0.3/16",
+                "IPv6Address": ""
+            },
+            "aa0ef40ec92663c76edaca67af1faa15d8722d150495b4029c5f8d3fcf442341": {
+                "Name": "bms-pos-hrm-service-1",
+                "EndpointID": "724be3650ec6c0fb9525ec002a63f832f9057d48159ea8a72aa4d3d9402ac3d1",
+                "MacAddress": "9e:fd:f0:62:29:f1",
+                "IPv4Address": "172.18.0.17/16",
+                "IPv6Address": ""
+            },
+            "b119bae3a898b64dc525d480d2583f14acf97b90c9e9af8fbd1b53ff429313c6": {
+                "Name": "virtualexpo-backend-1",
+                "EndpointID": "d846c14e5967b7fa06cb7793679e08df0ea737cafc89fe7179da47894de788e6",
+                "MacAddress": "e2:c3:d9:9c:3d:d5",
+                "IPv4Address": "172.18.0.11/16",
+                "IPv6Address": ""
+            },
+            "b40f7bd39f5622c7605b4abb9068d29455827c34d3937319c434465441a0a638": {
+                "Name": "dressnio-frontend-1",
+                "EndpointID": "d0cb534a6f7f3d3163d91efc96f7ffa14eee255616e1bd6ea01a506466ea2cc0",
+                "MacAddress": "c6:ab:47:16:b4:c9",
+                "IPv4Address": "172.18.0.26/16",
+                "IPv6Address": ""
+            },
+            "c9ddf93648219255faf77bafec6c912286b26b2028fcaebb414361b2d5242b0f": {
+                "Name": "ifiruled-backend-1",
+                "EndpointID": "fc0a3d838acaadb4ef2e4165683a562d590d323a679c6c5f98e4447199c369c1",
+                "MacAddress": "2a:74:4d:75:55:32",
+                "IPv4Address": "172.18.0.5/16",
+                "IPv6Address": ""
+            },
+            "d49f17e4957656e262d676c29f269df616b72747ac3fe687c74840e001220cfa": {
+                "Name": "nmffurniture-backend-1",
+                "EndpointID": "f626a16b6d9ccd54ebf48b043285147af667da7d47806ab04f0de8e5c879df9a",
+                "MacAddress": "2a:41:37:b7:27:d9",
+                "IPv4Address": "172.18.0.15/16",
+                "IPv6Address": ""
+            },
+            "d5303f6ff44bd6181d4e29d6977d137ad5fa733364c9c665120cb13c86939f19": {
+                "Name": "bms-pos-frontend-1",
+                "EndpointID": "eebf92d2c73b91473e1d328985a82c18dc6a58c84783fc194c26751e441c20e2",
+                "MacAddress": "26:c1:fb:41:44:14",
+                "IPv4Address": "172.18.0.8/16",
+                "IPv6Address": ""
+            },
+            "db823d1cf4309dfc59beb24466532011a3f1d6f6ee0d24b1811a1adc89be97bc": {
+                "Name": "gbrel-backend-1",
+                "EndpointID": "16785689d46bdda37d058f72e15b32682958c38e699e3aa82aaa0e700abc1486",
+                "MacAddress": "12:fa:d3:07:0f:fb",
+                "IPv4Address": "172.18.0.23/16",
+                "IPv6Address": ""
+            },
+            "dd56806b31a30bb056dd7791405b389d02f295dd43d81c7dbe9ec071dd383895": {
+                "Name": "bms-pos-queue-1",
+                "EndpointID": "9f71f7cc57bd225abe334f56e8fbcfe0c499ab0c011bf4a35c475aa73c1f8a01",
+                "MacAddress": "9a:ac:ca:eb:55:47",
+                "IPv4Address": "172.18.0.7/16",
+                "IPv6Address": ""
+            },
+            "e0c9b3692766e5deaf5e47705a696f1649c7e4f7a7086d15cb9c18bb5d3b4ed5": {
+                "Name": "dorjidokan-backend-1",
+                "EndpointID": "4f1eba960aa4f07fa66083c13ff5a139cff2dd70199c390885275da78ff7f87d",
+                "MacAddress": "46:14:81:93:b1:65",
+                "IPv4Address": "172.18.0.27/16",
+                "IPv6Address": ""
+            }
+        },
+        "Status": {
+            "IPAM": {
+                "Subnets": {
+                    "172.18.0.0/16": {
+                        "IPsInUse": 31,
+                        "DynamicIPsAvailable": 65505
+                    }
+                }
+            }
+        }
+    }
+]
+
+=== DB VOLUME DETAILS ===
+local     attashil_db-data
+local     bms-pos_db_data
+local     deshicoder_deshicoder-db-data
+local     dorjidokan_db-data
+local     dressnio_db-data
+local     dscc_management_db-data
+local     gangchil_backend-storage
+local     gbrel_backend-storage
+local     gbrel_backend_storage
+local     gbrel_mysql8_data
+local     ifiruled_db-data
+local     kokkhopoth_db-data
+local     nmffurniture_db-data
+local     softcredible_db-data
+local     virtualexpo_db-data
