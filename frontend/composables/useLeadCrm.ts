@@ -6,7 +6,7 @@ export const CALL_OUTCOMES = ['Answered', 'No answer', 'Busy', 'Wrong number'] a
 
 export interface LeadActivity {
   id: number
-  type: 'note' | 'call' | 'whatsapp' | 'email' | 'stage' | 'assign' | 'follow_up' | 'visit'
+  type: 'note' | 'call' | 'whatsapp' | 'email' | 'stage' | 'assign' | 'follow_up' | 'visit' | 'meta_lead'
   body: string | null
   meta: Record<string, any>
   user: { id: number; name: string } | null

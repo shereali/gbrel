@@ -3,7 +3,9 @@
 use App\Jobs\CompressVideoJob;
 use App\Models\Media;
 use App\Services\VideoCompressorService;
+use App\Support\MetaLeadImporter;
 use Illuminate\Foundation\Inspiring;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
@@ -79,3 +81,26 @@ Artisan::command('media:compress-videos {--check : Check if FFmpeg is installed 
 
     return 0;
 })->purpose('Check FFmpeg status or compress uploaded property videos to stream-ready MP4s');
+
+// Backfill Meta Lead Ad leads (the webhook only sees new ones; Meta keeps form leads for 90 days):
+// php artisan meta:import-leads 1618000993676451 --since=2026-10-01
+Artisan::command('meta:import-leads {forms* : One or more Meta lead form IDs} {--since= : Only leads created after this date}', function () {
+    if (! MetaLeadImporter::isConfigured()) {
+        $this->error('META_PAGE_ACCESS_TOKEN is not set in .env.');
+
+        return 1;
+    }
+    $since = $this->option('since') ? Carbon::parse($this->option('since'), 'Asia/Dhaka') : null;
+    $failed = false;
+    foreach ($this->argument('forms') as $formId) {
+        try {
+            $counts = MetaLeadImporter::importForm((string) $formId, $since);
+            $this->info("Form {$formId}: {$counts['created']} new leads imported, {$counts['skipped']} already in the CRM.");
+        } catch (Throwable $e) {
+            $failed = true;
+            $this->error("Form {$formId}: ".$e->getMessage());
+        }
+    }
+
+    return $failed ? 1 : 0;
+})->purpose('Import leads from Meta Lead Ad forms into the CRM (skips leads that are already there)');

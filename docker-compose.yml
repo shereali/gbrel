@@ -48,6 +48,10 @@ services:
       # Meta Conversions API (server-side Lead events). Token: Events Manager > Pixel > Settings > Conversions API.
       META_PIXEL_ID: ${META_PIXEL_ID:-}
       META_CAPI_TOKEN: ${META_CAPI_TOKEN:-}
+      # Meta Lead Ads webhook (/api/meta/leadgen): instant-form leads go straight into the CRM.
+      META_APP_SECRET: ${META_APP_SECRET:-}
+      META_WEBHOOK_VERIFY_TOKEN: ${META_WEBHOOK_VERIFY_TOKEN:-}
+      META_PAGE_ACCESS_TOKEN: ${META_PAGE_ACCESS_TOKEN:-}
       # EasyPay merchant API key for the paid e-book (/book). Without it the buy button shows "payment not switched on".
       EASYPAY_API_KEY: ${EASYPAY_API_KEY:-}
       BOOK_PRICE: ${BOOK_PRICE:-500}

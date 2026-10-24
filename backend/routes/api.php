@@ -2,12 +2,12 @@
 
 use App\Http\Controllers\BookDownloadController;
 use App\Http\Controllers\BookOrderController;
-use App\Jobs\CompressVideoJob;
 use App\Http\Controllers\LeadAnswersController;
 use App\Http\Controllers\LeadCrmController;
 use App\Http\Controllers\LeadJourneyController;
 use App\Http\Controllers\ListingReviewController;
 use App\Http\Controllers\MediaLibraryController;
+use App\Http\Controllers\MetaLeadWebhookController;
 use App\Http\Controllers\OwnerAccountController;
 use App\Http\Controllers\OwnerListingController;
 use App\Http\Controllers\PropertyDocumentController;
@@ -15,6 +15,7 @@ use App\Http\Controllers\PropertyLeadController;
 use App\Http\Controllers\TrackController;
 use App\Http\Controllers\UserAvatarController;
 use App\Http\Controllers\UserPasswordController;
+use App\Jobs\CompressVideoJob;
 use App\Models\Agent;
 use App\Models\Brochure;
 use App\Models\Category;
@@ -943,6 +944,10 @@ Route::post('/book-orders', [BookOrderController::class, 'store'])->middleware('
 Route::get('/book-orders/{publicId}', [BookOrderController::class, 'show'])->where('publicId', '[A-Za-z0-9]{20,40}')->middleware('throttle:60,1');
 Route::get('/book/download', [BookDownloadController::class, 'download'])->middleware('throttle:30,1');
 Route::get('/leads/{id}/journey', [LeadJourneyController::class, 'show'])->whereNumber('id');
+
+// Meta Lead Ads webhook: Facebook / Instagram instant-form leads arrive here (outside /api/leads, so no staff token is needed).
+Route::get('/meta/leadgen', [MetaLeadWebhookController::class, 'verify'])->middleware('throttle:30,1');
+Route::post('/meta/leadgen', [MetaLeadWebhookController::class, 'receive'])->middleware('throttle:600,1');
 
 // Visitor journey tracking (public/gb-track.js, cookie-consented visitors only)
 Route::post('/t', [TrackController::class, 'collect'])->middleware('throttle:300,1');

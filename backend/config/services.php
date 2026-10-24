@@ -33,6 +33,11 @@ return [
         'pixel_id' => env('META_PIXEL_ID'),
         'capi_token' => env('META_CAPI_TOKEN'),
         'test_event_code' => env('META_CAPI_TEST_EVENT_CODE'),
+        // Lead Ads webhook (/api/meta/leadgen): instant-form leads go straight into the CRM.
+        'app_secret' => env('META_APP_SECRET'),
+        'webhook_verify_token' => env('META_WEBHOOK_VERIFY_TOKEN'),
+        'page_access_token' => env('META_PAGE_ACCESS_TOKEN'),
+        'graph_version' => env('META_GRAPH_VERSION', 'v21.0'),
     ],
 
     // EasyPay (bKash/Nagad/Rocket) for the paid e-book on /book. API key: EasyPay Merchant Dashboard → API Settings.

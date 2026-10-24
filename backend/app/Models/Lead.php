@@ -16,6 +16,7 @@ class Lead extends Model
     protected $casts = [
         'next_follow_up_at' => 'datetime',
         'last_contacted_at' => 'datetime',
+        'meta_answers' => 'array',
     ];
 
     public function activities(): HasMany

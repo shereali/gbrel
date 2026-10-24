@@ -694,7 +694,8 @@ const detailSections = computed(() => {
   const l = selected.value
   if (!l) return []
   const surveyed = !!l.form_version
-  const source = l.utm_source === 'facebook' || l.parsed?.fbclick ? 'Facebook ad' : (l.utm_source || 'Website, no ad')
+  const formAd = l.meta_lead_id ? (l.meta_platform === 'instagram' ? 'Instagram lead form' : 'Facebook lead form') : ''
+  const source = formAd || (l.utm_source === 'facebook' || l.parsed?.fbclick ? 'Facebook ad' : (l.utm_source || 'Website, no ad'))
   const sections: { title: string; rows: Row[] }[] = [
     {
       title: 'What the buyer told us',
@@ -730,6 +731,7 @@ const detailSections = computed(() => {
         { label: 'Campaign', value: l.utm_campaign || '' },
         { label: 'Ad set', value: l.utm_term || '' },
         { label: 'Ad', value: l.utm_content || '' },
+        { label: 'Lead form', value: l.meta_form_name || '' },
         { label: 'Opened from', value: ctaLabels[l.parsed?.cta] || l.parsed?.cta || '' }
       ]
     }
