@@ -37,6 +37,8 @@ return [
         'app_secret' => env('META_APP_SECRET'),
         'webhook_verify_token' => env('META_WEBHOOK_VERIFY_TOKEN'),
         'page_access_token' => env('META_PAGE_ACCESS_TOKEN'),
+        // The Page whose lead forms are read. Needed when META_PAGE_ACCESS_TOKEN is a User token: its Page token is fetched from it.
+        'page_id' => env('META_PAGE_ID'),
         'graph_version' => env('META_GRAPH_VERSION', 'v26.0'),
     ],
 

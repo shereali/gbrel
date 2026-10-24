@@ -182,6 +182,37 @@ class MetaLeadWebhookTest extends TestCase
         Http::assertSent(fn (HttpRequest $request) => str_ends_with(parse_url($request->url(), PHP_URL_PATH), '/leads') && isset($request['filtering']));
     }
 
+    public function test_a_user_token_is_swapped_for_the_page_token_when_the_page_id_is_set(): void
+    {
+        config(['services.meta.page_access_token' => 'user-token', 'services.meta.page_id' => '1773471184786371']);
+        $lead = $this->graphLead();
+        Http::fake(function (HttpRequest $request) use ($lead) {
+            $path = parse_url($request->url(), PHP_URL_PATH);
+            if (str_ends_with($path, '/1773471184786371') && $request['access_token'] === 'user-token') {
+                return Http::response(['access_token' => 'page-token-from-user', 'id' => '1773471184786371']);
+            }
+            if ($request['access_token'] !== 'page-token-from-user') {
+                return Http::response(['error' => ['message' => '(#100) Tried accessing nonexisting field (leadgen_forms)']], 400);
+            }
+            if (str_ends_with($path, '/1773471184786371/leadgen_forms')) {
+                return Http::response(['data' => [['id' => '1618000993676451', 'name' => 'Site Visit form', 'status' => 'ACTIVE']]]);
+            }
+
+            return Http::response(['data' => str_ends_with($path, '/1618000993676451/leads') ? [$lead] : []]);
+        });
+
+        $this->artisan('meta:sync-leads')->expectsOutputToContain('Checked 1 forms: 1 new leads')->assertSuccessful();
+
+        $this->assertSame(1, Lead::whereNotNull('meta_lead_id')->count());
+    }
+
+    public function test_a_user_token_without_a_page_id_gets_a_clear_error(): void
+    {
+        Http::fake(['*' => Http::response(['error' => ['message' => '(#100) Tried accessing nonexisting field (leadgen_forms)']], 400)]);
+
+        $this->artisan('meta:sync-leads')->expectsOutputToContain('set META_PAGE_ID')->assertFailed();
+    }
+
     public function test_sync_command_does_nothing_without_a_page_token(): void
     {
         config(['services.meta.page_access_token' => null]);

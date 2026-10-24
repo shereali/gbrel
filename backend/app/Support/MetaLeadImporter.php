@@ -48,7 +48,8 @@ class MetaLeadImporter
     public static function syncPageForms(?Carbon $since = null): array
     {
         $totals = ['forms' => 0, 'created' => 0, 'skipped' => 0];
-        $page = self::graph('me/leadgen_forms', ['fields' => 'id,name,status', 'limit' => 100]);
+        $pageId = (string) config('services.meta.page_id');
+        $page = self::graph(($pageId !== '' ? $pageId : 'me').'/leadgen_forms', ['fields' => 'id,name,status', 'limit' => 100]);
         while (true) {
             foreach ($page['data'] ?? [] as $form) {
                 if ($since && strtoupper((string) ($form['status'] ?? 'ACTIVE')) !== 'ACTIVE') {
@@ -209,7 +210,27 @@ class MetaLeadImporter
     {
         $version = config('services.meta.graph_version', 'v21.0');
 
-        return self::request("https://graph.facebook.com/{$version}/{$path}", $query + ['access_token' => config('services.meta.page_access_token')]);
+        return self::request("https://graph.facebook.com/{$version}/{$path}", $query + ['access_token' => self::accessToken()]);
+    }
+
+    /**
+     * Lead forms and leads need a Page token. If META_PAGE_ACCESS_TOKEN is a User token and META_PAGE_ID is set,
+     * the Page's own token is fetched from it (and cached for 50 minutes); a Page token is used as it is.
+     */
+    private static function accessToken(): string
+    {
+        $configured = (string) config('services.meta.page_access_token');
+        $pageId = (string) config('services.meta.page_id');
+        if ($pageId === '') {
+            return $configured;
+        }
+
+        return Cache::remember('meta_page_token_'.sha1($configured.$pageId), now()->addMinutes(50), function () use ($configured, $pageId) {
+            $version = config('services.meta.graph_version', 'v21.0');
+            $response = Http::timeout(15)->get("https://graph.facebook.com/{$version}/{$pageId}", ['fields' => 'access_token', 'access_token' => $configured]);
+
+            return (string) ($response->json('access_token') ?: $configured);
+        });
     }
 
     /**
@@ -220,7 +241,11 @@ class MetaLeadImporter
     {
         $response = Http::timeout(15)->retry(2, 500, throw: false)->get($url, $query);
         if ($response->failed()) {
-            throw new RuntimeException('Meta Graph API error '.$response->status().': '.($response->json('error.message') ?? $response->body()));
+            $message = (string) ($response->json('error.message') ?? $response->body());
+            if (str_contains($message, 'leadgen_forms') && ! config('services.meta.page_id')) {
+                $message .= ' — META_PAGE_ACCESS_TOKEN looks like a User token: set META_PAGE_ID (or use a Page token).';
+            }
+            throw new RuntimeException('Meta Graph API error '.$response->status().': '.$message);
         }
 
         return $response->json() ?? [];
