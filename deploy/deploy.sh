@@ -108,4 +108,8 @@ echo "=== Verifying Backend Health ==="
 docker compose exec -T backend curl -sS -i http://127.0.0.1:8000/up || echo "Warning: Internal backend /up healthcheck failed"
 docker compose exec -T backend curl -sS -i http://127.0.0.1:8000/api/health || echo "Warning: Internal /api/health check failed"
 
+echo "=== Syncing Meta Lead Forms ==="
+docker compose exec -T backend php artisan meta:sync-leads || echo "Warning: Meta lead sync skipped or failed, continuing..."
+
 echo "=== Deploy Finished Successfully ==="
+

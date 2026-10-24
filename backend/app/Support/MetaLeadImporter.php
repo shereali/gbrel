@@ -40,6 +40,39 @@ class MetaLeadImporter
     }
 
     /**
+     * Imports new leads from every lead form of the Page the access token belongs to.
+     * New forms are picked up automatically, so a new ad needs no setup. Archived forms are only read on a full backfill.
+     *
+     * @return array{forms: int, created: int, skipped: int}
+     */
+    public static function syncPageForms(?Carbon $since = null): array
+    {
+        $totals = ['forms' => 0, 'created' => 0, 'skipped' => 0];
+        $page = self::graph('me/leadgen_forms', ['fields' => 'id,name,status', 'limit' => 100]);
+        while (true) {
+            foreach ($page['data'] ?? [] as $form) {
+                if ($since && strtoupper((string) ($form['status'] ?? 'ACTIVE')) !== 'ACTIVE') {
+                    continue;
+                }
+                if (! empty($form['name'])) {
+                    Cache::put("meta_lead_form_name_{$form['id']}", $form['name'], now()->addDay());
+                }
+                $counts = self::importForm((string) $form['id'], $since);
+                $totals['forms']++;
+                $totals['created'] += $counts['created'];
+                $totals['skipped'] += $counts['skipped'];
+            }
+            $next = $page['paging']['next'] ?? null;
+            if (! $next) {
+                break;
+            }
+            $page = self::request($next, []);
+        }
+
+        return $totals;
+    }
+
+    /**
      * Imports every lead of a form, newest first, optionally only those created after $since.
      *
      * @return array{created: int, skipped: int}

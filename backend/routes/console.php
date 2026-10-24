@@ -7,7 +7,9 @@ use App\Support\MetaLeadImporter;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -104,3 +106,32 @@ Artisan::command('meta:import-leads {forms* : One or more Meta lead form IDs} {-
 
     return $failed ? 1 : 0;
 })->purpose('Import leads from Meta Lead Ad forms into the CRM (skips leads that are already there)');
+
+// Polls the Page's lead forms for new Facebook / Instagram leads, so leads arrive even while the Meta App is unpublished
+// (an unpublished app gets no live webhooks). Runs every 2 minutes through `schedule:work` (see docker/entrypoint.sh).
+// The first run, or --full, reads the last 90 days: everything Meta still keeps.
+Artisan::command('meta:sync-leads {--full : Re-read the last 90 days of every form, archived ones included}', function () {
+    if (! MetaLeadImporter::isConfigured()) {
+        $this->warn('META_PAGE_ACCESS_TOKEN is not set; skipping.');
+
+        return 0;
+    }
+    $lastSync = Cache::get('meta_leads_synced_at');
+    $startedAt = now();
+    // Overlap the previous run by 10 minutes; leads already in the CRM are skipped, so nothing is lost or doubled.
+    $since = $this->option('full') || ! $lastSync ? null : Carbon::parse($lastSync)->subMinutes(10);
+    try {
+        $totals = MetaLeadImporter::syncPageForms($since);
+    } catch (Throwable $e) {
+        $this->error('Meta lead sync failed: '.$e->getMessage());
+        logger()->warning('Meta lead sync failed', ['error' => $e->getMessage()]);
+
+        return 1;
+    }
+    Cache::forever('meta_leads_synced_at', $startedAt->toIso8601String());
+    $this->info("Checked {$totals['forms']} forms: {$totals['created']} new leads, {$totals['skipped']} already in the CRM.");
+
+    return 0;
+})->purpose('Import new leads from all of the Page\'s Meta lead forms into the CRM');
+
+Schedule::command('meta:sync-leads')->everyTwoMinutes()->withoutOverlapping(10);

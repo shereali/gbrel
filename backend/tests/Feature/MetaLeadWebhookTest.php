@@ -156,6 +156,42 @@ class MetaLeadWebhookTest extends TestCase
         $this->assertSame('Instagram Lead Ad', $lead->lead_type);
     }
 
+    public function test_sync_command_reads_every_page_form_and_only_asks_for_new_leads_after_the_first_run(): void
+    {
+        $lead = $this->graphLead();
+        Http::fake(function (HttpRequest $request) use ($lead) {
+            $path = parse_url($request->url(), PHP_URL_PATH);
+            if (str_ends_with($path, '/me/leadgen_forms')) {
+                return Http::response(['data' => [
+                    ['id' => '1618000993676451', 'name' => 'GBREL Uttara S12 Rd18 Flat - Site Visit (Higher Intent)', 'status' => 'ACTIVE'],
+                    ['id' => '910884975294742', 'name' => 'Old owner form', 'status' => 'ARCHIVED'],
+                ]]);
+            }
+            if (str_ends_with($path, '/1618000993676451/leads')) {
+                return Http::response(['data' => [$lead]]);
+            }
+
+            return Http::response(['data' => []]);
+        });
+
+        $this->artisan('meta:sync-leads')->expectsOutputToContain('Checked 2 forms: 1 new leads')->assertSuccessful();
+        $this->artisan('meta:sync-leads')->expectsOutputToContain('Checked 1 forms: 0 new leads, 1 already in the CRM')->assertSuccessful();
+
+        $this->assertSame(1, Lead::where('meta_lead_id', '1111843911831334')->count());
+        $this->assertSame('GBREL Uttara S12 Rd18 Flat - Site Visit (Higher Intent)', Lead::first()->property_title);
+        Http::assertSent(fn (HttpRequest $request) => str_ends_with(parse_url($request->url(), PHP_URL_PATH), '/leads') && isset($request['filtering']));
+    }
+
+    public function test_sync_command_does_nothing_without_a_page_token(): void
+    {
+        config(['services.meta.page_access_token' => null]);
+        Http::fake();
+
+        $this->artisan('meta:sync-leads')->assertSuccessful();
+
+        Http::assertNothingSent();
+    }
+
     public function test_backfill_command_imports_a_whole_form_and_skips_known_leads(): void
     {
         $this->fakeGraph($this->graphLead('1111843911831334'), $this->graphLead('1432904612243360', ['field_data' => [
