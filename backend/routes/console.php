@@ -134,4 +134,18 @@ Artisan::command('meta:sync-leads {--full : Re-read the last 90 days of every fo
     return 0;
 })->purpose('Import new leads from all of the Page\'s Meta lead forms into the CRM');
 
+// Shows what META_PAGE_ACCESS_TOKEN is (User or Page) and which lead forms it can read: php artisan meta:check
+Artisan::command('meta:check', function () {
+    if (! MetaLeadImporter::isConfigured()) {
+        $this->error('META_PAGE_ACCESS_TOKEN is not set.');
+
+        return 1;
+    }
+    foreach (MetaLeadImporter::diagnose() as $label => $value) {
+        $this->line("{$label}: {$value}");
+    }
+
+    return 0;
+})->purpose('Check the Meta token and list the lead forms it can read');
+
 Schedule::command('meta:sync-leads')->everyTwoMinutes()->withoutOverlapping(10);

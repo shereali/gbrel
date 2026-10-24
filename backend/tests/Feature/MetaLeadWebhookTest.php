@@ -206,6 +206,30 @@ class MetaLeadWebhookTest extends TestCase
         $this->assertSame(1, Lead::whereNotNull('meta_lead_id')->count());
     }
 
+    public function test_a_wrong_page_id_gives_a_clear_error_instead_of_reusing_the_user_token(): void
+    {
+        config(['services.meta.page_id' => '123']);
+        Http::fake(['*' => Http::response(['error' => ['message' => 'Unsupported get request.']], 400)]);
+
+        $this->artisan('meta:sync-leads')->expectsOutputToContain('Could not get the Page token for META_PAGE_ID 123')->assertFailed();
+    }
+
+    public function test_meta_check_reports_the_token_type_and_forms(): void
+    {
+        Http::fake(function (HttpRequest $request) {
+            $path = parse_url($request->url(), PHP_URL_PATH);
+
+            return str_ends_with($path, '/me')
+                ? Http::response(['id' => '1773471184786371', 'name' => 'Gram Bangla Real Estate Limited', 'metadata' => ['type' => 'page']])
+                : Http::response(['data' => [['id' => '1618000993676451', 'name' => 'Site Visit form', 'status' => 'ACTIVE']]]);
+        });
+
+        $this->artisan('meta:check')
+            ->expectsOutputToContain('Token belongs to: page "Gram Bangla Real Estate Limited"')
+            ->expectsOutputToContain('Lead forms found: 1')
+            ->assertSuccessful();
+    }
+
     public function test_a_user_token_without_a_page_id_gets_a_clear_error(): void
     {
         Http::fake(['*' => Http::response(['error' => ['message' => '(#100) Tried accessing nonexisting field (leadgen_forms)']], 400)]);

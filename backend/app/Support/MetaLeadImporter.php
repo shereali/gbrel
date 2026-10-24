@@ -229,8 +229,38 @@ class MetaLeadImporter
             $version = config('services.meta.graph_version', 'v21.0');
             $response = Http::timeout(15)->get("https://graph.facebook.com/{$version}/{$pageId}", ['fields' => 'access_token', 'access_token' => $configured]);
 
-            return (string) ($response->json('access_token') ?: $configured);
+            if ($response->failed() || ! $response->json('access_token')) {
+                throw new RuntimeException("Could not get the Page token for META_PAGE_ID {$pageId}: ".($response->json('error.message') ?? 'no access_token returned; check the Page ID and that the token has pages_show_list for this Page.'));
+            }
+
+            return (string) $response->json('access_token');
         });
+    }
+
+    /**
+     * What the configured token is, for `php artisan meta:check`. Never returns the token itself.
+     *
+     * @return array<string, string>
+     */
+    public static function diagnose(): array
+    {
+        $version = config('services.meta.graph_version', 'v21.0');
+        $me = Http::timeout(15)->get("https://graph.facebook.com/{$version}/me", ['fields' => 'id,name', 'metadata' => 1, 'access_token' => config('services.meta.page_access_token')]);
+        $report = [
+            'Token belongs to' => $me->failed() ? 'ERROR: '.$me->json('error.message') : $me->json('metadata.type').' "'.$me->json('name').'" ('.$me->json('id').')',
+            'META_PAGE_ID' => (string) (config('services.meta.page_id') ?: '(not set)'),
+        ];
+        try {
+            $forms = self::graph((config('services.meta.page_id') ?: 'me').'/leadgen_forms', ['fields' => 'id,name,status', 'limit' => 100]);
+            $report['Lead forms found'] = (string) count($forms['data'] ?? []);
+            foreach (array_slice($forms['data'] ?? [], 0, 10) as $form) {
+                $report['  form '.$form['id']] = ($form['name'] ?? '').' ['.($form['status'] ?? '').']';
+            }
+        } catch (\Throwable $e) {
+            $report['Lead forms'] = 'ERROR: '.$e->getMessage();
+        }
+
+        return $report;
     }
 
     /**
