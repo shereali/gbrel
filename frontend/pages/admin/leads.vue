@@ -187,7 +187,9 @@
               <span class="ld-main">
                 <span class="ld-name">
                   <span v-if="isFresh(lead)" class="ld-new" title="Not contacted yet"></span>
-                  <span class="ld-name-text">{{ lead.name }}</span>
+                  <span class="ld-name-text" :title="lead.name || 'Direct Buyer'">{{ lead.name || 'Direct Buyer' }}</span>
+                </span>
+                <span class="ld-badges-row">
                   <span class="ld-stage" :data-stage="stageKey(lead.stage)">{{ lead.stage }}</span>
                   <span v-if="assignedName(lead)" class="ld-assigned-tag" :title="`Assigned to ${assignedName(lead)}`">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -576,9 +578,10 @@ const fetchLeads = async (onlyTrashed = false, quiet = false) => {
         return {
           ...l,
           ...read,
+          name: l.name || 'Direct Buyer',
           note: withoutFormAnswers(read.note, l.meta_answers),
           property: l.property_title || l.property || 'Direct Inquiry',
-        type: l.buyer_category || l.buyer_type || l.lead_type || l.type || 'Direct Buyer',
+          type: l.buyer_category || l.buyer_type || l.lead_type || l.type || 'Direct Buyer',
           stage: normalizeStage(l.status || l.stage)
         }
       })
@@ -857,7 +860,7 @@ const tierRank: Record<string, number> = { HOT: 0, WARM: 1, COLD: 2 }
 const filteredLeads = computed(() => {
   let list = view.value === 'trash' || statusFilter.value === 'All'
     ? [...baseLeads.value]
-    : baseLeads.value.filter(l => l.stage === statusFilter.value)
+    : baseLeads.value.filter(l => l.stage === statusFilter.value || l.id === selectedId.value)
 
   if (view.value === 'active') {
     if (staffFilter.value === 'unassigned') {
@@ -1003,10 +1006,19 @@ watch(selectedId, () => {
 })
 
 // Copies the fields the CRM can change from the server's answer onto the lead shown in the list.
-const syncLead = (lead: any, data: any) => Object.assign(lead, {
-  status: data.status, stage: normalizeStage(data.status), lost_reason: data.lost_reason,
-  assigned_to: data.assigned_to, next_follow_up_at: data.next_follow_up_at, last_contacted_at: data.last_contacted_at
-})
+const syncLead = (lead: any, data: any) => {
+  if (!lead || !data) return lead
+  const preservedName = lead.name || data.name || 'Direct Buyer'
+  return Object.assign(lead, {
+    name: preservedName,
+    status: data.status,
+    stage: normalizeStage(data.status),
+    lost_reason: data.lost_reason,
+    assigned_to: data.assigned_to,
+    next_follow_up_at: data.next_follow_up_at,
+    last_contacted_at: data.last_contacted_at
+  })
+}
 
 const assignLead = async (lead: any, event: Event) => {
   const select = event.target as HTMLSelectElement
@@ -1205,10 +1217,15 @@ const setStage = async (lead: any, newStage: string) => {
 
 const applyStage = async (lead: any, stage: string, reason?: string) => {
   const previous = lead.stage
+  const previousName = lead.name
   lead.stage = stage
   try {
-    syncLead(lead, await crm.setStage(lead.id, stage, reason))
-    toast.info('Status updated', lead.name + ' is now "' + stage + '".')
+    const updated = await crm.setStage(lead.id, stage, reason)
+    syncLead(lead, updated)
+    if (!lead.name && previousName) {
+      lead.name = previousName
+    }
+    toast.info('Status updated', (lead.name || 'Lead') + ' is now "' + stage + '".')
     loadDetail()
   } catch (err: any) {
     lead.stage = previous
@@ -1423,8 +1440,9 @@ const restoreLead = async (lead: any) => {
 .ld-fab { display: none; }
 .ld-backbar-name { display: none; }
 .ld-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.ld-name { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 700; font-size: 0.98rem; white-space: nowrap; }
-.ld-name-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.ld-name { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 700; font-size: 0.98rem; color: var(--admin-text-primary); line-height: 1.35; }
+.ld-name-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ld-badges-row { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 1px 0 2px; }
 /* Stage badge beside the name */
 .ld-stage { flex: none; padding: 1px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; line-height: 1.6; letter-spacing: 0.01em; background: var(--admin-chip-bg); color: var(--admin-text-secondary); }
 .ld-stage[data-stage='new'] { background: rgba(16, 185, 129, 0.15); color: #059669; }
