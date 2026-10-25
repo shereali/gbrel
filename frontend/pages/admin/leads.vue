@@ -49,8 +49,8 @@
         </button>
       </div>
 
-      <!-- Staff assignment tabs: see who has how many leads assigned and filter by staff -->
-      <div v-if="view === 'active' && staff.length" class="ld-staff-tabs" role="group" aria-label="Filter by assigned staff">
+      <!-- Staff assignment tabs: see who has how many leads assigned and filter by staff (Admins only) -->
+      <div v-if="view === 'active' && staff.length && isLeadAdmin" class="ld-staff-tabs" role="group" aria-label="Filter by assigned staff">
         <button
           type="button"
           class="ld-staff-tab"
@@ -87,14 +87,14 @@
         </button>
       </div>
 
-      <div v-if="activeStaffInfo" class="ld-staff-banner">
+      <div v-if="activeStaffInfo && isLeadAdmin" class="ld-staff-banner">
         <div class="ld-staff-banner-info">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span>Assigned to: <strong>{{ activeStaffInfo.name }}</strong> ({{ activeStaffInfo.role || 'Staff' }}) &middot; {{ activeStaffInfo.count }} leads</span>
         </div>
         <button type="button" class="ld-staff-banner-clear" @click="staffFilter = 'all'">Show all &times;</button>
       </div>
-      <p v-else-if="view === 'trash'" class="ld-trash-note">Showing deleted inquiries. Restore one to bring it back to the pipeline.</p>
+      <p v-else-if="view === 'trash' && isLeadAdmin" class="ld-trash-note">Showing deleted inquiries. Restore one to bring it back to the pipeline.</p>
 
       <div id="ld-controls" class="ld-controls" :class="{ open: showFilters }">
         <select v-if="answerOptions.length" v-model="answerFilter" class="ld-select ld-select--answer" :class="{ on: answerFilter }" aria-label="Filter by form answer">
@@ -113,7 +113,7 @@
           <option value="newest">Newest first</option>
           <option value="hottest">Hottest first</option>
         </select>
-        <button type="button" class="ld-trash-toggle" :class="{ on: view === 'trash' }" :aria-pressed="view === 'trash'" @click="changeView(view === 'trash' ? 'active' : 'trash')">
+        <button v-if="isLeadAdmin" type="button" class="ld-trash-toggle" :class="{ on: view === 'trash' }" :aria-pressed="view === 'trash'" @click="changeView(view === 'trash' ? 'active' : 'trash')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
           Trash
         </button>
@@ -141,7 +141,7 @@
     <div v-else class="ld-split" :class="{ 'is-detail': detailOpen }">
       <!-- Lead list with multi-select and bulk staff assignment -->
       <div class="ld-list-wrap">
-        <div v-if="view === 'active'" class="ld-list-header">
+        <div v-if="view === 'active' && isLeadAdmin" class="ld-list-header">
           <label class="ld-select-all" title="Select all visible leads">
             <input
               type="checkbox"
@@ -175,7 +175,7 @@
 
         <ul class="ld-list" aria-label="Leads">
           <li v-for="lead in filteredLeads" :key="lead.id" class="ld-item" :class="{ active: selected?.id === lead.id, checked: selectedLeadIds.has(lead.id) }" :data-tier="lead.tier || 'none'">
-            <label v-if="view === 'active'" class="ld-check-col" :title="`Select ${lead.name}`" @click.stop>
+            <label v-if="view === 'active' && isLeadAdmin" class="ld-check-col" :title="`Select ${lead.name}`" @click.stop>
               <input
                 type="checkbox"
                 class="ld-checkbox"
@@ -193,7 +193,7 @@
                   <span class="ld-stage" :data-stage="stageKey(lead.stage)">{{ lead.stage }}</span>
                   <span v-if="assignedName(lead)" class="ld-assigned-tag" :title="`Assigned to ${assignedName(lead)}`">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    {{ assignedName(lead) }}
+                    <span class="ld-assigned-text">{{ assignedName(lead) }}</span>
                   </span>
                 </span>
                 <span v-if="highlightsFor(lead).length" class="ld-hl-row">
@@ -305,10 +305,13 @@
         <div v-if="!selected.deleted_at" class="ld-work">
           <label class="ld-field">
             <span>Assigned to</span>
-            <select :value="selected.assigned_to ?? ''" class="ld-select" @change="assignLead(selected, $event)">
+            <select v-if="isLeadAdmin" :value="selected.assigned_to ?? ''" class="ld-select" @change="assignLead(selected, $event)">
               <option value="">Unassigned</option>
               <option v-for="s in staff" :key="s.id" :value="s.id">{{ s.name }}</option>
             </select>
+            <div v-else class="ld-assigned-readonly">
+              <span>{{ assignedName(selected) || 'Unassigned' }}</span>
+            </div>
           </label>
           <div class="ld-field">
             <span id="ld-follow-label">Next follow-up</span>
@@ -375,7 +378,7 @@
           <p class="ld-note">{{ selected.note }}</p>
         </section>
 
-        <footer class="ld-foot">
+        <footer v-if="isLeadAdmin" class="ld-foot">
           <button v-if="selected.deleted_at" type="button" class="btn btn-sm btn-emerald" @click="restoreLead(selected)">Restore lead</button>
           <button v-else type="button" class="ld-delete" @click="promptDeleteLead(selected)">Delete this inquiry</button>
         </footer>
@@ -492,7 +495,8 @@ definePageMeta({
 })
 
 const toast = useToast()
-const { token } = useAuth()
+const { token, user: me, isSuperAdmin } = useAuth()
+const isLeadAdmin = computed(() => isSuperAdmin.value || me.value?.role === 'admin' || (me.value?.permissions || []).includes('*'))
 
 const view = ref<'active' | 'trash'>('active')
 const statusFilter = ref('All')
@@ -885,7 +889,6 @@ const clearFilters = () => { search.value = ''; focus.value = 'All'; answerFilte
 
 const crm = useLeadCrm()
 const route = useRoute()
-const { user: me } = useAuth()
 
 const staff = ref<StaffMember[]>([])
 const upcomingVisits = ref<LeadVisit[]>([])
@@ -950,13 +953,20 @@ const shortNote = (l: any): string => {
 }
 
 const openLeads = computed(() => leadsList.value.filter(l => !isClosed(l)))
-const quickViews = computed(() => [
-  { key: 'all' as const, label: 'All leads', count: leadsList.value.length, alert: false },
-  { key: 'followups' as const, label: 'Needs follow-up', count: openLeads.value.filter(l => ['overdue', 'today'].includes(followState(l))).length, alert: true },
-  { key: 'visits' as const, label: 'Visits coming up', count: openLeads.value.filter(l => nextVisit.value.has(l.id)).length, alert: false },
-  { key: 'unassigned' as const, label: 'Unassigned', count: openLeads.value.filter(l => !l.assigned_to).length, alert: false },
-  { key: 'mine' as const, label: 'Assigned to me', count: openLeads.value.filter(l => l.assigned_to && l.assigned_to === me.value?.id).length, alert: false }
-])
+const quickViews = computed(() => {
+  const base = [
+    { key: 'all' as const, label: isLeadAdmin.value ? 'All leads' : 'My leads', count: leadsList.value.length, alert: false },
+    { key: 'followups' as const, label: 'Needs follow-up', count: openLeads.value.filter(l => ['overdue', 'today'].includes(followState(l))).length, alert: true },
+    { key: 'visits' as const, label: 'Visits coming up', count: openLeads.value.filter(l => nextVisit.value.has(l.id)).length, alert: false },
+  ]
+  if (isLeadAdmin.value) {
+    base.push(
+      { key: 'unassigned' as const, label: 'Unassigned', count: openLeads.value.filter(l => !l.assigned_to).length, alert: false },
+      { key: 'mine' as const, label: 'Assigned to me', count: openLeads.value.filter(l => l.assigned_to && l.assigned_to === me.value?.id).length, alert: false }
+    )
+  }
+  return base
+})
 function matchesQuick(l: any) {
   if (view.value === 'trash') return true
   switch (quick.value) {
@@ -1347,6 +1357,7 @@ const restoreLead = async (lead: any) => {
 .ld-work { display: grid; grid-template-columns: minmax(180px, 240px) 1fr; gap: 18px 24px; margin-top: 22px; padding: 16px 0 0; border-top: 1px solid var(--admin-border-subtle); }
 .ld-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .ld-field > span { font-size: 0.82rem; font-weight: 600; color: var(--admin-text-secondary); }
+.ld-assigned-readonly { min-height: 40px; display: flex; align-items: center; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background: var(--admin-bg-surface-alt); font-size: 0.9rem; font-weight: 600; color: var(--admin-text-primary); }
 .ld-follow-now { margin: 0; font-size: 0.95rem; font-weight: 700; }
 .ld-follow-now.overdue { color: var(--ld-danger); }
 .ld-follow-now.today { color: var(--ld-warm); }
@@ -1442,9 +1453,9 @@ const restoreLead = async (lead: any) => {
 .ld-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .ld-name { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 700; font-size: 0.98rem; color: var(--admin-text-primary); line-height: 1.35; }
 .ld-name-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ld-badges-row { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 1px 0 2px; }
+.ld-badges-row { display: flex; align-items: center; flex-wrap: nowrap; gap: 6px; margin: 2px 0 3px; min-width: 0; max-width: 100%; }
 /* Stage badge beside the name */
-.ld-stage { flex: none; padding: 1px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; line-height: 1.6; letter-spacing: 0.01em; background: var(--admin-chip-bg); color: var(--admin-text-secondary); }
+.ld-stage { flex: none; white-space: nowrap; padding: 1px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; line-height: 1.6; letter-spacing: 0.01em; background: var(--admin-chip-bg); color: var(--admin-text-secondary); }
 .ld-stage[data-stage='new'] { background: rgba(16, 185, 129, 0.15); color: #059669; }
 .ld-stage[data-stage='contacted'] { background: rgba(59, 130, 246, 0.15); color: #2563EB; }
 .ld-stage[data-stage='qualified'] { background: rgba(139, 92, 246, 0.16); color: #7C3AED; }
@@ -1453,8 +1464,9 @@ const restoreLead = async (lead: any) => {
 .ld-stage[data-stage='negotiation'] { background: rgba(245, 158, 11, 0.18); color: #B45309; }
 .ld-stage[data-stage='converted'] { background: #059669; color: #fff; }
 .ld-stage[data-stage='lost'] { background: rgba(239, 68, 68, 0.15); color: #DC2626; }
-.ld-assigned-tag { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: 6px; font-size: 0.68rem; font-weight: 600; background: var(--admin-chip-bg); color: var(--admin-text-secondary); border: 1px solid var(--admin-border-subtle); }
-.ld-assigned-tag svg { opacity: 0.7; }
+.ld-assigned-tag { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: 6px; font-size: 0.68rem; font-weight: 600; background: var(--admin-chip-bg); color: var(--admin-text-secondary); border: 1px solid var(--admin-border-subtle); flex: 0 1 auto; min-width: 0; max-width: 140px; white-space: nowrap; }
+.ld-assigned-tag svg { opacity: 0.7; flex: none; }
+.ld-assigned-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 
 /* Staff tabs */
 .ld-staff-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: 4px 0 0; padding: 2px 0; }

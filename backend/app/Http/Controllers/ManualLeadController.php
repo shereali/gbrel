@@ -37,9 +37,14 @@ class ManualLeadController extends Controller
             ], 409);
         }
 
-        $owner = ! empty($data['assigned_to']) ? User::find($data['assigned_to']) : null;
-        if ($owner && ! $owner->isStaff()) {
-            return response()->json(['success' => false, 'message' => 'Leads can only be assigned to team members.', 'errors' => ['assigned_to' => ['Leads can only be assigned to team members.']]], 422);
+        $user = $request->user();
+        if ($user && ! $user->isLeadAdmin()) {
+            $owner = $user;
+        } else {
+            $owner = ! empty($data['assigned_to']) ? User::find($data['assigned_to']) : null;
+            if ($owner && ! $owner->isStaff()) {
+                return response()->json(['success' => false, 'message' => 'Leads can only be assigned to team members.', 'errors' => ['assigned_to' => ['Leads can only be assigned to team members.']]], 422);
+            }
         }
 
         $property = ! empty($data['property_id']) ? Property::find($data['property_id']) : null;

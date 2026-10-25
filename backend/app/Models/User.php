@@ -71,6 +71,11 @@ class User extends Authenticatable
         return in_array($this->role, ['admin', 'property_manager', 'legal_compliance', 'finance_auditor']);
     }
 
+    public function isLeadAdmin(): bool
+    {
+        return $this->role === 'admin' || in_array('*', $this->getEffectivePermissions());
+    }
+
     /**
      * Staff are every role except the public ones (buyers and property owners).
      * Any user with active permissions or a non-buyer/owner role is also staff.

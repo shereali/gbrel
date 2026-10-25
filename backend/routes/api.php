@@ -921,11 +921,27 @@ Route::delete('/viewings/{id}', function ($id) {
 
 // 4. Leads API (Full CRUD with Soft Delete)
 Route::get('/leads', function (Request $request) {
+    $user = $request->user();
+    if (! $user) {
+        return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
+    }
+
     $query = Lead::query();
+
+    // Admin ছাড়া বাকি কেউই lead data পাবে না transfer করা ছাড়া
+    if (! $user->isLeadAdmin()) {
+        $query->where('assigned_to', $user->id);
+    }
+
     if ($request->boolean('only_trashed')) {
+        if (! $user->isLeadAdmin()) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
         $query->onlyTrashed();
     } elseif ($request->boolean('with_trashed')) {
-        $query->withTrashed();
+        if ($user->isLeadAdmin()) {
+            $query->withTrashed();
+        }
     }
 
     if ($request->has('stage') && ! empty($request->stage)) {
@@ -998,7 +1014,12 @@ Route::post('/leads/{id}/activities', [LeadCrmController::class, 'addActivity'])
 Route::post('/leads/{id}/visits', [LeadCrmController::class, 'scheduleVisit'])->whereNumber('id');
 Route::patch('/leads/{id}/visits/{visitId}', [LeadCrmController::class, 'updateVisit'])->whereNumber(['id', 'visitId']);
 
-Route::delete('/leads/{id}', function ($id) {
+Route::delete('/leads/{id}', function (Request $request, $id) {
+    $user = $request->user();
+    if (! $user || ! $user->isLeadAdmin()) {
+        return response()->json(['success' => false, 'message' => 'Only administrators can delete leads.'], 403);
+    }
+
     $lead = Lead::findOrFail($id);
     $lead->delete();
 
@@ -1008,7 +1029,12 @@ Route::delete('/leads/{id}', function ($id) {
     ]);
 });
 
-Route::post('/leads/{id}/restore', function ($id) {
+Route::post('/leads/{id}/restore', function (Request $request, $id) {
+    $user = $request->user();
+    if (! $user || ! $user->isLeadAdmin()) {
+        return response()->json(['success' => false, 'message' => 'Only administrators can restore leads.'], 403);
+    }
+
     $lead = Lead::onlyTrashed()->findOrFail($id);
     $lead->restore();
 
@@ -2029,7 +2055,10 @@ Route::delete('/land-units/{id}', function ($id) {
 // ------------------------------------------
 // 6. SMART ADMIN SIDEBAR COUNTS API
 // ------------------------------------------
-Route::get('/admin/sidebar-counts', function () {
+Route::get('/admin/sidebar-counts', function (Request $request) {
+    $user = $request->user();
+    $isAdmin = $user && $user->isLeadAdmin();
+
     $count = function (callable $query): int {
         try {
             return (int) $query();
@@ -2043,8 +2072,23 @@ Route::get('/admin/sidebar-counts', function () {
         'data' => [
             'pending' => $count(fn () => Property::where('status', 'Draft')->whereNull('owner_id')->count()),
             'listing_requests' => $count(fn () => Property::whereIn('review_status', ['submitted', 'update_submitted'])->count()),
-            'tours' => $count(fn () => Viewing::whereNotIn('status', ['completed', 'cancelled'])->count()),
-            'leads' => $count(fn () => Lead::whereNotIn('status', ['converted', 'closed', 'lost', 'Converted', 'Closed', 'Lost'])->count()),
+            'tours' => $count(function () use ($isAdmin, $user) {
+                $q = Viewing::whereNotIn('status', ['completed', 'cancelled']);
+                if (! $isAdmin && $user) {
+                    $q->where(function ($sq) use ($user) {
+                        $sq->where('assigned_to', $user->id)
+                           ->orWhereHas('lead', fn ($lq) => $lq->where('assigned_to', $user->id));
+                    });
+                }
+                return $q->count();
+            }),
+            'leads' => $count(function () use ($isAdmin, $user) {
+                $q = Lead::whereNotIn('status', ['converted', 'closed', 'lost', 'Converted', 'Closed', 'Lost']);
+                if (! $isAdmin && $user) {
+                    $q->where('assigned_to', $user->id);
+                }
+                return $q->count();
+            }),
             'categories' => $count(fn () => Category::count()),
             'divisions' => $count(fn () => Division::count()),
             'transaction_types' => $count(fn () => TransactionType::count()),
@@ -2237,7 +2281,10 @@ Route::post('/settings', function (Request $request) {
 })->middleware('staff:settings.manage');
 
 // 8. Executive KPI Analytics API (Realtime Aggregations)
-Route::get('/admin/stats', function () {
+Route::get('/admin/stats', function (Request $request) {
+    $user = $request->user();
+    $isAdmin = $user && $user->isLeadAdmin();
+
     $properties = Property::all();
     $totalValuation = (float) $properties->sum('price');
     $landShares = $properties->filter(fn ($p) => $p->property_type === 'Land Share')->count();
@@ -2261,8 +2308,20 @@ Route::get('/admin/stats', function () {
         ];
     }
 
-    $leads = Lead::orderBy('created_at', 'desc')->get();
-    $viewings = Viewing::orderBy('created_at', 'desc')->get();
+    $leadsQuery = Lead::orderBy('created_at', 'desc');
+    if (! $isAdmin && $user) {
+        $leadsQuery->where('assigned_to', $user->id);
+    }
+    $leads = $leadsQuery->get();
+
+    $viewingsQuery = Viewing::orderBy('created_at', 'desc');
+    if (! $isAdmin && $user) {
+        $viewingsQuery->where(function ($sq) use ($user) {
+            $sq->where('assigned_to', $user->id)
+               ->orWhereHas('lead', fn ($lq) => $lq->where('assigned_to', $user->id));
+        });
+    }
+    $viewings = $viewingsQuery->get();
     $brochuresCount = Brochure::count();
     $usersCount = User::count();
     $pendingApprovals = Property::where('is_rajuk_approved', false)

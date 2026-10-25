@@ -30,11 +30,22 @@ class LeadCrmController extends Controller
     private const TZ = 'Asia/Dhaka';
 
     /** GET /api/leads/overview: upcoming visits and the people a lead can be assigned to. */
-    public function overview(): JsonResponse
+    public function overview(Request $request): JsonResponse
     {
+        $user = $request->user();
+        $isAdmin = $user && $user->isLeadAdmin();
+
         $today = now(self::TZ)->toDateString();
-        $visits = Viewing::whereNotNull('lead_id')->where('status', 'Confirmed')->where('scheduled_date', '>=', $today)
-            ->orderBy('scheduled_date')->orderBy('scheduled_at')->limit(300)->get();
+        $visitsQuery = Viewing::whereNotNull('lead_id')->where('status', 'Confirmed')->where('scheduled_date', '>=', $today);
+
+        if (! $isAdmin && $user) {
+            $visitsQuery->where(function ($q) use ($user) {
+                $q->where('assigned_to', $user->id)
+                  ->orWhereHas('lead', fn ($lq) => $lq->where('assigned_to', $user->id));
+            });
+        }
+
+        $visits = $visitsQuery->orderBy('scheduled_date')->orderBy('scheduled_at')->limit(300)->get();
 
         return response()->json(['success' => true, 'data' => [
             'stages' => self::STAGES,
@@ -44,9 +55,12 @@ class LeadCrmController extends Controller
     }
 
     /** GET /api/leads/{id}/crm */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
         $lead = Lead::findOrFail($id);
+        if (! $this->canAccessLead($request, $lead)) {
+            return response()->json(['success' => false, 'message' => 'Access denied. This lead is not transferred to you.'], 403);
+        }
 
         return response()->json(['success' => true, 'data' => [
             'activities' => $lead->activities()->with('user:id,name')->orderByDesc('occurred_at')->orderByDesc('id')->limit(300)->get()
@@ -60,6 +74,10 @@ class LeadCrmController extends Controller
     public function addActivity(Request $request, int $id): JsonResponse
     {
         $lead = Lead::findOrFail($id);
+        if (! $this->canAccessLead($request, $lead)) {
+            return response()->json(['success' => false, 'message' => 'Access denied. This lead is not transferred to you.'], 403);
+        }
+
         $type = (string) $request->input('type');
         $data = $request->validate([
             'type' => ['required', Rule::in(['note', 'call', 'whatsapp', 'email'])],
@@ -91,6 +109,10 @@ class LeadCrmController extends Controller
     public function setStage(Request $request, int $id): JsonResponse
     {
         $lead = Lead::findOrFail($id);
+        if (! $this->canAccessLead($request, $lead)) {
+            return response()->json(['success' => false, 'message' => 'Access denied. This lead is not transferred to you.'], 403);
+        }
+
         $data = $request->validate([
             'stage' => ['required_without:status', Rule::in(self::STAGES)],
             'status' => ['nullable', Rule::in(self::STAGES)],
@@ -107,6 +129,11 @@ class LeadCrmController extends Controller
     /** PATCH /api/leads/{id}/assign */
     public function assign(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
+        if (! $user || ! $user->isLeadAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Only administrators can transfer leads.'], 403);
+        }
+
         $lead = Lead::findOrFail($id);
         $data = $request->validate(['user_id' => ['nullable', 'integer', 'exists:users,id']]);
         $owner = $data['user_id'] ? User::find($data['user_id']) : null;
@@ -124,6 +151,11 @@ class LeadCrmController extends Controller
     /** POST /api/leads/bulk-assign: assign multiple leads to a team member in one batch */
     public function bulkAssign(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if (! $user || ! $user->isLeadAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Only administrators can transfer leads.'], 403);
+        }
+
         $data = $request->validate([
             'lead_ids' => ['required', 'array', 'min:1'],
             'lead_ids.*' => ['integer', 'exists:leads,id'],
@@ -154,6 +186,10 @@ class LeadCrmController extends Controller
     public function followUp(Request $request, int $id): JsonResponse
     {
         $lead = Lead::findOrFail($id);
+        if (! $this->canAccessLead($request, $lead)) {
+            return response()->json(['success' => false, 'message' => 'Access denied. This lead is not transferred to you.'], 403);
+        }
+
         $data = $request->validate(['at' => ['nullable', 'date'], 'note' => ['nullable', 'string', 'max:300']]);
 
         $lead->next_follow_up_at = ! empty($data['at']) ? Carbon::parse($data['at'])->utc() : null;
@@ -167,6 +203,10 @@ class LeadCrmController extends Controller
     public function scheduleVisit(Request $request, int $id): JsonResponse
     {
         $lead = Lead::findOrFail($id);
+        if (! $this->canAccessLead($request, $lead)) {
+            return response()->json(['success' => false, 'message' => 'Access denied. This lead is not transferred to you.'], 403);
+        }
+
         $data = $request->validate([
             'date' => ['required', 'date_format:Y-m-d', 'after_or_equal:'.now(self::TZ)->toDateString()],
             'time' => ['required', 'date_format:H:i'],
@@ -212,6 +252,10 @@ class LeadCrmController extends Controller
     public function updateVisit(Request $request, int $id, int $visitId): JsonResponse
     {
         $lead = Lead::findOrFail($id);
+        if (! $this->canAccessLead($request, $lead)) {
+            return response()->json(['success' => false, 'message' => 'Access denied. This lead is not transferred to you.'], 403);
+        }
+
         $visit = Viewing::where('lead_id', $lead->id)->findOrFail($visitId);
         $data = $request->validate([
             'status' => ['sometimes', Rule::in(self::VISIT_STATUSES)],
@@ -316,5 +360,18 @@ class LeadCrmController extends Controller
             ->filter(fn (User $u) => $u->isStaff() && strtolower((string) $u->status) !== 'suspended')
             ->map(fn (User $u) => ['id' => $u->id, 'name' => $u->name, 'role' => $u->role])
             ->values()->all();
+    }
+
+    private function canAccessLead(Request $request, Lead $lead): bool
+    {
+        $user = $request->user();
+        if (! $user) {
+            return false;
+        }
+        if ($user->isLeadAdmin()) {
+            return true;
+        }
+
+        return (int) $lead->assigned_to === (int) $user->id;
     }
 }

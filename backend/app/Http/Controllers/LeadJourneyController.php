@@ -7,13 +7,18 @@ use App\Models\VisitorEvent;
 use App\Models\VisitorSession;
 use App\Support\VisitorJourney;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class LeadJourneyController extends Controller
 {
     /** GET /api/leads/{id}/journey. The ProtectLeadData middleware already limits /api/leads/* to staff with lead access. */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
         $lead = Lead::withTrashed()->findOrFail($id);
+        $user = $request->user();
+        if ($user && ! $user->isLeadAdmin() && (int) $lead->assigned_to !== (int) $user->id) {
+            return response()->json(['success' => false, 'message' => 'Access denied. This lead is not transferred to you.'], 403);
+        }
         $sessions = $lead->visitor_id
             ? VisitorSession::where('visitor_id', $lead->visitor_id)->orderBy('started_at')->limit(50)->get()
             : collect();

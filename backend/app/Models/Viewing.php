@@ -21,4 +21,9 @@ class Viewing extends Model
     {
         return $this->belongsTo(Property::class);
     }
+
+    public function lead()
+    {
+        return $this->belongsTo(Lead::class);
+    }
 }

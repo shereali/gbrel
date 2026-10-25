@@ -215,4 +215,33 @@ class LeadCrmTest extends TestCase
         $this->assertSame($agent->id, $lead2->fresh()->assigned_to);
         $this->assertDatabaseHas('lead_activities', ['lead_id' => $lead1->id, 'type' => 'assign', 'body' => 'Assigned to Monirul Islam']);
     }
+
+    public function test_non_admin_only_sees_leads_transferred_to_them_and_cannot_access_untransferred(): void
+    {
+        $agent = $this->signInAs('agent', [
+            'name' => 'Agent Rahat',
+            'custom_permissions' => ['leads.view', 'leads.manage'],
+        ]);
+        $myLead = $this->lead(['name' => 'Transferred Buyer', 'assigned_to' => $agent->id]);
+        $otherLead = $this->lead(['name' => 'Untransferred Buyer', 'assigned_to' => null]);
+
+        // Agent querying lead list should only get their transferred lead
+        $leads = $this->getJson('/api/leads')->assertOk()->json('data');
+        $leadIds = collect($leads)->pluck('id')->all();
+        $this->assertContains($myLead->id, $leadIds);
+        $this->assertNotContains($otherLead->id, $leadIds);
+
+        // Agent can access CRM details of their assigned lead
+        $this->getJson("/api/leads/{$myLead->id}/crm")->assertOk();
+
+        // Agent cannot access CRM details of untransferred lead
+        $this->getJson("/api/leads/{$otherLead->id}/crm")->assertForbidden();
+
+        // Agent cannot delete leads
+        $this->deleteJson("/api/leads/{$myLead->id}")->assertForbidden();
+
+        // Agent cannot transfer leads
+        $this->patchJson("/api/leads/{$myLead->id}/assign", ['user_id' => $agent->id])->assertForbidden();
+        $this->postJson('/api/leads/bulk-assign', ['lead_ids' => [$myLead->id], 'user_id' => $agent->id])->assertForbidden();
+    }
 }
