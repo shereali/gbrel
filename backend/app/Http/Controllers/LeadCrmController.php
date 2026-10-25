@@ -18,7 +18,7 @@ use Illuminate\Validation\Rule;
  */
 class LeadCrmController extends Controller
 {
-    public const STAGES = ['New', 'Contacted', 'Qualified', 'Site Visit', 'Negotiation', 'Converted', 'Lost'];
+    public const STAGES = ['New', 'Contacted', 'Qualified', 'Site Visit', 'Site Visit Completed', 'Negotiation', 'Converted', 'Lost'];
 
     public const CALL_OUTCOMES = ['Answered', 'No answer', 'Busy', 'Wrong number'];
 
@@ -217,8 +217,14 @@ class LeadCrmController extends Controller
         if ($changes) {
             $this->log($request, $lead, 'visit', $visit->visit_type.' '.implode(', ', $changes), ['visit_id' => $visit->id, 'event' => $visit->status === 'Confirmed' ? 'updated' : strtolower($visit->status)]);
         }
-        if (($data['status'] ?? null) === 'Completed' && $visit->outcome_notes) {
-            $this->log($request, $lead, 'note', 'Visit outcome: '.$visit->outcome_notes);
+        if (($data['status'] ?? null) === 'Completed') {
+            if ($visit->outcome_notes) {
+                $this->log($request, $lead, 'note', 'Visit outcome: '.$visit->outcome_notes);
+            }
+            if ($lead->status === 'Site Visit') {
+                $this->moveStage($request, $lead, 'Site Visit Completed');
+                $lead->save();
+            }
         }
 
         return response()->json(['success' => true, 'data' => $this->visit($visit->fresh())]);

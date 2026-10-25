@@ -147,12 +147,47 @@
           </p>
         </header>
 
-        <section v-if="highlightsFor(selected).length" class="ld-hl-card" aria-label="Highlighted answers">
-          <div v-for="h in highlightsFor(selected)" :key="h.label" class="ld-hl-item">
-            <span class="ld-hl-label">{{ h.label }}</span>
-            <strong class="ld-hl-value">{{ h.value }}</strong>
+        <section v-if="highlightsFor(selected).length || activeVisit" class="ld-hl-card" :class="{ 'with-visit': !!activeVisit && highlightsFor(selected).length }" aria-label="Highlighted answers and site visit">
+          <div v-if="highlightsFor(selected).length" class="ld-hl-left">
+            <div v-for="h in highlightsFor(selected)" :key="h.label" class="ld-hl-item">
+              <span class="ld-hl-label">{{ h.label }}</span>
+              <strong class="ld-hl-value">{{ h.value }}</strong>
+            </div>
+            <button type="button" class="ld-hl-edit" @click="openHighlights(formKeyOf(selected))">Change highlighted fields</button>
           </div>
-          <button type="button" class="ld-hl-edit" @click="openHighlights(formKeyOf(selected))">Change highlighted fields</button>
+
+          <div v-if="activeVisit" class="ld-hl-visit-side">
+            <div class="ld-hl-visit-badge-row">
+              <span class="ld-hl-visit-badge" :data-status="activeVisit.status">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span>{{ activeVisit.visit_type || 'Site Visit' }}: {{ activeVisit.status }}</span>
+              </span>
+              <button type="button" class="ld-hl-visit-link" @click="tab = 'visits'">
+                View all ({{ selectedVisits.length }}) &rarr;
+              </button>
+            </div>
+
+            <div class="ld-hl-visit-details">
+              <div class="ld-hl-visit-time">
+                <strong dir="ltr">{{ formatDay(activeVisit.date) }}<template v-if="activeVisit.time"> &middot; {{ formatTime(activeVisit.time) }}</template></strong>
+              </div>
+              <p v-if="activeVisit.property_title" class="ld-hl-visit-meta">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                <span>{{ activeVisit.property_title }}</span>
+              </p>
+              <p v-if="activeVisit.assigned_agent" class="ld-hl-visit-meta">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>Guide: {{ activeVisit.assigned_agent }}</span>
+              </p>
+              <p v-if="activeVisit.vip_pickup" class="ld-hl-visit-meta">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                <span>VIP Pickup: {{ activeVisit.pickup_location || 'Buyer location' }}</span>
+              </p>
+              <p v-if="activeVisit.outcome_notes" class="ld-hl-visit-outcome">
+                <strong>Outcome:</strong> {{ activeVisit.outcome_notes }}
+              </p>
+            </div>
+          </div>
         </section>
 
         <div v-if="!selected.deleted_at" class="ld-actions">
@@ -822,6 +857,19 @@ const pickFollowUp = (lead: any) => {
 // Stays open after a status change even if the active tab no longer lists the lead.
 const selected = computed(() => leadsList.value.find(l => l.id === selectedId.value) || null)
 
+const selectedVisits = computed<LeadVisit[]>(() => {
+  if (!selected.value) return []
+  const fromDetail = crmDetail.value.visits || []
+  if (fromDetail.length) return fromDetail
+  return upcomingVisits.value.filter(v => v.lead_id === selected.value.id)
+})
+
+const activeVisit = computed<LeadVisit | null>(() => {
+  const list = selectedVisits.value
+  if (!list.length) return null
+  return list.find(v => v.status === 'Confirmed') || list.find(v => v.status === 'Completed') || list[0] || null
+})
+
 // Keep a lead open on wide screens; on phones the list stays first until a lead is tapped.
 watch(filteredLeads, list => {
   if (!list.length) { selectedId.value = null; return }
@@ -1132,10 +1180,27 @@ const restoreLead = async (lead: any) => {
 .ld-row-call:hover { background: color-mix(in srgb, #C2530F 12%, transparent); }
 .admin-theme-light .ld-row-call { color: #A8460C; }
 
-/* Highlighted answers */
+/* Highlighted answers & site visit info */
 .ld-hl-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
 .ld-hl-chip { max-width: 100%; padding: 2px 8px; border-radius: 6px; background: rgba(251, 191, 36, 0.16); border: 1px solid rgba(251, 191, 36, 0.45); color: var(--admin-text-primary); font-size: 0.76rem; font-weight: 600; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ld-hl-card { display: grid; gap: 10px; margin-top: 16px; padding: 14px 16px; border-radius: 12px; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.45); border-left-width: 4px; }
+.ld-hl-card { display: grid; gap: 12px; margin-top: 16px; padding: 14px 16px; border-radius: 12px; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.45); border-left-width: 4px; }
+.ld-hl-card.with-visit { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 18px; align-items: start; }
+.ld-hl-left { display: flex; flex-direction: column; gap: 10px; }
+.ld-hl-visit-side { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 10px; background: var(--admin-bg-surface); border: 1px solid var(--admin-border-subtle); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
+.ld-hl-card:not(.with-visit) .ld-hl-visit-side { background: transparent; border: 0; padding: 0; box-shadow: none; }
+.ld-hl-visit-badge-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ld-hl-visit-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; background: rgba(14, 165, 233, 0.15); color: #0284C7; }
+.ld-hl-visit-badge[data-status='Confirmed'] { background: rgba(16, 185, 129, 0.16); color: #059669; }
+.ld-hl-visit-badge[data-status='Completed'] { background: rgba(13, 148, 136, 0.18); color: #0D9488; }
+.ld-hl-visit-badge[data-status='Cancelled'], .ld-hl-visit-badge[data-status='No-show'] { background: rgba(239, 68, 68, 0.15); color: #DC2626; }
+.ld-hl-visit-badge[data-status='Rescheduled'] { background: rgba(245, 158, 11, 0.18); color: #B45309; }
+.ld-hl-visit-link { border: 0; background: transparent; color: var(--admin-text-emerald); font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.ld-hl-visit-link:hover { opacity: 0.85; }
+.ld-hl-visit-details { display: flex; flex-direction: column; gap: 5px; }
+.ld-hl-visit-time { font-size: 0.96rem; color: var(--admin-text-primary); }
+.ld-hl-visit-meta { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--admin-text-secondary); }
+.ld-hl-visit-meta svg { flex: none; opacity: 0.8; }
+.ld-hl-visit-outcome { margin: 4px 0 0; padding-top: 5px; border-top: 1px dashed var(--admin-border-subtle); font-size: 0.82rem; color: var(--admin-text-secondary); line-height: 1.4; }
 .ld-hl-item { display: flex; flex-direction: column; gap: 2px; }
 .ld-hl-label { font-size: 0.78rem; color: var(--admin-text-secondary); line-height: 1.4; }
 .ld-hl-value { font-size: 1.02rem; line-height: 1.4; overflow-wrap: anywhere; }
@@ -1183,6 +1248,7 @@ const restoreLead = async (lead: any) => {
 .ld-stage[data-stage='contacted'] { background: rgba(59, 130, 246, 0.15); color: #2563EB; }
 .ld-stage[data-stage='qualified'] { background: rgba(139, 92, 246, 0.16); color: #7C3AED; }
 .ld-stage[data-stage='site-visit'] { background: rgba(14, 165, 233, 0.16); color: #0284C7; }
+.ld-stage[data-stage='site-visit-completed'] { background: rgba(13, 148, 136, 0.18); color: #0D9488; }
 .ld-stage[data-stage='negotiation'] { background: rgba(245, 158, 11, 0.18); color: #B45309; }
 .ld-stage[data-stage='converted'] { background: #059669; color: #fff; }
 .ld-stage[data-stage='lost'] { background: rgba(239, 68, 68, 0.15); color: #DC2626; }
@@ -1253,12 +1319,39 @@ const restoreLead = async (lead: any) => {
   .ld-toolbar { position: sticky; top: var(--ld-sticky-top, 0px); z-index: 30; margin: 0 -16px 12px; padding: 10px 16px; gap: 10px; background: var(--admin-bg-base, var(--admin-bg-surface)); border-bottom: 1px solid var(--admin-border-subtle); }
   .ld-toolbar, .ld-toolbar:not(:has(.ld-voice-status)) { display: flex; flex-wrap: wrap; align-items: center; }
   .ld-searchrow, .ld-toolbar > .ld-searchrow { flex-basis: 100%; max-width: none; }
-  .ld-controls .ld-select--answer { flex-basis: 100%; max-width: none; }
-  .ld-search input { min-height: 46px; font-size: 1rem; }
-  .ld-filter-btn { display: flex; }
-  .ld-controls { display: none; margin-left: 0; width: 100%; }
-  .ld-controls.open { display: flex; }
-  .ld-controls .ld-select { flex: 1 1 140px; }
+  .ld-filter-btn { display: none !important; }
+  .ld-controls {
+    display: flex !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    margin: 2px 0 0;
+    gap: 8px;
+    padding: 2px 0 4px;
+  }
+  .ld-controls::-webkit-scrollbar { display: none; }
+  .ld-controls .ld-select {
+    flex: 0 0 auto;
+    min-height: 38px;
+    font-size: 0.84rem;
+    padding: 6px 10px;
+    white-space: nowrap;
+  }
+  .ld-controls .ld-select--answer {
+    flex-basis: auto;
+    max-width: 180px;
+  }
+  .ld-controls .ld-trash-toggle {
+    flex: 0 0 auto;
+    min-height: 38px;
+    font-size: 0.84rem;
+    padding: 6px 12px;
+    white-space: nowrap;
+  }
+  .ld-hl-card.with-visit { grid-template-columns: 1fr; gap: 14px; }
+  .ld-hl-card.with-visit .ld-hl-visit-side { border-top: 1px solid rgba(251, 191, 36, 0.35); }
   .ld-tabs, .ld-views { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin-right: -16px; padding-right: 16px; }
   .ld-tabs::-webkit-scrollbar, .ld-views::-webkit-scrollbar { display: none; }
   .ld-tab, .ld-views button { flex: none; white-space: nowrap; }

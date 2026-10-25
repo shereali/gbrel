@@ -1,7 +1,7 @@
 import { useApiUrl } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 
-export const LEAD_STAGES = ['New', 'Contacted', 'Qualified', 'Site Visit', 'Negotiation', 'Converted', 'Lost'] as const
+export const LEAD_STAGES = ['New', 'Contacted', 'Qualified', 'Site Visit', 'Site Visit Completed', 'Negotiation', 'Converted', 'Lost'] as const
 export const CALL_OUTCOMES = ['Answered', 'No answer', 'Busy', 'Wrong number'] as const
 
 export interface LeadActivity {
