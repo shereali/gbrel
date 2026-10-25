@@ -20,17 +20,17 @@ class UserSeeder extends Seeder
         $adminEmail = 'admin@gbrel.com';
         $adminPassword = (string) (env('ADMIN_PASSWORD') ?: 'admin123');
 
-        User::updateOrCreate(
-            ['email' => $adminEmail],
-            [
+        if (! User::where('email', $adminEmail)->exists()) {
+            User::create([
                 'name' => 'GBREL Super Admin',
+                'email' => $adminEmail,
                 'password' => Hash::make($adminPassword),
                 'email_verified_at' => now(),
                 'role' => 'admin',
                 'role_id' => $roleAdmin?->id,
                 'status' => 'Active',
-            ]
-        );
+            ]);
+        }
 
         // Demo staff accounts should only be seeded ONCE on initial installation.
         // If an administrator deletes them, do NOT resurrect them on subsequent restarts/seed runs!

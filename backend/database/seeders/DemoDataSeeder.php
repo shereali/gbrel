@@ -6,7 +6,9 @@ use App\Models\Brochure;
 use App\Models\FinancialTransaction;
 use App\Models\Lead;
 use App\Models\Viewing;
+use App\Models\Setting;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class DemoDataSeeder extends Seeder
 {
@@ -18,6 +20,12 @@ class DemoDataSeeder extends Seeder
         if (! $this->shouldSeedDemoData()) {
             return;
         }
+
+        try {
+            if (Schema::hasTable('settings') && Setting::getVal('demo_data_seeded', false)) {
+                return;
+            }
+        } catch (\Throwable $e) {}
 
         // 1. Seed Demo Viewings
         Viewing::updateOrCreate(
@@ -112,6 +120,12 @@ class DemoDataSeeder extends Seeder
                 'is_public' => true,
             ]
         );
+
+        try {
+            if (Schema::hasTable('settings')) {
+                Setting::setVal('demo_data_seeded', '1');
+            }
+        } catch (\Throwable $e) {}
     }
 
     private function shouldSeedDemoData(): bool

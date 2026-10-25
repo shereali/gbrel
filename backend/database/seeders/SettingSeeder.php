@@ -5,14 +5,32 @@ namespace Database\Seeders;
 use App\Models\Setting;
 use App\Support\SiteSettings;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class SettingSeeder extends Seeder
 {
     /**
-     * Seed default site settings and ensure company profile information is up to date.
+     * Seed default site settings once on initial install.
+     * NEVER overwrites user-customized settings on subsequent deploys or container restarts.
      */
     public function run(): void
     {
+        try {
+            // If settings have already been seeded, never overwrite any existing user-saved settings!
+            if (Schema::hasTable('settings') && Setting::getVal('settings_seeded', false)) {
+                // Only insert completely new definitions that do not exist yet in the database.
+                foreach (SiteSettings::definitions() as $key => $def) {
+                    if (! Setting::where('key', $key)->exists() && $def['default'] !== '') {
+                        Setting::setVal($key, $def['default']);
+                    }
+                }
+
+                return;
+            }
+        } catch (\Throwable $e) {
+            // Proceed safely
+        }
+
         $companySettings = [
             'site_name' => 'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড',
             'site_title' => 'Gram Bangla Real Estate Limited | গ্রাম বাংলা রিয়েল এস্টেট — GBREL',
@@ -32,8 +50,11 @@ class SettingSeeder extends Seeder
             'property_cta_note' => 'কাগজপত্রের তথ্য, মোট খরচের হিসাব আর সাইট ভিজিটের সময়, সব জানাবে GBREL টিম। কোনো অগ্রিম ফি নেই।',
         ];
 
+        // Only set default values if the setting does NOT already exist in the database!
         foreach ($companySettings as $key => $val) {
-            Setting::setVal($key, $val);
+            if (! Setting::where('key', $key)->exists()) {
+                Setting::setVal($key, $val);
+            }
         }
 
         foreach (SiteSettings::definitions() as $key => $def) {
@@ -41,5 +62,11 @@ class SettingSeeder extends Seeder
                 Setting::setVal($key, $def['default']);
             }
         }
+
+        try {
+            if (Schema::hasTable('settings')) {
+                Setting::setVal('settings_seeded', '1');
+            }
+        } catch (\Throwable $e) {}
     }
 }

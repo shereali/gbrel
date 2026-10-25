@@ -17,7 +17,11 @@ class PropertySeeder extends Seeder
     public function run(): void
     {
         try {
-            if (Schema::hasTable('settings') && Setting::getVal('properties_seeded', false)) {
+            if (Schema::hasTable('settings') && (Setting::getVal('properties_seeded', false) || Property::exists())) {
+                if (! Setting::getVal('properties_seeded', false)) {
+                    Setting::setVal('properties_seeded', '1');
+                }
+
                 return;
             }
         } catch (\Throwable $e) {
