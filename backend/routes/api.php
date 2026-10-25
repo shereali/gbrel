@@ -24,6 +24,7 @@ use App\Models\Division;
 use App\Models\FinancialTransaction;
 use App\Models\LandUnit;
 use App\Models\Lead;
+use App\Models\LeadActivity;
 use App\Models\Media;
 use App\Models\Permission;
 use App\Models\Property;
@@ -730,7 +731,7 @@ Route::delete('/properties/{id}', function ($id) {
             PropertyDocument::where('property_id', $property->id)->delete();
         }
         if (Schema::hasTable('saved_properties')) {
-            \Illuminate\Support\Facades\DB::table('saved_properties')->where('property_id', $property->id)->delete();
+            DB::table('saved_properties')->where('property_id', $property->id)->delete();
         }
     } catch (\Throwable $e) {}
     $property->delete();
@@ -930,9 +931,32 @@ Route::get('/leads', function (Request $request) {
         $query->where('status', $request->stage);
     }
 
+    $leads = $query->orderBy('created_at', 'desc')->get();
+
+    $latestActivities = LeadActivity::whereIn('lead_id', $leads->pluck('id'))
+        ->orderByDesc('occurred_at')
+        ->orderByDesc('id')
+        ->get()
+        ->groupBy('lead_id')
+        ->map(function ($items) {
+            $a = $items->first();
+
+            return [
+                'id' => $a->id,
+                'type' => $a->type,
+                'outcome' => $a->meta['outcome'] ?? null,
+                'body' => $a->body,
+                'at' => $a->occurred_at?->toISOString() ?? (string) $a->occurred_at,
+            ];
+        });
+
+    $leads->each(function (Lead $lead) use ($latestActivities) {
+        $lead->setAttribute('last_activity', $latestActivities->get($lead->id));
+    });
+
     return response()->json([
         'success' => true,
-        'data' => $query->orderBy('created_at', 'desc')->get(),
+        'data' => $leads,
     ]);
 });
 

@@ -51,6 +51,12 @@
       <p v-else class="ld-trash-note">Showing deleted inquiries. Restore one to bring it back to the pipeline.</p>
 
       <div id="ld-controls" class="ld-controls" :class="{ open: showFilters }">
+        <select v-if="answerOptions.length" v-model="answerFilter" class="ld-select ld-select--answer" :class="{ on: answerFilter }" aria-label="Filter by form answer">
+          <option value="">All answers</option>
+          <optgroup v-for="group in answerOptions" :key="group.label" :label="group.label">
+            <option v-for="opt in group.options" :key="opt.value" :value="opt.value">{{ opt.text }} ({{ opt.count }})</option>
+          </optgroup>
+        </select>
         <select v-model="focus" class="ld-select" aria-label="Show">
           <option value="All">All buyers</option>
           <option value="Ready within 3 months">Ready within 3 months</option>
@@ -93,13 +99,17 @@
           <button type="button" class="ld-row" :aria-current="selected?.id === lead.id ? 'true' : undefined" @click="openLead(lead)">
             <span class="ld-main">
               <span class="ld-name">
-                <span v-if="isFresh(lead)" class="ld-new" title="Not contacted yet"></span>{{ lead.name }}
+                <span v-if="isFresh(lead)" class="ld-new" title="Not contacted yet"></span>
+                <span class="ld-name-text">{{ lead.name }}</span>
+                <span class="ld-stage" :data-stage="stageKey(lead.stage)">{{ lead.stage }}</span>
               </span>
-              <span class="ld-prop">{{ lead.property }}</span>
               <span v-if="highlightsFor(lead).length" class="ld-hl-row">
                 <span v-for="h in highlightsFor(lead).slice(0, 2)" :key="h.label" class="ld-hl-chip" :title="h.label + ': ' + h.value">{{ h.value }}</span>
               </span>
               <span v-if="flagFor(lead)" class="ld-flag" :data-tone="flagFor(lead)!.tone">{{ flagFor(lead)!.text }}</span>
+              <span v-else-if="lastContactText(lead)" class="ld-flag" data-tone="muted">{{ lastContactText(lead) }}</span>
+              <span v-else class="ld-prop">{{ lead.property }}</span>
+              <span v-if="shortNote(lead)" class="ld-note-line" :title="shortNote(lead)">{{ shortNote(lead) }}</span>
             </span>
             <span class="ld-side">
               <span class="ld-tier" :data-tier="lead.tier || 'none'">{{ tierLabel(lead.tier) }}</span>
@@ -640,7 +650,37 @@ const saveHighlights = async (form: string, fields: string[]) => {
   }
 }
 
-const baseLeads = computed(() => leadsList.value.filter(l => matchesFocus(l) && matchesSearch(l) && matchesQuick(l)))
+/* ---------- Filter by a highlighted form answer, e.g. "যত দ্রুত সম্ভব (আজই)" ---------- */
+
+const answerFilter = ref('')
+const ANSWER_SEP = '\u0001'
+const answerOptions = computed(() => {
+  const groups = new Map<string, Map<string, number>>()
+  for (const l of leadsList.value) {
+    for (const h of highlightsFor(l)) {
+      const answers = groups.get(h.label) || new Map<string, number>()
+      answers.set(h.value, (answers.get(h.value) || 0) + 1)
+      groups.set(h.label, answers)
+    }
+  }
+  return [...groups.entries()].map(([label, answers]) => ({
+    label,
+    options: [...answers.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([text, count]) => ({ value: label + ANSWER_SEP + text, text, count }))
+  }))
+})
+const matchesAnswer = (l: any) => {
+  if (!answerFilter.value) return true
+  const [label, value] = answerFilter.value.split(ANSWER_SEP)
+  return highlightsFor(l).some(h => h.label === label && h.value === value)
+}
+// A saved choice that no longer exists (e.g. highlights changed) must not hide every lead.
+watch(answerOptions, groups => {
+  if (answerFilter.value && !groups.some(g => g.options.some(o => o.value === answerFilter.value))) answerFilter.value = ''
+})
+
+const baseLeads = computed(() => leadsList.value.filter(l => matchesFocus(l) && matchesSearch(l) && matchesQuick(l) && matchesAnswer(l)))
 
 const statusTabs = computed(() => [
   { value: 'All', label: 'All', count: baseLeads.value.length },
@@ -660,8 +700,8 @@ const filteredLeads = computed(() => {
   return list
 })
 
-const hasFilters = computed(() => !!search.value || focus.value !== 'All' || (view.value === 'active' && (statusFilter.value !== 'All' || quick.value !== 'all')))
-const clearFilters = () => { search.value = ''; focus.value = 'All'; statusFilter.value = 'All'; quick.value = 'all' }
+const hasFilters = computed(() => !!search.value || focus.value !== 'All' || !!answerFilter.value || (view.value === 'active' && (statusFilter.value !== 'All' || quick.value !== 'all')))
+const clearFilters = () => { search.value = ''; focus.value = 'All'; answerFilter.value = ''; statusFilter.value = 'All'; quick.value = 'all' }
 
 /* ---------- CRM: owner, follow-up, site visits and activity ---------- */
 
@@ -708,6 +748,23 @@ const flagFor = (l: any): { tone: string; text: string } | null => {
   if (v) return { tone: 'info', text: v.visit_type + ' ' + formatDay(v.date) + (v.time ? ', ' + formatTime(v.time) : '') }
   if (state === 'later') return { tone: 'muted', text: 'Follow up ' + formatWhen(l.next_follow_up_at) }
   return null
+}
+
+/** CSS hook for the coloured stage badge beside the name ("Site Visit" → "site-visit"). */
+const stageKey = (stage?: string) => String(stage || 'New').toLowerCase().replace(/\s+/g, '-')
+
+const ACTIVITY_LABELS: Record<string, string> = { call: 'Call', whatsapp: 'WhatsApp', note: 'Note', email: 'Email' }
+/** Shown when there is no visit or follow-up flag: what happened on the last contact, e.g. "Call · No answer · 2h ago". */
+const lastContactText = (l: any): string => {
+  const a = l.last_activity
+  if (!a || a.type === 'note') return l.stage && l.stage !== 'New' ? 'Status: ' + l.stage : ''
+  return [ACTIVITY_LABELS[a.type] || a.type, a.outcome, a.at ? ago(a.at) : ''].filter(Boolean).join(' · ')
+}
+/** One short line of the latest note (or call note) so the team sees the context without opening the lead. */
+const shortNote = (l: any): string => {
+  const body = l.last_activity?.body || String(l.note || '').split('\n').find((line: string) => line.trim()) || ''
+  const text = body.replace(/\s+/g, ' ').trim()
+  return text.length > 90 ? text.slice(0, 89) + '…' : text
 }
 
 const openLeads = computed(() => leadsList.value.filter(l => !isClosed(l)))
@@ -1058,7 +1115,15 @@ const restoreLead = async (lead: any) => {
 .admin-theme-light .ld { --ld-danger: #B91C1C; --ld-hot: #C2410C; --ld-warm: #A16207; --ld-cold: #3B6A99; }
 
 /* Toolbar */
-.ld-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-bottom: 18px; }
+/* Desktop: search on the left, filters on the right of the same row, status tabs on a full row below. */
+.ld-toolbar { display: grid; grid-template-columns: minmax(280px, 1fr) auto; grid-template-areas: "search controls" "status status" "tabs tabs"; align-items: center; gap: 12px 16px; margin-bottom: 18px; }
+.ld-toolbar > .ld-searchrow { grid-area: search; max-width: 560px; }
+.ld-toolbar:not(:has(.ld-voice-status)) { grid-template-areas: "search controls" "tabs tabs"; }
+.ld-toolbar > .ld-controls { grid-area: controls; margin-left: 0; justify-content: flex-end; }
+.ld-toolbar > .ld-voice-status { grid-area: status; margin: 0; }
+.ld-toolbar > .ld-tabs, .ld-toolbar > .ld-trash-note { grid-area: tabs; }
+.ld-select--answer { max-width: 260px; text-overflow: ellipsis; }
+.ld-select.on { border-color: var(--admin-text-gold); background-color: rgba(251, 191, 36, 0.12); font-weight: 600; }
 .ld-search { position: relative; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; }
 .ld-search svg { position: absolute; left: 12px; color: var(--admin-text-muted); pointer-events: none; }
 .ld-search input { width: 100%; min-height: 40px; padding: 8px 12px 8px 36px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background: var(--admin-bg-surface); color: inherit; font: inherit; font-size: 0.9rem; }
@@ -1172,7 +1237,18 @@ const restoreLead = async (lead: any) => {
 .ld-fab { display: none; }
 .ld-backbar-name { display: none; }
 .ld-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.ld-name { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.98rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ld-name { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 700; font-size: 0.98rem; white-space: nowrap; }
+.ld-name-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* Stage badge beside the name */
+.ld-stage { flex: none; padding: 1px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; line-height: 1.6; letter-spacing: 0.01em; background: var(--admin-chip-bg); color: var(--admin-text-secondary); }
+.ld-stage[data-stage='new'] { background: rgba(16, 185, 129, 0.15); color: #059669; }
+.ld-stage[data-stage='contacted'] { background: rgba(59, 130, 246, 0.15); color: #2563EB; }
+.ld-stage[data-stage='qualified'] { background: rgba(139, 92, 246, 0.16); color: #7C3AED; }
+.ld-stage[data-stage='site-visit'] { background: rgba(14, 165, 233, 0.16); color: #0284C7; }
+.ld-stage[data-stage='negotiation'] { background: rgba(245, 158, 11, 0.18); color: #B45309; }
+.ld-stage[data-stage='converted'] { background: #059669; color: #fff; }
+.ld-stage[data-stage='lost'] { background: rgba(239, 68, 68, 0.15); color: #DC2626; }
+.ld-note-line { font-size: 0.78rem; font-style: italic; color: var(--admin-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ld-new { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--admin-text-emerald); }
 .ld-prop { font-size: 0.82rem; color: var(--admin-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ld-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: 0.76rem; color: var(--admin-text-muted); }
@@ -1237,7 +1313,9 @@ const restoreLead = async (lead: any) => {
 
   /* Search stays in reach while scrolling the list */
   .ld-toolbar { position: sticky; top: var(--ld-sticky-top, 0px); z-index: 30; margin: 0 -16px 12px; padding: 10px 16px; gap: 10px; background: var(--admin-bg-base, var(--admin-bg-surface)); border-bottom: 1px solid var(--admin-border-subtle); }
-  .ld-searchrow { flex-basis: 100%; max-width: none; }
+  .ld-toolbar, .ld-toolbar:not(:has(.ld-voice-status)) { display: flex; flex-wrap: wrap; align-items: center; }
+  .ld-searchrow, .ld-toolbar > .ld-searchrow { flex-basis: 100%; max-width: none; }
+  .ld-controls .ld-select--answer { flex-basis: 100%; max-width: none; }
   .ld-search input { min-height: 46px; font-size: 1rem; }
   .ld-filter-btn { display: flex; }
   .ld-controls { display: none; margin-left: 0; width: 100%; }

@@ -42,7 +42,7 @@
         <div class="admin-topbar-right">
           <!-- Dark / Light Theme Toggle -->
           <button 
-            class="btn btn-sm btn-outline-white nav-action-btn" 
+            class="btn btn-sm btn-outline-white nav-action-btn nav-hide-mobile" 
             @click="toggleTheme" 
             :title="adminTheme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'"
             aria-label="Toggle Dark or Light Theme"
@@ -52,7 +52,7 @@
           </button>
 
           <!-- View Live Website -->
-          <NuxtLink to="/" class="btn btn-sm btn-outline-white nav-action-btn" title="Return to Public Website">
+          <NuxtLink to="/" class="btn btn-sm btn-outline-white nav-action-btn nav-hide-mobile" title="Return to Public Website">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="action-icon">
               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
               <polyline points="15 3 21 3 21 9"/>
@@ -63,7 +63,7 @@
           </NuxtLink>
 
           <!-- Quick Add Property -->
-          <NuxtLink to="/admin/properties/create" class="btn btn-sm btn-gold nav-action-btn" title="Add New Property Listing">
+          <NuxtLink to="/admin/properties/create" class="btn btn-sm btn-gold nav-action-btn nav-add-btn" title="Add New Property Listing" aria-label="Add New Property Listing">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
@@ -73,16 +73,16 @@
           </NuxtLink>
 
           <!-- Admin Avatar Pill -->
-          <div class="admin-user-pill" :title="(user.name || 'Administrator') + ' (' + (user.role_name || user.role || 'Admin') + ')'">
+          <button type="button" class="admin-user-pill" aria-label="Open account and navigation menu" @click="openMenuFromAvatar" :title="(user.name || 'Administrator') + ' (' + (user.role_name || user.role || 'Admin') + ')'">
             <img :src="user.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop'" :alt="user.name || 'Admin'" class="admin-user-avatar" />
             <div class="admin-user-info">
               <span class="admin-user-name">{{ user.name || 'Administrator' }}</span>
               <span class="admin-user-role">{{ (user.role_name || user.role || 'Admin').toUpperCase() }}</span>
             </div>
-          </div>
+          </button>
 
           <!-- Logout Button -->
-          <button class="btn btn-sm btn-logout" @click="handleLogout" title="Sign out of Admin Portal" aria-label="Sign out">
+          <button class="btn btn-sm btn-logout nav-hide-mobile" @click="handleLogout" title="Sign out of Admin Portal" aria-label="Sign out">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
               <polyline points="16 17 21 12 16 7"/>
@@ -95,7 +95,7 @@
     </header>
 
     <!-- Mobile/Tablet Quick-Nav Chip Bar (<= 1024px) -->
-    <div class="mobile-quick-nav-bar">
+    <div ref="quickNavBar" class="mobile-quick-nav-bar">
       <div class="mobile-quick-nav-track">
         <NuxtLink to="/admin" class="quick-nav-chip" exact-active-class="active">Overview</NuxtLink>
         <NuxtLink to="/admin/properties" class="quick-nav-chip" active-class="active">Properties ({{ displayPropertiesCount }})</NuxtLink>
@@ -556,7 +556,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
 import { useToast } from '~/composables/useToast'
@@ -572,6 +572,19 @@ const { properties: liveProperties, fetchProperties } = useProperties()
 
 const mobileNavOpen = ref(false)
 const drawerRoot = ref<HTMLElement | null>(null)
+const quickNavBar = ref<HTMLElement | null>(null)
+// On phones and tablets the avatar opens the drawer, which holds theme, live site and sign out.
+const openMenuFromAvatar = () => {
+  if (window.matchMedia('(max-width: 1024px)').matches) mobileNavOpen.value = true
+}
+
+// Keep the current page's chip in view on phones, so "Leads" is not hidden off to the right.
+const showActiveChip = () => nextTick(() => {
+  const bar = quickNavBar.value
+  const chip = bar?.querySelector<HTMLElement>('.quick-nav-chip.active')
+  if (!bar || !chip || bar.offsetParent === null) return
+  bar.scrollTo({ left: Math.max(0, chip.offsetLeft - (bar.clientWidth - chip.offsetWidth) / 2), behavior: 'smooth' })
+})
 
 const adminTheme = ref<'dark' | 'light'>('light')
 const sidebarCollapsed = ref(false)
@@ -615,6 +628,7 @@ const fetchSidebarCounts = async () => {
 
 watch(() => route.path, () => {
   fetchSidebarCounts()
+  showActiveChip()
 })
 
 useHead({
@@ -636,6 +650,7 @@ onMounted(async () => {
   }
 
   fetchSidebarCounts()
+  showActiveChip()
   if (!liveProperties.value || liveProperties.value.length === 0) {
     fetchProperties()
   }
@@ -1560,5 +1575,43 @@ const handleLogout = async () => {
     width: 38px;
     height: 38px;
   }
+}
+
+/* 6. Phone topbar: menu, logo, Add and avatar only. Theme, live site and sign out live in the drawer. */
+.admin-user-pill { font: inherit; color: inherit; cursor: default; }
+.nav-add-btn svg { flex-shrink: 0; }
+.mobile-quick-nav-bar { scrollbar-width: none; }
+.mobile-quick-nav-bar::-webkit-scrollbar { display: none; }
+.quick-nav-chip { display: inline-flex; align-items: center; flex-shrink: 0; }
+
+@media (max-width: 1024px) {
+  .admin-user-pill { cursor: pointer; }
+}
+
+@media (max-width: 640px) {
+  .nav-hide-mobile,
+  .system-status-indicator { display: none !important; }
+  .admin-topbar { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18); }
+  .admin-topbar-inner { min-height: 56px; padding: 8px 12px; gap: 8px; }
+  .admin-topbar-left { flex: 1 1 auto; gap: 10px; }
+  .admin-brand { min-width: 0; flex-shrink: 1; gap: 8px; }
+  .admin-brand-text { min-width: 0; }
+  .admin-brand-name { font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .admin-brand-icon { width: 32px; height: 32px; }
+  .admin-hamburger-btn { width: 40px; height: 40px; }
+  .admin-topbar-right { gap: 8px; }
+  .nav-add-btn { width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 50%; }
+  .nav-add-btn .action-label-full,
+  .nav-add-btn .action-label-short { display: none !important; }
+  .nav-add-btn svg { width: 18px; height: 18px; }
+  .admin-user-pill { padding: 2px; border-radius: 50%; }
+  .admin-user-avatar { width: 34px; height: 34px; }
+  .mobile-quick-nav-bar {
+    padding: 8px 12px;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 24px), transparent 100%);
+  }
+  .mobile-quick-nav-track { padding-right: 16px; }
+  .quick-nav-chip { min-height: 34px; padding: 4px 14px; font-size: 0.82rem; }
 }
 </style>

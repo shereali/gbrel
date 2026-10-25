@@ -170,4 +170,21 @@ class LeadCrmTest extends TestCase
         $this->assertSame([], $this->getJson('/api/leads/overview')->json('data.visits'), 'completed visits are no longer upcoming');
         $this->patchJson("/api/leads/{$lead->id}/visits/{$visitId}", ['status' => 'Teleported'])->assertUnprocessable();
     }
+
+    public function test_the_lead_list_carries_the_latest_call_or_note_for_each_buyer(): void
+    {
+        $this->signInAs('admin');
+        $called = $this->lead();
+        $quiet = $this->lead(['name' => 'Not contacted yet']);
+
+        $this->postJson("/api/leads/{$called->id}/activities", ['type' => 'note', 'body' => 'Older note'])->assertOk();
+        $this->travel(5)->minutes();
+        $this->postJson("/api/leads/{$called->id}/activities", ['type' => 'call', 'outcome' => 'No answer', 'body' => 'Call again after Jumma.'])->assertOk();
+
+        $leads = collect($this->getJson('/api/leads')->assertOk()->json('data'))->keyBy('id');
+        $this->assertSame('call', $leads[$called->id]['last_activity']['type']);
+        $this->assertSame('No answer', $leads[$called->id]['last_activity']['outcome']);
+        $this->assertSame('Call again after Jumma.', $leads[$called->id]['last_activity']['body']);
+        $this->assertNull($leads[$quiet->id]['last_activity']);
+    }
 }
