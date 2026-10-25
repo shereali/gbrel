@@ -1,7 +1,7 @@
 import { useAuth } from '~/composables/useAuth'
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  const { isAuthenticated, isAdmin, isSuperAdmin, hasPermission, initAuth } = useAuth()
+  const { isAuthenticated, isAdmin, canAccessAdmin, isSuperAdmin, hasPermission, initAuth } = useAuth()
 
   // Make sure auth is initialized from cookies or storage
   if (process.client && !isAuthenticated.value) {
@@ -13,7 +13,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   // 1. Handling /admin/login
   if (isAdminLogin) {
-    if (isAuthenticated.value && isAdmin.value) {
+    if (isAuthenticated.value && (canAccessAdmin.value || isAdmin.value)) {
       return navigateTo('/admin')
     }
     return
@@ -26,8 +26,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       return navigateTo(`/admin/login?redirect=${encodeURIComponent(to.fullPath)}`)
     }
 
-    // B. Must have administrative role
-    if (!isAdmin.value) {
+    // B. Must have administrative or staff role with permissions
+    if (!canAccessAdmin.value && !isAdmin.value) {
       return navigateTo('/dashboard')
     }
 

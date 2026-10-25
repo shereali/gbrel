@@ -566,7 +566,7 @@ import { useApiUrl } from '~/composables/useApi'
 
 const router = useRouter()
 const route = useRoute()
-const { user, currentUser, token, isAuthenticated, isAdmin, isSuperAdmin, hasPermission, logout, initAuth } = useAuth()
+const { user, currentUser, token, isAuthenticated, isAdmin, canAccessAdmin, isSuperAdmin, hasPermission, logout, initAuth } = useAuth()
 const { toasts, remove: removeToast } = useToast()
 const { properties: liveProperties, fetchProperties } = useProperties()
 
@@ -644,7 +644,7 @@ onMounted(async () => {
   // Validate real session against backend
   await initAuth()
 
-  if (!isAuthenticated.value || !isAdmin.value) {
+  if (!isAuthenticated.value || (!isAdmin.value && !canAccessAdmin.value)) {
     router.push(`/admin/login?redirect=${encodeURIComponent(route.fullPath)}`)
     return
   }

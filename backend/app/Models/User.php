@@ -73,11 +73,23 @@ class User extends Authenticatable
 
     /**
      * Staff are every role except the public ones (buyers and property owners).
+     * Any user with active permissions or a non-buyer/owner role is also staff.
      */
     public function isStaff(): bool
     {
         if ($this->isAdmin()) {
             return true;
+        }
+
+        if (count($this->getEffectivePermissions()) > 0) {
+            return true;
+        }
+
+        if ($this->role_id) {
+            $roleSlug = $this->roleRelation?->slug;
+            if ($roleSlug && ! in_array($roleSlug, ['buyer', 'owner', 'guest'], true)) {
+                return true;
+            }
         }
 
         return ! in_array($this->role, [null, '', 'buyer', 'owner', 'guest'], true);

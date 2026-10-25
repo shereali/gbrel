@@ -37,7 +37,7 @@
               <NuxtLink to="/dashboard" @click="userMenuOpen = false">আমার ড্যাশবোর্ড</NuxtLink>
               <NuxtLink to="/dashboard?tab=favorites" @click="userMenuOpen = false">সেভ করা প্রপার্টি ({{ savedCount }})</NuxtLink>
               <NuxtLink to="/dashboard?tab=viewings" @click="userMenuOpen = false">সাইট ভিজিটের সময়সূচি</NuxtLink>
-              <NuxtLink v-if="isAdmin" to="/admin" @click="userMenuOpen = false">অ্যাডমিন প্যানেল</NuxtLink>
+              <NuxtLink v-if="canAccessAdmin || isAdmin" to="/admin" @click="userMenuOpen = false">অ্যাডমিন প্যানেল</NuxtLink>
               <button class="hd-menu-out" @click="handleLogout">সাইন আউট</button>
             </div>
           </transition>
@@ -63,6 +63,7 @@
             <NuxtLink v-for="item in drawerItems" :key="item.to" :to="item.to" @click="mobileMenuOpen = false">{{ item.label }}</NuxtLink>
             <NuxtLink v-if="isOwner" to="/my-listings" @click="mobileMenuOpen = false">আমার প্রপার্টি</NuxtLink>
             <NuxtLink v-if="isAuthenticated" to="/dashboard" @click="mobileMenuOpen = false">আমার ড্যাশবোর্ড</NuxtLink>
+            <NuxtLink v-if="canAccessAdmin || isAdmin" to="/admin" @click="mobileMenuOpen = false">অ্যাডমিন প্যানেল</NuxtLink>
           </nav>
           <div class="hd-panel-foot">
             <NuxtLink to="/list-property" class="gb-btn gb-btn--sun" @click="mobileMenuOpen = false">প্রপার্টি বিক্রি করুন</NuxtLink>
@@ -86,7 +87,7 @@ import { useOverlayBehavior } from '~/composables/useOverlayBehavior'
 
 const router = useRouter()
 const route = useRoute()
-const { user, isAuthenticated, isAdmin, isOwner, logout } = useAuth()
+const { user, isAuthenticated, isAdmin, canAccessAdmin, isOwner, logout } = useAuth()
 const { settings, fetchSettings } = useSettings()
 
 const mobileMenuOpen = ref(false)

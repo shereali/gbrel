@@ -63,4 +63,20 @@ class ApiAccessTest extends TestCase
     {
         $this->get('/api/storage/../../.env')->assertNotFound();
     }
+
+    public function test_user_with_assigned_permissions_is_treated_as_staff(): void
+    {
+        $user = User::create([
+            'name' => 'Agent User',
+            'email' => 'agent@gbrel.com',
+            'password' => Hash::make('password123'),
+            'role' => 'agent',
+            'custom_permissions' => ['leads.view'],
+        ]);
+
+        $this->assertTrue($user->isStaff());
+        $payload = $user->toAuthPayload();
+        $this->assertTrue($payload['is_staff']);
+        $this->assertContains('leads.view', $payload['permissions']);
+    }
 }

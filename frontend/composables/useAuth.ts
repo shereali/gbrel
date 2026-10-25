@@ -73,23 +73,36 @@ export const useAuth = () => {
     return userCookie.value.role === 'admin' || (userCookie.value.permissions || []).includes('*')
   })
 
-  const isAdmin = computed(() => {
+  const isAgent = computed(() => userCookie.value?.role === 'agent')
+  const isOwner = computed(() => userCookie.value?.role === 'owner')
+  const isBuyer = computed(() => userCookie.value?.role === 'buyer' || userCookie.value?.role === 'guest')
+
+  const isStaff = computed(() => {
     if (!userCookie.value) return false
-    const r = userCookie.value.role
+    const u = userCookie.value
     return (
-      r === 'admin' ||
-      r === 'property_manager' ||
-      r === 'legal_compliance' ||
-      r === 'finance_auditor' ||
-      !!userCookie.value.is_admin ||
-      (userCookie.value.permissions || []).includes('*')
+      !!u.is_staff ||
+      u.role === 'admin' ||
+      u.role === 'agent' ||
+      u.role === 'property_manager' ||
+      u.role === 'legal_compliance' ||
+      u.role === 'finance_auditor' ||
+      (u.permissions || []).length > 0 ||
+      (!!u.role && !['buyer', 'owner', 'guest'].includes(u.role))
     )
   })
 
-  const isAgent = computed(() => userCookie.value?.role === 'agent')
-  const isOwner = computed(() => userCookie.value?.role === 'owner')
-  const isStaff = computed(() => !!userCookie.value && (!!userCookie.value.is_staff || isAdmin.value || isAgent.value))
-  const isBuyer = computed(() => userCookie.value?.role === 'buyer' || userCookie.value?.role === 'guest')
+  const canAccessAdmin = computed(() => {
+    if (!userCookie.value) return false
+    const u = userCookie.value
+    if (isSuperAdmin.value || !!u.is_admin || isStaff.value) return true
+    const perms = u.permissions || []
+    return perms.length > 0
+  })
+
+  const isAdmin = computed(() => {
+    return canAccessAdmin.value
+  })
 
   // Permission Checks
   const hasPermission = (permissionSlug: string): boolean => {
@@ -361,6 +374,7 @@ export const useAuth = () => {
     token,
     isAuthenticated,
     isAdmin,
+    canAccessAdmin,
     isSuperAdmin,
     isAgent,
     isBuyer,

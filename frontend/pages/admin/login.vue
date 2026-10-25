@@ -53,9 +53,11 @@ const handleAdminLogin = async () => {
   loading.value = true
   try {
     const user = await login(trimmedEmail, trimmedPassword, true)
-    if (!user.is_staff && !user.is_admin) {
+    const hasPerms = (user.permissions && user.permissions.length > 0)
+    const isStaffRole = user.role && !['buyer', 'owner', 'guest'].includes(user.role)
+    if (!user.is_staff && !user.is_admin && !hasPerms && !isStaffRole) {
       await logout()
-      error.value = 'This account is not a staff account. Property owners use the main sign-in page.'
+      error.value = 'This account does not have staff permissions. Property owners use the main sign-in page.'
       return
     }
     const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/admin') ? route.query.redirect : '/admin'

@@ -34,7 +34,7 @@ class ProtectLeadData
         }
         $canManage = $user->role === 'admin' || $user->hasPermission('leads.manage');
         $canRead = $canManage || $user->hasPermission('leads.view');
-        $allowed = $isStats ? $user->isAdmin() : ($request->isMethod('GET') ? $canRead : $canManage);
+        $allowed = $isStats ? ($user->isAdmin() || $user->isStaff()) : ($request->isMethod('GET') ? $canRead : $canManage);
         if (! $allowed) {
             return response()->json(['success' => false, 'message' => 'Lead access is not permitted.'], 403);
         }

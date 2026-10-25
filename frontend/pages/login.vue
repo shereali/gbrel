@@ -56,7 +56,9 @@ const handleLogin = async () => {
     const user = await login(cleanId, cleanPass, true)
     const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/') ? route.query.redirect : ''
     if (redirect) return router.push(redirect)
-    if (user.is_staff || user.is_admin) return router.push('/admin')
+    const hasPerms = (user.permissions && user.permissions.length > 0)
+    const isStaffRole = user.role && !['buyer', 'owner', 'guest'].includes(user.role)
+    if (user.is_staff || user.is_admin || hasPerms || isStaffRole) return router.push('/admin')
     if (user.role === 'owner') return router.push('/my-listings')
     return router.push('/dashboard')
   } catch (err: any) {
