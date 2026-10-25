@@ -20,32 +20,24 @@
       </div>
     </div>
 
-    <!-- Toolbar: search, status tabs, focus and sort (sticky on phones) -->
+    <!-- Toolbar: search, status tabs, focus and sort (inline on laptop/desktop, responsive on phones) -->
     <div class="ld-toolbar" :class="{ 'is-hidden-mobile': detailOpen }">
-      <div class="ld-searchrow">
-        <label class="ld-search">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input v-model.trim="search" type="search" inputmode="search" placeholder="Search name, phone or property" aria-label="Search leads" />
-          <template v-if="voice.supported.value">
-            <button type="button" class="ld-lang" :title="voiceLang === 'bn-BD' ? 'Listening in Bangla. Tap for English.' : 'Listening in English. Tap for Bangla.'" @click="toggleVoiceLang">{{ voiceLang === 'bn-BD' ? 'বাং' : 'EN' }}</button>
-            <button type="button" class="ld-mic" :class="{ on: voice.listening.value }" :aria-pressed="voice.listening.value" :aria-label="voice.listening.value ? 'Stop voice search' : 'Search by voice'" @click="toggleVoice">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/></svg>
-            </button>
-          </template>
-        </label>
-        <button type="button" class="ld-filter-btn" :class="{ on: showFilters || focus !== 'All' || sortBy !== 'newest' || view === 'trash' }" :aria-expanded="showFilters" aria-controls="ld-controls" @click="showFilters = !showFilters">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
-          <span class="ld-sr">Filters</span>
-        </button>
-      </div>
-      <p v-if="voice.listening.value || voice.error.value" class="ld-voice-status" role="status">
-        <template v-if="voice.listening.value">Listening… {{ voice.interim.value || (voiceLang === 'bn-BD' ? 'নাম বা নম্বর বলুন' : 'Say a name or number') }}</template>
-        <template v-else>{{ voice.error.value }}</template>
-      </p>
+      <div class="ld-toolbar-row">
+        <div class="ld-searchrow">
+          <label class="ld-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input v-model.trim="search" type="search" inputmode="search" placeholder="Search name, phone or property" aria-label="Search leads" />
+            <template v-if="voice.supported.value">
+              <button type="button" class="ld-lang" :title="voiceLang === 'bn-BD' ? 'Listening in Bangla. Tap for English.' : 'Listening in English. Tap for Bangla.'" @click="toggleVoiceLang">{{ voiceLang === 'bn-BD' ? 'বাং' : 'EN' }}</button>
+              <button type="button" class="ld-mic" :class="{ on: voice.listening.value }" :aria-pressed="voice.listening.value" :aria-label="voice.listening.value ? 'Stop voice search' : 'Search by voice'" @click="toggleVoice">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/></svg>
+              </button>
+            </template>
+          </label>
+        </div>
 
-      <!-- Primary 3 filter dropdowns side-by-side: Status, Team, and Leads View -->
-      <div v-if="view === 'active'" class="ld-filter-row">
-        <div class="ld-filter-col">
+        <!-- All select filter elements: inline on laptop/desktop, 3-col grid on mobile -->
+        <div v-if="view === 'active'" class="ld-filters">
           <CrmFilterDropdown
             v-model="statusFilter"
             :options="statusDropdownOptions"
@@ -55,32 +47,65 @@
             align="left"
             aria-label="Filter by status"
           />
-        </div>
 
-        <div v-if="staff.length && isLeadAdmin" class="ld-filter-col ld-filter-col--team">
           <CrmFilterDropdown
+            v-if="staff.length && isLeadAdmin"
             v-model="staffFilter"
             :options="staffDropdownOptions"
             :icon="Users"
             default-value="all"
             placeholder="All Team"
-            align="center"
+            align="left"
             aria-label="Filter by assigned staff"
           />
-        </div>
 
-        <div class="ld-filter-col">
           <CrmFilterDropdown
             v-model="quick"
             :options="quickDropdownOptions"
             :icon="Layers"
             default-value="all"
             placeholder="All leads"
-            align="right"
+            align="left"
             aria-label="Quick views"
+          />
+
+          <CrmFilterDropdown
+            v-model="answerFilter"
+            :options="answerDropdownOptions"
+            :icon="MessageSquareQuote"
+            default-value=""
+            placeholder="All answers"
+            empty-text="No form answers yet"
+            align="left"
+            aria-label="Filter by form answer"
+          />
+
+          <CrmFilterDropdown
+            v-model="sortBy"
+            :options="sortDropdownOptions"
+            :icon="ArrowUpDown"
+            default-value="newest"
+            placeholder="Sort by"
+            align="right"
+            aria-label="Sort by"
+          />
+
+          <CrmFilterDropdown
+            v-model="focus"
+            :options="buyerFocusOptions"
+            :icon="Target"
+            default-value="All"
+            placeholder="All buyers"
+            align="right"
+            aria-label="Show buyer type"
           />
         </div>
       </div>
+
+      <p v-if="voice.listening.value || voice.error.value" class="ld-voice-status" role="status">
+        <template v-if="voice.listening.value">Listening… {{ voice.interim.value || (voiceLang === 'bn-BD' ? 'নাম বা নম্বর বলুন' : 'Say a name or number') }}</template>
+        <template v-else>{{ voice.error.value }}</template>
+      </p>
 
       <div v-if="activeStaffInfo && isLeadAdmin" class="ld-staff-banner">
         <div class="ld-staff-banner-info">
@@ -95,46 +120,6 @@
           <span>Showing deleted inquiries (Trash). Restore one to bring it back to active pipeline.</span>
         </div>
         <button type="button" class="ld-staff-banner-clear" @click="changeView('active')">Back to active leads &times;</button>
-      </div>
-
-      <!-- Secondary 3 filter dropdowns: Answers, Newest first, All buyers (matching exact widths of top row) -->
-      <div v-if="view === 'active'" id="ld-controls" class="ld-filter-row ld-filter-row--secondary" :class="{ open: showFilters }">
-        <div class="ld-filter-col">
-          <CrmFilterDropdown
-            v-model="answerFilter"
-            :options="answerDropdownOptions"
-            :icon="MessageSquareQuote"
-            default-value=""
-            placeholder="All answers"
-            empty-text="No form answers yet"
-            align="left"
-            aria-label="Filter by form answer"
-          />
-        </div>
-
-        <div class="ld-filter-col">
-          <CrmFilterDropdown
-            v-model="sortBy"
-            :options="sortDropdownOptions"
-            :icon="ArrowUpDown"
-            default-value="newest"
-            placeholder="Sort by"
-            align="center"
-            aria-label="Sort by"
-          />
-        </div>
-
-        <div class="ld-filter-col">
-          <CrmFilterDropdown
-            v-model="focus"
-            :options="buyerFocusOptions"
-            :icon="Target"
-            default-value="All"
-            placeholder="All buyers"
-            align="right"
-            aria-label="Show buyer type"
-          />
-        </div>
       </div>
     </div>
 
@@ -1416,29 +1401,23 @@ const restoreLead = async (lead: any) => {
 .ld { color: var(--admin-text-primary); --ld-danger: #F87171; --ld-hot: #F97316; --ld-warm: #FBBF24; --ld-cold: #7DA0C4; }
 .admin-theme-light .ld { --ld-danger: #B91C1C; --ld-hot: #C2410C; --ld-warm: #A16207; --ld-cold: #3B6A99; }
 
-/* Toolbar */
-.ld-toolbar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
-.ld-toolbar > .ld-searchrow { max-width: 560px; width: 100%; }
-.ld-toolbar > .ld-controls { margin-left: 0; justify-content: flex-start; }
-.ld-toolbar > .ld-voice-status { margin: 0; }
-.ld-filter-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; }
-.ld-filter-row:not(:has(.ld-filter-col--team)):not(.ld-filter-row--secondary) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.ld-filter-row--secondary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.ld-filter-col { min-width: 0; width: 100%; }
-.ld-filter-select { width: 100%; min-height: 40px; font-size: 0.86rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.ld-select--answer { width: 100%; max-width: none; text-overflow: ellipsis; }
-.ld-select.on { border-color: var(--admin-text-gold); background-color: rgba(251, 191, 36, 0.12); font-weight: 600; }
+/* Header & Toolbar */
+.ld-header { margin-bottom: 12px; }
+.ld-subtitle { margin-top: 2px; font-size: 0.86rem; }
+.ld-toolbar { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.ld-toolbar-row { display: flex; align-items: center; gap: 8px; width: 100%; }
+.ld-searchrow { flex: 0 1 240px; min-width: 170px; }
 .ld-search { position: relative; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; }
 .ld-search svg { position: absolute; left: 12px; color: var(--admin-text-muted); pointer-events: none; }
-.ld-search input { width: 100%; min-height: 40px; padding: 8px 12px 8px 36px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background: var(--admin-bg-surface); color: inherit; font: inherit; font-size: 0.9rem; }
+.ld-search input { width: 100%; min-height: 38px; padding: 6px 12px 6px 36px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background: var(--admin-bg-surface); color: inherit; font: inherit; font-size: 0.86rem; }
 .ld-search input:focus { outline: 2px solid var(--admin-text-gold); outline-offset: 1px; border-color: transparent; }
+.ld-filters { display: flex; align-items: center; gap: 6px; flex: 1 1 auto; min-width: 0; }
+.ld-filters :deep(.cf-dropdown) { flex: 1 1 0; min-width: 105px; max-width: 175px; }
 .ld-count { margin-left: 4px; color: var(--admin-text-muted); font-weight: 500; }
 .ld-trash-note { margin: 0; font-size: 0.88rem; color: var(--admin-text-secondary); }
 .ld-trash-banner { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); font-size: 0.82rem; color: var(--admin-text-primary); }
 .ld-trash-banner-info { display: flex; align-items: center; gap: 6px; }
 .ld-trash-banner-info svg { color: var(--ld-danger); flex: none; }
-.ld-controls { width: 100%; }
-.ld-select { min-height: 40px; padding: 6px 30px 6px 12px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background-color: var(--admin-bg-surface); color: inherit; font: inherit; font-size: 0.86rem; }
 .ld button:focus-visible, .ld a:focus-visible, .ld select:focus-visible { outline: 2px solid var(--admin-text-gold); outline-offset: 2px; }
 
 /* Flags on list rows */
@@ -1651,14 +1630,12 @@ const restoreLead = async (lead: any) => {
   .ld-back { display: inline-flex; margin: 0; }
 
   /* Search stays in reach while scrolling the list */
-  .ld-toolbar { position: sticky; top: var(--ld-sticky-top, 0px); z-index: 30; margin: 0 -16px 12px; padding: 10px 16px; gap: 8px; background: var(--admin-bg-base, var(--admin-bg-surface)); border-bottom: 1px solid var(--admin-border-subtle); }
-  .ld-toolbar, .ld-toolbar:not(:has(.ld-voice-status)) { display: flex; flex-direction: column; align-items: stretch; }
-  .ld-searchrow, .ld-toolbar > .ld-searchrow { flex-basis: auto; max-width: none; }
+  .ld-toolbar { position: sticky; top: var(--ld-sticky-top, 0px); z-index: 30; margin: 0 -16px 8px; padding: 8px 16px; gap: 6px; background: var(--admin-bg-base, var(--admin-bg-surface)); border-bottom: 1px solid var(--admin-border-subtle); }
+  .ld-toolbar-row { flex-direction: column; align-items: stretch; gap: 6px; }
+  .ld-searchrow { flex: none; width: 100%; max-width: none; }
+  .ld-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; width: 100%; }
+  .ld-filters :deep(.cf-dropdown) { width: 100%; max-width: none; min-width: 0; }
   .ld-filter-btn { display: none !important; }
-  .ld-filter-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; width: 100%; margin-top: 2px; }
-  .ld-filter-row:not(:has(.ld-filter-col--team)):not(.ld-filter-row--secondary) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ld-filter-row--secondary { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 4px; }
-  .ld-filter-select { width: 100%; min-height: 38px; padding: 4px 20px 4px 8px; font-size: 0.78rem; font-weight: 600; }
   .ld-hl-card.with-visit { grid-template-columns: 1fr; gap: 12px; }
   .ld-hl-card.with-visit .ld-hl-visit-side { border-top: 1px solid rgba(251, 191, 36, 0.35); }
   .ld-check-col { width: 38px; padding-left: 8px; }
