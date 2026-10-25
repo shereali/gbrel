@@ -4,6 +4,7 @@ use App\Http\Controllers\BookDownloadController;
 use App\Http\Controllers\BookOrderController;
 use App\Http\Controllers\LeadAnswersController;
 use App\Http\Controllers\LeadCrmController;
+use App\Http\Controllers\LeadHighlightController;
 use App\Http\Controllers\LeadJourneyController;
 use App\Http\Controllers\ListingReviewController;
 use App\Http\Controllers\MediaLibraryController;
@@ -583,15 +584,6 @@ Route::get('/properties/{id}', function ($id) {
             : Property::where('slug', $id)->first();
 
         if (! $property) {
-            $fallback = LaunchListings::findFallback($id);
-            if ($fallback) {
-                return response()->json([
-                    'success' => true,
-                    'data' => $fallback,
-                    'fallback' => true,
-                ]);
-            }
-
             return response()->json(['success' => false, 'message' => 'Property not found in database'], 404);
         }
         $canSeePrivate = $viewer && ($viewer->isStaff() || ($property->owner_id && $property->owner_id === $viewer->id));
@@ -731,6 +723,15 @@ Route::delete('/properties/{id}', function ($id) {
     if ($property->slug) {
         Cache::forget("property_pub_{$property->slug}");
     }
+    try {
+        Brochure::where('property_id', $property->id)->delete();
+        if (Schema::hasTable('property_documents')) {
+            PropertyDocument::where('property_id', $property->id)->delete();
+        }
+        if (Schema::hasTable('saved_properties')) {
+            \Illuminate\Support\Facades\DB::table('saved_properties')->where('property_id', $property->id)->delete();
+        }
+    } catch (\Throwable $e) {}
     $property->delete();
 
     return response()->json([
@@ -955,6 +956,9 @@ Route::post('/t/draft', [TrackController::class, 'draft'])->middleware('throttle
 
 // Lead CRM: stage, owner, follow-up, activity timeline and site visits (see LeadCrmController).
 Route::get('/leads/overview', [LeadCrmController::class, 'overview']);
+// Which form answers the CRM highlights on each lead (see LeadHighlightController).
+Route::get('/leads/highlights', [LeadHighlightController::class, 'index']);
+Route::put('/leads/highlights', [LeadHighlightController::class, 'update']);
 Route::get('/leads/{id}/crm', [LeadCrmController::class, 'show'])->whereNumber('id');
 Route::patch('/leads/{id}/stage', [LeadCrmController::class, 'setStage'])->whereNumber('id');
 Route::patch('/leads/{id}/assign', [LeadCrmController::class, 'assign'])->whereNumber('id');

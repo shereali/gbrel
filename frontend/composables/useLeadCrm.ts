@@ -29,6 +29,9 @@ export interface LeadVisit {
   outcome_notes: string | null
 }
 export interface StaffMember { id: number; name: string; role: string | null }
+/** A lead form and its fields; "website" is the site's own inquiry form, the rest are Meta lead form IDs. */
+export interface HighlightForm { key: string; name: string; fields: string[] }
+export interface LeadHighlights { forms: HighlightForm[]; selected: Record<string, string[]> }
 
 // Everyone on the team works in Bangladesh time (UTC+6, no daylight saving), wherever their browser thinks it is.
 const DHAKA = 'Asia/Dhaka'
@@ -91,6 +94,8 @@ export const useLeadCrm = () => {
     followUp: (id: number, at: string | null) => call(`/leads/${id}/follow-up`, { method: 'PATCH', body: { at } }),
     log: (id: number, body: { type: string; body?: string; outcome?: string; follow_up_at?: string | null }) => call(`/leads/${id}/activities`, { method: 'POST', body }),
     scheduleVisit: (id: number, body: Record<string, unknown>) => call<LeadVisit>(`/leads/${id}/visits`, { method: 'POST', body }),
-    updateVisit: (id: number, visitId: number, body: Record<string, unknown>) => call<LeadVisit>(`/leads/${id}/visits/${visitId}`, { method: 'PATCH', body })
+    updateVisit: (id: number, visitId: number, body: Record<string, unknown>) => call<LeadVisit>(`/leads/${id}/visits/${visitId}`, { method: 'PATCH', body }),
+    highlights: () => call<LeadHighlights>('/leads/highlights'),
+    saveHighlights: (form: string, fields: string[]) => call<{ form: string; fields: string[] }>('/leads/highlights', { method: 'PUT', body: { form, fields } })
   }
 }

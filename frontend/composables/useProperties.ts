@@ -1072,7 +1072,7 @@ export const useProperties = () => {
     const strId = String(id).toLowerCase().trim()
     const foundBySlug = propertiesData.value.find(p => (p.slug || '').toLowerCase() === strId)
     if (foundBySlug) return foundBySlug
-    return propertiesData.value.find(p => p.id === numId) || propertiesData.value[0]
+    return null
   }
 
   const fetchPropertyById = async (idOrSlug: string | number, options: { strict?: boolean } = {}): Promise<PropertyItem | null> => {
@@ -1106,7 +1106,9 @@ export const useProperties = () => {
     }
 
     try {
-      const res = await fetch(useApiUrl(`/properties/${idOrSlug}`))
+      const res = await fetch(useApiUrl(`/properties/${idOrSlug}`), {
+        headers: { ...authHeader() }
+      })
       if (res.ok) {
         const json = await res.json()
         if (json && json.success && json.data) {
@@ -1125,6 +1127,14 @@ export const useProperties = () => {
           }
           return mapped
         }
+      } else if (res.status === 404) {
+        // Property was deleted or does not exist: purge from local cache
+        const numId = Number(idOrSlug)
+        const idx = propertiesData.value.findIndex(p => p.id === numId || (p.slug && p.slug === String(idOrSlug)))
+        if (idx >= 0) {
+          propertiesData.value.splice(idx, 1)
+        }
+        return null
       }
     } catch (err) {
       console.warn('Failed to fetch property by id/slug from API:', err)
@@ -1154,11 +1164,13 @@ export const useProperties = () => {
       if (opts.status) params.set('status', opts.status)
       const queryStr = params.toString() ? `?${params.toString()}` : ''
 
-      const res = await fetch(useApiUrl(`/properties${queryStr}`))
+      const res = await fetch(useApiUrl(`/properties${queryStr}`), {
+        headers: { ...authHeader() }
+      })
       if (res.ok) {
         const json = await res.json()
         if (json && json.success && Array.isArray(json.data)) {
-          if (json.data.length > 0 || opts.force || opts.q || opts.state || opts.type || opts.status) {
+          if (!json.fallback || json.data.length > 0 || opts.force || opts.q || opts.state || opts.type || opts.status) {
             propertiesData.value = json.data.map((item: any) => mapDbItemToPropertyItem(item))
           }
           lastPropertiesSyncedAt.value = new Date()

@@ -4,8 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\Agent;
 use App\Models\Property;
+use App\Models\Setting;
 use App\Support\LaunchListings;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class PropertySeeder extends Seeder
 {
@@ -14,6 +16,13 @@ class PropertySeeder extends Seeder
      */
     public function run(): void
     {
+        try {
+            if (Schema::hasTable('settings') && Setting::getVal('properties_seeded', false)) {
+                return;
+            }
+        } catch (\Throwable $e) {
+            // Proceed if settings check fails
+        }
         $agent1 = Agent::where('email', 'abu.hanif@gbrel.com')->first();
         $agent2 = Agent::where('email', 'sirajum.munira@gbrel.com')->first();
         $agent3 = Agent::where('email', 'siam.talukder@gbrel.com')->first();
@@ -650,5 +659,11 @@ class PropertySeeder extends Seeder
 
         LaunchListings::correct();
         LaunchListings::rewriteCopy();
+
+        try {
+            if (Schema::hasTable('settings')) {
+                Setting::setVal('properties_seeded', '1');
+            }
+        } catch (\Throwable $e) {}
     }
 }

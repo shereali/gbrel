@@ -1,12 +1,16 @@
 <template>
-  <div class="admin-page animate-fade-in ld">
-    <div class="admin-header-row">
+  <div ref="pageRoot" class="admin-page animate-fade-in ld">
+    <div class="admin-header-row ld-header" :class="{ 'is-hidden-mobile': detailOpen }">
       <div>
         <h1 class="page-title">Buyer Inquiries & Leads</h1>
-        <p class="page-subtitle">Open a lead to see everything the buyer told us, then call or message them.</p>
+        <p class="page-subtitle ld-subtitle">Open a lead to see everything the buyer told us, then call or message them.</p>
       </div>
       <div class="admin-header-actions">
-        <button class="btn btn-emerald" @click="showAddLeadModal = true">
+        <button type="button" class="ld-hl-btn" title="Choose which form answers to highlight" @click="openHighlights()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Highlights</span>
+        </button>
+        <button class="btn btn-emerald ld-add" @click="showAddLeadModal = true">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
@@ -16,12 +20,28 @@
       </div>
     </div>
 
-    <!-- Toolbar: search, status tabs, focus and sort -->
-    <div class="ld-toolbar">
-      <label class="ld-search">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input v-model.trim="search" type="search" placeholder="Search name, phone or property" aria-label="Search leads" />
-      </label>
+    <!-- Toolbar: search, status tabs, focus and sort (sticky on phones) -->
+    <div class="ld-toolbar" :class="{ 'is-hidden-mobile': detailOpen }">
+      <div class="ld-searchrow">
+        <label class="ld-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input v-model.trim="search" type="search" inputmode="search" placeholder="Search name, phone or property" aria-label="Search leads" />
+          <template v-if="voice.supported.value">
+            <button type="button" class="ld-lang" :title="voiceLang === 'bn-BD' ? 'Listening in Bangla. Tap for English.' : 'Listening in English. Tap for Bangla.'" @click="toggleVoiceLang">{{ voiceLang === 'bn-BD' ? 'বাং' : 'EN' }}</button>
+            <button type="button" class="ld-mic" :class="{ on: voice.listening.value }" :aria-pressed="voice.listening.value" :aria-label="voice.listening.value ? 'Stop voice search' : 'Search by voice'" @click="toggleVoice">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/></svg>
+            </button>
+          </template>
+        </label>
+        <button type="button" class="ld-filter-btn" :class="{ on: showFilters || focus !== 'All' || sortBy !== 'newest' || view === 'trash' }" :aria-expanded="showFilters" aria-controls="ld-controls" @click="showFilters = !showFilters">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+          <span class="ld-sr">Filters</span>
+        </button>
+      </div>
+      <p v-if="voice.listening.value || voice.error.value" class="ld-voice-status" role="status">
+        <template v-if="voice.listening.value">Listening… {{ voice.interim.value || (voiceLang === 'bn-BD' ? 'নাম বা নম্বর বলুন' : 'Say a name or number') }}</template>
+        <template v-else>{{ voice.error.value }}</template>
+      </p>
 
       <div v-if="view === 'active'" class="ld-tabs" role="group" aria-label="Filter by status">
         <button v-for="tab in statusTabs" :key="tab.value" type="button" class="ld-tab" :class="{ on: statusFilter === tab.value }" :aria-pressed="statusFilter === tab.value" @click="statusFilter = tab.value">
@@ -30,7 +50,7 @@
       </div>
       <p v-else class="ld-trash-note">Showing deleted inquiries. Restore one to bring it back to the pipeline.</p>
 
-      <div class="ld-controls">
+      <div id="ld-controls" class="ld-controls" :class="{ open: showFilters }">
         <select v-model="focus" class="ld-select" aria-label="Show">
           <option value="All">All buyers</option>
           <option value="Ready within 3 months">Ready within 3 months</option>
@@ -49,7 +69,7 @@
     </div>
 
     <!-- Quick views: the lists a salesperson starts the day with -->
-    <div v-if="view === 'active'" class="ld-views" role="group" aria-label="Quick views">
+    <div v-if="view === 'active'" class="ld-views" :class="{ 'is-hidden-mobile': detailOpen }" role="group" aria-label="Quick views">
       <button v-for="q in quickViews" :key="q.key" type="button" :class="{ on: quick === q.key, alert: q.alert && q.count > 0 }" :aria-pressed="quick === q.key" @click="quick = q.key">
         {{ q.label }}<span class="ld-count">{{ q.count }}</span>
       </button>
@@ -69,13 +89,16 @@
     <div v-else class="ld-split" :class="{ 'is-detail': detailOpen }">
       <!-- Lead list -->
       <ul class="ld-list" aria-label="Leads">
-        <li v-for="lead in filteredLeads" :key="lead.id">
-          <button type="button" class="ld-row" :class="{ active: selected?.id === lead.id }" :data-tier="lead.tier || 'none'" :aria-current="selected?.id === lead.id ? 'true' : undefined" @click="openLead(lead)">
+        <li v-for="lead in filteredLeads" :key="lead.id" class="ld-item" :class="{ active: selected?.id === lead.id }" :data-tier="lead.tier || 'none'">
+          <button type="button" class="ld-row" :aria-current="selected?.id === lead.id ? 'true' : undefined" @click="openLead(lead)">
             <span class="ld-main">
               <span class="ld-name">
                 <span v-if="isFresh(lead)" class="ld-new" title="Not contacted yet"></span>{{ lead.name }}
               </span>
               <span class="ld-prop">{{ lead.property }}</span>
+              <span v-if="highlightsFor(lead).length" class="ld-hl-row">
+                <span v-for="h in highlightsFor(lead).slice(0, 2)" :key="h.label" class="ld-hl-chip" :title="h.label + ': ' + h.value">{{ h.value }}</span>
+              </span>
               <span v-if="flagFor(lead)" class="ld-flag" :data-tone="flagFor(lead)!.tone">{{ flagFor(lead)!.text }}</span>
             </span>
             <span class="ld-side">
@@ -83,15 +106,21 @@
               <time :datetime="lead.created_at" :title="fullDate(lead.created_at)">{{ ago(lead.created_at) }}</time>
             </span>
           </button>
+          <a v-if="lead.phone && !lead.deleted_at" :href="`tel:${lead.phone}`" class="ld-row-call" :aria-label="`Call ${lead.name}`" :title="`Call ${lead.phone}`">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </a>
         </li>
       </ul>
 
       <!-- Lead detail -->
       <article v-if="selected" class="ld-detail" :aria-label="`Details for ${selected.name}`">
-        <button type="button" class="ld-back" @click="detailOpen = false">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-          All leads
-        </button>
+        <div class="ld-backbar">
+          <button type="button" class="ld-back" @click="detailOpen = false">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+            <span>All leads</span>
+          </button>
+          <span class="ld-backbar-name">{{ selected.name }}</span>
+        </div>
 
         <header class="ld-head">
           <div class="ld-head-top">
@@ -107,6 +136,14 @@
             <template v-if="selected.deleted_at"> · <span class="ld-deleted">Deleted</span></template>
           </p>
         </header>
+
+        <section v-if="highlightsFor(selected).length" class="ld-hl-card" aria-label="Highlighted answers">
+          <div v-for="h in highlightsFor(selected)" :key="h.label" class="ld-hl-item">
+            <span class="ld-hl-label">{{ h.label }}</span>
+            <strong class="ld-hl-value">{{ h.value }}</strong>
+          </div>
+          <button type="button" class="ld-hl-edit" @click="openHighlights(formKeyOf(selected))">Change highlighted fields</button>
+        </section>
 
         <div v-if="!selected.deleted_at" class="ld-actions">
           <a v-if="selected.phone" :href="`tel:${selected.phone}`" class="ld-act ld-act--call">
@@ -192,6 +229,17 @@
         </footer>
       </article>
     </div>
+
+    <!-- Phones: add a lead with one thumb -->
+    <button v-if="!detailOpen && view === 'active'" type="button" class="ld-fab" aria-label="Log new inquiry" @click="showAddLeadModal = true">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+
+    <HighlightFieldsModal
+      v-if="highlightModal.open && highlights.forms.length"
+      :forms="highlights.forms" :selected="highlights.selected" :initial-form="highlightModal.form" :saving="highlightModal.saving"
+      @close="highlightModal.open = false" @save="saveHighlights"
+    />
 
     <!-- MODAL: WHY WAS THE LEAD LOST? -->
     <div v-if="lostTarget" class="admin-modal-overlay" @click.self="lostTarget = null">
@@ -316,16 +364,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useToast } from '~/composables/useToast'
 import { useApiUrl } from '~/composables/useApi'
 import { buildQuestions } from '~/utils/leadSurvey'
 import LeadActivityPanel from '~/components/admin/crm/LeadActivityPanel.vue'
 import LeadVisitsPanel from '~/components/admin/crm/LeadVisitsPanel.vue'
+import HighlightFieldsModal from '~/components/admin/crm/HighlightFieldsModal.vue'
 import {
   LEAD_STAGES, dhakaIso, endOfDhakaDay, formatDay, formatTime, formatWhen, inDays, parseApiDate, useLeadCrm,
-  type LeadActivity, type LeadVisit, type StaffMember
+  type LeadActivity, type LeadHighlights, type LeadVisit, type StaffMember
 } from '~/composables/useLeadCrm'
+import { toLatinDigits, useVoiceSearch, type VoiceLang } from '~/composables/useVoiceSearch'
 
 definePageMeta({
   layout: 'admin'
@@ -435,8 +485,18 @@ const changeView = async (next: 'active' | 'trash') => {
   await fetchLeads(next === 'trash')
 }
 
+// Phones: the search bar and the lead's back bar stick just under the admin top bar, whatever its height.
+const pageRoot = ref<HTMLElement | null>(null)
+const measureTopbar = () => {
+  const bar = document.querySelector('.admin-topbar') as HTMLElement | null
+  pageRoot.value?.style.setProperty('--ld-sticky-top', `${bar?.offsetHeight ?? 0}px`)
+}
+onMounted(() => { measureTopbar(); window.addEventListener('resize', measureTopbar, { passive: true }) })
+onBeforeUnmount(() => window.removeEventListener('resize', measureTopbar))
+
 onMounted(async () => {
-  await Promise.all([fetchLeads(), loadOverview()])
+  voiceLang.value = readVoiceLang()
+  await Promise.all([fetchLeads(), loadOverview(), loadHighlights()])
   // /admin/leads?lead=12 (linked from the Site Viewings page) opens that lead.
   const wanted = Number(route.query.lead)
   if (wanted && leadsList.value.some(l => l.id === wanted)) {
@@ -454,10 +514,98 @@ const matchesFocus = (l: any) => {
   }
   return (l.type || '').includes(focus.value)
 }
+// "01785 665175", "+8801785…" and "০১৭৮৫…" all find the same buyer: phone numbers are compared digit by digit.
+const digitsOf = (value: unknown) => toLatinDigits(String(value || '')).replace(/\D/g, '')
 const matchesSearch = (l: any) => {
-  const q = search.value.toLowerCase()
+  const q = toLatinDigits(search.value).toLowerCase()
   if (!q) return true
-  return [l.name, l.phone, l.property].some(v => String(v || '').toLowerCase().includes(q))
+  const qDigits = q.replace(/\D/g, '')
+  if (qDigits.length >= 3 && /^[\d\s+()-]+$/.test(q)) {
+    const phone = digitsOf(l.phone)
+    return phone.includes(qDigits) || phone.includes(qDigits.replace(/^0/, ''))
+  }
+  const words = q.split(/\s+/).filter(Boolean)
+  const haystack = [l.name, l.phone, l.property, l.email, l.utm_campaign].map(v => String(v || '').toLowerCase()).join(' ')
+  return words.every(w => haystack.includes(w))
+}
+
+/* ---------- Voice search ---------- */
+
+const voice = useVoiceSearch()
+const readVoiceLang = (): VoiceLang => {
+  try { return localStorage.getItem('gbrel_voice_lang') === 'bn-BD' ? 'bn-BD' : 'en-US' } catch { return 'en-US' }
+}
+const voiceLang = ref<VoiceLang>('en-US')
+const toggleVoiceLang = () => {
+  voiceLang.value = voiceLang.value === 'bn-BD' ? 'en-US' : 'bn-BD'
+  try { localStorage.setItem('gbrel_voice_lang', voiceLang.value) } catch { /* private mode */ }
+}
+const toggleVoice = () => {
+  if (voice.listening.value) { voice.stop(); return }
+  voice.start(voiceLang.value, query => {
+    search.value = query
+    // One match: open it straight away, the way a person would after searching.
+    nextTick(() => {
+      if (filteredLeads.value.length === 1) openLead(filteredLeads.value[0])
+      else if (!filteredLeads.value.length) toast.info('No match', `Nothing found for "${query}".`)
+    })
+  })
+}
+
+/* ---------- Highlighted answers ---------- */
+
+const highlights = ref<LeadHighlights>({ forms: [], selected: {} })
+const highlightModal = reactive<{ open: boolean; form: string | null; saving: boolean }>({ open: false, form: null, saving: false })
+const showFilters = ref(false)
+
+const websiteFieldValue: Record<string, (l: any) => string> = {
+  'Best time to call': l => l.callback_time || l.parsed?.time || '',
+  'Wants to buy': l => say(l.investment_readiness),
+  Budget: l => say(l.budget_range),
+  'Plans to use it for': l => say(l.buyer_category),
+  Prefers: l => l.preferred_contact || '',
+  Email: l => l.email || ''
+}
+const formKeyOf = (l: any): string => (l?.meta_form_id ? String(l.meta_form_id) : 'website')
+const highlightsFor = (l: any): { label: string; value: string }[] => {
+  if (!l) return []
+  const key = formKeyOf(l)
+  const chosen = highlights.value.selected[key] || []
+  if (!chosen.length) return []
+  if (key === 'website') {
+    return chosen.map(label => ({ label, value: websiteFieldValue[label]?.(l) || '' })).filter(h => h.value)
+  }
+  const answers: { question: string; answer: string }[] = Array.isArray(l.meta_answers) ? l.meta_answers : []
+  return chosen
+    .map(label => ({ label, value: answers.find(a => a.question === label)?.answer || '' }))
+    .filter(h => h.value)
+}
+
+async function loadHighlights() {
+  try {
+    highlights.value = await crm.highlights()
+  } catch {
+    // Leads still show without highlights.
+  }
+}
+const openHighlights = async (form?: string) => {
+  if (!highlights.value.forms.length) await loadHighlights()
+  if (!highlights.value.forms.length) { toast.error('Could not load the lead forms', 'Try again in a moment.'); return }
+  highlightModal.form = form || null
+  highlightModal.open = true
+}
+const saveHighlights = async (form: string, fields: string[]) => {
+  highlightModal.saving = true
+  try {
+    const saved = await crm.saveHighlights(form, fields)
+    highlights.value.selected = { ...highlights.value.selected, [saved.form]: saved.fields }
+    highlightModal.open = false
+    toast.success('Highlights saved', fields.length ? `${fields.length} field${fields.length > 1 ? 's' : ''} will show first.` : 'Nothing is highlighted for this form now.')
+  } catch (err: any) {
+    toast.error('Could not save', err?.message || 'Only team members who can manage leads can change this.')
+  } finally {
+    highlightModal.saving = false
+  }
 }
 
 const baseLeads = computed(() => leadsList.value.filter(l => matchesFocus(l) && matchesSearch(l) && matchesQuick(l)))
@@ -879,7 +1027,7 @@ const restoreLead = async (lead: any) => {
 
 /* Toolbar */
 .ld-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-bottom: 18px; }
-.ld-search { position: relative; flex: 1 1 260px; max-width: 360px; display: flex; align-items: center; }
+.ld-search { position: relative; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; }
 .ld-search svg { position: absolute; left: 12px; color: var(--admin-text-muted); pointer-events: none; }
 .ld-search input { width: 100%; min-height: 40px; padding: 8px 12px 8px 36px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background: var(--admin-bg-surface); color: inherit; font: inherit; font-size: 0.9rem; }
 .ld-search input:focus { outline: 2px solid var(--admin-text-gold); outline-offset: 1px; border-color: transparent; }
@@ -940,10 +1088,44 @@ const restoreLead = async (lead: any) => {
 /* Split layout */
 .ld-split { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; border: 1px solid var(--admin-border-subtle); border-radius: 14px; background: var(--admin-bg-surface); overflow: hidden; align-items: start; }
 .ld-list { list-style: none; margin: 0; padding: 0; max-height: calc(100vh - 290px); min-height: 360px; overflow-y: auto; border-right: 1px solid var(--admin-border-subtle); }
-.ld-row { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 14px 16px 14px 20px; border: 0; border-bottom: 1px solid var(--admin-border-subtle); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ld-item { display: flex; align-items: stretch; border-bottom: 1px solid var(--admin-border-subtle); }
+.ld-item:hover { background: var(--admin-table-row-hover); }
+.ld-item.active { background: color-mix(in srgb, var(--admin-text-emerald) 12%, transparent); }
+.ld-row { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 8px 14px 20px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .ld-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--tier, transparent); }
-.ld-row:hover { background: var(--admin-table-row-hover); }
-.ld-row.active { background: color-mix(in srgb, var(--admin-text-emerald) 12%, transparent); }
+.ld-row-call { flex: none; display: flex; align-items: center; justify-content: center; width: 52px; color: #C2530F; border-left: 1px solid var(--admin-border-subtle); }
+.ld-row-call:hover { background: color-mix(in srgb, #C2530F 12%, transparent); }
+.admin-theme-light .ld-row-call { color: #A8460C; }
+
+/* Highlighted answers */
+.ld-hl-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.ld-hl-chip { max-width: 100%; padding: 2px 8px; border-radius: 6px; background: rgba(251, 191, 36, 0.16); border: 1px solid rgba(251, 191, 36, 0.45); color: var(--admin-text-primary); font-size: 0.76rem; font-weight: 600; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ld-hl-card { display: grid; gap: 10px; margin-top: 16px; padding: 14px 16px; border-radius: 12px; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.45); border-left-width: 4px; }
+.ld-hl-item { display: flex; flex-direction: column; gap: 2px; }
+.ld-hl-label { font-size: 0.78rem; color: var(--admin-text-secondary); line-height: 1.4; }
+.ld-hl-value { font-size: 1.02rem; line-height: 1.4; overflow-wrap: anywhere; }
+.ld-hl-edit { justify-self: start; min-height: 32px; padding: 0; border: 0; background: transparent; color: var(--admin-text-muted); font: inherit; font-size: 0.8rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ld-hl-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 6px 14px; border-radius: 10px; border: 1px solid rgba(251, 191, 36, 0.5); background: transparent; color: var(--admin-text-primary); font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+.ld-hl-btn svg { color: #D9A21B; }
+.ld-hl-btn:hover { background: rgba(251, 191, 36, 0.12); }
+.admin-header-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Search, voice and filters */
+.ld-searchrow { display: flex; gap: 8px; flex: 1 1 320px; max-width: 460px; }
+.ld-search input::-webkit-search-cancel-button { cursor: pointer; }
+.ld-search:has(.ld-mic) input { padding-right: 92px; }
+.ld-lang, .ld-mic { position: absolute; display: flex; align-items: center; justify-content: center; border: 0; font: inherit; cursor: pointer; }
+.ld-lang { right: 48px; min-width: 38px; height: 30px; padding: 0 6px; border-radius: 8px; background: var(--admin-chip-bg); color: var(--admin-text-secondary); font-size: 0.74rem; font-weight: 700; }
+.ld-mic { right: 4px; width: 40px; height: 34px; border-radius: 8px; background: transparent; color: var(--admin-text-secondary); }
+.ld-mic:hover { background: var(--admin-chip-bg); color: var(--admin-text-primary); }
+.ld-mic.on { background: #DC2626; color: #fff; animation: ld-pulse 1.2s ease-in-out infinite; }
+@keyframes ld-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); } 50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); } }
+@media (prefers-reduced-motion: reduce) { .ld-mic.on { animation: none; } }
+.ld-voice-status { flex-basis: 100%; margin: -4px 0 0; font-size: 0.84rem; color: var(--admin-text-secondary); }
+.ld-filter-btn { display: none; flex: none; align-items: center; justify-content: center; width: 44px; min-height: 44px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background: var(--admin-bg-surface); color: var(--admin-text-secondary); cursor: pointer; }
+.ld-filter-btn.on { border-color: var(--admin-text-gold); color: var(--admin-text-primary); }
+.ld-fab { display: none; }
+.ld-backbar-name { display: none; }
 .ld-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .ld-name { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.98rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ld-new { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--admin-text-emerald); }
@@ -999,18 +1181,60 @@ const restoreLead = async (lead: any) => {
 
 /* Phones and narrow tablets: the list first, the lead opens full screen */
 @media (max-width: 960px) {
+  .is-hidden-mobile { display: none !important; }
   .ld-split { display: block; border-radius: 12px; }
   .ld-list { max-height: none; border-right: 0; }
   .ld-detail { display: none; }
+  .ld-split.is-detail { border: 0; background: transparent; overflow: visible; }
   .ld-split.is-detail .ld-list { display: none; }
-  .ld-split.is-detail .ld-detail { display: block; max-height: none; padding: 16px 16px 28px; }
-  .ld-back { display: inline-flex; }
-  .ld-search { max-width: none; }
-  .ld-controls { margin-left: 0; width: 100%; }
+  .ld-split.is-detail .ld-detail { display: block; max-height: none; min-height: 0; padding: 0 2px calc(96px + env(safe-area-inset-bottom)); overflow: visible; }
+  .ld-back { display: inline-flex; margin: 0; }
+
+  /* Search stays in reach while scrolling the list */
+  .ld-toolbar { position: sticky; top: var(--ld-sticky-top, 0px); z-index: 30; margin: 0 -16px 12px; padding: 10px 16px; gap: 10px; background: var(--admin-bg-base, var(--admin-bg-surface)); border-bottom: 1px solid var(--admin-border-subtle); }
+  .ld-searchrow { flex-basis: 100%; max-width: none; }
+  .ld-search input { min-height: 46px; font-size: 1rem; }
+  .ld-filter-btn { display: flex; }
+  .ld-controls { display: none; margin-left: 0; width: 100%; }
+  .ld-controls.open { display: flex; }
   .ld-controls .ld-select { flex: 1 1 140px; }
-  .ld-act { flex: 1 1 140px; }
-  .ld-work { grid-template-columns: 1fr; }
-  .ld-section dl > div { grid-template-columns: 1fr; gap: 0; padding: 8px 0; }
+  .ld-tabs, .ld-views { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin-right: -16px; padding-right: 16px; }
+  .ld-tabs::-webkit-scrollbar, .ld-views::-webkit-scrollbar { display: none; }
+  .ld-tab, .ld-views button { flex: none; white-space: nowrap; }
+  .ld-views { margin: 0 0 12px; }
+
+  .ld-row { padding: 12px 6px 12px 16px; }
+  .ld-name { font-size: 1rem; }
+  .ld-row-call { width: 56px; }
+
+  /* Lead screen: a bar to go back, the key answers first, call buttons always under the thumb */
+  .ld-backbar { position: sticky; top: var(--ld-sticky-top, 0px); z-index: 30; display: flex; align-items: center; gap: 8px; margin: 0 -16px 10px; padding: 4px 12px; background: var(--admin-bg-base, var(--admin-bg-surface)); border-bottom: 1px solid var(--admin-border-subtle); }
+  .ld-backbar-name { display: block; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ld-head h2 { font-size: 1.3rem; }
+  .ld-actions { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; margin: 0; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); gap: 8px; background: var(--admin-bg-surface); border-top: 1px solid var(--admin-border-subtle); box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.18); }
+  .ld-act { flex: 1 1 0; min-height: 48px; padding: 8px 10px; font-size: 0.95rem; }
+  .ld-status { margin-top: 16px; }
+  .ld-seg { display: flex; flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: none; }
+  .ld-seg::-webkit-scrollbar { display: none; }
+  .ld-seg button { flex: none; white-space: nowrap; min-height: 44px; }
+  .ld-work { grid-template-columns: 1fr; margin-top: 16px; }
+  .ld-tabs-detail { position: sticky; top: calc(var(--ld-sticky-top, 0px) + 53px); z-index: 20; margin: 18px -16px 14px; padding: 0 8px; background: var(--admin-bg-base, var(--admin-bg-surface)); }
+  .ld-tabs-detail button { flex: 1 1 0; justify-content: center; padding: 8px 10px; }
+  .ld-section { margin-top: 18px; padding-top: 14px; }
+  .ld-section dl > div { grid-template-columns: 1fr; gap: 0; padding: 7px 0; }
   .ld-section dt { font-size: 0.8rem; }
+
+  /* Add a lead: round button above the bottom edge */
+  .ld-fab { position: fixed; right: 16px; bottom: calc(20px + env(safe-area-inset-bottom)); z-index: 55; display: flex; align-items: center; justify-content: center; width: 58px; height: 58px; border: 0; border-radius: 50%; background: #0B7A58; color: #fff; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3); cursor: pointer; }
+  .ld-list { padding-bottom: 84px; }
+}
+
+@media (max-width: 640px) {
+  .ld-subtitle { display: none; }
+  .ld-header { align-items: center; gap: 8px; margin-bottom: 8px; }
+  .ld-header .page-title { font-size: 1.25rem; }
+  .ld-add { display: none !important; }
+  .ld-hl-btn span { display: none; }
+  .ld-hl-btn { width: 44px; min-height: 44px; justify-content: center; padding: 0; }
 }
 </style>
