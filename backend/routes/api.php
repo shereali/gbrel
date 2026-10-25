@@ -992,6 +992,7 @@ Route::put('/leads/highlights', [LeadHighlightController::class, 'update']);
 Route::get('/leads/{id}/crm', [LeadCrmController::class, 'show'])->whereNumber('id');
 Route::patch('/leads/{id}/stage', [LeadCrmController::class, 'setStage'])->whereNumber('id');
 Route::patch('/leads/{id}/assign', [LeadCrmController::class, 'assign'])->whereNumber('id');
+Route::post('/leads/bulk-assign', [LeadCrmController::class, 'bulkAssign']);
 Route::patch('/leads/{id}/follow-up', [LeadCrmController::class, 'followUp'])->whereNumber('id');
 Route::post('/leads/{id}/activities', [LeadCrmController::class, 'addActivity'])->whereNumber('id');
 Route::post('/leads/{id}/visits', [LeadCrmController::class, 'scheduleVisit'])->whereNumber('id');

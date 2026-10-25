@@ -18,7 +18,7 @@ use Illuminate\Validation\Rule;
  */
 class LeadCrmController extends Controller
 {
-    public const STAGES = ['New', 'Contacted', 'Qualified', 'Site Visit', 'Site Visit Completed', 'Negotiation', 'Converted', 'Lost'];
+    public const STAGES = ['New', 'Contacted', 'Qualified', 'Site Visit', 'Visited', 'Negotiation', 'Converted', 'Lost'];
 
     public const CALL_OUTCOMES = ['Answered', 'No answer', 'Busy', 'Wrong number'];
 
@@ -119,6 +119,35 @@ class LeadCrmController extends Controller
         $this->log($request, $lead, 'assign', $owner ? "Assigned to {$owner->name}" : 'Unassigned', ['user_id' => $owner?->id]);
 
         return response()->json(['success' => true, 'data' => $lead->fresh()]);
+    }
+
+    /** POST /api/leads/bulk-assign: assign multiple leads to a team member in one batch */
+    public function bulkAssign(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'lead_ids' => ['required', 'array', 'min:1'],
+            'lead_ids.*' => ['integer', 'exists:leads,id'],
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
+        ]);
+
+        $owner = $data['user_id'] ? User::find($data['user_id']) : null;
+        if ($owner && ! $owner->isStaff()) {
+            return response()->json(['success' => false, 'message' => 'Leads can only be assigned to team members.'], 422);
+        }
+
+        $leads = Lead::whereIn('id', $data['lead_ids'])->get();
+        foreach ($leads as $lead) {
+            $lead->assigned_to = $owner?->id;
+            $lead->save();
+            $this->log($request, $lead, 'assign', $owner ? "Assigned to {$owner->name}" : 'Unassigned', ['user_id' => $owner?->id]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => count($leads).' lead(s) transferred to '.($owner ? $owner->name : 'Unassigned'),
+            'count' => count($leads),
+            'owner' => $owner ? ['id' => $owner->id, 'name' => $owner->name] : null,
+        ]);
     }
 
     /** PATCH /api/leads/{id}/follow-up: the next time someone should contact this buyer. Null clears it. */
@@ -222,7 +251,7 @@ class LeadCrmController extends Controller
                 $this->log($request, $lead, 'note', 'Visit outcome: '.$visit->outcome_notes);
             }
             if ($lead->status === 'Site Visit') {
-                $this->moveStage($request, $lead, 'Site Visit Completed');
+                $this->moveStage($request, $lead, 'Visited');
                 $lead->save();
             }
         }

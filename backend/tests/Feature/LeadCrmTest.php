@@ -187,4 +187,32 @@ class LeadCrmTest extends TestCase
         $this->assertSame('Call again after Jumma.', $leads[$called->id]['last_activity']['body']);
         $this->assertNull($leads[$quiet->id]['last_activity']);
     }
+
+    public function test_completing_a_visit_advances_site_visit_lead_to_visited(): void
+    {
+        $this->signInAs('admin');
+        $lead = $this->lead(['status' => 'Site Visit']);
+        $visitId = $this->postJson("/api/leads/{$lead->id}/visits", ['date' => $this->tomorrow(), 'time' => '10:00', 'visit_type' => 'Site visit'])->json('data.id');
+
+        $this->patchJson("/api/leads/{$lead->id}/visits/{$visitId}", ['status' => 'Completed', 'outcome_notes' => 'Visited property'])->assertOk();
+        $this->assertSame('Visited', $lead->fresh()->status);
+    }
+
+    public function test_bulk_assign_transfers_multiple_leads_to_staff(): void
+    {
+        $this->signInAs('admin');
+        $lead1 = $this->lead(['name' => 'Buyer 1']);
+        $lead2 = $this->lead(['name' => 'Buyer 2']);
+        $agent = User::create(['name' => 'Monirul Islam', 'email' => 'monirul@example.test', 'password' => 'secret-password', 'role' => 'agent']);
+
+        $res = $this->postJson('/api/leads/bulk-assign', [
+            'lead_ids' => [$lead1->id, $lead2->id],
+            'user_id' => $agent->id,
+        ])->assertOk();
+
+        $this->assertSame(2, $res->json('count'));
+        $this->assertSame($agent->id, $lead1->fresh()->assigned_to);
+        $this->assertSame($agent->id, $lead2->fresh()->assigned_to);
+        $this->assertDatabaseHas('lead_activities', ['lead_id' => $lead1->id, 'type' => 'assign', 'body' => 'Assigned to Monirul Islam']);
+    }
 }

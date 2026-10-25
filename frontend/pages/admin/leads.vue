@@ -48,7 +48,53 @@
           {{ tab.label }} <span class="ld-count">{{ tab.count }}</span>
         </button>
       </div>
-      <p v-else class="ld-trash-note">Showing deleted inquiries. Restore one to bring it back to the pipeline.</p>
+
+      <!-- Staff assignment tabs: see who has how many leads assigned and filter by staff -->
+      <div v-if="view === 'active' && staff.length" class="ld-staff-tabs" role="group" aria-label="Filter by assigned staff">
+        <button
+          type="button"
+          class="ld-staff-tab"
+          :class="{ on: staffFilter === 'all' }"
+          :aria-pressed="staffFilter === 'all'"
+          @click="staffFilter = 'all'"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>All Team</span>
+          <span class="ld-count">{{ baseLeads.length }}</span>
+        </button>
+        <button
+          type="button"
+          class="ld-staff-tab"
+          :class="{ on: staffFilter === 'unassigned' }"
+          :aria-pressed="staffFilter === 'unassigned'"
+          @click="staffFilter = 'unassigned'"
+        >
+          <span>Unassigned</span>
+          <span class="ld-count">{{ unassignedCount }}</span>
+        </button>
+        <button
+          v-for="s in staffTabs"
+          :key="s.id"
+          type="button"
+          class="ld-staff-tab"
+          :class="{ on: staffFilter === s.id }"
+          :aria-pressed="staffFilter === s.id"
+          @click="staffFilter = s.id"
+        >
+          <span class="ld-staff-dot"></span>
+          <span>{{ s.name }}</span>
+          <span class="ld-count">{{ s.count }}</span>
+        </button>
+      </div>
+
+      <div v-if="activeStaffInfo" class="ld-staff-banner">
+        <div class="ld-staff-banner-info">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Assigned to: <strong>{{ activeStaffInfo.name }}</strong> ({{ activeStaffInfo.role || 'Staff' }}) &middot; {{ activeStaffInfo.count }} leads</span>
+        </div>
+        <button type="button" class="ld-staff-banner-clear" @click="staffFilter = 'all'">Show all &times;</button>
+      </div>
+      <p v-else-if="view === 'trash'" class="ld-trash-note">Showing deleted inquiries. Restore one to bring it back to the pipeline.</p>
 
       <div id="ld-controls" class="ld-controls" :class="{ open: showFilters }">
         <select v-if="answerOptions.length" v-model="answerFilter" class="ld-select ld-select--answer" :class="{ on: answerFilter }" aria-label="Filter by form answer">
@@ -93,34 +139,80 @@
     </div>
 
     <div v-else class="ld-split" :class="{ 'is-detail': detailOpen }">
-      <!-- Lead list -->
-      <ul class="ld-list" aria-label="Leads">
-        <li v-for="lead in filteredLeads" :key="lead.id" class="ld-item" :class="{ active: selected?.id === lead.id }" :data-tier="lead.tier || 'none'">
-          <button type="button" class="ld-row" :aria-current="selected?.id === lead.id ? 'true' : undefined" @click="openLead(lead)">
-            <span class="ld-main">
-              <span class="ld-name">
-                <span v-if="isFresh(lead)" class="ld-new" title="Not contacted yet"></span>
-                <span class="ld-name-text">{{ lead.name }}</span>
-                <span class="ld-stage" :data-stage="stageKey(lead.stage)">{{ lead.stage }}</span>
-              </span>
-              <span v-if="highlightsFor(lead).length" class="ld-hl-row">
-                <span v-for="h in highlightsFor(lead).slice(0, 2)" :key="h.label" class="ld-hl-chip" :title="h.label + ': ' + h.value">{{ h.value }}</span>
-              </span>
-              <span v-if="flagFor(lead)" class="ld-flag" :data-tone="flagFor(lead)!.tone">{{ flagFor(lead)!.text }}</span>
-              <span v-else-if="lastContactText(lead)" class="ld-flag" data-tone="muted">{{ lastContactText(lead) }}</span>
-              <span v-else class="ld-prop">{{ lead.property }}</span>
-              <span v-if="shortNote(lead)" class="ld-note-line" :title="shortNote(lead)">{{ shortNote(lead) }}</span>
+      <!-- Lead list with multi-select and bulk staff assignment -->
+      <div class="ld-list-wrap">
+        <div v-if="view === 'active'" class="ld-list-header">
+          <label class="ld-select-all" title="Select all visible leads">
+            <input
+              type="checkbox"
+              class="ld-checkbox"
+              :checked="allFilteredSelected && filteredLeads.length > 0"
+              :indeterminate.prop="someFilteredSelected"
+              @change="toggleSelectAll"
+            />
+            <span class="ld-select-all-text">
+              {{ selectedLeadIds.size ? `${selectedLeadIds.size} selected` : 'Select all' }}
             </span>
-            <span class="ld-side">
-              <span class="ld-tier" :data-tier="lead.tier || 'none'">{{ tierLabel(lead.tier) }}</span>
-              <time :datetime="lead.created_at" :title="fullDate(lead.created_at)">{{ ago(lead.created_at) }}</time>
-            </span>
-          </button>
-          <a v-if="lead.phone && !lead.deleted_at" :href="`tel:${lead.phone}`" class="ld-row-call" :aria-label="`Call ${lead.name}`" :title="`Call ${lead.phone}`">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          </a>
-        </li>
-      </ul>
+          </label>
+
+          <div v-if="selectedLeadIds.size" class="ld-bulk-bar">
+            <select v-model="bulkAssignTarget" class="ld-select ld-bulk-select" aria-label="Transfer selected leads to">
+              <option value="" disabled>Transfer to staff...</option>
+              <option value="unassigned">Unassigned</option>
+              <option v-for="s in staff" :key="s.id" :value="s.id">{{ s.name }} ({{ s.role || 'Staff' }})</option>
+            </select>
+            <button
+              type="button"
+              class="btn btn-sm btn-emerald ld-bulk-btn"
+              :disabled="!bulkAssignTarget || isBulkAssigning"
+              @click="executeBulkAssign"
+            >
+              {{ isBulkAssigning ? 'Transferring…' : 'Transfer' }}
+            </button>
+            <button type="button" class="ld-bulk-cancel" title="Clear selection" @click="clearSelection">&times;</button>
+          </div>
+        </div>
+
+        <ul class="ld-list" aria-label="Leads">
+          <li v-for="lead in filteredLeads" :key="lead.id" class="ld-item" :class="{ active: selected?.id === lead.id, checked: selectedLeadIds.has(lead.id) }" :data-tier="lead.tier || 'none'">
+            <label v-if="view === 'active'" class="ld-check-col" :title="`Select ${lead.name}`" @click.stop>
+              <input
+                type="checkbox"
+                class="ld-checkbox"
+                :checked="selectedLeadIds.has(lead.id)"
+                @change="toggleSelectLead(lead.id)"
+              />
+            </label>
+            <button type="button" class="ld-row" :aria-current="selected?.id === lead.id ? 'true' : undefined" @click="openLead(lead)">
+              <span class="ld-main">
+                <span class="ld-name">
+                  <span v-if="isFresh(lead)" class="ld-new" title="Not contacted yet"></span>
+                  <span class="ld-name-text">{{ lead.name }}</span>
+                  <span class="ld-stage" :data-stage="stageKey(lead.stage)">{{ lead.stage }}</span>
+                  <span v-if="assignedName(lead)" class="ld-assigned-tag" :title="`Assigned to ${assignedName(lead)}`">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    {{ assignedName(lead) }}
+                  </span>
+                </span>
+                <span v-if="highlightsFor(lead).length" class="ld-hl-row">
+                  <span v-for="h in highlightsFor(lead).slice(0, 2)" :key="h.label" class="ld-hl-chip" :title="h.label + ': ' + h.value">{{ h.value }}</span>
+                </span>
+                <span v-if="flagFor(lead)" class="ld-flag" :data-tone="flagFor(lead)!.tone">{{ flagFor(lead)!.text }}</span>
+                <span v-else-if="lastContactText(lead)" class="ld-flag" data-tone="muted">{{ lastContactText(lead) }}</span>
+                <span v-else class="ld-prop">{{ lead.property }}</span>
+                <span v-if="shortNote(lead)" class="ld-note-line" :title="shortNote(lead)">{{ shortNote(lead) }}</span>
+              </span>
+              <span class="ld-side">
+                <span class="ld-tier" :data-tier="lead.tier || 'none'">{{ tierLabel(lead.tier) }}</span>
+                <time :datetime="lead.created_at" :title="fullDate(lead.created_at)">{{ ago(lead.created_at) }}</time>
+              </span>
+            </button>
+            <a v-if="lead.phone && !lead.deleted_at" :href="`tel:${lead.phone}`" class="ld-row-call" :aria-label="`Call ${lead.name}`" :title="`Call ${lead.phone}`">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </a>
+          </li>
+        </ul>
+      </div>
 
       <!-- Lead detail -->
       <article v-if="selected" class="ld-detail" :aria-label="`Details for ${selected.name}`">
@@ -169,7 +261,7 @@
 
             <div class="ld-hl-visit-details">
               <div class="ld-hl-visit-time">
-                <strong dir="ltr">{{ formatDay(activeVisit.date) }}<template v-if="activeVisit.time"> &middot; {{ formatTime(activeVisit.time) }}</template></strong>
+                <strong dir="ltr">{{ formatHumanVisit(activeVisit.date, activeVisit.time) }}</strong>
               </div>
               <p v-if="activeVisit.property_title" class="ld-hl-visit-meta">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
@@ -388,7 +480,7 @@ import LeadVisitsPanel from '~/components/admin/crm/LeadVisitsPanel.vue'
 import HighlightFieldsModal from '~/components/admin/crm/HighlightFieldsModal.vue'
 import LogInquiryModal from '~/components/admin/crm/LogInquiryModal.vue'
 import {
-  LEAD_STAGES, dhakaIso, endOfDhakaDay, formatDay, formatTime, formatWhen, inDays, parseApiDate, useLeadCrm,
+  LEAD_STAGES, dhakaIso, endOfDhakaDay, formatDay, formatHumanVisit, formatTime, formatWhen, inDays, parseApiDate, useLeadCrm,
   type LeadActivity, type LeadHighlights, type LeadVisit, type StaffMember
 } from '~/composables/useLeadCrm'
 import { toLatinDigits, useVoiceSearch, type VoiceLang } from '~/composables/useVoiceSearch'
@@ -402,6 +494,7 @@ const { token } = useAuth()
 
 const view = ref<'active' | 'trash'>('active')
 const statusFilter = ref('All')
+const staffFilter = ref<number | 'all' | 'unassigned'>('all')
 const focus = ref('All')
 const sortBy = ref<'newest' | 'hottest'>('newest')
 const search = ref('')
@@ -409,6 +502,10 @@ const showAddLeadModal = ref(false)
 const isLoading = ref(false)
 const detailOpen = ref(false)
 const selectedId = ref<number | null>(null)
+
+const selectedLeadIds = reactive(new Set<number>())
+const bulkAssignTarget = ref<string>('')
+const isBulkAssigning = ref(false)
 
 const deleteLeadTarget = ref<any | null>(null)
 const isDeleting = ref(false)
@@ -460,6 +557,7 @@ const readMessage = (message?: string | null) => {
 
 const normalizeStage = (value?: string | null) => {
   const s = String(value || 'New').trim()
+  if (s.toLowerCase() === 'site visit completed' || s.toLowerCase() === 'site_visit_completed') return 'Visited'
   const known = LEAD_STAGES.find(stage => stage.toLowerCase() === s.toLowerCase())
   return known || s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
 }
@@ -499,7 +597,9 @@ const fetchLeads = async (onlyTrashed = false, quiet = false) => {
 const changeView = async (next: 'active' | 'trash') => {
   view.value = next
   statusFilter.value = 'All'
+  staffFilter.value = 'all'
   quick.value = 'all'
+  clearSelection()
   detailOpen.value = false
   await fetchLeads(next === 'trash')
 }
@@ -679,11 +779,94 @@ const statusTabs = computed(() => [
   ...stages.map(s => ({ value: s, label: s, count: baseLeads.value.filter(l => l.stage === s).length }))
 ])
 
+const staffTabs = computed(() => {
+  const map = new Map<number, number>()
+  for (const l of baseLeads.value) {
+    if (l.assigned_to) {
+      map.set(l.assigned_to, (map.get(l.assigned_to) || 0) + 1)
+    }
+  }
+  return staff.value.map(s => ({
+    id: s.id,
+    name: s.name,
+    role: s.role,
+    count: map.get(s.id) || 0
+  }))
+})
+
+const unassignedCount = computed(() => baseLeads.value.filter(l => !l.assigned_to).length)
+
+const activeStaffInfo = computed(() => {
+  if (typeof staffFilter.value !== 'number') return null
+  return staffTabs.value.find(s => s.id === staffFilter.value) || null
+})
+
+const assignedName = (l: any): string => {
+  if (!l?.assigned_to) return ''
+  return staff.value.find(s => s.id === l.assigned_to)?.name || ''
+}
+
+const allFilteredSelected = computed(() => {
+  if (!filteredLeads.value.length) return false
+  return filteredLeads.value.every(l => selectedLeadIds.has(l.id))
+})
+
+const someFilteredSelected = computed(() => {
+  if (!filteredLeads.value.length) return false
+  const count = filteredLeads.value.filter(l => selectedLeadIds.has(l.id)).length
+  return count > 0 && count < filteredLeads.value.length
+})
+
+const toggleSelectLead = (id: number) => {
+  if (selectedLeadIds.has(id)) selectedLeadIds.delete(id)
+  else selectedLeadIds.add(id)
+}
+
+const toggleSelectAll = () => {
+  if (allFilteredSelected.value) {
+    filteredLeads.value.forEach(l => selectedLeadIds.delete(l.id))
+  } else {
+    filteredLeads.value.forEach(l => selectedLeadIds.add(l.id))
+  }
+}
+
+const clearSelection = () => {
+  selectedLeadIds.clear()
+  bulkAssignTarget.value = ''
+}
+
+const executeBulkAssign = async () => {
+  if (!selectedLeadIds.size || !bulkAssignTarget.value) return
+  isBulkAssigning.value = true
+  try {
+    const targetId = bulkAssignTarget.value === 'unassigned' ? null : Number(bulkAssignTarget.value)
+    const ids = Array.from(selectedLeadIds)
+    await crm.bulkAssign(ids, targetId)
+    const targetName = targetId ? staff.value.find(s => s.id === targetId)?.name || 'staff' : 'Unassigned'
+    toast.success('Leads transferred', `${ids.length} lead${ids.length > 1 ? 's' : ''} transferred to ${targetName}.`)
+    clearSelection()
+    await refreshAll()
+  } catch (err: any) {
+    toast.error('Could not transfer leads', err?.message || 'Try again.')
+  } finally {
+    isBulkAssigning.value = false
+  }
+}
+
 const tierRank: Record<string, number> = { HOT: 0, WARM: 1, COLD: 2 }
 const filteredLeads = computed(() => {
-  const list = view.value === 'trash' || statusFilter.value === 'All'
+  let list = view.value === 'trash' || statusFilter.value === 'All'
     ? [...baseLeads.value]
     : baseLeads.value.filter(l => l.stage === statusFilter.value)
+
+  if (view.value === 'active') {
+    if (staffFilter.value === 'unassigned') {
+      list = list.filter(l => !l.assigned_to)
+    } else if (typeof staffFilter.value === 'number') {
+      list = list.filter(l => l.assigned_to === staffFilter.value)
+    }
+  }
+
   if (quick.value === 'followups') list.sort((a, b) => (followMs(a) ?? 0) - (followMs(b) ?? 0))
   else if (quick.value === 'visits') list.sort((a, b) => visitKey(a).localeCompare(visitKey(b)))
   else if (sortBy.value === 'hottest') {
@@ -692,8 +875,8 @@ const filteredLeads = computed(() => {
   return list
 })
 
-const hasFilters = computed(() => !!search.value || focus.value !== 'All' || !!answerFilter.value || (view.value === 'active' && (statusFilter.value !== 'All' || quick.value !== 'all')))
-const clearFilters = () => { search.value = ''; focus.value = 'All'; answerFilter.value = ''; statusFilter.value = 'All'; quick.value = 'all' }
+const hasFilters = computed(() => !!search.value || focus.value !== 'All' || !!answerFilter.value || (view.value === 'active' && (statusFilter.value !== 'All' || quick.value !== 'all' || staffFilter.value !== 'all')))
+const clearFilters = () => { search.value = ''; focus.value = 'All'; answerFilter.value = ''; statusFilter.value = 'All'; quick.value = 'all'; staffFilter.value = 'all' }
 
 /* ---------- CRM: owner, follow-up, site visits and activity ---------- */
 
@@ -1248,10 +1431,38 @@ const restoreLead = async (lead: any) => {
 .ld-stage[data-stage='contacted'] { background: rgba(59, 130, 246, 0.15); color: #2563EB; }
 .ld-stage[data-stage='qualified'] { background: rgba(139, 92, 246, 0.16); color: #7C3AED; }
 .ld-stage[data-stage='site-visit'] { background: rgba(14, 165, 233, 0.16); color: #0284C7; }
-.ld-stage[data-stage='site-visit-completed'] { background: rgba(13, 148, 136, 0.18); color: #0D9488; }
+.ld-stage[data-stage='visited'] { background: rgba(13, 148, 136, 0.18); color: #0D9488; }
 .ld-stage[data-stage='negotiation'] { background: rgba(245, 158, 11, 0.18); color: #B45309; }
 .ld-stage[data-stage='converted'] { background: #059669; color: #fff; }
 .ld-stage[data-stage='lost'] { background: rgba(239, 68, 68, 0.15); color: #DC2626; }
+.ld-assigned-tag { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: 6px; font-size: 0.68rem; font-weight: 600; background: var(--admin-chip-bg); color: var(--admin-text-secondary); border: 1px solid var(--admin-border-subtle); }
+.ld-assigned-tag svg { opacity: 0.7; }
+
+/* Staff tabs */
+.ld-staff-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: 4px 0 0; padding: 2px 0; }
+.ld-staff-tabs::-webkit-scrollbar { display: none; }
+.ld-staff-tab { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--admin-border-subtle); background: var(--admin-bg-surface); color: var(--admin-text-secondary); font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; white-space: nowrap; flex: none; transition: all 0.15s ease; }
+.ld-staff-tab:hover { background: var(--admin-chip-bg); color: var(--admin-text-primary); }
+.ld-staff-tab.on { background: #0B7A58; border-color: #0B7A58; color: #fff; }
+.ld-staff-tab.on .ld-count { background: rgba(255, 255, 255, 0.25); color: #fff; }
+.ld-staff-dot { width: 7px; height: 7px; border-radius: 50%; background: #10B981; }
+.ld-staff-tab.on .ld-staff-dot { background: #fff; }
+.ld-staff-banner { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; border-radius: 8px; background: rgba(11, 122, 88, 0.1); border: 1px solid rgba(11, 122, 88, 0.25); font-size: 0.82rem; color: var(--admin-text-primary); }
+.ld-staff-banner-info { display: flex; align-items: center; gap: 6px; }
+.ld-staff-banner-clear { border: 0; background: transparent; color: var(--admin-text-emerald); font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; text-decoration: underline; }
+
+/* List wrapper, selection & bulk actions */
+.ld-list-wrap { display: flex; flex-direction: column; min-width: 0; }
+.ld-list-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; background: var(--admin-bg-surface-alt); border-bottom: 1px solid var(--admin-border-subtle); min-height: 44px; }
+.ld-select-all { display: inline-flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 600; color: var(--admin-text-secondary); cursor: pointer; user-select: none; }
+.ld-bulk-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ld-bulk-select { font-size: 0.82rem; padding: 4px 8px; min-height: 32px; border-radius: 8px; }
+.ld-bulk-btn { min-height: 32px; padding: 4px 12px; font-size: 0.82rem; font-weight: 700; border-radius: 8px; }
+.ld-bulk-cancel { border: 0; background: transparent; color: var(--admin-text-muted); font-size: 1rem; cursor: pointer; padding: 2px 6px; }
+.ld-bulk-cancel:hover { color: var(--admin-text-primary); }
+.ld-check-col { display: flex; align-items: center; justify-content: center; width: 44px; padding-left: 12px; cursor: pointer; flex: none; }
+.ld-checkbox { width: 17px; height: 17px; accent-color: #0B7A58; cursor: pointer; border-radius: 4px; }
+.ld-item.checked { background: rgba(16, 185, 129, 0.08); }
 .ld-note-line { font-size: 0.78rem; font-style: italic; color: var(--admin-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ld-new { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--admin-text-emerald); }
 .ld-prop { font-size: 0.82rem; color: var(--admin-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1352,12 +1563,13 @@ const restoreLead = async (lead: any) => {
   }
   .ld-hl-card.with-visit { grid-template-columns: 1fr; gap: 14px; }
   .ld-hl-card.with-visit .ld-hl-visit-side { border-top: 1px solid rgba(251, 191, 36, 0.35); }
-  .ld-tabs, .ld-views { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin-right: -16px; padding-right: 16px; }
-  .ld-tabs::-webkit-scrollbar, .ld-views::-webkit-scrollbar { display: none; }
-  .ld-tab, .ld-views button { flex: none; white-space: nowrap; }
+  .ld-tabs, .ld-views, .ld-staff-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin-right: -16px; padding-right: 16px; }
+  .ld-tabs::-webkit-scrollbar, .ld-views::-webkit-scrollbar, .ld-staff-tabs::-webkit-scrollbar { display: none; }
+  .ld-tab, .ld-views button, .ld-staff-tab { flex: none; white-space: nowrap; }
   .ld-views { margin: 0 0 12px; }
 
-  .ld-row { padding: 12px 6px 12px 16px; }
+  .ld-check-col { width: 38px; padding-left: 8px; }
+  .ld-row { padding: 12px 6px 12px 6px; }
   .ld-name { font-size: 1rem; }
   .ld-row-call { width: 56px; }
 
