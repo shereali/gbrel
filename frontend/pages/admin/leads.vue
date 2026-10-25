@@ -205,6 +205,19 @@
           @changed="refreshAll"
         />
 
+        <section v-if="formAnswers(selected).length" v-show="selected.deleted_at || tab === 'overview'" class="ld-section ld-answers">
+          <h3>
+            Form answers
+            <span v-if="selected.meta_form_name" class="ld-answers-form">{{ selected.meta_form_name }}</span>
+          </h3>
+          <ol class="ld-qa">
+            <li v-for="(qa, i) in formAnswers(selected)" :key="i" :class="{ hl: qa.highlighted }">
+              <span class="ld-q"><span class="ld-qn" aria-hidden="true">{{ i + 1 }}</span>{{ qa.question }}</span>
+              <strong class="ld-a">{{ qa.answer }}</strong>
+            </li>
+          </ol>
+        </section>
+
         <section v-for="section in detailSections" v-show="selected.deleted_at || tab === 'overview'" :key="section.title" class="ld-section">
           <h3>{{ section.title }}</h3>
           <dl>
@@ -458,13 +471,17 @@ const fetchLeads = async (onlyTrashed = false, quiet = false) => {
     if (!res.ok) throw new Error('Lead access failed')
     const json = await res.json()
     if (json && json.success && Array.isArray(json.data)) {
-      leadsList.value = json.data.map((l: any) => ({
-        ...l,
-        ...readMessage(l.message),
-        property: l.property_title || l.property || 'Direct Inquiry',
+      leadsList.value = json.data.map((l: any) => {
+        const read = readMessage(l.message)
+        return {
+          ...l,
+          ...read,
+          note: withoutFormAnswers(read.note, l.meta_answers),
+          property: l.property_title || l.property || 'Direct Inquiry',
         type: l.buyer_category || l.buyer_type || l.lead_type || l.type || 'Direct Buyer',
-        stage: normalizeStage(l.status || l.stage)
-      }))
+          stage: normalizeStage(l.status || l.stage)
+        }
+      })
     } else {
       leadsList.value = []
     }
@@ -566,6 +583,21 @@ const websiteFieldValue: Record<string, (l: any) => string> = {
   Prefers: l => l.preferred_contact || '',
   Email: l => l.email || ''
 }
+/** Every question of a Meta lead form with the buyer's answer, in the order of the form. */
+const formAnswers = (l: any): { question: string; answer: string; highlighted: boolean }[] => {
+  if (!l || !Array.isArray(l.meta_answers)) return []
+  const chosen = highlights.value.selected[formKeyOf(l)] || []
+  return l.meta_answers
+    .filter((a: any) => a?.question && a?.answer)
+    .map((a: any) => ({ question: String(a.question), answer: String(a.answer), highlighted: chosen.includes(a.question) }))
+}
+// The answers are also saved as "Question: answer" lines in the message; they now have their own section, so keep them out of Notes.
+const withoutFormAnswers = (note: string, answers: unknown): string => {
+  if (!note || !Array.isArray(answers)) return note
+  const lines = new Set(answers.map((a: any) => `${a?.question}: ${a?.answer}`.trim()))
+  return note.split('\n').filter(line => !lines.has(line.trim())).join('\n').trim()
+}
+
 const formKeyOf = (l: any): string => (l?.meta_form_id ? String(l.meta_form_id) : 'website')
 const highlightsFor = (l: any): { label: string; value: string }[] => {
   if (!l) return []
@@ -1105,6 +1137,19 @@ const restoreLead = async (lead: any) => {
 .ld-hl-label { font-size: 0.78rem; color: var(--admin-text-secondary); line-height: 1.4; }
 .ld-hl-value { font-size: 1.02rem; line-height: 1.4; overflow-wrap: anywhere; }
 .ld-hl-edit { justify-self: start; min-height: 32px; padding: 0; border: 0; background: transparent; color: var(--admin-text-muted); font: inherit; font-size: 0.8rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+/* Form answers: question on top, the buyer's answer under it, one after another */
+.ld-answers h3 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.ld-answers-form { font-size: 0.78rem; font-weight: 500; color: var(--admin-text-muted); }
+.ld-qa { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 8px; }
+.ld-qa li { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 10px; background: var(--admin-bg-surface-alt); border: 1px solid var(--admin-border-subtle); }
+.ld-qa li.hl { background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.45); border-left: 4px solid #D9A21B; }
+.ld-q { display: flex; align-items: flex-start; gap: 8px; font-size: 0.84rem; line-height: 1.45; color: var(--admin-text-secondary); }
+.ld-qn { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; border-radius: 50%; background: var(--admin-chip-bg); color: var(--admin-text-secondary); font-size: 0.72rem; font-weight: 700; }
+.ld-a { padding-left: 28px; font-size: 1rem; line-height: 1.45; overflow-wrap: anywhere; }
+@media (min-width: 1280px) {
+  .ld-qa li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: baseline; gap: 4px 16px; }
+  .ld-a { padding-left: 0; }
+}
 .ld-hl-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 6px 14px; border-radius: 10px; border: 1px solid rgba(251, 191, 36, 0.5); background: transparent; color: var(--admin-text-primary); font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
 .ld-hl-btn svg { color: #D9A21B; }
 .ld-hl-btn:hover { background: rgba(251, 191, 36, 0.12); }

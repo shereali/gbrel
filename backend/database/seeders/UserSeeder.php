@@ -3,9 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\Role;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class UserSeeder extends Seeder
 {
@@ -29,6 +31,21 @@ class UserSeeder extends Seeder
                 'status' => 'Active',
             ]
         );
+
+        // Demo staff accounts should only be seeded ONCE on initial installation.
+        // If an administrator deletes them, do NOT resurrect them on subsequent restarts/seed runs!
+        try {
+            $alreadySeeded = Schema::hasTable('settings') && Setting::getVal('demo_users_seeded', false);
+            if ($alreadySeeded || User::where('email', '!=', $adminEmail)->exists()) {
+                if (Schema::hasTable('settings') && ! $alreadySeeded) {
+                    Setting::setVal('demo_users_seeded', '1');
+                }
+
+                return;
+            }
+        } catch (\Throwable $e) {
+            // Proceed if settings check fails
+        }
 
         // Demo staff accounts use publicly known passwords, so they only exist on local/test machines.
         if ($this->shouldSeedDemoData()) {
@@ -96,6 +113,12 @@ class UserSeeder extends Seeder
                     'avatar' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
                 ]
             );
+
+            try {
+                if (Schema::hasTable('settings')) {
+                    Setting::setVal('demo_users_seeded', '1');
+                }
+            } catch (\Throwable $e) {}
         }
     }
 

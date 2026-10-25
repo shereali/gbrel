@@ -1211,6 +1211,10 @@ const executeDeleteUser = async () => {
       const err = await res.json().catch(() => null)
       throw new Error(err?.message || 'Failed to delete user')
     }
+    const idx = userAccounts.value.findIndex(u => u.id === id)
+    if (idx > -1) {
+      userAccounts.value.splice(idx, 1)
+    }
     toast.info('User Removed', `Account for ${name} has been deleted.`)
     deleteUserTarget.value = null
     await loadData()

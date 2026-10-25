@@ -44,6 +44,7 @@ use App\Support\SiteSettings;
 use App\Support\VideoLink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -1309,17 +1310,38 @@ Route::delete('/users/{id}', function (Request $request, $id) {
     }
 
     // Clean up dependent user records safely
-    if (Schema::hasTable('saved_properties')) {
-        DB::table('saved_properties')->where('user_id', $user->id)->delete();
-    }
-    if (Schema::hasTable('lead_activities')) {
-        DB::table('lead_activities')->where('user_id', $user->id)->update(['user_id' => null]);
-    }
-    if (Schema::hasTable('leads')) {
-        DB::table('leads')->where('assigned_to', $user->id)->update(['assigned_to' => null]);
-    }
-    if (Schema::hasTable('viewings')) {
-        DB::table('viewings')->where('assigned_to', $user->id)->update(['assigned_to' => null]);
+    try {
+        if (Schema::hasTable('saved_properties')) {
+            DB::table('saved_properties')->where('user_id', $user->id)->delete();
+        }
+        if (Schema::hasTable('lead_activities')) {
+            DB::table('lead_activities')->where('user_id', $user->id)->update(['user_id' => null]);
+        }
+        if (Schema::hasTable('leads')) {
+            DB::table('leads')->where('assigned_to', $user->id)->update(['assigned_to' => null]);
+        }
+        if (Schema::hasTable('viewings')) {
+            DB::table('viewings')->where('assigned_to', $user->id)->update(['assigned_to' => null]);
+        }
+        if (Schema::hasTable('properties')) {
+            DB::table('properties')->where('owner_id', $user->id)->update(['owner_id' => null]);
+            DB::table('properties')->where('reviewed_by', $user->id)->update(['reviewed_by' => null]);
+        }
+        if (Schema::hasTable('property_documents')) {
+            DB::table('property_documents')->where('uploaded_by', $user->id)->update(['uploaded_by' => null]);
+            DB::table('property_documents')->where('reviewed_by', $user->id)->update(['reviewed_by' => null]);
+        }
+        if (Schema::hasTable('media')) {
+            DB::table('media')->where('uploaded_by', $user->id)->update(['uploaded_by' => null]);
+        }
+        if (Schema::hasTable('personal_access_tokens')) {
+            DB::table('personal_access_tokens')
+                ->where('tokenable_type', User::class)
+                ->where('tokenable_id', $user->id)
+                ->delete();
+        }
+    } catch (\Throwable $e) {
+        Log::warning('Notice during user dependent records cleanup: '.$e->getMessage());
     }
 
     $user->delete();
