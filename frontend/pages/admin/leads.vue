@@ -46,29 +46,39 @@
       <!-- Primary 3 filter dropdowns side-by-side: Status, Team, and Leads View -->
       <div v-if="view === 'active'" class="ld-filter-row">
         <div class="ld-filter-col">
-          <select v-model="statusFilter" class="ld-select ld-filter-select" :class="{ on: statusFilter !== 'All' }" aria-label="Filter by status">
-            <option v-for="tab in statusTabs" :key="tab.value" :value="tab.value">
-              {{ tab.label === 'All' ? 'All Status' : tab.label }} ({{ tab.count }})
-            </option>
-          </select>
+          <CrmFilterDropdown
+            v-model="statusFilter"
+            :options="statusDropdownOptions"
+            :icon="CircleDot"
+            default-value="All"
+            placeholder="All Status"
+            align="left"
+            aria-label="Filter by status"
+          />
         </div>
 
         <div v-if="staff.length && isLeadAdmin" class="ld-filter-col ld-filter-col--team">
-          <select v-model="staffFilter" class="ld-select ld-filter-select" :class="{ on: staffFilter !== 'all' }" aria-label="Filter by assigned staff">
-            <option value="all">All Team ({{ baseLeads.length }})</option>
-            <option value="unassigned">Unassigned ({{ unassignedCount }})</option>
-            <option v-for="s in staffTabs" :key="s.id" :value="s.id">
-              {{ s.name }} ({{ s.count }})
-            </option>
-          </select>
+          <CrmFilterDropdown
+            v-model="staffFilter"
+            :options="staffDropdownOptions"
+            :icon="Users"
+            default-value="all"
+            placeholder="All Team"
+            align="center"
+            aria-label="Filter by assigned staff"
+          />
         </div>
 
         <div class="ld-filter-col">
-          <select v-model="quick" class="ld-select ld-filter-select" :class="{ on: quick !== 'all' }" aria-label="Quick views">
-            <option v-for="q in quickViews" :key="q.key" :value="q.key">
-              {{ q.label }} ({{ q.count }})
-            </option>
-          </select>
+          <CrmFilterDropdown
+            v-model="quick"
+            :options="quickDropdownOptions"
+            :icon="Layers"
+            default-value="all"
+            placeholder="All leads"
+            align="right"
+            aria-label="Quick views"
+          />
         </div>
       </div>
 
@@ -90,29 +100,40 @@
       <!-- Secondary 3 filter dropdowns: Answers, Newest first, All buyers (matching exact widths of top row) -->
       <div v-if="view === 'active'" id="ld-controls" class="ld-filter-row ld-filter-row--secondary" :class="{ open: showFilters }">
         <div class="ld-filter-col">
-          <select v-model="answerFilter" class="ld-select ld-filter-select ld-select--answer" :class="{ on: answerFilter }" aria-label="Filter by form answer">
-            <option value="">All answers</option>
-            <optgroup v-for="group in answerOptions" :key="group.label" :label="group.label">
-              <option v-for="opt in group.options" :key="opt.value" :value="opt.value">{{ opt.text }} ({{ opt.count }})</option>
-            </optgroup>
-            <option v-if="!answerOptions.length" disabled value="">No form answers yet</option>
-          </select>
+          <CrmFilterDropdown
+            v-model="answerFilter"
+            :options="answerDropdownOptions"
+            :icon="MessageSquareQuote"
+            default-value=""
+            placeholder="All answers"
+            empty-text="No form answers yet"
+            align="left"
+            aria-label="Filter by form answer"
+          />
         </div>
 
         <div class="ld-filter-col">
-          <select v-model="sortBy" class="ld-select ld-filter-select" :class="{ on: sortBy !== 'newest' }" aria-label="Sort by">
-            <option value="newest">Newest first</option>
-            <option value="hottest">Hottest first</option>
-          </select>
+          <CrmFilterDropdown
+            v-model="sortBy"
+            :options="sortDropdownOptions"
+            :icon="ArrowUpDown"
+            default-value="newest"
+            placeholder="Sort by"
+            align="center"
+            aria-label="Sort by"
+          />
         </div>
 
         <div class="ld-filter-col">
-          <select v-model="focus" class="ld-select ld-filter-select" :class="{ on: focus !== 'All' }" aria-label="Show buyer type">
-            <option value="All">All buyers</option>
-            <option value="Ready within 3 months">Ready within 3 months</option>
-            <option value="Own / family use">Own / family use</option>
-            <option value="Investment">Investment</option>
-          </select>
+          <CrmFilterDropdown
+            v-model="focus"
+            :options="buyerFocusOptions"
+            :icon="Target"
+            default-value="All"
+            placeholder="All buyers"
+            align="right"
+            aria-label="Show buyer type"
+          />
         </div>
       </div>
     </div>
@@ -493,6 +514,8 @@ import LeadActivityPanel from '~/components/admin/crm/LeadActivityPanel.vue'
 import LeadVisitsPanel from '~/components/admin/crm/LeadVisitsPanel.vue'
 import HighlightFieldsModal from '~/components/admin/crm/HighlightFieldsModal.vue'
 import LogInquiryModal from '~/components/admin/crm/LogInquiryModal.vue'
+import CrmFilterDropdown from '~/components/admin/crm/CrmFilterDropdown.vue'
+import { ArrowUpDown, CircleDot, Layers, MessageSquareQuote, Target, Users } from 'lucide-vue-next'
 import {
   LEAD_STAGES, dhakaIso, endOfDhakaDay, formatDay, formatHumanVisit, formatTime, formatWhen, inDays, parseApiDate, useLeadCrm,
   type LeadActivity, type LeadHighlights, type LeadVisit, type StaffMember
@@ -804,6 +827,10 @@ const statusTabs = computed(() => [
   { value: 'All', label: 'All', count: baseLeads.value.length },
   ...stages.map(s => ({ value: s, label: s, count: baseLeads.value.filter(l => l.stage === s).length }))
 ])
+const statusDropdownOptions = computed(() => [
+  { value: 'All', label: 'All Status', count: baseLeads.value.length },
+  ...stages.map(s => ({ value: s, label: s, count: baseLeads.value.filter(l => l.stage === s).length }))
+])
 
 const staffTabs = computed(() => {
   const map = new Map<number, number>()
@@ -821,6 +848,46 @@ const staffTabs = computed(() => {
 })
 
 const unassignedCount = computed(() => baseLeads.value.filter(l => !l.assigned_to).length)
+
+const staffDropdownOptions = computed(() => [
+  { value: 'all', label: 'All Team', count: baseLeads.value.length },
+  { value: 'unassigned', label: 'Unassigned', count: unassignedCount.value },
+  ...staffTabs.value.map(s => ({
+    value: s.id,
+    label: s.name,
+    count: s.count,
+    subtext: s.role || 'Staff'
+  }))
+])
+
+const answerDropdownOptions = computed(() => {
+  const list: any[] = [
+    { value: '', label: 'All answers' }
+  ]
+  for (const group of answerOptions.value) {
+    list.push({
+      label: group.label,
+      options: group.options.map(opt => ({
+        value: opt.value,
+        label: opt.text,
+        count: opt.count
+      }))
+    })
+  }
+  return list
+})
+
+const sortDropdownOptions = [
+  { value: 'newest', label: 'Newest first' },
+  { value: 'hottest', label: 'Hottest first' }
+]
+
+const buyerFocusOptions = [
+  { value: 'All', label: 'All buyers' },
+  { value: 'Ready within 3 months', label: 'Ready within 3 months' },
+  { value: 'Own / family use', label: 'Own / family use' },
+  { value: 'Investment', label: 'Investment' }
+]
 
 const activeStaffInfo = computed(() => {
   if (typeof staffFilter.value !== 'number') return null
@@ -994,6 +1061,13 @@ const quickViews = computed(() => {
   }
   return base
 })
+const quickDropdownOptions = computed(() =>
+  quickViews.value.map(q => ({
+    value: q.key,
+    label: q.label,
+    count: q.count
+  }))
+)
 function matchesQuick(l: any) {
   if (view.value === 'trash') return true
   switch (quick.value) {
