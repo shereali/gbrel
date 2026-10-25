@@ -43,48 +43,33 @@
         <template v-else>{{ voice.error.value }}</template>
       </p>
 
-      <div v-if="view === 'active'" class="ld-tabs" role="group" aria-label="Filter by status">
-        <button v-for="tab in statusTabs" :key="tab.value" type="button" class="ld-tab" :class="{ on: statusFilter === tab.value }" :aria-pressed="statusFilter === tab.value" @click="statusFilter = tab.value">
-          {{ tab.label }} <span class="ld-count">{{ tab.count }}</span>
-        </button>
-      </div>
+      <!-- Primary 3 filter dropdowns side-by-side: Status, Team, and Leads View -->
+      <div v-if="view === 'active'" class="ld-filter-row">
+        <div class="ld-filter-col">
+          <select v-model="statusFilter" class="ld-select ld-filter-select" :class="{ on: statusFilter !== 'All' }" aria-label="Filter by status">
+            <option v-for="tab in statusTabs" :key="tab.value" :value="tab.value">
+              {{ tab.label === 'All' ? 'All Status' : tab.label }} ({{ tab.count }})
+            </option>
+          </select>
+        </div>
 
-      <!-- Staff assignment tabs: see who has how many leads assigned and filter by staff (Admins only) -->
-      <div v-if="view === 'active' && staff.length && isLeadAdmin" class="ld-staff-tabs" role="group" aria-label="Filter by assigned staff">
-        <button
-          type="button"
-          class="ld-staff-tab"
-          :class="{ on: staffFilter === 'all' }"
-          :aria-pressed="staffFilter === 'all'"
-          @click="staffFilter = 'all'"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          <span>All Team</span>
-          <span class="ld-count">{{ baseLeads.length }}</span>
-        </button>
-        <button
-          type="button"
-          class="ld-staff-tab"
-          :class="{ on: staffFilter === 'unassigned' }"
-          :aria-pressed="staffFilter === 'unassigned'"
-          @click="staffFilter = 'unassigned'"
-        >
-          <span>Unassigned</span>
-          <span class="ld-count">{{ unassignedCount }}</span>
-        </button>
-        <button
-          v-for="s in staffTabs"
-          :key="s.id"
-          type="button"
-          class="ld-staff-tab"
-          :class="{ on: staffFilter === s.id }"
-          :aria-pressed="staffFilter === s.id"
-          @click="staffFilter = s.id"
-        >
-          <span class="ld-staff-dot"></span>
-          <span>{{ s.name }}</span>
-          <span class="ld-count">{{ s.count }}</span>
-        </button>
+        <div v-if="staff.length && isLeadAdmin" class="ld-filter-col ld-filter-col--team">
+          <select v-model="staffFilter" class="ld-select ld-filter-select" :class="{ on: staffFilter !== 'all' }" aria-label="Filter by assigned staff">
+            <option value="all">All Team ({{ baseLeads.length }})</option>
+            <option value="unassigned">Unassigned ({{ unassignedCount }})</option>
+            <option v-for="s in staffTabs" :key="s.id" :value="s.id">
+              {{ s.name }} ({{ s.count }})
+            </option>
+          </select>
+        </div>
+
+        <div class="ld-filter-col">
+          <select v-model="quick" class="ld-select ld-filter-select" :class="{ on: quick !== 'all' }" aria-label="Quick views">
+            <option v-for="q in quickViews" :key="q.key" :value="q.key">
+              {{ q.label }} ({{ q.count }})
+            </option>
+          </select>
+        </div>
       </div>
 
       <div v-if="activeStaffInfo && isLeadAdmin" class="ld-staff-banner">
@@ -97,13 +82,14 @@
       <p v-else-if="view === 'trash' && isLeadAdmin" class="ld-trash-note">Showing deleted inquiries. Restore one to bring it back to the pipeline.</p>
 
       <div id="ld-controls" class="ld-controls" :class="{ open: showFilters }">
-        <select v-if="answerOptions.length" v-model="answerFilter" class="ld-select ld-select--answer" :class="{ on: answerFilter }" aria-label="Filter by form answer">
+        <select v-model="answerFilter" class="ld-select ld-select--answer" :class="{ on: answerFilter }" aria-label="Filter by form answer">
           <option value="">All answers</option>
           <optgroup v-for="group in answerOptions" :key="group.label" :label="group.label">
             <option v-for="opt in group.options" :key="opt.value" :value="opt.value">{{ opt.text }} ({{ opt.count }})</option>
           </optgroup>
+          <option v-if="!answerOptions.length" disabled value="">No form answers yet</option>
         </select>
-        <select v-model="focus" class="ld-select" aria-label="Show">
+        <select v-model="focus" class="ld-select" :class="{ on: focus !== 'All' }" aria-label="Show">
           <option value="All">All buyers</option>
           <option value="Ready within 3 months">Ready within 3 months</option>
           <option value="Own / family use">Own / family use</option>
@@ -118,13 +104,6 @@
           Trash
         </button>
       </div>
-    </div>
-
-    <!-- Quick views: the lists a salesperson starts the day with -->
-    <div v-if="view === 'active'" class="ld-views" :class="{ 'is-hidden-mobile': detailOpen }" role="group" aria-label="Quick views">
-      <button v-for="q in quickViews" :key="q.key" type="button" :class="{ on: quick === q.key, alert: q.alert && q.count > 0 }" :aria-pressed="quick === q.key" @click="quick = q.key">
-        {{ q.label }}<span class="ld-count">{{ q.count }}</span>
-      </button>
     </div>
 
     <div v-if="isLoading" class="ld-empty" role="status">Loading leads…</div>
@@ -242,12 +221,22 @@
         </header>
 
         <section v-if="highlightsFor(selected).length || activeVisit" class="ld-hl-card" :class="{ 'with-visit': !!activeVisit && highlightsFor(selected).length }" aria-label="Highlighted answers and site visit">
+          <button
+            v-if="highlightsFor(selected).length"
+            type="button"
+            class="ld-hl-edit-corner"
+            title="Change highlighted fields"
+            @click="openHighlights(formKeyOf(selected))"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>Change</span>
+          </button>
+
           <div v-if="highlightsFor(selected).length" class="ld-hl-left">
             <div v-for="h in highlightsFor(selected)" :key="h.label" class="ld-hl-item">
-              <span class="ld-hl-label">{{ h.label }}</span>
+              <span class="ld-hl-label">{{ h.label }}:</span>
               <strong class="ld-hl-value">{{ h.value }}</strong>
             </div>
-            <button type="button" class="ld-hl-edit" @click="openHighlights(formKeyOf(selected))">Change highlighted fields</button>
           </div>
 
           <div v-if="activeVisit" class="ld-hl-visit-side">
@@ -303,24 +292,30 @@
         <p v-if="selected.stage === 'Lost' && selected.lost_reason" class="ld-lost">Lost: {{ selected.lost_reason }}</p>
 
         <div v-if="!selected.deleted_at" class="ld-work">
-          <label class="ld-field">
-            <span>Assigned to</span>
-            <select v-if="isLeadAdmin" :value="selected.assigned_to ?? ''" class="ld-select" @change="assignLead(selected, $event)">
-              <option value="">Unassigned</option>
-              <option v-for="s in staff" :key="s.id" :value="s.id">{{ s.name }}</option>
-            </select>
-            <div v-else class="ld-assigned-readonly">
-              <span>{{ assignedName(selected) || 'Unassigned' }}</span>
+          <div class="ld-work-col ld-work-col--assign">
+            <div class="ld-work-header">
+              <span class="ld-work-label">Assigned to</span>
             </div>
-          </label>
-          <div class="ld-field">
-            <span id="ld-follow-label">Next follow-up</span>
-            <p class="ld-follow-now" :class="followState(selected)">{{ followText(selected) }}</p>
-            <div class="ld-chips" role="group" aria-labelledby="ld-follow-label">
+            <div class="ld-work-control">
+              <select v-if="isLeadAdmin" :value="selected.assigned_to ?? ''" class="ld-select ld-work-select" @change="assignLead(selected, $event)">
+                <option value="">Unassigned</option>
+                <option v-for="s in staff" :key="s.id" :value="s.id">{{ s.name }}</option>
+              </select>
+              <div v-else class="ld-assigned-readonly">
+                <span>{{ assignedName(selected) || 'Unassigned' }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="ld-work-col ld-work-col--follow">
+            <div class="ld-work-header">
+              <span id="ld-follow-label" class="ld-work-label">Next follow-up</span>
+              <span class="ld-follow-now" :class="followState(selected)">({{ followText(selected) }})</span>
+            </div>
+            <div class="ld-work-control ld-chips" role="group" aria-labelledby="ld-follow-label">
               <button type="button" @click="setFollowUp(selected, inDays(1))">Tomorrow</button>
               <button type="button" @click="setFollowUp(selected, inDays(3))">In 3 days</button>
               <button type="button" @click="setFollowUp(selected, inDays(7))">Next week</button>
-              <label class="ld-pick">
+              <label class="ld-pick" title="Pick date and time">
                 <span class="ld-sr">Pick a date and time</span>
                 <input v-model="pickedFollowUp" type="datetime-local" @change="pickFollowUp(selected)" />
               </label>
@@ -347,7 +342,7 @@
           @changed="refreshAll"
         />
 
-        <section v-if="formAnswers(selected).length" v-show="selected.deleted_at || tab === 'overview'" class="ld-section ld-answers">
+        <section v-if="formAnswers(selected).length" v-show="selected.deleted_at || tab === 'overview' || tab === 'answers'" class="ld-section ld-answers">
           <h3>
             Form answers
             <span v-if="selected.meta_form_name" class="ld-answers-form">{{ selected.meta_form_name }}</span>
@@ -359,6 +354,9 @@
             </li>
           </ol>
         </section>
+        <div v-else-if="tab === 'answers'" class="ld-section ld-answers-empty">
+          <p>No form answers recorded for this inquiry.</p>
+        </div>
 
         <section v-for="section in detailSections" v-show="selected.deleted_at || tab === 'overview'" :key="section.title" class="ld-section">
           <h3>{{ section.title }}</h3>
@@ -753,10 +751,20 @@ const saveHighlights = async (form: string, fields: string[]) => {
 
 const answerFilter = ref('')
 const ANSWER_SEP = '\u0001'
+const allAnswersFor = (l: any): { label: string; value: string }[] => {
+  const hl = highlightsFor(l)
+  if (hl.length) return hl
+  if (Array.isArray(l.meta_answers)) {
+    return l.meta_answers
+      .filter((a: any) => a?.question && a?.answer)
+      .map((a: any) => ({ label: String(a.question), value: String(a.answer) }))
+  }
+  return []
+}
 const answerOptions = computed(() => {
   const groups = new Map<string, Map<string, number>>()
   for (const l of leadsList.value) {
-    for (const h of highlightsFor(l)) {
+    for (const h of allAnswersFor(l)) {
       const answers = groups.get(h.label) || new Map<string, number>()
       answers.set(h.value, (answers.get(h.value) || 0) + 1)
       groups.set(h.label, answers)
@@ -772,7 +780,7 @@ const answerOptions = computed(() => {
 const matchesAnswer = (l: any) => {
   if (!answerFilter.value) return true
   const [label, value] = answerFilter.value.split(ANSWER_SEP)
-  return highlightsFor(l).some(h => h.label === label && h.value === value)
+  return allAnswersFor(l).some(h => h.label === label && h.value === value)
 }
 // A saved choice that no longer exists (e.g. highlights changed) must not hide every lead.
 watch(answerOptions, groups => {
@@ -894,7 +902,7 @@ const staff = ref<StaffMember[]>([])
 const upcomingVisits = ref<LeadVisit[]>([])
 const crmDetail = ref<{ activities: LeadActivity[]; visits: LeadVisit[] }>({ activities: [], visits: [] })
 const crmLoading = ref(false)
-const tab = ref<'overview' | 'activity' | 'visits'>('overview')
+const tab = ref<'overview' | 'answers' | 'activity' | 'visits'>('overview')
 const quick = ref<'all' | 'followups' | 'visits' | 'unassigned' | 'mine'>('all')
 const pickedFollowUp = ref('')
 const lostTarget = ref<any | null>(null)
@@ -978,11 +986,15 @@ function matchesQuick(l: any) {
   }
 }
 
-const detailTabs = computed(() => [
-  { key: 'overview' as const, label: 'Overview', count: 0 },
-  { key: 'activity' as const, label: 'Activity', count: crmDetail.value.activities.length },
-  { key: 'visits' as const, label: 'Site visits', count: crmDetail.value.visits.filter(v => v.status === 'Confirmed').length }
-])
+const detailTabs = computed(() => {
+  const answersCount = selected.value ? formAnswers(selected.value).length : 0
+  return [
+    { key: 'overview' as const, label: 'Overview', count: 0 },
+    { key: 'answers' as const, label: 'Answers', count: answersCount },
+    { key: 'activity' as const, label: 'Activity', count: crmDetail.value.activities.length },
+    { key: 'visits' as const, label: 'Site visits', count: crmDetail.value.visits.filter(v => v.status === 'Confirmed').length }
+  ]
+})
 
 async function loadOverview() {
   try {
@@ -1311,40 +1323,27 @@ const restoreLead = async (lead: any) => {
 .admin-theme-light .ld { --ld-danger: #B91C1C; --ld-hot: #C2410C; --ld-warm: #A16207; --ld-cold: #3B6A99; }
 
 /* Toolbar */
-/* Desktop: search on the left, filters on the right of the same row, status tabs on a full row below. */
-.ld-toolbar { display: grid; grid-template-columns: minmax(280px, 1fr) auto; grid-template-areas: "search controls" "status status" "tabs tabs"; align-items: center; gap: 12px 16px; margin-bottom: 18px; }
-.ld-toolbar > .ld-searchrow { grid-area: search; max-width: 560px; }
-.ld-toolbar:not(:has(.ld-voice-status)) { grid-template-areas: "search controls" "tabs tabs"; }
-.ld-toolbar > .ld-controls { grid-area: controls; margin-left: 0; justify-content: flex-end; }
-.ld-toolbar > .ld-voice-status { grid-area: status; margin: 0; }
-.ld-toolbar > .ld-tabs, .ld-toolbar > .ld-trash-note { grid-area: tabs; }
+.ld-toolbar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.ld-toolbar > .ld-searchrow { max-width: 560px; width: 100%; }
+.ld-toolbar > .ld-controls { margin-left: 0; justify-content: flex-start; }
+.ld-toolbar > .ld-voice-status { margin: 0; }
+.ld-filter-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; }
+.ld-filter-row:not(:has(.ld-filter-col--team)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ld-filter-col { min-width: 0; }
+.ld-filter-select { width: 100%; min-height: 40px; font-size: 0.86rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .ld-select--answer { max-width: 260px; text-overflow: ellipsis; }
 .ld-select.on { border-color: var(--admin-text-gold); background-color: rgba(251, 191, 36, 0.12); font-weight: 600; }
 .ld-search { position: relative; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; }
 .ld-search svg { position: absolute; left: 12px; color: var(--admin-text-muted); pointer-events: none; }
 .ld-search input { width: 100%; min-height: 40px; padding: 8px 12px 8px 36px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background: var(--admin-bg-surface); color: inherit; font: inherit; font-size: 0.9rem; }
 .ld-search input:focus { outline: 2px solid var(--admin-text-gold); outline-offset: 1px; border-color: transparent; }
-.ld-tabs { display: flex; flex-wrap: wrap; gap: 4px; }
-.ld-tab { min-height: 40px; padding: 6px 14px; border-radius: 999px; border: 1px solid transparent; background: transparent; color: var(--admin-text-secondary); font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
-.ld-tab:hover { background: var(--admin-chip-bg); }
-.ld-tab.on { background: var(--admin-text-primary); color: var(--admin-bg-surface); }
 .ld-count { margin-left: 4px; color: var(--admin-text-muted); font-weight: 500; }
-.ld-tab.on .ld-count { color: inherit; opacity: 0.75; }
 .ld-trash-note { margin: 0; font-size: 0.88rem; color: var(--admin-text-secondary); }
-.ld-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.ld-controls { display: flex; flex-wrap: wrap; gap: 8px; }
 .ld-select { min-height: 40px; padding: 6px 30px 6px 12px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background-color: var(--admin-bg-surface); color: inherit; font: inherit; font-size: 0.86rem; }
 .ld-trash-toggle { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 6px 14px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background: transparent; color: var(--admin-text-secondary); font: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer; }
 .ld-trash-toggle.on { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: var(--ld-danger); }
 .ld button:focus-visible, .ld a:focus-visible, .ld select:focus-visible { outline: 2px solid var(--admin-text-gold); outline-offset: 2px; }
-
-/* Quick views */
-.ld-views { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 18px; }
-.ld-views button { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 4px 14px; border-radius: 10px; border: 1px solid var(--admin-border-hover); background: transparent; color: var(--admin-text-secondary); font: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer; }
-.ld-views button:hover { background: var(--admin-chip-bg); }
-.ld-views button.on { background: var(--admin-text-primary); color: var(--admin-bg-surface); border-color: transparent; }
-.ld-views button.alert:not(.on) { border-color: var(--ld-danger); color: var(--ld-danger); }
-.ld-views button.on .ld-count { color: inherit; opacity: 0.75; }
-.ld-views button.alert:not(.on) .ld-count { color: inherit; font-weight: 800; }
 
 /* Flags on list rows */
 .ld-flag { font-size: 0.76rem; font-weight: 700; color: var(--admin-text-muted); }
@@ -1354,14 +1353,19 @@ const restoreLead = async (lead: any) => {
 
 /* Owner, follow-up and sections inside a lead */
 .ld-lost { margin: 10px 0 0; font-size: 0.88rem; color: var(--ld-danger); font-weight: 600; }
-.ld-work { display: grid; grid-template-columns: minmax(180px, 240px) 1fr; gap: 18px 24px; margin-top: 22px; padding: 16px 0 0; border-top: 1px solid var(--admin-border-subtle); }
-.ld-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.ld-field > span { font-size: 0.82rem; font-weight: 600; color: var(--admin-text-secondary); }
-.ld-assigned-readonly { min-height: 40px; display: flex; align-items: center; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background: var(--admin-bg-surface-alt); font-size: 0.9rem; font-weight: 600; color: var(--admin-text-primary); }
-.ld-follow-now { margin: 0; font-size: 0.95rem; font-weight: 700; }
+.ld-work { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px 24px; margin-top: 18px; padding: 14px 0 0; border-top: 1px solid var(--admin-border-subtle); }
+.ld-work-col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ld-work-col--assign { flex: 0 1 200px; min-width: 150px; }
+.ld-work-col--follow { flex: 1 1 280px; min-width: 220px; }
+.ld-work-header { display: flex; align-items: center; gap: 8px; min-height: 22px; }
+.ld-work-label { font-size: 0.82rem; font-weight: 600; color: var(--admin-text-secondary); }
+.ld-assigned-readonly { min-height: 38px; width: 100%; display: flex; align-items: center; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background: var(--admin-bg-surface-alt); font-size: 0.88rem; font-weight: 600; color: var(--admin-text-primary); }
+.ld-follow-now { margin: 0; font-size: 0.82rem; font-weight: 700; }
 .ld-follow-now.overdue { color: var(--ld-danger); }
 .ld-follow-now.today { color: var(--ld-warm); }
 .ld-follow-now.none { color: var(--admin-text-muted); font-weight: 500; }
+.ld-work-control { min-height: 38px; display: flex; align-items: center; }
+.ld-work-select { width: 100%; min-height: 38px; font-size: 0.86rem; }
 .ld-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .ld-chips button { min-height: 34px; padding: 2px 12px; border-radius: 999px; border: 1px solid var(--admin-border-hover); background: transparent; color: var(--admin-text-secondary); font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
 .ld-chips button:hover { background: var(--admin-chip-bg); }
@@ -1373,6 +1377,7 @@ const restoreLead = async (lead: any) => {
 .ld-tabs-detail button:hover { color: var(--admin-text-primary); }
 .ld-tabs-detail button.on { color: var(--admin-text-primary); border-bottom-color: var(--admin-text-gold); }
 .ld-detail .ld-section:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
+.ld-answers-empty { padding: 32px 16px; text-align: center; color: var(--admin-text-muted); font-size: 0.9rem; }
 
 /* Empty / loading */
 .ld-empty { text-align: center; padding: 56px 24px; color: var(--admin-text-muted); border: 1px dashed var(--admin-border-hover); border-radius: 14px; }
@@ -1385,7 +1390,7 @@ const restoreLead = async (lead: any) => {
 .ld-item { display: flex; align-items: stretch; border-bottom: 1px solid var(--admin-border-subtle); }
 .ld-item:hover { background: var(--admin-table-row-hover); }
 .ld-item.active { background: color-mix(in srgb, var(--admin-text-emerald) 12%, transparent); }
-.ld-row { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 8px 14px 20px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ld-row { position: relative; flex: 1; min-width: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 8px 12px 18px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .ld-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--tier, transparent); }
 .ld-row-call { flex: none; display: flex; align-items: center; justify-content: center; width: 52px; color: #C2530F; border-left: 1px solid var(--admin-border-subtle); }
 .ld-row-call:hover { background: color-mix(in srgb, #C2530F 12%, transparent); }
@@ -1394,28 +1399,29 @@ const restoreLead = async (lead: any) => {
 /* Highlighted answers & site visit info */
 .ld-hl-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
 .ld-hl-chip { max-width: 100%; padding: 2px 8px; border-radius: 6px; background: rgba(251, 191, 36, 0.16); border: 1px solid rgba(251, 191, 36, 0.45); color: var(--admin-text-primary); font-size: 0.76rem; font-weight: 600; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ld-hl-card { display: grid; gap: 12px; margin-top: 16px; padding: 14px 16px; border-radius: 12px; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.45); border-left-width: 4px; }
-.ld-hl-card.with-visit { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 18px; align-items: start; }
-.ld-hl-left { display: flex; flex-direction: column; gap: 10px; }
-.ld-hl-visit-side { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 10px; background: var(--admin-bg-surface); border: 1px solid var(--admin-border-subtle); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
+.ld-hl-card { position: relative; display: grid; gap: 8px; margin-top: 12px; padding: 10px 14px; border-radius: 10px; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.35); border-left-width: 3px; }
+.ld-hl-card.with-visit { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 14px; align-items: start; }
+.ld-hl-left { display: flex; flex-direction: column; gap: 5px; padding-right: 70px; }
+.ld-hl-visit-side { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: 10px; background: var(--admin-bg-surface); border: 1px solid var(--admin-border-subtle); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
 .ld-hl-card:not(.with-visit) .ld-hl-visit-side { background: transparent; border: 0; padding: 0; box-shadow: none; }
 .ld-hl-visit-badge-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.ld-hl-visit-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; background: rgba(14, 165, 233, 0.15); color: #0284C7; }
+.ld-hl-visit-badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; font-size: 0.74rem; font-weight: 700; background: rgba(14, 165, 233, 0.15); color: #0284C7; }
 .ld-hl-visit-badge[data-status='Confirmed'] { background: rgba(16, 185, 129, 0.16); color: #059669; }
 .ld-hl-visit-badge[data-status='Completed'] { background: rgba(13, 148, 136, 0.18); color: #0D9488; }
 .ld-hl-visit-badge[data-status='Cancelled'], .ld-hl-visit-badge[data-status='No-show'] { background: rgba(239, 68, 68, 0.15); color: #DC2626; }
 .ld-hl-visit-badge[data-status='Rescheduled'] { background: rgba(245, 158, 11, 0.18); color: #B45309; }
-.ld-hl-visit-link { border: 0; background: transparent; color: var(--admin-text-emerald); font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.ld-hl-visit-link { border: 0; background: transparent; color: var(--admin-text-emerald); font: inherit; font-size: 0.76rem; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .ld-hl-visit-link:hover { opacity: 0.85; }
-.ld-hl-visit-details { display: flex; flex-direction: column; gap: 5px; }
-.ld-hl-visit-time { font-size: 0.96rem; color: var(--admin-text-primary); }
-.ld-hl-visit-meta { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--admin-text-secondary); }
+.ld-hl-visit-details { display: flex; flex-direction: column; gap: 4px; }
+.ld-hl-visit-time { font-size: 0.92rem; color: var(--admin-text-primary); }
+.ld-hl-visit-meta { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--admin-text-secondary); }
 .ld-hl-visit-meta svg { flex: none; opacity: 0.8; }
-.ld-hl-visit-outcome { margin: 4px 0 0; padding-top: 5px; border-top: 1px dashed var(--admin-border-subtle); font-size: 0.82rem; color: var(--admin-text-secondary); line-height: 1.4; }
-.ld-hl-item { display: flex; flex-direction: column; gap: 2px; }
-.ld-hl-label { font-size: 0.78rem; color: var(--admin-text-secondary); line-height: 1.4; }
-.ld-hl-value { font-size: 1.02rem; line-height: 1.4; overflow-wrap: anywhere; }
-.ld-hl-edit { justify-self: start; min-height: 32px; padding: 0; border: 0; background: transparent; color: var(--admin-text-muted); font: inherit; font-size: 0.8rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ld-hl-visit-outcome { margin: 3px 0 0; padding-top: 4px; border-top: 1px dashed var(--admin-border-subtle); font-size: 0.8rem; color: var(--admin-text-secondary); line-height: 1.35; }
+.ld-hl-item { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.ld-hl-label { font-size: 0.74rem; color: var(--admin-text-secondary); line-height: 1.35; }
+.ld-hl-value { font-size: 0.88rem; font-weight: 700; line-height: 1.35; color: var(--admin-text-primary); overflow-wrap: anywhere; }
+.ld-hl-edit-corner { position: absolute; top: 8px; right: 10px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 6px; border: 1px solid rgba(251, 191, 36, 0.4); background: rgba(251, 191, 36, 0.12); color: var(--admin-text-primary); font: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s ease; }
+.ld-hl-edit-corner:hover { background: rgba(251, 191, 36, 0.25); }
 /* Form answers: question on top, the buyer's answer under it, one after another */
 .ld-answers h3 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
 .ld-answers-form { font-size: 0.78rem; font-weight: 500; color: var(--admin-text-muted); }
@@ -1453,7 +1459,7 @@ const restoreLead = async (lead: any) => {
 .ld-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .ld-name { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 700; font-size: 0.98rem; color: var(--admin-text-primary); line-height: 1.35; }
 .ld-name-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ld-badges-row { display: flex; align-items: center; flex-wrap: nowrap; gap: 6px; margin: 2px 0 3px; min-width: 0; max-width: 100%; }
+.ld-badges-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 2px 0 3px; min-width: 0; max-width: 100%; }
 /* Stage badge beside the name */
 .ld-stage { flex: none; white-space: nowrap; padding: 1px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; line-height: 1.6; letter-spacing: 0.01em; background: var(--admin-chip-bg); color: var(--admin-text-secondary); }
 .ld-stage[data-stage='new'] { background: rgba(16, 185, 129, 0.15); color: #059669; }
@@ -1464,19 +1470,11 @@ const restoreLead = async (lead: any) => {
 .ld-stage[data-stage='negotiation'] { background: rgba(245, 158, 11, 0.18); color: #B45309; }
 .ld-stage[data-stage='converted'] { background: #059669; color: #fff; }
 .ld-stage[data-stage='lost'] { background: rgba(239, 68, 68, 0.15); color: #DC2626; }
-.ld-assigned-tag { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: 6px; font-size: 0.68rem; font-weight: 600; background: var(--admin-chip-bg); color: var(--admin-text-secondary); border: 1px solid var(--admin-border-subtle); flex: 0 1 auto; min-width: 0; max-width: 140px; white-space: nowrap; }
+.ld-assigned-tag { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: 6px; font-size: 0.68rem; font-weight: 600; background: var(--admin-chip-bg); color: var(--admin-text-secondary); border: 1px solid var(--admin-border-subtle); flex: 0 1 auto; min-width: 0; max-width: none; white-space: nowrap; }
 .ld-assigned-tag svg { opacity: 0.7; flex: none; }
-.ld-assigned-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.ld-assigned-text { min-width: 0; white-space: nowrap; }
 
-/* Staff tabs */
-.ld-staff-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: 4px 0 0; padding: 2px 0; }
-.ld-staff-tabs::-webkit-scrollbar { display: none; }
-.ld-staff-tab { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--admin-border-subtle); background: var(--admin-bg-surface); color: var(--admin-text-secondary); font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; white-space: nowrap; flex: none; transition: all 0.15s ease; }
-.ld-staff-tab:hover { background: var(--admin-chip-bg); color: var(--admin-text-primary); }
-.ld-staff-tab.on { background: #0B7A58; border-color: #0B7A58; color: #fff; }
-.ld-staff-tab.on .ld-count { background: rgba(255, 255, 255, 0.25); color: #fff; }
-.ld-staff-dot { width: 7px; height: 7px; border-radius: 50%; background: #10B981; }
-.ld-staff-tab.on .ld-staff-dot { background: #fff; }
+/* Staff banner */
 .ld-staff-banner { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; border-radius: 8px; background: rgba(11, 122, 88, 0.1); border: 1px solid rgba(11, 122, 88, 0.25); font-size: 0.82rem; color: var(--admin-text-primary); }
 .ld-staff-banner-info { display: flex; align-items: center; gap: 6px; }
 .ld-staff-banner-clear { border: 0; background: transparent; color: var(--admin-text-emerald); font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; text-decoration: underline; }
@@ -1496,12 +1494,12 @@ const restoreLead = async (lead: any) => {
 .ld-note-line { font-size: 0.78rem; font-style: italic; color: var(--admin-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ld-new { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--admin-text-emerald); }
 .ld-prop { font-size: 0.82rem; color: var(--admin-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ld-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: 0.76rem; color: var(--admin-text-muted); }
+.ld-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: 0.76rem; color: var(--admin-text-muted); padding-top: 1px; }
 [data-tier='HOT'] { --tier: var(--ld-hot); }
 [data-tier='WARM'] { --tier: var(--ld-warm); }
 [data-tier='COLD'] { --tier: var(--ld-cold); }
-.ld-tier { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 700; color: var(--tier, var(--admin-text-muted)); }
-.ld-tier::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--tier, var(--admin-text-muted)); opacity: 0.9; }
+.ld-tier { display: inline-flex; align-items: center; gap: 5px; font-size: 0.76rem; font-weight: 700; color: var(--tier, var(--admin-text-muted)); line-height: 1.35; white-space: nowrap; }
+.ld-tier::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--tier, var(--admin-text-muted)); opacity: 0.9; }
 .ld-tier--big { font-size: 0.88rem; padding: 4px 12px; border-radius: 999px; background: color-mix(in srgb, var(--tier, #8E9B8F) 16%, transparent); }
 
 /* Detail */
@@ -1557,10 +1555,13 @@ const restoreLead = async (lead: any) => {
   .ld-back { display: inline-flex; margin: 0; }
 
   /* Search stays in reach while scrolling the list */
-  .ld-toolbar { position: sticky; top: var(--ld-sticky-top, 0px); z-index: 30; margin: 0 -16px 12px; padding: 10px 16px; gap: 10px; background: var(--admin-bg-base, var(--admin-bg-surface)); border-bottom: 1px solid var(--admin-border-subtle); }
-  .ld-toolbar, .ld-toolbar:not(:has(.ld-voice-status)) { display: flex; flex-wrap: wrap; align-items: center; }
-  .ld-searchrow, .ld-toolbar > .ld-searchrow { flex-basis: 100%; max-width: none; }
+  .ld-toolbar { position: sticky; top: var(--ld-sticky-top, 0px); z-index: 30; margin: 0 -16px 12px; padding: 10px 16px; gap: 8px; background: var(--admin-bg-base, var(--admin-bg-surface)); border-bottom: 1px solid var(--admin-border-subtle); }
+  .ld-toolbar, .ld-toolbar:not(:has(.ld-voice-status)) { display: flex; flex-direction: column; align-items: stretch; }
+  .ld-searchrow, .ld-toolbar > .ld-searchrow { flex-basis: auto; max-width: none; }
   .ld-filter-btn { display: none !important; }
+  .ld-filter-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; width: 100%; margin-top: 2px; }
+  .ld-filter-row:not(:has(.ld-filter-col--team)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ld-filter-select { min-height: 38px; padding: 4px 22px 4px 8px; font-size: 0.78rem; font-weight: 600; }
   .ld-controls {
     display: flex !important;
     flex-wrap: nowrap;
@@ -1569,35 +1570,30 @@ const restoreLead = async (lead: any) => {
     -webkit-overflow-scrolling: touch;
     width: 100%;
     margin: 2px 0 0;
-    gap: 8px;
+    gap: 6px;
     padding: 2px 0 4px;
   }
   .ld-controls::-webkit-scrollbar { display: none; }
   .ld-controls .ld-select {
     flex: 0 0 auto;
-    min-height: 38px;
-    font-size: 0.84rem;
-    padding: 6px 10px;
+    min-height: 34px;
+    font-size: 0.8rem;
+    padding: 4px 8px;
     white-space: nowrap;
   }
   .ld-controls .ld-select--answer {
     flex-basis: auto;
-    max-width: 180px;
+    max-width: 160px;
   }
   .ld-controls .ld-trash-toggle {
     flex: 0 0 auto;
-    min-height: 38px;
-    font-size: 0.84rem;
-    padding: 6px 12px;
+    min-height: 34px;
+    font-size: 0.8rem;
+    padding: 4px 10px;
     white-space: nowrap;
   }
-  .ld-hl-card.with-visit { grid-template-columns: 1fr; gap: 14px; }
+  .ld-hl-card.with-visit { grid-template-columns: 1fr; gap: 12px; }
   .ld-hl-card.with-visit .ld-hl-visit-side { border-top: 1px solid rgba(251, 191, 36, 0.35); }
-  .ld-tabs, .ld-views, .ld-staff-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin-right: -16px; padding-right: 16px; }
-  .ld-tabs::-webkit-scrollbar, .ld-views::-webkit-scrollbar, .ld-staff-tabs::-webkit-scrollbar { display: none; }
-  .ld-tab, .ld-views button, .ld-staff-tab { flex: none; white-space: nowrap; }
-  .ld-views { margin: 0 0 12px; }
-
   .ld-check-col { width: 38px; padding-left: 8px; }
   .ld-row { padding: 12px 6px 12px 6px; }
   .ld-name { font-size: 1rem; }
@@ -1613,7 +1609,9 @@ const restoreLead = async (lead: any) => {
   .ld-seg { display: flex; flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: none; }
   .ld-seg::-webkit-scrollbar { display: none; }
   .ld-seg button { flex: none; white-space: nowrap; min-height: 44px; }
-  .ld-work { grid-template-columns: 1fr; margin-top: 16px; }
+  .ld-work { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px 14px; margin-top: 14px; padding-top: 12px; }
+  .ld-work-col--assign { flex: 1 1 140px; }
+  .ld-work-col--follow { flex: 2 1 200px; }
   .ld-tabs-detail { position: sticky; top: calc(var(--ld-sticky-top, 0px) + 53px); z-index: 20; margin: 18px -16px 14px; padding: 0 8px; background: var(--admin-bg-base, var(--admin-bg-surface)); }
   .ld-tabs-detail button { flex: 1 1 0; justify-content: center; padding: 8px 10px; }
   .ld-section { margin-top: 18px; padding-top: 14px; }
