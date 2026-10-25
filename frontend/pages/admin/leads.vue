@@ -79,30 +79,41 @@
         </div>
         <button type="button" class="ld-staff-banner-clear" @click="staffFilter = 'all'">Show all &times;</button>
       </div>
-      <p v-else-if="view === 'trash' && isLeadAdmin" class="ld-trash-note">Showing deleted inquiries. Restore one to bring it back to the pipeline.</p>
+      <div v-else-if="view === 'trash' && isLeadAdmin" class="ld-trash-banner">
+        <div class="ld-trash-banner-info">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Showing deleted inquiries (Trash). Restore one to bring it back to active pipeline.</span>
+        </div>
+        <button type="button" class="ld-staff-banner-clear" @click="changeView('active')">Back to active leads &times;</button>
+      </div>
 
-      <div id="ld-controls" class="ld-controls" :class="{ open: showFilters }">
-        <select v-model="answerFilter" class="ld-select ld-select--answer" :class="{ on: answerFilter }" aria-label="Filter by form answer">
-          <option value="">All answers</option>
-          <optgroup v-for="group in answerOptions" :key="group.label" :label="group.label">
-            <option v-for="opt in group.options" :key="opt.value" :value="opt.value">{{ opt.text }} ({{ opt.count }})</option>
-          </optgroup>
-          <option v-if="!answerOptions.length" disabled value="">No form answers yet</option>
-        </select>
-        <select v-model="focus" class="ld-select" :class="{ on: focus !== 'All' }" aria-label="Show">
-          <option value="All">All buyers</option>
-          <option value="Ready within 3 months">Ready within 3 months</option>
-          <option value="Own / family use">Own / family use</option>
-          <option value="Investment">Investment</option>
-        </select>
-        <select v-model="sortBy" class="ld-select" aria-label="Sort by">
-          <option value="newest">Newest first</option>
-          <option value="hottest">Hottest first</option>
-        </select>
-        <button v-if="isLeadAdmin" type="button" class="ld-trash-toggle" :class="{ on: view === 'trash' }" :aria-pressed="view === 'trash'" @click="changeView(view === 'trash' ? 'active' : 'trash')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          Trash
-        </button>
+      <!-- Secondary 3 filter dropdowns: Answers, Newest first, All buyers (matching exact widths of top row) -->
+      <div v-if="view === 'active'" id="ld-controls" class="ld-filter-row ld-filter-row--secondary" :class="{ open: showFilters }">
+        <div class="ld-filter-col">
+          <select v-model="answerFilter" class="ld-select ld-filter-select ld-select--answer" :class="{ on: answerFilter }" aria-label="Filter by form answer">
+            <option value="">All answers</option>
+            <optgroup v-for="group in answerOptions" :key="group.label" :label="group.label">
+              <option v-for="opt in group.options" :key="opt.value" :value="opt.value">{{ opt.text }} ({{ opt.count }})</option>
+            </optgroup>
+            <option v-if="!answerOptions.length" disabled value="">No form answers yet</option>
+          </select>
+        </div>
+
+        <div class="ld-filter-col">
+          <select v-model="sortBy" class="ld-select ld-filter-select" :class="{ on: sortBy !== 'newest' }" aria-label="Sort by">
+            <option value="newest">Newest first</option>
+            <option value="hottest">Hottest first</option>
+          </select>
+        </div>
+
+        <div class="ld-filter-col">
+          <select v-model="focus" class="ld-select ld-filter-select" :class="{ on: focus !== 'All' }" aria-label="Show buyer type">
+            <option value="All">All buyers</option>
+            <option value="Ready within 3 months">Ready within 3 months</option>
+            <option value="Own / family use">Own / family use</option>
+            <option value="Investment">Investment</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -603,7 +614,7 @@ const changeView = async (next: 'active' | 'trash') => {
   view.value = next
   statusFilter.value = 'All'
   staffFilter.value = 'all'
-  quick.value = 'all'
+  quick.value = next === 'trash' ? 'trash' : 'all'
   clearSelection()
   detailOpen.value = false
   await fetchLeads(next === 'trash')
@@ -903,7 +914,14 @@ const upcomingVisits = ref<LeadVisit[]>([])
 const crmDetail = ref<{ activities: LeadActivity[]; visits: LeadVisit[] }>({ activities: [], visits: [] })
 const crmLoading = ref(false)
 const tab = ref<'overview' | 'answers' | 'activity' | 'visits'>('overview')
-const quick = ref<'all' | 'followups' | 'visits' | 'unassigned' | 'mine'>('all')
+const quick = ref<'all' | 'followups' | 'visits' | 'unassigned' | 'mine' | 'trash'>('all')
+watch(quick, val => {
+  if (val === 'trash' && view.value !== 'trash') {
+    changeView('trash')
+  } else if (val !== 'trash' && view.value === 'trash') {
+    changeView('active')
+  }
+})
 const pickedFollowUp = ref('')
 const lostTarget = ref<any | null>(null)
 const lostReasons = ['Bought elsewhere', 'Price too high', 'Not interested any more', 'Could not reach the buyer', 'Other']
@@ -970,7 +988,8 @@ const quickViews = computed(() => {
   if (isLeadAdmin.value) {
     base.push(
       { key: 'unassigned' as const, label: 'Unassigned', count: openLeads.value.filter(l => !l.assigned_to).length, alert: false },
-      { key: 'mine' as const, label: 'Assigned to me', count: openLeads.value.filter(l => l.assigned_to && l.assigned_to === me.value?.id).length, alert: false }
+      { key: 'mine' as const, label: 'Assigned to me', count: openLeads.value.filter(l => l.assigned_to && l.assigned_to === me.value?.id).length, alert: false },
+      { key: 'trash' as const, label: 'Trash (Deleted)', count: view.value === 'trash' ? leadsList.value.length : 0, alert: false }
     )
   }
   return base
@@ -982,6 +1001,7 @@ function matchesQuick(l: any) {
     case 'visits': return !isClosed(l) && nextVisit.value.has(l.id)
     case 'unassigned': return !isClosed(l) && !l.assigned_to
     case 'mine': return !!l.assigned_to && l.assigned_to === me.value?.id
+    case 'trash': return true
     default: return true
   }
 }
@@ -1328,10 +1348,11 @@ const restoreLead = async (lead: any) => {
 .ld-toolbar > .ld-controls { margin-left: 0; justify-content: flex-start; }
 .ld-toolbar > .ld-voice-status { margin: 0; }
 .ld-filter-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; }
-.ld-filter-row:not(:has(.ld-filter-col--team)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.ld-filter-col { min-width: 0; }
+.ld-filter-row:not(:has(.ld-filter-col--team)):not(.ld-filter-row--secondary) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ld-filter-row--secondary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ld-filter-col { min-width: 0; width: 100%; }
 .ld-filter-select { width: 100%; min-height: 40px; font-size: 0.86rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.ld-select--answer { max-width: 260px; text-overflow: ellipsis; }
+.ld-select--answer { width: 100%; max-width: none; text-overflow: ellipsis; }
 .ld-select.on { border-color: var(--admin-text-gold); background-color: rgba(251, 191, 36, 0.12); font-weight: 600; }
 .ld-search { position: relative; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; }
 .ld-search svg { position: absolute; left: 12px; color: var(--admin-text-muted); pointer-events: none; }
@@ -1339,10 +1360,11 @@ const restoreLead = async (lead: any) => {
 .ld-search input:focus { outline: 2px solid var(--admin-text-gold); outline-offset: 1px; border-color: transparent; }
 .ld-count { margin-left: 4px; color: var(--admin-text-muted); font-weight: 500; }
 .ld-trash-note { margin: 0; font-size: 0.88rem; color: var(--admin-text-secondary); }
-.ld-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.ld-trash-banner { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); font-size: 0.82rem; color: var(--admin-text-primary); }
+.ld-trash-banner-info { display: flex; align-items: center; gap: 6px; }
+.ld-trash-banner-info svg { color: var(--ld-danger); flex: none; }
+.ld-controls { width: 100%; }
 .ld-select { min-height: 40px; padding: 6px 30px 6px 12px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background-color: var(--admin-bg-surface); color: inherit; font: inherit; font-size: 0.86rem; }
-.ld-trash-toggle { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 6px 14px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background: transparent; color: var(--admin-text-secondary); font: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer; }
-.ld-trash-toggle.on { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: var(--ld-danger); }
 .ld button:focus-visible, .ld a:focus-visible, .ld select:focus-visible { outline: 2px solid var(--admin-text-gold); outline-offset: 2px; }
 
 /* Flags on list rows */
@@ -1560,38 +1582,9 @@ const restoreLead = async (lead: any) => {
   .ld-searchrow, .ld-toolbar > .ld-searchrow { flex-basis: auto; max-width: none; }
   .ld-filter-btn { display: none !important; }
   .ld-filter-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; width: 100%; margin-top: 2px; }
-  .ld-filter-row:not(:has(.ld-filter-col--team)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ld-filter-select { min-height: 38px; padding: 4px 22px 4px 8px; font-size: 0.78rem; font-weight: 600; }
-  .ld-controls {
-    display: flex !important;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    width: 100%;
-    margin: 2px 0 0;
-    gap: 6px;
-    padding: 2px 0 4px;
-  }
-  .ld-controls::-webkit-scrollbar { display: none; }
-  .ld-controls .ld-select {
-    flex: 0 0 auto;
-    min-height: 34px;
-    font-size: 0.8rem;
-    padding: 4px 8px;
-    white-space: nowrap;
-  }
-  .ld-controls .ld-select--answer {
-    flex-basis: auto;
-    max-width: 160px;
-  }
-  .ld-controls .ld-trash-toggle {
-    flex: 0 0 auto;
-    min-height: 34px;
-    font-size: 0.8rem;
-    padding: 4px 10px;
-    white-space: nowrap;
-  }
+  .ld-filter-row:not(:has(.ld-filter-col--team)):not(.ld-filter-row--secondary) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ld-filter-row--secondary { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 4px; }
+  .ld-filter-select { width: 100%; min-height: 38px; padding: 4px 20px 4px 8px; font-size: 0.78rem; font-weight: 600; }
   .ld-hl-card.with-visit { grid-template-columns: 1fr; gap: 12px; }
   .ld-hl-card.with-visit .ld-hl-visit-side { border-top: 1px solid rgba(251, 191, 36, 0.35); }
   .ld-check-col { width: 38px; padding-left: 8px; }
