@@ -102,6 +102,7 @@ const describe = (a: LeadActivity) => {
     case 'assign': return { title: a.body || 'Assignment changed', text: null }
     case 'follow_up': return { title: m.at ? `Follow-up set for ${formatWhen(m.at)}` : 'Follow-up cleared', text: a.body }
     case 'visit': return { title: a.body || 'Site visit updated', text: null }
+    case 'manual': return { title: `Logged by the team${m.channel ? ' · ' + m.channel : ''}`, text: a.body }
     case 'meta_lead': return { title: m.platform === 'instagram' ? 'Came in from an Instagram lead form' : 'Came in from a Facebook lead form', text: a.body }
     default: return { title: a.type, text: a.body }
   }

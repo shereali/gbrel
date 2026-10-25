@@ -16,13 +16,58 @@
               <option value="">সব ধরন</option>
               <option v-for="band in bands" :key="band.key" :value="band.key">{{ band.name }}</option>
             </select>
-            <label class="sr-only" for="hero-q">এলাকা বা প্রকল্পের নাম</label>
-            <input id="hero-q" v-model="search.q" class="hero-input" type="search" placeholder="এলাকা বা প্রকল্প, যেমন পূর্বাচল" autocomplete="off" />
+            <div class="hero-input-wrap">
+              <label class="sr-only" for="hero-q">এলাকা বা প্রকল্পের নাম</label>
+              <input
+                id="hero-q"
+                v-model="search.q"
+                class="hero-input"
+                type="search"
+                placeholder="এলাকা বা প্রকল্প, যেমন পূর্বাচল"
+                autocomplete="off"
+              />
+              <template v-if="voice.supported.value">
+                <button
+                  type="button"
+                  class="hero-voice-lang"
+                  :title="voiceLang === 'bn-BD' ? 'বর্তমানে বাংলায় শুনছে। ইংরেজিতে খুঁজতে ক্লিক করুন।' : 'Listening in English. Click for Bangla.'"
+                  @click="toggleVoiceLang"
+                >
+                  {{ voiceLang === 'bn-BD' ? 'বাং' : 'EN' }}
+                </button>
+                <button
+                  type="button"
+                  class="hero-voice-mic"
+                  :class="{ on: voice.listening.value }"
+                  :aria-pressed="voice.listening.value"
+                  :aria-label="voice.listening.value ? 'ভয়েস সার্চ বন্ধ করুন' : 'ভয়েস দিয়ে খুঁজুন'"
+                  :title="voice.listening.value ? 'ভয়েস সার্চ বন্ধ করুন' : (voiceLang === 'bn-BD' ? 'ভয়েস দিয়ে খুঁজুন (বাংলা)' : 'Search by voice (English)')"
+                  @click="toggleVoice"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <rect x="9" y="2" width="6" height="12" rx="3"/>
+                    <path d="M5 10a7 7 0 0 0 14 0"/>
+                    <line x1="12" y1="17" x2="12" y2="22"/>
+                  </svg>
+                </button>
+              </template>
+            </div>
             <button type="submit" class="gb-btn gb-btn--sun hero-go">
               <Search :size="18" aria-hidden="true" />
               <span>খুঁজুন</span>
             </button>
           </form>
+
+          <p v-if="voice.listening.value || voice.error.value" class="hero-voice-status" :class="{ 'is-err': !!voice.error.value }" role="status">
+            <template v-if="voice.listening.value">
+              <span class="hero-voice-pulse" aria-hidden="true"></span>
+              <strong>{{ voiceLang === 'bn-BD' ? 'শুনছি…' : 'Listening…' }}</strong>
+              <span class="hero-voice-heard">{{ voice.interim.value || (voiceLang === 'bn-BD' ? 'এলাকা বা প্রকল্পের নাম বলুন (যেমন: পূর্বাচল, উত্তরা, গুলশান)' : 'Say an area or project name (e.g. Purbachal, Uttara, Gulshan)') }}</span>
+            </template>
+            <template v-else>
+              <span class="hero-voice-err">{{ voice.error.value }}</span>
+            </template>
+          </p>
         </div>
       </div>
 
@@ -167,8 +212,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { Clock, FileText, MessageCircle, Search, Users, Video } from 'lucide-vue-next'
+import { useVoiceSearch, type VoiceLang } from '~/composables/useVoiceSearch'
 import { useProperties } from '~/composables/useProperties'
 import { useSettings } from '~/composables/useSettings'
 import PropertyCard from '~/components/PropertyCard.vue'
@@ -223,6 +269,34 @@ const runSearch = () => {
   if (search.type) query.type = search.type
   if (search.q.trim()) query.q = search.q.trim()
   router.push({ path: '/properties', query })
+}
+
+/* ---------- Voice search (Bangla & English) ---------- */
+const voice = useVoiceSearch()
+const readVoiceLang = (): VoiceLang => {
+  try {
+    const saved = localStorage.getItem('gbrel_voice_lang')
+    return saved === 'en-US' ? 'en-US' : 'bn-BD'
+  } catch {
+    return 'bn-BD'
+  }
+}
+const voiceLang = ref<VoiceLang>(readVoiceLang())
+const toggleVoiceLang = () => {
+  voiceLang.value = voiceLang.value === 'bn-BD' ? 'en-US' : 'bn-BD'
+  try {
+    localStorage.setItem('gbrel_voice_lang', voiceLang.value)
+  } catch { /* private mode */ }
+}
+const toggleVoice = () => {
+  if (voice.listening.value) {
+    voice.stop()
+    return
+  }
+  voice.start(voiceLang.value, (query) => {
+    search.q = query
+    runSearch()
+  })
 }
 
 // The headline breaks after each comma, the way it is set on the page. Defaults live in useSettings.
@@ -298,11 +372,164 @@ useHead({
 }
 .hero-lead { font-size: var(--gb-t-lead); color: var(--gb-ink-soft); max-width: 58ch; margin-bottom: 30px; }
 
-.hero-search { display: flex; background: var(--gb-sheet); border: 1.5px solid var(--gb-silt); border-radius: 999px; padding: 6px; max-width: 640px; box-shadow: 0 14px 30px -22px rgba(29, 74, 42, .5); }
-.hero-select, .hero-input { background: transparent; color: var(--gb-ink); font-family: var(--gb-body); font-size: 1rem; min-height: 48px; padding: 0 16px; }
-.hero-select { border-right: 1px solid var(--gb-silt); max-width: 190px; cursor: pointer; appearance: none; padding-right: 30px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231D4A2A' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
-.hero-input { flex: 1; min-width: 0; }
+.hero-search {
+  display: flex;
+  align-items: center;
+  background: var(--gb-sheet);
+  border: 1.5px solid var(--gb-silt);
+  border-radius: 999px;
+  padding: 6px;
+  max-width: 660px;
+  box-shadow: 0 14px 30px -22px rgba(29, 74, 42, .5);
+  transition: border-color .2s ease, box-shadow .2s ease;
+  position: relative;
+}
+.hero-search:focus-within {
+  border-color: var(--gb-leaf);
+  box-shadow: 0 0 0 3px rgba(63, 122, 53, .18), 0 16px 36px -20px rgba(29, 74, 42, .45);
+}
+
+.hero-select, .hero-input {
+  background: transparent;
+  color: var(--gb-ink);
+  font-family: var(--gb-body);
+  font-size: 1rem;
+  min-height: 48px;
+  border: none;
+  outline: none;
+}
+.hero-select:focus, .hero-select:focus-visible,
+.hero-input:focus, .hero-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+.hero-select {
+  border-right: 1px solid var(--gb-silt);
+  max-width: 190px;
+  cursor: pointer;
+  appearance: none;
+  padding: 0 32px 0 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231D4A2A' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  border-radius: 999px 0 0 999px;
+}
+
+.hero-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+.hero-input {
+  width: 100%;
+  min-width: 0;
+  padding: 0 16px;
+}
+.hero-input-wrap:has(.hero-voice-mic) .hero-input {
+  padding-right: 92px;
+}
+.hero-input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
 .hero-input::placeholder { color: #7D8B80; }
+
+.hero-voice-lang, .hero-voice-mic {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  transition: all .18s ease;
+}
+.hero-voice-lang {
+  right: 48px;
+  min-width: 36px;
+  height: 30px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: rgba(29, 74, 42, 0.08);
+  color: var(--gb-paddy);
+  font-family: var(--gb-display);
+  font-size: 0.74rem;
+  font-weight: 700;
+  border: 1px solid rgba(29, 74, 42, 0.16);
+}
+.hero-voice-lang:hover {
+  background: rgba(29, 74, 42, 0.15);
+  color: var(--gb-paddy-deep);
+  border-color: var(--gb-leaf);
+}
+.hero-voice-lang:focus-visible, .hero-voice-mic:focus-visible {
+  outline: 2px solid var(--gb-leaf);
+  outline-offset: 1px;
+}
+.hero-voice-mic {
+  right: 6px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--gb-leaf);
+}
+.hero-voice-mic:hover {
+  background: rgba(29, 74, 42, 0.09);
+  color: var(--gb-paddy);
+}
+.hero-voice-mic.on {
+  background: #DC2626;
+  color: #fff;
+  animation: hero-mic-pulse 1.2s ease-in-out infinite;
+}
+@keyframes hero-mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-voice-mic.on { animation: none; }
+}
+
+.hero-voice-status {
+  margin-top: 10px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: var(--gb-sheet);
+  border: 1.5px solid var(--gb-leaf);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.86rem;
+  color: var(--gb-paddy);
+  box-shadow: 0 8px 24px -10px rgba(29, 74, 42, 0.25);
+  max-width: 660px;
+}
+.hero-voice-status.is-err {
+  border-color: #F87171;
+  background: #FEF2F2;
+  color: #B91C1C;
+}
+.hero-voice-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #DC2626;
+  flex-shrink: 0;
+  animation: hero-dot-blink 1s infinite alternate;
+}
+@keyframes hero-dot-blink {
+  from { opacity: 0.35; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1.15); }
+}
+.hero-voice-heard {
+  color: var(--gb-ink);
+  margin-left: 4px;
+  font-weight: 500;
+}
 .hero-go { flex-shrink: 0; }
 
 /* Field bands: the categories, drawn as terraced paddy rows */
@@ -428,10 +655,12 @@ useHead({
   .sun .disc { inset: 24px; }
   .sun .ray { height: 22px; margin-top: -11px; width: 7px; transform: rotate(calc((var(--i) - 5) * 20deg)) translateY(-54px); }
   .hero-top { padding-bottom: 72px; }
-  .hero-search { flex-wrap: wrap; border-radius: var(--gb-r); gap: 4px; }
-  .hero-select { max-width: none; width: 100%; border-right: 0; border-bottom: 1px solid var(--gb-silt); }
-  .hero-input { width: 100%; flex-basis: 100%; }
+  .hero-search { flex-wrap: wrap; border-radius: var(--gb-r); gap: 6px; padding: 8px; }
+  .hero-select { max-width: none; width: 100%; border-right: 0; border-bottom: 1px solid var(--gb-silt); border-radius: var(--gb-r-sm) var(--gb-r-sm) 0 0; }
+  .hero-input-wrap { width: 100%; flex-basis: 100%; }
+  .hero-input { width: 100%; }
   .hero-go { width: 100%; border-radius: var(--gb-r-sm); }
+  .hero-voice-status { border-radius: var(--gb-r-sm); width: 100%; box-sizing: border-box; }
   .band-row { grid-template-columns: 1fr auto; gap: 4px 12px; }
   .band-note { grid-column: 1; grid-row: 2; font-size: .85rem; }
   .band-count { grid-row: 1 / 3; grid-column: 2; align-self: center; font-size: .95rem; }

@@ -34,7 +34,7 @@ class SendMetaEvent
     public function handle(): void
     {
         $token = config('services.meta.capi_token');
-        $pixelId = trim((string) (SiteSettings::all()['meta_pixel_id'] ?: config('services.meta.pixel_id')));
+        $pixelId = trim((string) (config('services.meta.pixel_id') ?: (SiteSettings::all()['meta_pixel_id'] ?? '')));
         if (! $token || ! preg_match('/^\d{10,20}$/', $pixelId)) {
             return;
         }

@@ -30,6 +30,31 @@
           aria-label="Location or project name"
           @keyup.enter="handleSearch"
         />
+        <template v-if="voice.supported.value">
+          <button 
+            type="button" 
+            class="hero-search-lang" 
+            :title="voiceLang === 'bn-BD' ? 'Currently Bangla. Click for English.' : 'Listening in English. Click for Bangla.'"
+            @click="toggleVoiceLang"
+          >
+            {{ voiceLang === 'bn-BD' ? 'বাং' : 'EN' }}
+          </button>
+          <button 
+            type="button" 
+            class="hero-search-mic" 
+            :class="{ on: voice.listening.value }" 
+            :aria-pressed="voice.listening.value" 
+            :aria-label="voice.listening.value ? 'Stop voice search' : 'Search by voice'"
+            :title="voice.listening.value ? 'Stop voice search' : (voiceLang === 'bn-BD' ? 'ভয়েস দিয়ে খুঁজুন (বাংলা)' : 'Search by voice (English)')"
+            @click="toggleVoice"
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <rect x="9" y="2" width="6" height="12" rx="3"/>
+              <path d="M5 10a7 7 0 0 0 14 0"/>
+              <line x1="12" y1="17" x2="12" y2="22"/>
+            </svg>
+          </button>
+        </template>
       </div>
 
       <!-- 2. Property Type Selector -->
@@ -91,6 +116,18 @@
       </button>
     </div>
 
+    <!-- Voice Search Status Banner -->
+    <p v-if="voice.listening.value || voice.error.value" class="hero-voice-bar" :class="{ 'is-err': !!voice.error.value }" role="status">
+      <template v-if="voice.listening.value">
+        <span class="hero-voice-dot" aria-hidden="true"></span>
+        <strong>{{ voiceLang === 'bn-BD' ? 'শুনছি…' : 'Listening…' }}</strong>
+        <span>{{ voice.interim.value || (voiceLang === 'bn-BD' ? 'এলাকা বা প্রকল্পের নাম বলুন (যেমন: পূর্বাচল, উত্তরা, গুলশান)' : 'Say an area or project name (e.g. Purbachal, Uttara, Gulshan)') }}</span>
+      </template>
+      <template v-else>
+        <span>{{ voice.error.value }}</span>
+      </template>
+    </p>
+
     <!-- Quick Location Chips -->
     <div class="hero-quick-chips">
       <span class="chip-label">
@@ -113,6 +150,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useVoiceSearch, type VoiceLang } from '~/composables/useVoiceSearch'
 
 const router = useRouter()
 
@@ -165,6 +203,24 @@ const handleSearch = () => {
 const quickSearch = (term: string) => {
   locationQuery.value = term
   handleSearch()
+}
+
+/* ---------- Voice search (Bangla & English) ---------- */
+const voice = useVoiceSearch()
+const readVoiceLang = (): VoiceLang => {
+  try { return localStorage.getItem('gbrel_voice_lang') === 'en-US' ? 'en-US' : 'bn-BD' } catch { return 'bn-BD' }
+}
+const voiceLang = ref<VoiceLang>(readVoiceLang())
+const toggleVoiceLang = () => {
+  voiceLang.value = voiceLang.value === 'bn-BD' ? 'en-US' : 'bn-BD'
+  try { localStorage.setItem('gbrel_voice_lang', voiceLang.value) } catch { /* private mode */ }
+}
+const toggleVoice = () => {
+  if (voice.listening.value) { voice.stop(); return }
+  voice.start(voiceLang.value, query => {
+    locationQuery.value = query
+    handleSearch()
+  })
 }
 </script>
 
@@ -279,6 +335,102 @@ const quickSearch = (term: string) => {
   outline: none;
   cursor: pointer;
   text-overflow: ellipsis;
+}
+
+.search-input-field input:focus,
+.search-input-field input:focus-visible,
+.search-input-field select:focus,
+.search-input-field select:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+.location-field {
+  position: relative;
+}
+
+.hero-search-lang, .hero-search-mic {
+  border: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.hero-search-lang {
+  padding: 2px 7px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  background: #F1F5F9;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid #CBD5E1;
+}
+
+.hero-search-lang:hover {
+  background: #E2E8F0;
+  color: #0F172A;
+}
+
+.hero-search-mic {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: transparent;
+  color: #059669;
+  margin-left: 2px;
+}
+
+.hero-search-mic:hover {
+  background: rgba(5, 150, 105, 0.1);
+}
+
+.hero-search-mic.on {
+  background: #DC2626;
+  color: #FFFFFF;
+  animation: hero-mic-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes hero-mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+}
+
+.hero-voice-bar {
+  margin: 10px 4px 2px;
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  background: #F0FDF4;
+  border: 1px solid #86EFAC;
+  color: #166534;
+  font-size: 0.84rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hero-voice-bar.is-err {
+  background: #FEF2F2;
+  border-color: #FCA5A5;
+  color: #991B1B;
+}
+
+.hero-voice-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #DC2626;
+  flex-shrink: 0;
+  animation: hero-dot-blink 1s infinite alternate;
+}
+
+@keyframes hero-dot-blink {
+  from { opacity: 0.35; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1.15); }
 }
 
 .search-input-field input {

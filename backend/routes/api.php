@@ -5,6 +5,7 @@ use App\Http\Controllers\BookOrderController;
 use App\Http\Controllers\LeadAnswersController;
 use App\Http\Controllers\LeadCrmController;
 use App\Http\Controllers\LeadHighlightController;
+use App\Http\Controllers\ManualLeadController;
 use App\Http\Controllers\LeadJourneyController;
 use App\Http\Controllers\ListingReviewController;
 use App\Http\Controllers\MediaLibraryController;
@@ -933,10 +934,12 @@ Route::get('/leads', function (Request $request) {
 
     $leads = $query->orderBy('created_at', 'desc')->get();
 
+    // The last call, WhatsApp, email or note for each buyer (not stage or owner changes), shown under the name in the CRM list.
     $latestActivities = LeadActivity::whereIn('lead_id', $leads->pluck('id'))
+        ->whereIn('type', ['note', 'call', 'whatsapp', 'email', 'manual'])
         ->orderByDesc('occurred_at')
         ->orderByDesc('id')
-        ->get()
+        ->get(['id', 'lead_id', 'type', 'body', 'meta', 'occurred_at'])
         ->groupBy('lead_id')
         ->map(function ($items) {
             $a = $items->first();
@@ -945,7 +948,7 @@ Route::get('/leads', function (Request $request) {
                 'id' => $a->id,
                 'type' => $a->type,
                 'outcome' => $a->meta['outcome'] ?? null,
-                'body' => $a->body,
+                'body' => $a->body ? Str::limit($a->body, 140) : null,
                 'at' => $a->occurred_at?->toISOString() ?? (string) $a->occurred_at,
             ];
         });
@@ -981,6 +984,8 @@ Route::post('/t/draft', [TrackController::class, 'draft'])->middleware('throttle
 
 // Lead CRM: stage, owner, follow-up, activity timeline and site visits (see LeadCrmController).
 Route::get('/leads/overview', [LeadCrmController::class, 'overview']);
+// The CRM's "Log Buyer Inquiry" form (staff only; see ManualLeadController).
+Route::post('/leads/manual', [ManualLeadController::class, 'store']);
 // Which form answers the CRM highlights on each lead (see LeadHighlightController).
 Route::get('/leads/highlights', [LeadHighlightController::class, 'index']);
 Route::put('/leads/highlights', [LeadHighlightController::class, 'update']);

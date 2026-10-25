@@ -288,59 +288,16 @@
       </div>
     </div>
 
-    <!-- ======================================================================
-         MODAL: LOG NEW BUYER INQUIRY
-         ====================================================================== -->
-    <div v-if="showAddLeadModal" class="admin-modal-overlay" @click.self="showAddLeadModal = false">
-      <div class="admin-modal-card animate-fade-in-up">
-        <div class="admin-modal-header">
-          <h3 class="admin-modal-title">Log Buyer Inquiry</h3>
-          <button class="admin-modal-close" aria-label="Close" @click="showAddLeadModal = false">✕</button>
-        </div>
-        <form @submit.prevent="saveNewLead">
-          <div class="admin-modal-body">
-            <div class="grid grid-2" style="gap:14px; margin-bottom:14px;">
-              <div class="form-group">
-                <label class="form-label">Prospect Name *</label>
-                <input v-model="leadForm.name" type="text" required placeholder="e.g. Dr. Salman Khan" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Phone / WhatsApp *</label>
-                <input v-model="leadForm.phone" type="tel" required placeholder="+880 1819-..." class="form-input" />
-              </div>
-            </div>
-
-            <div class="grid grid-2" style="gap:14px; margin-bottom:14px;">
-              <div class="form-group">
-                <label class="form-label">Target Asset / Property</label>
-                <input v-model="leadForm.property" type="text" placeholder="যেমন: গুলশান ১ এ ১৫ কাঠা জমি / লেক ভিউ" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Buyer Category</label>
-                <select v-model="leadForm.type" class="form-select">
-                  <option value="NRB Investor">NRB Investor (Expatriate)</option>
-                  <option value="Direct Buyer">Direct Buyer (End-User)</option>
-                  <option value="Hospitality ROI">Hospitality ROI Investor</option>
-                  <option value="Corporate / Institutional">Corporate / Institutional</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Inquiry Message & Due Diligence Notes</label>
-              <textarea v-model="leadForm.message" rows="3" placeholder="Buyer requirements, budget constraints, timeline..." class="form-textarea"></textarea>
-            </div>
-          </div>
-
-          <div class="admin-modal-footer">
-            <button type="button" class="btn btn-sm btn-outline-white" @click="showAddLeadModal = false">Cancel</button>
-            <button type="submit" class="btn btn-sm btn-emerald" :disabled="isSubmitting">
-              {{ isSubmitting ? 'Saving...' : 'Save Lead' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <!-- Log a buyer the team spoke to (phone, Messenger, walk-in…) -->
+    <LogInquiryModal
+      v-if="showAddLeadModal"
+      :staff="staff"
+      :leads="leadsList"
+      :me-id="me?.id ?? null"
+      @close="showAddLeadModal = false"
+      @open="openFromInquiry"
+      @saved="onInquirySaved"
+    />
 
     <!-- ======================================================================
          MODAL: CONFIRM SOFT DELETE LEAD
@@ -394,6 +351,7 @@ import { buildQuestions } from '~/utils/leadSurvey'
 import LeadActivityPanel from '~/components/admin/crm/LeadActivityPanel.vue'
 import LeadVisitsPanel from '~/components/admin/crm/LeadVisitsPanel.vue'
 import HighlightFieldsModal from '~/components/admin/crm/HighlightFieldsModal.vue'
+import LogInquiryModal from '~/components/admin/crm/LogInquiryModal.vue'
 import {
   LEAD_STAGES, dhakaIso, endOfDhakaDay, formatDay, formatTime, formatWhen, inDays, parseApiDate, useLeadCrm,
   type LeadActivity, type LeadHighlights, type LeadVisit, type StaffMember
@@ -414,7 +372,6 @@ const sortBy = ref<'newest' | 'hottest'>('newest')
 const search = ref('')
 const showAddLeadModal = ref(false)
 const isLoading = ref(false)
-const isSubmitting = ref(false)
 const detailOpen = ref(false)
 const selectedId = ref<number | null>(null)
 
@@ -753,16 +710,20 @@ const flagFor = (l: any): { tone: string; text: string } | null => {
 /** CSS hook for the coloured stage badge beside the name ("Site Visit" → "site-visit"). */
 const stageKey = (stage?: string) => String(stage || 'New').toLowerCase().replace(/\s+/g, '-')
 
-const ACTIVITY_LABELS: Record<string, string> = { call: 'Call', whatsapp: 'WhatsApp', note: 'Note', email: 'Email' }
-/** Shown when there is no visit or follow-up flag: what happened on the last contact, e.g. "Call · No answer · 2h ago". */
+// Only real contact with the buyer goes under the name. System entries (form arrived, stage or owner changed)
+// are skipped: when the lead arrived is already shown on the right.
+const CONTACT_LABELS: Record<string, string> = { call: 'Call', whatsapp: 'WhatsApp', email: 'Email' }
+const NOTE_TYPES = ['note', 'call', 'whatsapp', 'email', 'manual']
+/** Shown when there is no visit or follow-up flag: the last contact, e.g. "Call · No answer · 2h ago", else the stage. */
 const lastContactText = (l: any): string => {
   const a = l.last_activity
-  if (!a || a.type === 'note') return l.stage && l.stage !== 'New' ? 'Status: ' + l.stage : ''
-  return [ACTIVITY_LABELS[a.type] || a.type, a.outcome, a.at ? ago(a.at) : ''].filter(Boolean).join(' · ')
+  if (a && CONTACT_LABELS[a.type]) return [CONTACT_LABELS[a.type], a.outcome, a.at ? ago(a.at) : ''].filter(Boolean).join(' · ')
+  return l.stage && l.stage !== 'New' ? 'Status: ' + l.stage : ''
 }
 /** One short line of the latest note (or call note) so the team sees the context without opening the lead. */
 const shortNote = (l: any): string => {
-  const body = l.last_activity?.body || String(l.note || '').split('\n').find((line: string) => line.trim()) || ''
+  const a = l.last_activity
+  const body = (a && NOTE_TYPES.includes(a.type) ? a.body : '') || String(l.note || '').split('\n').find((line: string) => line.trim()) || ''
   const text = body.replace(/\s+/g, ' ').trim()
   return text.length > 90 ? text.slice(0, 89) + '…' : text
 }
@@ -932,7 +893,9 @@ const detailSections = computed(() => {
   if (!l) return []
   const surveyed = !!l.form_version
   const formAd = l.meta_lead_id ? (l.meta_platform === 'instagram' ? 'Instagram lead form' : 'Facebook lead form') : ''
-  const source = formAd || (l.utm_source === 'facebook' || l.parsed?.fbclick ? 'Facebook ad' : (l.utm_source || 'Website, no ad'))
+  const source = formAd || (l.utm_source === 'crm_manual'
+    ? `Logged by the team · ${l.utm_medium || 'manual'}`
+    : (l.utm_source === 'facebook' || l.parsed?.fbclick ? 'Facebook ad' : (l.utm_source || 'Website, no ad')))
   const sections: { title: string; rows: Row[] }[] = [
     {
       title: 'What the buyer told us',
@@ -980,47 +943,22 @@ const detailSections = computed(() => {
 
 /* ---------- Actions ---------- */
 
-const leadForm = reactive({
-  name: '',
-  phone: '',
-  property: '',
-  type: 'NRB Investor',
-  message: ''
-})
+const openFromInquiry = async (id: number) => {
+  showAddLeadModal.value = false
+  if (view.value === 'trash') { view.value = 'active'; await fetchLeads(false) }
+  clearFilters()
+  const lead = leadsList.value.find(l => l.id === id)
+  if (lead) openLead(lead)
+}
 
-const saveNewLead = async () => {
-  isSubmitting.value = true
-  try {
-    const res = await fetch(useApiUrl('/leads'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token.value}`
-      },
-      body: JSON.stringify({
-        name: leadForm.name,
-        phone: leadForm.phone,
-        property_title: leadForm.property,
-        buyer_type: leadForm.type,
-        message: leadForm.message || 'Direct telephone inquiry recorded at GBREL HQ.',
-        source: 'Admin CRM Manual'
-      })
-    })
-
-    if (!res.ok) throw new Error('Failed to create lead in database')
-
-    toast.success('Lead Registered', `Inquiry from ${leadForm.name} saved to CRM inbox.`)
-    showAddLeadModal.value = false
-    leadForm.name = ''
-    leadForm.phone = ''
-    leadForm.property = ''
-    leadForm.message = ''
-    await fetchLeads(view.value === 'trash')
-  } catch (err: any) {
-    toast.error('Save Failed', err?.message || 'Could not save buyer inquiry.')
-  } finally {
-    isSubmitting.value = false
-  }
+const onInquirySaved = async (lead: any) => {
+  showAddLeadModal.value = false
+  toast.success('Lead saved', `${lead.name} is in the CRM.`)
+  view.value = 'active'
+  await fetchLeads(false)
+  clearFilters()
+  const fresh = leadsList.value.find(l => l.id === lead.id)
+  if (fresh) openLead(fresh)
 }
 
 const setStage = async (lead: any, newStage: string) => {
