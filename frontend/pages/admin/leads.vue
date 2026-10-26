@@ -359,7 +359,7 @@
           @changed="refreshAll"
         />
 
-        <section v-if="formAnswers(selected).length" v-show="selected.deleted_at || tab === 'overview' || tab === 'answers'" class="ld-section ld-answers">
+        <section v-if="formAnswers(selected).length" v-show="selected.deleted_at || tab === 'overview'" class="ld-section ld-answers">
           <h3>
             Form answers
             <span v-if="selected.meta_form_name" class="ld-answers-form">{{ selected.meta_form_name }}</span>
@@ -371,9 +371,6 @@
             </li>
           </ol>
         </section>
-        <div v-else-if="tab === 'answers'" class="ld-section ld-answers-empty">
-          <p>No form answers recorded for this inquiry.</p>
-        </div>
 
         <section v-for="section in detailSections" v-show="selected.deleted_at || tab === 'overview'" :key="section.title" class="ld-section">
           <h3>{{ section.title }}</h3>
@@ -965,7 +962,7 @@ const staff = ref<StaffMember[]>([])
 const upcomingVisits = ref<LeadVisit[]>([])
 const crmDetail = ref<{ activities: LeadActivity[]; visits: LeadVisit[] }>({ activities: [], visits: [] })
 const crmLoading = ref(false)
-const tab = ref<'overview' | 'answers' | 'activity' | 'visits'>('overview')
+const tab = ref<'overview' | 'activity' | 'visits'>('overview')
 const quick = ref<'all' | 'followups' | 'visits' | 'unassigned' | 'mine' | 'trash'>('all')
 watch(quick, val => {
   if (val === 'trash' && view.value !== 'trash') {
@@ -1065,15 +1062,11 @@ function matchesQuick(l: any) {
   }
 }
 
-const detailTabs = computed(() => {
-  const answersCount = selected.value ? formAnswers(selected.value).length : 0
-  return [
-    { key: 'overview' as const, label: 'Overview', count: 0 },
-    { key: 'answers' as const, label: 'Answers', count: answersCount },
-    { key: 'activity' as const, label: 'Activity', count: crmDetail.value.activities.length },
-    { key: 'visits' as const, label: 'Site visits', count: crmDetail.value.visits.filter(v => v.status === 'Confirmed').length }
-  ]
-})
+const detailTabs = computed(() => [
+  { key: 'overview' as const, label: 'Overview', count: 0 },
+  { key: 'activity' as const, label: 'Activity', count: crmDetail.value.activities.length },
+  { key: 'visits' as const, label: 'Site visits', count: crmDetail.value.visits.filter(v => v.status === 'Confirmed').length }
+])
 
 async function loadOverview() {
   try {
@@ -1452,7 +1445,6 @@ const restoreLead = async (lead: any) => {
 .ld-tabs-detail button:hover { color: var(--admin-text-primary); }
 .ld-tabs-detail button.on { color: var(--admin-text-primary); border-bottom-color: var(--admin-text-gold); }
 .ld-detail .ld-section:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
-.ld-answers-empty { padding: 32px 16px; text-align: center; color: var(--admin-text-muted); font-size: 0.9rem; }
 
 /* Empty / loading */
 .ld-empty { text-align: center; padding: 56px 24px; color: var(--admin-text-muted); border: 1px dashed var(--admin-border-hover); border-radius: 14px; }
