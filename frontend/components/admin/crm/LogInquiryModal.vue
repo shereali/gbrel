@@ -260,7 +260,18 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.li-card { max-width: 720px; }
+.li-overlay {
+  --li-top-gap: max(96px, calc(var(--ld-sticky-top, 72px) + 24px));
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: var(--li-top-gap) 20px 32px;
+}
+.li-card {
+  max-width: 720px;
+  max-height: calc(100dvh - var(--li-top-gap) - 32px);
+  margin: 0 auto;
+}
 .li-card form { display: flex; flex-direction: column; min-height: 0; flex: 1; }
 .li-body { overflow-y: auto; min-height: 0; flex: 1; display: grid; gap: 18px; }
 .li-group { margin: 0; padding: 0; border: 0; display: grid; gap: 12px; min-width: 0; }
