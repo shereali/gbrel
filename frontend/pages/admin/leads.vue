@@ -122,6 +122,19 @@
           />
 
           <button
+            type="button"
+            class="ld-activity-filter-btn"
+            :class="{ 'is-active': quick === 'activity' }"
+            title="Filter by current activity (status updates, notes, recent interactions)"
+            aria-label="Filter by current activity"
+            @click="toggleActivityFilter"
+          >
+            <Activity :size="14" aria-hidden="true" />
+            <span>Current Activity</span>
+            <span v-if="currentActivityCount" class="ld-act-count">{{ currentActivityCount }}</span>
+          </button>
+
+          <button
             v-if="hasFilters"
             type="button"
             class="ld-reset-btn"
@@ -530,7 +543,7 @@ import LeadVisitsPanel from '~/components/admin/crm/LeadVisitsPanel.vue'
 import HighlightFieldsModal from '~/components/admin/crm/HighlightFieldsModal.vue'
 import LogInquiryModal from '~/components/admin/crm/LogInquiryModal.vue'
 import CrmFilterDropdown from '~/components/admin/crm/CrmFilterDropdown.vue'
-import { ArrowUpDown, CircleDot, FolderKanban, Layers, MessageSquareQuote, RotateCcw, Target, Users } from 'lucide-vue-next'
+import { Activity, ArrowUpDown, CircleDot, FolderKanban, Layers, MessageSquareQuote, RotateCcw, Target, Users } from 'lucide-vue-next'
 import {
   LEAD_STAGES, dhakaIso, endOfDhakaDay, formatDay, formatHumanVisit, formatTime, formatWhen, inDays, parseApiDate, useLeadCrm,
   type LeadActivity, type LeadHighlights, type LeadVisit, type StaffMember, type HighlightForm
@@ -1122,6 +1135,7 @@ const answerDropdownOptions = computed(() => {
 
 const sortDropdownOptions = [
   { value: 'newest', label: 'Newest first' },
+  { value: 'activity', label: 'Current Activity' },
   { value: 'hottest', label: 'Hottest first' }
 ]
 
@@ -1203,9 +1217,12 @@ const filteredLeads = computed(() => {
     }
   }
 
-  if (quick.value === 'followups') list.sort((a, b) => (followMs(a) ?? 0) - (followMs(b) ?? 0))
+  if (quick.value === 'activity') list.sort((a, b) => activityTimeMs(b) - activityTimeMs(a))
+  else if (quick.value === 'followups') list.sort((a, b) => (followMs(a) ?? 0) - (followMs(b) ?? 0))
   else if (quick.value === 'visits') list.sort((a, b) => visitKey(a).localeCompare(visitKey(b)))
-  else if (sortBy.value === 'hottest') {
+  else if (sortBy.value === 'activity') {
+    list.sort((a, b) => activityTimeMs(b) - activityTimeMs(a))
+  } else if (sortBy.value === 'hottest') {
     list.sort((a, b) => (tierRank[a.tier] ?? 3) - (tierRank[b.tier] ?? 3) || String(b.created_at).localeCompare(String(a.created_at)))
   }
   return list
@@ -1224,7 +1241,7 @@ const upcomingVisits = ref<LeadVisit[]>([])
 const crmDetail = ref<{ activities: LeadActivity[]; visits: LeadVisit[] }>({ activities: [], visits: [] })
 const crmLoading = ref(false)
 const tab = ref<'overview' | 'activity' | 'visits'>('overview')
-const quick = ref<'all' | 'followups' | 'visits' | 'unassigned' | 'mine' | 'trash'>('all')
+const quick = ref<'all' | 'activity' | 'followups' | 'visits' | 'unassigned' | 'mine' | 'trash'>('all')
 watch(quick, val => {
   if (val === 'trash' && view.value !== 'trash') {
     changeView('trash')
@@ -1272,26 +1289,56 @@ const stageKey = (stage?: string) => String(stage || 'New').toLowerCase().replac
 
 // Only real contact with the buyer goes under the name. System entries (form arrived, stage or owner changed)
 // are skipped: when the lead arrived is already shown on the right.
-const CONTACT_LABELS: Record<string, string> = { call: 'Call', whatsapp: 'WhatsApp', email: 'Email' }
+const CONTACT_LABELS: Record<string, string> = { call: 'Call', whatsapp: 'WhatsApp', email: 'Email', note: 'Note' }
 const NOTE_TYPES = ['note', 'call', 'whatsapp', 'email', 'manual']
 /** Shown when there is no visit or follow-up flag: the last contact, e.g. "Call · No answer · 2h ago", else the stage. */
 const lastContactText = (l: any): string => {
-  const a = l.last_activity
+  const a = l.last_activity || l.recent_activity
   if (a && CONTACT_LABELS[a.type]) return [CONTACT_LABELS[a.type], a.outcome, a.at ? ago(a.at) : ''].filter(Boolean).join(' · ')
+  if (a && a.type === 'stage') return 'Status: ' + (a.meta?.to || l.stage) + (a.at ? ' · ' + ago(a.at) : '')
   return l.stage && l.stage !== 'New' ? 'Status: ' + l.stage : ''
 }
 /** One short line of the latest note (or call note) so the team sees the context without opening the lead. */
 const shortNote = (l: any): string => {
-  const a = l.last_activity
+  const a = l.last_activity || l.recent_activity
   const body = (a && NOTE_TYPES.includes(a.type) ? a.body : '') || String(l.note || '').split('\n').find((line: string) => line.trim()) || ''
   const text = body.replace(/\s+/g, ' ').trim()
   return text.length > 90 ? text.slice(0, 89) + '…' : text
+}
+
+function hasCurrentActivity(l: any): boolean {
+  if (!l || l.deleted_at) return false
+  if (l.recent_activity || l.last_activity) return true
+  if (l.stage && l.stage !== 'New') return true
+  if (l.note && String(l.note).trim().length > 0) return true
+  if (l.last_contacted_at || l.next_follow_up_at) return true
+  if (l.updated_at && l.created_at) {
+    const updated = new Date(l.updated_at).getTime()
+    const created = new Date(l.created_at).getTime()
+    if (updated - created > 60000) return true
+  }
+  return false
+}
+
+function activityTimeMs(l: any): number {
+  if (!l) return 0
+  const iso = l.recent_activity?.at || l.last_activity?.at || l.last_contacted_at || l.updated_at || l.created_at
+  if (!iso) return 0
+  const t = new Date(iso).getTime()
+  return isNaN(t) ? 0 : t
+}
+
+const currentActivityCount = computed(() => openLeads.value.filter(hasCurrentActivity).length)
+
+const toggleActivityFilter = () => {
+  quick.value = quick.value === 'activity' ? 'all' : 'activity'
 }
 
 const openLeads = computed(() => leadsList.value.filter(l => !isClosed(l)))
 const quickViews = computed(() => {
   const base = [
     { key: 'all' as const, label: isLeadAdmin.value ? 'All leads' : 'My leads', count: leadsList.value.length, alert: false },
+    { key: 'activity' as const, label: 'Current Activity', count: currentActivityCount.value, alert: false },
     { key: 'followups' as const, label: 'Needs follow-up', count: openLeads.value.filter(l => ['overdue', 'today'].includes(followState(l))).length, alert: true },
     { key: 'visits' as const, label: 'Visits coming up', count: openLeads.value.filter(l => nextVisit.value.has(l.id)).length, alert: false },
   ]
@@ -1314,6 +1361,7 @@ const quickDropdownOptions = computed(() =>
 function matchesQuick(l: any) {
   if (view.value === 'trash') return true
   switch (quick.value) {
+    case 'activity': return !isClosed(l) && hasCurrentActivity(l)
     case 'followups': return !isClosed(l) && ['overdue', 'today'].includes(followState(l))
     case 'visits': return !isClosed(l) && nextVisit.value.has(l.id)
     case 'unassigned': return !isClosed(l) && !l.assigned_to
@@ -1800,6 +1848,12 @@ const restoreLead = async (lead: any) => {
 .ld-refresh-btn.is-refreshing { opacity: 0.8; pointer-events: none; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .spin-anim { animation: spin 0.75s linear infinite; }
+.ld-activity-filter-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background: var(--admin-bg-surface); color: var(--admin-text-secondary); font: inherit; font-size: 0.83rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); }
+.ld-activity-filter-btn:hover { background: var(--admin-chip-bg); color: var(--admin-text-primary); border-color: var(--admin-border-hover); }
+.ld-activity-filter-btn.is-active { background: rgba(14, 165, 233, 0.14); border-color: #0284C7; color: #0284C7; font-weight: 700; }
+.admin-theme-light .ld-activity-filter-btn.is-active { background: rgba(2, 132, 199, 0.1); border-color: #0284C7; color: #0369A1; }
+.ld-act-count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; background: rgba(14, 165, 233, 0.2); color: #0284C7; }
+.ld-activity-filter-btn.is-active .ld-act-count { background: #0284C7; color: #fff; }
 .ld-reset-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.45); background: rgba(239, 68, 68, 0.1); color: #EF4444; font: inherit; font-size: 0.83rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); }
 .ld-reset-btn:hover { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.7); color: #DC2626; }
 .admin-header-actions { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -1924,7 +1978,7 @@ const restoreLead = async (lead: any) => {
   .ld-searchrow { flex: none; width: 100%; max-width: none; }
   .ld-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; width: 100%; }
   .ld-filters :deep(.cf-dropdown) { width: 100%; max-width: none; min-width: 0; }
-  .ld-reset-btn { min-height: 38px; padding: 4px 8px; font-size: 0.78rem; width: 100%; }
+  .ld-activity-filter-btn, .ld-reset-btn { min-height: 38px; padding: 4px 8px; font-size: 0.78rem; width: 100%; }
   .ld-filter-btn { display: none !important; }
   .ld-hl-card.with-visit { grid-template-columns: 1fr; gap: 12px; }
   .ld-hl-card.with-visit .ld-hl-visit-side { border-top: 1px solid rgba(251, 191, 36, 0.35); }

@@ -969,26 +969,41 @@ Route::get('/leads', function (Request $request) {
     $leads = $query->orderBy('created_at', 'desc')->get();
 
     // The last call, WhatsApp, email or note for each buyer (not stage or owner changes), shown under the name in the CRM list.
-    $latestActivities = LeadActivity::whereIn('lead_id', $leads->pluck('id'))
-        ->whereIn('type', ['note', 'call', 'whatsapp', 'email', 'manual'])
+    $leadIds = $leads->pluck('id');
+    $allActivities = LeadActivity::whereIn('lead_id', $leadIds)
         ->orderByDesc('occurred_at')
         ->orderByDesc('id')
         ->get(['id', 'lead_id', 'type', 'body', 'meta', 'occurred_at'])
-        ->groupBy('lead_id')
-        ->map(function ($items) {
-            $a = $items->first();
+        ->groupBy('lead_id');
 
-            return [
-                'id' => $a->id,
-                'type' => $a->type,
-                'outcome' => $a->meta['outcome'] ?? null,
-                'body' => $a->body ? Str::limit($a->body, 140) : null,
-                'at' => $a->occurred_at?->toISOString() ?? (string) $a->occurred_at,
-            ];
-        });
+    $latestActivities = $allActivities->map(function ($items) {
+        $a = $items->firstWhere(fn ($act) => in_array($act->type, ['note', 'call', 'whatsapp', 'email', 'manual'], true));
+        if (! $a) return null;
+        return [
+            'id' => $a->id,
+            'type' => $a->type,
+            'outcome' => $a->meta['outcome'] ?? null,
+            'body' => $a->body ? Str::limit($a->body, 140) : null,
+            'at' => $a->occurred_at?->toISOString() ?? (string) $a->occurred_at,
+        ];
+    });
 
-    $leads->each(function (Lead $lead) use ($latestActivities) {
+    $latestAnyActivity = $allActivities->map(function ($items) {
+        $a = $items->first();
+        if (! $a) return null;
+        return [
+            'id' => $a->id,
+            'type' => $a->type,
+            'outcome' => $a->meta['outcome'] ?? null,
+            'body' => $a->body ? Str::limit($a->body, 140) : null,
+            'meta' => $a->meta ?? [],
+            'at' => $a->occurred_at?->toISOString() ?? (string) $a->occurred_at,
+        ];
+    });
+
+    $leads->each(function (Lead $lead) use ($latestActivities, $latestAnyActivity) {
         $lead->setAttribute('last_activity', $latestActivities->get($lead->id));
+        $lead->setAttribute('recent_activity', $latestAnyActivity->get($lead->id));
     });
 
     return response()->json([
