@@ -6,6 +6,16 @@
         <p class="page-subtitle ld-subtitle">Open a lead to see everything the buyer told us, then call or message them.</p>
       </div>
       <div class="admin-header-actions">
+        <button
+          type="button"
+          class="ld-hl-btn ld-refresh-btn"
+          :class="{ 'is-refreshing': isRefreshing }"
+          title="Refresh leads list"
+          @click="handleManualRefresh"
+        >
+          <RotateCcw :size="14" :class="{ 'spin-anim': isRefreshing }" aria-hidden="true" />
+          <span>Refresh</span>
+        </button>
         <button type="button" class="ld-hl-btn" title="Choose which form answers to highlight" @click="openHighlights()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           <span>Highlights</span>
@@ -66,7 +76,7 @@
             :icon="Users"
             default-value="all"
             placeholder="All Team"
-            align="left"
+            align="right"
             aria-label="Filter by assigned staff"
           />
 
@@ -107,9 +117,21 @@
             :icon="Target"
             default-value="All"
             placeholder="All buyers"
-            align="right"
+            align="left"
             aria-label="Show buyer type"
           />
+
+          <button
+            v-if="hasFilters"
+            type="button"
+            class="ld-reset-btn"
+            title="Reset all filters to default"
+            aria-label="Reset all filters"
+            @click="clearFilters"
+          >
+            <RotateCcw :size="13" aria-hidden="true" />
+            <span>Reset</span>
+          </button>
         </div>
       </div>
 
@@ -508,7 +530,7 @@ import LeadVisitsPanel from '~/components/admin/crm/LeadVisitsPanel.vue'
 import HighlightFieldsModal from '~/components/admin/crm/HighlightFieldsModal.vue'
 import LogInquiryModal from '~/components/admin/crm/LogInquiryModal.vue'
 import CrmFilterDropdown from '~/components/admin/crm/CrmFilterDropdown.vue'
-import { ArrowUpDown, CircleDot, FolderKanban, Layers, MessageSquareQuote, Target, Users } from 'lucide-vue-next'
+import { ArrowUpDown, CircleDot, FolderKanban, Layers, MessageSquareQuote, RotateCcw, Target, Users } from 'lucide-vue-next'
 import {
   LEAD_STAGES, dhakaIso, endOfDhakaDay, formatDay, formatHumanVisit, formatTime, formatWhen, inDays, parseApiDate, useLeadCrm,
   type LeadActivity, type LeadHighlights, type LeadVisit, type StaffMember
@@ -1217,6 +1239,33 @@ async function loadDetail() {
 }
 const refreshAll = () => Promise.all([fetchLeads(view.value === 'trash', true), loadOverview(), loadDetail()])
 
+const isRefreshing = ref(false)
+const handleManualRefresh = async () => {
+  if (isRefreshing.value) return
+  isRefreshing.value = true
+  try {
+    await refreshAll()
+    toast.success('Leads refreshed', 'Showing the latest buyer inquiries.')
+  } catch {
+    toast.error('Could not refresh', 'Check your network connection.')
+  } finally {
+    setTimeout(() => { isRefreshing.value = false }, 500)
+  }
+}
+
+let autoRefreshTimer: ReturnType<typeof setInterval> | null = null
+onMounted(() => {
+  autoRefreshTimer = setInterval(() => {
+    refreshAll()
+  }, 120000)
+})
+onBeforeUnmount(() => {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer)
+    autoRefreshTimer = null
+  }
+})
+
 watch(selectedId, () => {
   tab.value = 'overview'
   pickedFollowUp.value = ''
@@ -1630,6 +1679,15 @@ const restoreLead = async (lead: any) => {
 .ld-hl-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 6px 14px; border-radius: 10px; border: 1px solid rgba(251, 191, 36, 0.5); background: transparent; color: var(--admin-text-primary); font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
 .ld-hl-btn svg { color: #D9A21B; }
 .ld-hl-btn:hover { background: rgba(251, 191, 36, 0.12); }
+.ld-refresh-btn { border-color: var(--admin-border-subtle); color: var(--admin-text-secondary); }
+.ld-refresh-btn svg { color: var(--admin-text-secondary); }
+.ld-refresh-btn:hover { background: var(--admin-chip-bg); color: var(--admin-text-primary); border-color: var(--admin-border-hover); }
+.ld-refresh-btn:hover svg { color: var(--admin-text-primary); }
+.ld-refresh-btn.is-refreshing { opacity: 0.8; pointer-events: none; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.spin-anim { animation: spin 0.75s linear infinite; }
+.ld-reset-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.45); background: rgba(239, 68, 68, 0.1); color: #EF4444; font: inherit; font-size: 0.83rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); }
+.ld-reset-btn:hover { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.7); color: #DC2626; }
 .admin-header-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* Search, voice and filters */
@@ -1752,10 +1810,12 @@ const restoreLead = async (lead: any) => {
   .ld-searchrow { flex: none; width: 100%; max-width: none; }
   .ld-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; width: 100%; }
   .ld-filters :deep(.cf-dropdown) { width: 100%; max-width: none; min-width: 0; }
+  .ld-reset-btn { min-height: 38px; padding: 4px 8px; font-size: 0.78rem; width: 100%; }
   .ld-filter-btn { display: none !important; }
   .ld-hl-card.with-visit { grid-template-columns: 1fr; gap: 12px; }
   .ld-hl-card.with-visit .ld-hl-visit-side { border-top: 1px solid rgba(251, 191, 36, 0.35); }
-  .ld-check-col { width: 38px; padding-left: 8px; }
+  .ld-list-header { display: none !important; }
+  .ld-check-col { display: none !important; }
   .ld-row { padding: 12px 6px 12px 6px; }
   .ld-name { font-size: 1rem; }
   .ld-row-call { width: 56px; }

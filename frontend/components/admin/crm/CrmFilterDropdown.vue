@@ -26,7 +26,7 @@
     </button>
 
     <transition name="cf-pop">
-      <div v-if="isOpen" class="cf-menu" role="listbox">
+      <div v-if="isOpen" ref="menuRef" class="cf-menu" :style="menuStyle" role="listbox">
         <template v-for="(item, idx) in options" :key="idx">
           <!-- Grouped Options -->
           <div v-if="isGrouped(item)" class="cf-group">
@@ -79,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { ChevronDown, Check } from 'lucide-vue-next'
 
 export interface DropdownOption {
@@ -165,8 +165,78 @@ const isSelected = (val: string | number) => {
   return String(props.modelValue) === String(val)
 }
 
+const menuRef = ref<HTMLElement | null>(null)
+const menuStyle = ref<Record<string, string>>({})
+
+const updatePosition = () => {
+  if (!rootRef.value) return
+  const vw = window.innerWidth
+  if (vw > 900) {
+    menuStyle.value = {}
+    return
+  }
+
+  const triggerRect = rootRef.value.getBoundingClientRect()
+  const triggerCenter = triggerRect.left + triggerRect.width / 2
+  const padding = 10
+
+  if (triggerCenter < vw * 0.35) {
+    // Left column: align left with trigger, clamp max-width to right screen edge
+    const maxW = Math.min(320, Math.floor(vw - triggerRect.left - padding))
+    menuStyle.value = {
+      left: '0',
+      right: 'auto',
+      maxWidth: `${maxW}px`
+    }
+  } else if (triggerCenter > vw * 0.65) {
+    // Right column: align right with trigger, clamp max-width to left screen edge
+    const maxW = Math.min(320, Math.floor(triggerRect.right - padding))
+    menuStyle.value = {
+      right: '0',
+      left: 'auto',
+      maxWidth: `${maxW}px`
+    }
+  } else {
+    // Middle column: center horizontally under trigger
+    const halfAvail = Math.min(triggerCenter - padding, vw - padding - triggerCenter)
+    const maxW = Math.min(320, Math.floor(halfAvail * 2))
+    menuStyle.value = {
+      left: '50%',
+      right: 'auto',
+      transform: 'translateX(-50%)',
+      maxWidth: `${maxW}px`
+    }
+  }
+
+  // Double check after render to guarantee zero clipping
+  nextTick(() => {
+    if (!menuRef.value || !rootRef.value) return
+    const menuRect = menuRef.value.getBoundingClientRect()
+    if (menuRect.left < padding) {
+      const shift = Math.floor(padding - menuRect.left)
+      menuStyle.value = {
+        ...menuStyle.value,
+        left: `${shift}px`,
+        right: 'auto',
+        transform: 'none'
+      }
+    } else if (menuRect.right > vw - padding) {
+      const shift = Math.floor(menuRect.right - (vw - padding))
+      menuStyle.value = {
+        ...menuStyle.value,
+        right: `${shift}px`,
+        left: 'auto',
+        transform: 'none'
+      }
+    }
+  })
+}
+
 const toggleOpen = () => {
   isOpen.value = !isOpen.value
+  if (isOpen.value) {
+    updatePosition()
+  }
 }
 
 const selectOption = (opt: DropdownOption) => {
@@ -189,14 +259,22 @@ const handleKeyDown = (e: KeyboardEvent) => {
   }
 }
 
+const handleScrollOrResize = () => {
+  if (isOpen.value && window.innerWidth <= 900) {
+    updatePosition()
+  }
+}
+
 onMounted(() => {
   window.addEventListener('pointerdown', handlePointerDown)
   window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('resize', handleScrollOrResize)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('pointerdown', handlePointerDown)
   window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('resize', handleScrollOrResize)
 })
 </script>
 
@@ -205,6 +283,10 @@ onBeforeUnmount(() => {
   position: relative;
   width: 100%;
   min-width: 0;
+}
+
+.cf-dropdown.is-open {
+  z-index: 120;
 }
 
 /* Trigger Button */
