@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Lead;
+use App\Models\Property;
 use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,6 +42,36 @@ class LeadHighlightController extends Controller
             'fields' => array_values(self::WEBSITE_FIELDS),
         ]];
 
+        // Distinct website projects/properties from leads and published properties
+        $websiteProjects = Lead::query()
+            ->whereNull('meta_form_id')
+            ->whereNotNull('property_title')
+            ->where('property_title', '!=', '')
+            ->whereNotIn('property_title', ['General Inquiry', 'Direct Inquiry'])
+            ->distinct()
+            ->orderBy('property_title')
+            ->pluck('property_title');
+
+        try {
+            $publishedProps = Property::query()
+                ->whereNotIn('status', Property::HIDDEN_STATUSES)
+                ->whereNotNull('title')
+                ->where('title', '!=', '')
+                ->orderBy('title')
+                ->pluck('title');
+            $websiteProjects = $websiteProjects->merge($publishedProps)->unique()->values();
+        } catch (\Throwable $e) {
+            // Ignore if properties table isn't accessible
+        }
+
+        foreach ($websiteProjects as $projectTitle) {
+            $forms[] = [
+                'key' => 'website:'.$projectTitle,
+                'name' => 'Website - '.$projectTitle,
+                'fields' => array_values(self::WEBSITE_FIELDS),
+            ];
+        }
+
         $questionsByForm = [];
         $names = [];
         Lead::query()->whereNotNull('meta_form_id')->orderByDesc('id')->limit(2000)
@@ -59,9 +90,13 @@ class LeadHighlightController extends Controller
 
         $selected = [];
         foreach ($forms as $form) {
-            $selected[$form['key']] = array_key_exists($form['key'], $saved)
-                ? array_values(array_intersect((array) $saved[$form['key']], $form['fields']))
-                : array_values(array_filter($form['fields'], fn (string $field) => preg_match(self::DEFAULT_PATTERN, $field)));
+            if (array_key_exists($form['key'], $saved)) {
+                $selected[$form['key']] = array_values(array_intersect((array) $saved[$form['key']], $form['fields']));
+            } elseif (str_starts_with($form['key'], 'website:') && array_key_exists(self::WEBSITE_FORM, $saved)) {
+                $selected[$form['key']] = array_values(array_intersect((array) $saved[self::WEBSITE_FORM], $form['fields']));
+            } else {
+                $selected[$form['key']] = array_values(array_filter($form['fields'], fn (string $field) => preg_match(self::DEFAULT_PATTERN, $field)));
+            }
         }
 
         return response()->json(['success' => true, 'data' => ['forms' => $forms, 'selected' => $selected]]);
@@ -71,7 +106,7 @@ class LeadHighlightController extends Controller
     public function update(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'form' => ['required', 'string', 'max:40'],
+            'form' => ['required', 'string', 'max:255'],
             'fields' => ['present', 'array', 'max:20'],
             'fields.*' => ['string', 'max:300'],
         ]);

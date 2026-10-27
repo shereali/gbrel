@@ -948,6 +948,24 @@ Route::get('/leads', function (Request $request) {
         $query->where('status', $request->stage);
     }
 
+    if ($request->filled('project')) {
+        $project = (string) $request->project;
+        if ($project === 'website' || $project === 'website:all') {
+            $query->whereNull('meta_form_id');
+        } elseif (str_starts_with($project, 'website:')) {
+            $projName = substr($project, 8);
+            $query->whereNull('meta_form_id')->where(function ($q) use ($projName) {
+                $q->where('property_title', $projName)->orWhere('property', $projName);
+            });
+        } else {
+            $query->where(function ($q) use ($project) {
+                $q->where('meta_form_id', $project)
+                    ->orWhere('meta_form_name', $project)
+                    ->orWhere('property_title', $project);
+            });
+        }
+    }
+
     $leads = $query->orderBy('created_at', 'desc')->get();
 
     // The last call, WhatsApp, email or note for each buyer (not stage or owner changes), shown under the name in the CRM list.

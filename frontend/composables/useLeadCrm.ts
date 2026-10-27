@@ -30,7 +30,7 @@ export interface LeadVisit {
 }
 export interface StaffMember { id: number; name: string; role: string | null }
 /** A lead form and its fields; "website" is the site's own inquiry form, the rest are Meta lead form IDs. */
-export interface HighlightForm { key: string; name: string; fields: string[] }
+export interface HighlightForm { key: string; name: string; fields: string[]; source?: 'website' | 'meta'; project?: string }
 export interface LeadHighlights { forms: HighlightForm[]; selected: Record<string, string[]> }
 
 // Everyone on the team works in Bangladesh time (UTC+6, no daylight saving), wherever their browser thinks it is.

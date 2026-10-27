@@ -64,4 +64,34 @@ class LeadHighlightTest extends TestCase
         $this->getJson('/api/leads/highlights')->assertForbidden();
         $this->putJson('/api/leads/highlights', ['form' => 'website', 'fields' => []])->assertForbidden();
     }
+
+    public function test_website_projects_are_listed_and_can_have_custom_highlights(): void
+    {
+        Lead::create([
+            'name' => 'Rahim Uddin',
+            'phone' => '+8801712345678',
+            'status' => 'New',
+            'property_title' => 'Purbachal Marine City',
+        ]);
+        $this->signInAs('admin');
+
+        $data = $this->getJson('/api/leads/highlights')->assertOk()->json('data');
+        $websitePropForm = collect($data['forms'])->firstWhere('key', 'website:Purbachal Marine City');
+        $this->assertNotNull($websitePropForm);
+        $this->assertSame('Website - Purbachal Marine City', $websitePropForm['name']);
+
+        // Default inherits website highlights
+        $this->assertSame(['Best time to call'], $data['selected']['website:Purbachal Marine City']);
+
+        // Staff can customize specific website project highlights
+        $this->putJson('/api/leads/highlights', [
+            'form' => 'website:Purbachal Marine City',
+            'fields' => ['Budget', 'Best time to call'],
+        ])->assertOk();
+
+        $updated = $this->getJson('/api/leads/highlights')->json('data.selected');
+        $this->assertSame(['Budget', 'Best time to call'], $updated['website:Purbachal Marine City']);
+        // Base website remains unchanged
+        $this->assertSame(['Best time to call'], $updated['website']);
+    }
 }

@@ -39,6 +39,17 @@
         <!-- All select filter elements: inline on laptop/desktop, 3-col grid on mobile -->
         <div v-if="view === 'active'" class="ld-filters">
           <CrmFilterDropdown
+            v-model="projectFilter"
+            :options="projectDropdownOptions"
+            :icon="FolderKanban"
+            default-value="all"
+            placeholder="All Projects"
+            empty-text="No projects"
+            align="left"
+            aria-label="Filter by project"
+          />
+
+          <CrmFilterDropdown
             v-model="statusFilter"
             :options="statusDropdownOptions"
             :icon="CircleDot"
@@ -497,7 +508,7 @@ import LeadVisitsPanel from '~/components/admin/crm/LeadVisitsPanel.vue'
 import HighlightFieldsModal from '~/components/admin/crm/HighlightFieldsModal.vue'
 import LogInquiryModal from '~/components/admin/crm/LogInquiryModal.vue'
 import CrmFilterDropdown from '~/components/admin/crm/CrmFilterDropdown.vue'
-import { ArrowUpDown, CircleDot, Layers, MessageSquareQuote, Target, Users } from 'lucide-vue-next'
+import { ArrowUpDown, CircleDot, FolderKanban, Layers, MessageSquareQuote, Target, Users } from 'lucide-vue-next'
 import {
   LEAD_STAGES, dhakaIso, endOfDhakaDay, formatDay, formatHumanVisit, formatTime, formatWhen, inDays, parseApiDate, useLeadCrm,
   type LeadActivity, type LeadHighlights, type LeadVisit, type StaffMember
@@ -513,6 +524,7 @@ const { token, user: me, isSuperAdmin } = useAuth()
 const isLeadAdmin = computed(() => isSuperAdmin.value || me.value?.role === 'admin' || (me.value?.permissions || []).includes('*'))
 
 const view = ref<'active' | 'trash'>('active')
+const projectFilter = ref('all')
 const statusFilter = ref('All')
 const staffFilter = ref<number | 'all' | 'unassigned'>('all')
 const focus = ref('All')
@@ -721,13 +733,20 @@ const withoutFormAnswers = (note: string, answers: unknown): string => {
   return note.split('\n').filter(line => !lines.has(line.trim())).join('\n').trim()
 }
 
-const formKeyOf = (l: any): string => (l?.meta_form_id ? String(l.meta_form_id) : 'website')
+const formKeyOf = (l: any): string => {
+  if (l?.meta_form_id) return String(l.meta_form_id)
+  const prop = l?.property_title || l?.property
+  if (prop && highlights.value.selected[`website:${prop}`]) {
+    return `website:${prop}`
+  }
+  return 'website'
+}
 const highlightsFor = (l: any): { label: string; value: string }[] => {
   if (!l) return []
   const key = formKeyOf(l)
-  const chosen = highlights.value.selected[key] || []
+  const chosen = highlights.value.selected[key] || (key.startsWith('website:') ? highlights.value.selected['website'] : []) || []
   if (!chosen.length) return []
-  if (key === 'website') {
+  if (!l.meta_form_id) {
     return chosen.map(label => ({ label, value: websiteFieldValue[label]?.(l) || '' })).filter(h => h.value)
   }
   const answers: { question: string; answer: string }[] = Array.isArray(l.meta_answers) ? l.meta_answers : []
@@ -746,7 +765,7 @@ async function loadHighlights() {
 const openHighlights = async (form?: string) => {
   if (!highlights.value.forms.length) await loadHighlights()
   if (!highlights.value.forms.length) { toast.error('Could not load the lead forms', 'Try again in a moment.'); return }
-  highlightModal.form = form || null
+  highlightModal.form = form || (projectFilter.value !== 'all' ? projectFilter.value : null)
   highlightModal.open = true
 }
 const saveHighlights = async (form: string, fields: string[]) => {
@@ -762,6 +781,111 @@ const saveHighlights = async (form: string, fields: string[]) => {
     highlightModal.saving = false
   }
 }
+
+/* ---------- Filter by Project (Meta forms & Website properties) ---------- */
+
+const matchesProject = (l: any): boolean => {
+  if (!projectFilter.value || projectFilter.value === 'all') return true
+  if (projectFilter.value === 'website' || projectFilter.value === 'website:all') {
+    return !l.meta_form_id
+  }
+  if (projectFilter.value.startsWith('website:')) {
+    const target = projectFilter.value.slice(8)
+    return !l.meta_form_id && ((l.property_title || '') === target || (l.property || '') === target)
+  }
+  return String(l.meta_form_id || '') === projectFilter.value ||
+         (l.meta_form_name && l.meta_form_name === projectFilter.value) ||
+         (l.property_title && l.property_title === projectFilter.value)
+}
+
+const projectDropdownOptions = computed(() => {
+  const allCount = leadsList.value.filter(l => matchesFocus(l) && matchesSearch(l) && matchesQuick(l)).length
+
+  // Meta forms
+  const metaFormMap = new Map<string, { key: string; name: string }>()
+  for (const f of highlights.value.forms) {
+    if (f.key !== 'website' && !f.key.startsWith('website:')) {
+      metaFormMap.set(f.key, { key: f.key, name: f.name })
+    }
+  }
+  for (const l of leadsList.value) {
+    if (l.meta_form_id && !metaFormMap.has(String(l.meta_form_id))) {
+      metaFormMap.set(String(l.meta_form_id), {
+        key: String(l.meta_form_id),
+        name: l.meta_form_name || l.property_title || `Form ${l.meta_form_id}`
+      })
+    }
+  }
+
+  // Website projects
+  const websiteProjectCounts = new Map<string, number>()
+  let totalWebsiteCount = 0
+  for (const l of leadsList.value) {
+    if (!l.meta_form_id) {
+      totalWebsiteCount++
+      const p = l.property_title || l.property || 'General Inquiry'
+      websiteProjectCounts.set(p, (websiteProjectCounts.get(p) || 0) + 1)
+    }
+  }
+  for (const f of highlights.value.forms) {
+    if (f.key.startsWith('website:')) {
+      const proj = f.key.slice(8)
+      if (!websiteProjectCounts.has(proj)) {
+        websiteProjectCounts.set(proj, 0)
+      }
+    }
+  }
+
+  const items: any[] = [
+    { value: 'all', label: 'All Projects', count: allCount }
+  ]
+
+  if (metaFormMap.size > 0) {
+    const metaOptions = [...metaFormMap.values()].map(mf => {
+      const count = leadsList.value.filter(l => String(l.meta_form_id) === mf.key).length
+      return {
+        value: mf.key,
+        label: mf.name,
+        count
+      }
+    }).sort((a, b) => b.count - a.count)
+
+    items.push({
+      label: 'Meta Ad Campaigns',
+      options: metaOptions
+    })
+  }
+
+  if (totalWebsiteCount > 0 || websiteProjectCounts.size > 0) {
+    const webOptions: any[] = [
+      { value: 'website:all', label: 'All Website Inquiries', count: totalWebsiteCount }
+    ]
+
+    const sortedProjects = [...websiteProjectCounts.entries()].sort((a, b) => b[1] - a[1])
+    for (const [proj, count] of sortedProjects) {
+      webOptions.push({
+        value: `website:${proj}`,
+        label: proj,
+        count
+      })
+    }
+
+    items.push({
+      label: 'Website Projects',
+      options: webOptions
+    })
+  }
+
+  return items
+})
+
+watch(projectFilter, () => {
+  answerFilter.value = ''
+  if (selected.value && !matchesProject(selected.value)) {
+    selectedId.value = null
+    detailOpen.value = false
+  }
+})
 
 /* ---------- Filter by a highlighted form answer, e.g. "যত দ্রুত সম্ভব (আজই)" ---------- */
 
@@ -779,7 +903,8 @@ const allAnswersFor = (l: any): { label: string; value: string }[] => {
 }
 const answerOptions = computed(() => {
   const groups = new Map<string, Map<string, number>>()
-  for (const l of leadsList.value) {
+  const scopedLeads = leadsList.value.filter(l => matchesProject(l))
+  for (const l of scopedLeads) {
     for (const h of allAnswersFor(l)) {
       const answers = groups.get(h.label) || new Map<string, number>()
       answers.set(h.value, (answers.get(h.value) || 0) + 1)
@@ -803,7 +928,7 @@ watch(answerOptions, groups => {
   if (answerFilter.value && !groups.some(g => g.options.some(o => o.value === answerFilter.value))) answerFilter.value = ''
 })
 
-const baseLeads = computed(() => leadsList.value.filter(l => matchesFocus(l) && matchesSearch(l) && matchesQuick(l) && matchesAnswer(l)))
+const baseLeads = computed(() => leadsList.value.filter(l => matchesProject(l) && matchesFocus(l) && matchesSearch(l) && matchesQuick(l) && matchesAnswer(l)))
 
 const statusTabs = computed(() => [
   { value: 'All', label: 'All', count: baseLeads.value.length },
@@ -950,8 +1075,8 @@ const filteredLeads = computed(() => {
   return list
 })
 
-const hasFilters = computed(() => !!search.value || focus.value !== 'All' || !!answerFilter.value || (view.value === 'active' && (statusFilter.value !== 'All' || quick.value !== 'all' || staffFilter.value !== 'all')))
-const clearFilters = () => { search.value = ''; focus.value = 'All'; answerFilter.value = ''; statusFilter.value = 'All'; quick.value = 'all'; staffFilter.value = 'all' }
+const hasFilters = computed(() => !!search.value || focus.value !== 'All' || !!answerFilter.value || projectFilter.value !== 'all' || (view.value === 'active' && (statusFilter.value !== 'All' || quick.value !== 'all' || staffFilter.value !== 'all')))
+const clearFilters = () => { search.value = ''; focus.value = 'All'; answerFilter.value = ''; projectFilter.value = 'all'; statusFilter.value = 'All'; quick.value = 'all'; staffFilter.value = 'all' }
 
 /* ---------- CRM: owner, follow-up, site visits and activity ---------- */
 
