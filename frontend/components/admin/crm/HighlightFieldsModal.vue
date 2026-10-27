@@ -22,16 +22,17 @@
           >
             <div class="hf-selected-val">
               <span class="hf-form-icon" aria-hidden="true">
-                <!-- Globe icon for website -->
-                <svg v-if="currentFormIsWebsite" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                </svg>
                 <!-- Campaign / layers icon for Meta -->
-                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <svg v-if="!currentFormIsWebsite" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
                 </svg>
+                <!-- Globe icon for website -->
+                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
               </span>
-              <span :title="currentFormName">{{ currentFormName }}</span>
+              <span class="hf-selected-title" :title="currentFormName">{{ currentFormName }}</span>
+              <span v-if="currentForm?.count !== undefined" class="hf-opt-count">{{ currentForm.count }}</span>
             </div>
             <svg class="hf-chevron" :class="{ 'is-open': formDropdownOpen }" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
               <polyline points="6 9 12 15 18 9"/>
@@ -40,35 +41,11 @@
 
           <transition name="hf-pop">
             <div v-if="formDropdownOpen" class="hf-dd-list form-menu" role="listbox" aria-labelledby="hf-form-label">
-              <!-- Website Group -->
-              <div v-if="websiteForms.length" class="hf-group">
-                <div class="hf-group-title">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                  <span>Website Inquiries & Projects</span>
-                </div>
-                <button
-                  v-for="f in websiteForms"
-                  :key="f.key"
-                  type="button"
-                  class="hf-opt-btn"
-                  :class="{ 'is-selected': formKey === f.key }"
-                  role="option"
-                  :aria-selected="formKey === f.key"
-                  @click="selectForm(f.key)"
-                >
-                  <div class="hf-opt-left">
-                    <svg v-if="formKey === f.key" class="hf-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span v-else class="hf-check-spacer" aria-hidden="true" />
-                    <span class="hf-opt-text" :title="f.name">{{ f.name }}</span>
-                  </div>
-                </button>
-              </div>
-
-              <!-- Meta Group -->
+              <!-- Meta Group (On Top - exact same as All Projects) -->
               <div v-if="metaForms.length" class="hf-group">
                 <div class="hf-group-title">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-                  <span>Meta Lead Forms / Campaigns</span>
+                  <span>Meta Ad Campaigns</span>
                 </div>
                 <button
                   v-for="f in metaForms"
@@ -85,6 +62,32 @@
                     <span v-else class="hf-check-spacer" aria-hidden="true" />
                     <span class="hf-opt-text" :title="f.name">{{ f.name }}</span>
                   </div>
+                  <span v-if="f.count !== undefined" class="hf-opt-count">{{ f.count }}</span>
+                </button>
+              </div>
+
+              <!-- Website Group (Below) -->
+              <div v-if="websiteForms.length" class="hf-group">
+                <div class="hf-group-title">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  <span>Website Projects</span>
+                </div>
+                <button
+                  v-for="f in websiteForms"
+                  :key="f.key"
+                  type="button"
+                  class="hf-opt-btn"
+                  :class="{ 'is-selected': formKey === f.key }"
+                  role="option"
+                  :aria-selected="formKey === f.key"
+                  @click="selectForm(f.key)"
+                >
+                  <div class="hf-opt-left">
+                    <svg v-if="formKey === f.key" class="hf-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span v-else class="hf-check-spacer" aria-hidden="true" />
+                    <span class="hf-opt-text" :title="f.name">{{ f.name }}</span>
+                  </div>
+                  <span v-if="f.count !== undefined" class="hf-opt-count">{{ f.count }}</span>
                 </button>
               </div>
             </div>
@@ -136,21 +139,26 @@ import type { HighlightForm } from '~/composables/useLeadCrm'
 const props = defineProps<{ forms: HighlightForm[]; selected: Record<string, string[]>; initialForm?: string | null; saving: boolean }>()
 const emit = defineEmits<{ close: []; save: [form: string, fields: string[]] }>()
 
+const websiteForms = computed(() => props.forms.filter(f => f.key === 'website' || f.key.startsWith('website:')))
+const metaForms = computed(() => props.forms.filter(f => f.key !== 'website' && !f.key.startsWith('website:')))
+
 const formKey = ref(
   props.initialForm && props.forms.some(f => f.key === props.initialForm)
     ? props.initialForm
-    : (props.forms.find(f => f.key !== 'website')?.key || props.forms[0]?.key || '')
+    : (props.forms.find(f => f.key !== 'website' && !f.key.startsWith('website:'))?.key || props.forms[0]?.key || '')
 )
+
+watch(() => props.initialForm, (newVal) => {
+  if (newVal && props.forms.some(f => f.key === newVal)) {
+    formKey.value = newVal
+  }
+})
 const picked = ref<string[]>([])
 const dropdownOpen = ref(false)
 const dropdownRoot = ref<HTMLElement | null>(null)
 
 const formDropdownOpen = ref(false)
 const formDropdownRoot = ref<HTMLElement | null>(null)
-
-const websiteForms = computed(() => props.forms.filter(f => f.key === 'website' || f.key.startsWith('website:')))
-const metaForms = computed(() => props.forms.filter(f => f.key !== 'website' && !f.key.startsWith('website:')))
-
 const currentForm = computed(() => props.forms.find(f => f.key === formKey.value))
 const currentFormName = computed(() => currentForm.value?.name || 'Select project or form')
 const currentFormIsWebsite = computed(() => formKey.value === 'website' || formKey.value.startsWith('website:'))
@@ -263,10 +271,25 @@ onBeforeUnmount(() => {
   flex: 1 1 auto;
 }
 
-.hf-selected-val span:last-child {
+.hf-selected-title {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.hf-opt-count {
+  flex: none;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--admin-chip-bg);
+  color: var(--admin-text-secondary);
+}
+
+.hf-opt-btn.is-selected .hf-opt-count {
+  background: rgba(11, 122, 88, 0.25);
+  color: var(--admin-text-emerald, #0B7A58);
 }
 
 .hf-form-icon {

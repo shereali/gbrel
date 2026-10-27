@@ -436,8 +436,8 @@
     </button>
 
     <HighlightFieldsModal
-      v-if="highlightModal.open && highlights.forms.length"
-      :forms="highlights.forms" :selected="highlights.selected" :initial-form="highlightModal.form" :saving="highlightModal.saving"
+      v-if="highlightModal.open && modalHighlightForms.length"
+      :forms="modalHighlightForms" :selected="highlights.selected" :initial-form="highlightModal.form" :saving="highlightModal.saving"
       @close="highlightModal.open = false" @save="saveHighlights"
     />
 
@@ -533,7 +533,7 @@ import CrmFilterDropdown from '~/components/admin/crm/CrmFilterDropdown.vue'
 import { ArrowUpDown, CircleDot, FolderKanban, Layers, MessageSquareQuote, RotateCcw, Target, Users } from 'lucide-vue-next'
 import {
   LEAD_STAGES, dhakaIso, endOfDhakaDay, formatDay, formatHumanVisit, formatTime, formatWhen, inDays, parseApiDate, useLeadCrm,
-  type LeadActivity, type LeadHighlights, type LeadVisit, type StaffMember
+  type LeadActivity, type LeadHighlights, type LeadVisit, type StaffMember, type HighlightForm
 } from '~/composables/useLeadCrm'
 import { toLatinDigits, useVoiceSearch, type VoiceLang } from '~/composables/useVoiceSearch'
 
@@ -746,7 +746,11 @@ const formAnswers = (l: any): { question: string; answer: string; highlighted: b
   const chosen = highlights.value.selected[formKeyOf(l)] || []
   return l.meta_answers
     .filter((a: any) => a?.question && a?.answer)
-    .map((a: any) => ({ question: String(a.question), answer: String(a.answer), highlighted: chosen.includes(a.question) }))
+    .map((a: any) => ({
+      question: String(a.question),
+      answer: String(a.answer),
+      highlighted: chosen.some((c: string) => c.trim() === String(a.question).trim())
+    }))
 }
 // The answers are also saved as "Question: answer" lines in the message; they now have their own section, so keep them out of Notes.
 const withoutFormAnswers = (note: string, answers: unknown): string => {
@@ -757,6 +761,7 @@ const withoutFormAnswers = (note: string, answers: unknown): string => {
 
 const formKeyOf = (l: any): string => {
   if (l?.meta_form_id) return String(l.meta_form_id)
+  if (l?.meta_form_name && highlights.value.selected[l.meta_form_name]) return l.meta_form_name
   const prop = l?.property_title || l?.property
   if (prop && highlights.value.selected[`website:${prop}`]) {
     return `website:${prop}`
@@ -768,14 +773,124 @@ const highlightsFor = (l: any): { label: string; value: string }[] => {
   const key = formKeyOf(l)
   const chosen = highlights.value.selected[key] || (key.startsWith('website:') ? highlights.value.selected['website'] : []) || []
   if (!chosen.length) return []
-  if (!l.meta_form_id) {
+  if (!l.meta_form_id && (!Array.isArray(l.meta_answers) || l.meta_answers.length === 0)) {
     return chosen.map(label => ({ label, value: websiteFieldValue[label]?.(l) || '' })).filter(h => h.value)
   }
   const answers: { question: string; answer: string }[] = Array.isArray(l.meta_answers) ? l.meta_answers : []
   return chosen
-    .map(label => ({ label, value: answers.find(a => a.question === label)?.answer || '' }))
+    .map(label => {
+      const match = answers.find(a => String(a?.question || '').trim() === label.trim())
+      return { label, value: match?.answer || '' }
+    })
     .filter(h => h.value)
 }
+
+const modalHighlightForms = computed<HighlightForm[]>(() => {
+  const metaMap = new Map<string, { key: string; name: string; fields: Set<string>; count: number }>()
+
+  // Seed from backend highlights.forms
+  for (const f of highlights.value.forms) {
+    if (f.key !== 'website' && !f.key.startsWith('website:')) {
+      metaMap.set(f.key, {
+        key: f.key,
+        name: f.name,
+        fields: new Set(f.fields || []),
+        count: (f as any).count || 0
+      })
+    }
+  }
+
+  // Merge from leadsList (exact same source as projectDropdownOptions!)
+  for (const l of leadsList.value) {
+    if (l.meta_form_id) {
+      const key = String(l.meta_form_id)
+      const existing = metaMap.get(key)
+      const name = l.meta_form_name || l.property_title || existing?.name || `Form ${key}`
+      if (!existing) {
+        metaMap.set(key, {
+          key,
+          name,
+          fields: new Set<string>(),
+          count: 1
+        })
+      } else {
+        existing.count++
+        if (name && (existing.name.startsWith('Form ') || !existing.name)) {
+          existing.name = name
+        }
+      }
+
+      // Collect questions from meta_answers so they can be highlighted
+      const entry = metaMap.get(key)!
+      if (Array.isArray(l.meta_answers)) {
+        for (const a of l.meta_answers) {
+          if (a?.question && typeof a.question === 'string' && a.question.trim()) {
+            entry.fields.add(a.question.trim())
+          }
+        }
+      }
+    }
+  }
+
+  // Sort Meta forms by count descending (exact same order and counts as All Projects)
+  const metaList: HighlightForm[] = [...metaMap.values()]
+    .sort((a, b) => b.count - a.count)
+    .map(m => ({
+      key: m.key,
+      name: m.name,
+      fields: Array.from(m.fields),
+      count: m.count,
+      source: 'meta' as const
+    }))
+
+  // Website forms below Meta
+  const websiteForms: HighlightForm[] = []
+  const baseWeb = highlights.value.forms.find(f => f.key === 'website')
+  const baseWebFields = baseWeb?.fields?.length ? baseWeb.fields : [
+    'Best time to call', 'Wants to buy', 'Budget', 'Plans to use it for', 'Prefers', 'Email'
+  ]
+  const totalWebCount = leadsList.value.filter(l => !l.meta_form_id).length
+
+  websiteForms.push({
+    key: 'website',
+    name: 'All Website Inquiries',
+    fields: baseWebFields,
+    count: totalWebCount,
+    source: 'website' as const
+  })
+
+  const webProjectsMap = new Map<string, { count: number }>()
+  for (const l of leadsList.value) {
+    if (!l.meta_form_id) {
+      const p = l.property_title || l.property || 'General Inquiry'
+      const cur = webProjectsMap.get(p) || { count: 0 }
+      cur.count++
+      webProjectsMap.set(p, cur)
+    }
+  }
+  for (const f of highlights.value.forms) {
+    if (f.key.startsWith('website:')) {
+      const p = f.key.slice(8)
+      if (!webProjectsMap.has(p)) {
+        webProjectsMap.set(p, { count: 0 })
+      }
+    }
+  }
+
+  const sortedWebProjects = [...webProjectsMap.entries()].sort((a, b) => b[1].count - a[1].count)
+  for (const [proj, info] of sortedWebProjects) {
+    const existingF = highlights.value.forms.find(f => f.key === `website:${proj}`)
+    websiteForms.push({
+      key: `website:${proj}`,
+      name: proj,
+      fields: existingF?.fields?.length ? existingF.fields : baseWebFields,
+      count: info.count,
+      source: 'website' as const
+    })
+  }
+
+  return [...metaList, ...websiteForms]
+})
 
 async function loadHighlights() {
   try {
@@ -786,7 +901,6 @@ async function loadHighlights() {
 }
 const openHighlights = async (form?: string) => {
   if (!highlights.value.forms.length) await loadHighlights()
-  if (!highlights.value.forms.length) { toast.error('Could not load the lead forms', 'Try again in a moment.'); return }
   highlightModal.form = form || (projectFilter.value !== 'all' ? projectFilter.value : null)
   highlightModal.open = true
 }

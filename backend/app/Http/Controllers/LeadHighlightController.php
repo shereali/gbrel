@@ -36,11 +36,51 @@ class LeadHighlightController extends Controller
     public function index(): JsonResponse
     {
         $saved = (array) Setting::getVal(self::SETTING_KEY, []);
-        $forms = [[
-            'key' => self::WEBSITE_FORM,
-            'name' => 'Website inquiry form',
-            'fields' => array_values(self::WEBSITE_FIELDS),
-        ]];
+        $questionsByForm = [];
+        $names = [];
+        $metaCounts = [];
+
+        Lead::query()
+            ->whereNotNull('meta_form_id')
+            ->orderByDesc('id')
+            ->limit(2000)
+            ->get(['meta_form_id', 'meta_form_name', 'property_title', 'campaign_name', 'meta_answers'])
+            ->each(function (Lead $lead) use (&$questionsByForm, &$names, &$metaCounts) {
+                $formId = (string) $lead->meta_form_id;
+                $metaCounts[$formId] = ($metaCounts[$formId] ?? 0) + 1;
+
+                if (empty($names[$formId]) || str_starts_with($names[$formId], 'Form ')) {
+                    $title = $lead->meta_form_name ?: ($lead->property_title ?: ($lead->campaign_name ?: null));
+                    if ($title && ! in_array($title, ['Facebook Lead Ad', 'Instagram Lead Ad', 'General Inquiry'], true)) {
+                        $names[$formId] = $title;
+                    } else {
+                        $names[$formId] ??= 'Form '.$formId;
+                    }
+                }
+
+                foreach ((array) $lead->meta_answers as $answer) {
+                    if (! empty($answer['question'])) {
+                        $q = trim((string) $answer['question']);
+                        if ($q !== '') {
+                            $questionsByForm[$formId][$q] = true;
+                        }
+                    }
+                }
+            });
+
+        // Meta forms come FIRST (on top), sorted by lead count descending
+        uksort($names, fn ($a, $b) => ($metaCounts[$b] ?? 0) <=> ($metaCounts[$a] ?? 0));
+
+        $metaForms = [];
+        foreach ($names as $formId => $name) {
+            $metaForms[] = [
+                'key' => (string) $formId,
+                'name' => $name,
+                'fields' => array_keys($questionsByForm[$formId] ?? []),
+                'count' => $metaCounts[$formId] ?? 0,
+                'source' => 'meta',
+            ];
+        }
 
         // Distinct website projects/properties from leads and published properties
         $websiteProjects = Lead::query()
@@ -64,29 +104,25 @@ class LeadHighlightController extends Controller
             // Ignore if properties table isn't accessible
         }
 
+        $webForms = [[
+            'key' => self::WEBSITE_FORM,
+            'name' => 'Website inquiry form',
+            'fields' => array_values(self::WEBSITE_FIELDS),
+            'source' => 'website',
+        ]];
+
         foreach ($websiteProjects as $projectTitle) {
-            $forms[] = [
+            $webForms[] = [
                 'key' => 'website:'.$projectTitle,
                 'name' => 'Website - '.$projectTitle,
                 'fields' => array_values(self::WEBSITE_FIELDS),
+                'source' => 'website',
+                'project' => $projectTitle,
             ];
         }
 
-        $questionsByForm = [];
-        $names = [];
-        Lead::query()->whereNotNull('meta_form_id')->orderByDesc('id')->limit(2000)
-            ->get(['meta_form_id', 'meta_form_name', 'meta_answers'])
-            ->each(function (Lead $lead) use (&$questionsByForm, &$names) {
-                $names[$lead->meta_form_id] ??= $lead->meta_form_name ?: 'Form '.$lead->meta_form_id;
-                foreach ((array) $lead->meta_answers as $answer) {
-                    if (! empty($answer['question'])) {
-                        $questionsByForm[$lead->meta_form_id][$answer['question']] = true;
-                    }
-                }
-            });
-        foreach ($names as $formId => $name) {
-            $forms[] = ['key' => (string) $formId, 'name' => $name, 'fields' => array_keys($questionsByForm[$formId] ?? [])];
-        }
+        // Meta forms on top, Website projects below (exact same order as All Projects dropdown)
+        $forms = array_merge($metaForms, $webForms);
 
         $selected = [];
         foreach ($forms as $form) {
