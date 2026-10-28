@@ -62,7 +62,10 @@
                     <span v-else class="hf-check-spacer" aria-hidden="true" />
                     <span class="hf-opt-text" :title="f.name">{{ f.name }}</span>
                   </div>
-                  <span v-if="f.count !== undefined" class="hf-opt-count">{{ f.count }}</span>
+                  <div class="hf-opt-right">
+                    <span v-if="fieldsForKey(f.key).length" class="hf-hl-tag" :title="`${fieldsForKey(f.key).length} highlighted`">★ {{ fieldsForKey(f.key).length }}</span>
+                    <span v-if="f.count !== undefined" class="hf-opt-count">{{ f.count }}</span>
+                  </div>
                 </button>
               </div>
 
@@ -87,11 +90,20 @@
                     <span v-else class="hf-check-spacer" aria-hidden="true" />
                     <span class="hf-opt-text" :title="f.name">{{ f.name }}</span>
                   </div>
-                  <span v-if="f.count !== undefined" class="hf-opt-count">{{ f.count }}</span>
+                  <div class="hf-opt-right">
+                    <span v-if="fieldsForKey(f.key).length" class="hf-hl-tag" :title="`${fieldsForKey(f.key).length} highlighted`">★ {{ fieldsForKey(f.key).length }}</span>
+                    <span v-if="f.count !== undefined" class="hf-opt-count">{{ f.count }}</span>
+                  </div>
                 </button>
               </div>
             </div>
           </transition>
+        </div>
+
+        <div v-if="picked.length" class="hf-chips" aria-label="Highlighted fields">
+          <button v-for="field in picked" :key="field" type="button" class="hf-chip" :title="'Remove ' + field" @click="toggle(field)">
+            {{ field }} <span aria-hidden="true">✕</span>
+          </button>
         </div>
 
         <span id="hf-fields-label" class="form-label hf-label">Fields to highlight</span>
@@ -105,24 +117,16 @@
               <polyline points="6 9 12 15 18 9"/>
             </svg>
           </button>
-          <transition name="hf-pop">
-            <ul v-if="dropdownOpen" class="hf-dd-list" role="listbox" aria-multiselectable="true" aria-labelledby="hf-fields-label">
-              <li v-for="field in fields" :key="field" role="option" :aria-selected="picked.includes(field)">
-                <label class="hf-opt">
-                  <input type="checkbox" :value="field" :checked="picked.includes(field)" @change="toggle(field)" />
-                  <span>{{ field }}</span>
-                </label>
-              </li>
-            </ul>
-          </transition>
+          <ul v-if="fields.length && dropdownOpen" class="hf-fields-inline" role="listbox" aria-multiselectable="true" aria-labelledby="hf-fields-label">
+            <li v-for="field in fields" :key="field" role="option" :aria-selected="picked.includes(field)">
+              <label class="hf-opt" :class="{ 'is-checked': picked.includes(field) }">
+                <input type="checkbox" :value="field" :checked="picked.includes(field)" @change="toggle(field)" />
+                <span>{{ field }}</span>
+              </label>
+            </li>
+          </ul>
         </div>
         <p v-if="!fields.length" class="hf-empty">No answers from this project or form yet. Its fields appear here after the first lead arrives.</p>
-
-        <div v-if="picked.length" class="hf-chips" aria-label="Highlighted fields">
-          <button v-for="field in picked" :key="field" type="button" class="hf-chip" :title="'Remove ' + field" @click="toggle(field)">
-            {{ field }} <span aria-hidden="true">✕</span>
-          </button>
-        </div>
       </div>
       <div class="admin-modal-footer">
         <button type="button" class="btn btn-sm btn-outline-white" @click="emit('close')">Cancel</button>
@@ -133,28 +137,80 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import type { HighlightForm } from '~/composables/useLeadCrm'
 
 const props = defineProps<{ forms: HighlightForm[]; selected: Record<string, string[]>; initialForm?: string | null; saving: boolean }>()
-const emit = defineEmits<{ close: []; save: [form: string, fields: string[]] }>()
+const emit = defineEmits<{ close: []; save: [form: string, fields: string[], allModified?: Record<string, string[]>] }>()
 
 const websiteForms = computed(() => props.forms.filter(f => f.key === 'website' || f.key.startsWith('website:')))
 const metaForms = computed(() => props.forms.filter(f => f.key !== 'website' && !f.key.startsWith('website:')))
 
-const formKey = ref(
-  props.initialForm && props.forms.some(f => f.key === props.initialForm)
-    ? props.initialForm
-    : (props.forms.find(f => f.key !== 'website' && !f.key.startsWith('website:'))?.key || props.forms[0]?.key || '')
-)
+const resolveInitialFormKey = (): string => {
+  if (props.initialForm) {
+    const normalized = props.initialForm === 'website:all' ? 'website' : props.initialForm
+    if (props.forms.some(f => f.key === normalized)) return normalized
+  }
+  const firstWithHighlights = props.forms.find(f => (props.selected[f.key] || []).length > 0)
+  if (firstWithHighlights) return firstWithHighlights.key
+  return props.forms.find(f => f.key !== 'website' && !f.key.startsWith('website:'))?.key || props.forms[0]?.key || ''
+}
+
+const formKey = ref(resolveInitialFormKey())
+
+const draftSelected = reactive<Record<string, string[]>>({})
+const modifiedKeys = reactive(new Set<string>())
+
+const initDrafts = () => {
+  for (const f of props.forms) {
+    if (!(f.key in draftSelected)) {
+      const existing = props.selected[f.key]
+      if (Array.isArray(existing)) {
+        draftSelected[f.key] = [...existing]
+      } else if (f.key.startsWith('website:') && Array.isArray(props.selected['website'])) {
+        draftSelected[f.key] = [...props.selected['website']]
+      } else {
+        draftSelected[f.key] = []
+      }
+    }
+  }
+  for (const [k, v] of Object.entries(props.selected || {})) {
+    if (!(k in draftSelected) && Array.isArray(v)) {
+      draftSelected[k] = [...v]
+    }
+  }
+}
+initDrafts()
+
+watch(() => props.selected, () => {
+  initDrafts()
+}, { deep: true })
 
 watch(() => props.initialForm, (newVal) => {
-  if (newVal && props.forms.some(f => f.key === newVal)) {
-    formKey.value = newVal
+  if (newVal) {
+    const normalized = newVal === 'website:all' ? 'website' : newVal
+    if (props.forms.some(f => f.key === normalized)) {
+      formKey.value = normalized
+    }
   }
 })
-const picked = ref<string[]>([])
-const dropdownOpen = ref(false)
+
+const fieldsForKey = (key: string): string[] => {
+  if (key in draftSelected) return draftSelected[key] || []
+  if (key in props.selected) return props.selected[key] || []
+  if (key.startsWith('website:')) return draftSelected['website'] || props.selected['website'] || []
+  return []
+}
+
+const picked = computed<string[]>({
+  get: () => fieldsForKey(formKey.value),
+  set: (val: string[]) => {
+    draftSelected[formKey.value] = val
+    modifiedKeys.add(formKey.value)
+  }
+})
+
+const dropdownOpen = ref(true)
 const dropdownRoot = ref<HTMLElement | null>(null)
 
 const formDropdownOpen = ref(false)
@@ -171,13 +227,14 @@ const summary = computed(() => {
 })
 
 watch(formKey, key => {
-  picked.value = [...(props.selected[key] || [])]
-  dropdownOpen.value = false
+  if (!(key in draftSelected)) {
+    draftSelected[key] = [...fieldsForKey(key)]
+  }
+  dropdownOpen.value = true
 }, { immediate: true })
 
 const toggleFormDropdown = () => {
   formDropdownOpen.value = !formDropdownOpen.value
-  if (formDropdownOpen.value) dropdownOpen.value = false
 }
 
 const toggleFieldsDropdown = () => {
@@ -188,18 +245,25 @@ const toggleFieldsDropdown = () => {
 const selectForm = (key: string) => {
   formKey.value = key
   formDropdownOpen.value = false
+  dropdownOpen.value = true
 }
 
 const toggle = (field: string) => {
-  picked.value = picked.value.includes(field) ? picked.value.filter(f => f !== field) : [...picked.value, field]
+  const cur = picked.value
+  picked.value = cur.includes(field) ? cur.filter(f => f !== field) : [...cur, field]
 }
-const save = () => emit('save', formKey.value, picked.value)
+
+const save = () => {
+  const allModified: Record<string, string[]> = {}
+  for (const k of modifiedKeys) {
+    allModified[k] = [...(draftSelected[k] || [])]
+  }
+  allModified[formKey.value] = [...picked.value]
+  emit('save', formKey.value, [...picked.value], allModified)
+}
 
 const closeOnOutside = (event: MouseEvent) => {
   const target = event.target as Node
-  if (dropdownOpen.value && dropdownRoot.value && !dropdownRoot.value.contains(target)) {
-    dropdownOpen.value = false
-  }
   if (formDropdownOpen.value && formDropdownRoot.value && !formDropdownRoot.value.contains(target)) {
     formDropdownOpen.value = false
   }
@@ -208,7 +272,6 @@ const closeOnOutside = (event: MouseEvent) => {
 const handleKeyDown = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
     if (formDropdownOpen.value) formDropdownOpen.value = false
-    else if (dropdownOpen.value) dropdownOpen.value = false
   }
 }
 
@@ -417,6 +480,38 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
+.hf-opt-right {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+}
+
+.hf-hl-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.18);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  color: #D9A21B;
+}
+
+.hf-fields-inline {
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 6px 0 0;
+  padding: 6px;
+  list-style: none;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border-subtle);
+  background: var(--admin-bg-surface-alt);
+  scrollbar-width: thin;
+}
+
+.hf-fields-inline::-webkit-scrollbar { width: 5px; }
+.hf-fields-inline::-webkit-scrollbar-thumb { background: var(--admin-border-hover); border-radius: 10px; }
+
 .hf-opt {
   display: flex;
   align-items: flex-start;
@@ -427,6 +522,11 @@ onBeforeUnmount(() => {
   font-size: 0.88rem;
   line-height: 1.4;
   cursor: pointer;
+}
+
+.hf-opt.is-checked {
+  background: rgba(251, 191, 36, 0.12);
+  font-weight: 600;
 }
 
 .hf-opt:hover {

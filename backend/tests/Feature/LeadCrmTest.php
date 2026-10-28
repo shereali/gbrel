@@ -244,4 +244,42 @@ class LeadCrmTest extends TestCase
         $this->patchJson("/api/leads/{$myLead->id}/assign", ['user_id' => $agent->id])->assertForbidden();
         $this->postJson('/api/leads/bulk-assign', ['lead_ids' => [$myLead->id], 'user_id' => $agent->id])->assertForbidden();
     }
+
+    public function test_crm_records_which_user_updated_status_and_which_user_saved_activity(): void
+    {
+        $agent = $this->signInAs('agent', [
+            'name' => 'Agent Karim',
+            'custom_permissions' => ['leads.view', 'leads.manage'],
+        ]);
+
+        $lead = $this->lead(['name' => 'Tracked Buyer', 'assigned_to' => $agent->id]);
+
+        // Agent updates status to Qualified and saves a note activity
+        $stageRes = $this->patchJson("/api/leads/{$lead->id}/stage", ['stage' => 'Qualified'])->assertOk()->json('data');
+        $this->assertSame('Agent Karim', $stageRes['last_stage_activity']['user_name']);
+        $this->assertSame('Qualified', $stageRes['last_stage_activity']['to']);
+
+        $actRes = $this->postJson("/api/leads/{$lead->id}/activities", [
+            'type' => 'note',
+            'body' => 'Spoke with buyer about plot size.',
+        ])->assertOk()->json('data');
+        $this->assertSame('Agent Karim', $actRes['last_activity']['user_name']);
+        $this->assertSame('note', $actRes['last_activity']['type']);
+
+        // Admin views lead list and CRM timeline and sees Agent Karim's attribution
+        $this->signInAs('admin', ['name' => 'Admin Boss']);
+        $listLead = collect($this->getJson('/api/leads')->assertOk()->json('data'))->firstWhere('id', $lead->id);
+        $this->assertSame('Agent Karim', $listLead['last_stage_activity']['user_name']);
+        $this->assertSame('Qualified', $listLead['last_stage_activity']['to']);
+        $this->assertSame('Agent Karim', $listLead['last_activity']['user_name']);
+        $this->assertSame('note', $listLead['last_activity']['type']);
+
+        $timeline = $this->getJson("/api/leads/{$lead->id}/crm")->assertOk()->json('data.activities');
+        $stageEntry = collect($timeline)->firstWhere('type', 'stage');
+        $noteEntry = collect($timeline)->firstWhere('type', 'note');
+        $this->assertSame('Agent Karim', $stageEntry['user']['name']);
+        $this->assertSame('Agent Karim', $stageEntry['meta']['by_user_name']);
+        $this->assertSame('Agent Karim', $noteEntry['user']['name']);
+        $this->assertSame('Agent Karim', $noteEntry['meta']['by_user_name']);
+    }
 }

@@ -16,6 +16,18 @@
           <RotateCcw :size="14" :class="{ 'spin-anim': isRefreshing }" aria-hidden="true" />
           <span>Refresh</span>
         </button>
+        <button
+          v-if="view === 'active'"
+          type="button"
+          class="ld-reset-btn ld-reset-desktop"
+          :class="{ 'is-active': hasFilters }"
+          title="Reset all filters to default"
+          aria-label="Reset all filters"
+          @click="clearFilters"
+        >
+          <RotateCcw :size="13" aria-hidden="true" />
+          <span>Reset</span>
+        </button>
         <button type="button" class="ld-hl-btn" title="Choose which form answers to highlight" @click="openHighlights()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           <span>Highlights</span>
@@ -106,9 +118,10 @@
             :options="sortDropdownOptions"
             :icon="ArrowUpDown"
             default-value="newest"
-            placeholder="Sort by"
+            default-trigger-label="Sort"
+            placeholder="Sort"
             align="right"
-            aria-label="Sort by"
+            aria-label="Sort"
           />
 
           <CrmFilterDropdown
@@ -122,22 +135,9 @@
           />
 
           <button
-            type="button"
-            class="ld-activity-filter-btn"
-            :class="{ 'is-active': quick === 'activity' }"
-            title="Filter by current activity (status updates, notes, recent interactions)"
-            aria-label="Filter by current activity"
-            @click="toggleActivityFilter"
-          >
-            <Activity :size="14" aria-hidden="true" />
-            <span>Current Activity</span>
-            <span v-if="currentActivityCount" class="ld-act-count">{{ currentActivityCount }}</span>
-          </button>
-
-          <button
             v-if="hasFilters"
             type="button"
-            class="ld-reset-btn"
+            class="ld-reset-btn ld-reset-mobile"
             title="Reset all filters to default"
             aria-label="Reset all filters"
             @click="clearFilters"
@@ -146,6 +146,17 @@
             <span>Reset</span>
           </button>
         </div>
+      </div>
+
+      <div v-if="activeProjectHighlights.length" class="ld-project-hl-banner">
+        <div class="ld-project-hl-left">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span class="ld-project-hl-title">Highlighted fields ({{ activeProjectLabel }}):</span>
+          <div class="ld-project-hl-chips">
+            <span v-for="field in activeProjectHighlights" :key="field" class="ld-hl-chip">{{ field }}</span>
+          </div>
+        </div>
+        <button type="button" class="ld-hl-edit-inline" @click="openHighlights(activeProjectHighlightKey)">Change</button>
       </div>
 
       <p v-if="voice.listening.value || voice.error.value" class="ld-voice-status" role="status">
@@ -238,8 +249,8 @@
                     <span class="ld-assigned-text">{{ assignedName(lead) }}</span>
                   </span>
                 </span>
-                <span v-if="highlightsFor(lead).length" class="ld-hl-row">
-                  <span v-for="h in highlightsFor(lead).slice(0, 2)" :key="h.label" class="ld-hl-chip" :title="h.label + ': ' + h.value">{{ h.value }}</span>
+                <span v-if="highlightsFor(lead, projectFilter !== 'all').length" class="ld-hl-row">
+                  <span v-for="h in highlightsFor(lead, projectFilter !== 'all')" :key="h.label" class="ld-hl-chip" :title="h.label + ': ' + (h.value || '—')">{{ h.value ? h.value : `${h.label}: —` }}</span>
                 </span>
                 <span v-if="flagFor(lead)" class="ld-flag" :data-tone="flagFor(lead)!.tone">{{ flagFor(lead)!.text }}</span>
                 <span v-else-if="lastContactText(lead)" class="ld-flag" data-tone="muted">{{ lastContactText(lead) }}</span>
@@ -283,9 +294,9 @@
           </p>
         </header>
 
-        <section v-if="highlightsFor(selected).length || activeVisit" class="ld-hl-card" :class="{ 'with-visit': !!activeVisit && highlightsFor(selected).length }" aria-label="Highlighted answers and site visit">
+        <section v-if="highlightsFor(selected, true).length || activeVisit" class="ld-hl-card" :class="{ 'with-visit': !!activeVisit && highlightsFor(selected, true).length }" aria-label="Highlighted answers and site visit">
           <button
-            v-if="highlightsFor(selected).length"
+            v-if="highlightsFor(selected, true).length"
             type="button"
             class="ld-hl-edit-corner"
             title="Change highlighted fields"
@@ -295,10 +306,10 @@
             <span>Change</span>
           </button>
 
-          <div v-if="highlightsFor(selected).length" class="ld-hl-left">
-            <div v-for="h in highlightsFor(selected)" :key="h.label" class="ld-hl-item">
+          <div v-if="highlightsFor(selected, true).length" class="ld-hl-left">
+            <div v-for="h in highlightsFor(selected, true)" :key="h.label" class="ld-hl-item">
               <span class="ld-hl-label">{{ h.label }}:</span>
-              <strong class="ld-hl-value">{{ h.value }}</strong>
+              <strong class="ld-hl-value">{{ h.value || '—' }}</strong>
             </div>
           </div>
 
@@ -351,6 +362,16 @@
             <button v-for="stage in stages" :key="stage" type="button" :class="{ on: selected.stage === stage }" :aria-pressed="selected.stage === stage" @click="setStage(selected, stage)">{{ stage }}</button>
           </div>
           <span v-if="!stages.includes(selected.stage)" class="ld-muted">Current status: {{ selected.stage }}</span>
+        </div>
+        <div v-if="statusActorInfo(selected) || activityActorInfo(selected)" class="ld-audit-row">
+          <span v-if="statusActorInfo(selected)" class="ld-audit-badge ld-audit-badge--stage">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>Status updated to <strong>{{ statusActorInfo(selected)!.to }}</strong> by <strong>{{ statusActorInfo(selected)!.actor }}</strong><template v-if="statusActorInfo(selected)!.when"> &middot; {{ statusActorInfo(selected)!.when }}</template></span>
+          </span>
+          <span v-if="activityActorInfo(selected)" class="ld-audit-badge ld-audit-badge--act">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>{{ activityActorInfo(selected)!.label }} saved by <strong>{{ activityActorInfo(selected)!.actor }}</strong><template v-if="activityActorInfo(selected)!.when"> &middot; {{ activityActorInfo(selected)!.when }}</template></span>
+          </span>
         </div>
         <p v-if="selected.stage === 'Lost' && selected.lost_reason" class="ld-lost">Lost: {{ selected.lost_reason }}</p>
 
@@ -543,7 +564,7 @@ import LeadVisitsPanel from '~/components/admin/crm/LeadVisitsPanel.vue'
 import HighlightFieldsModal from '~/components/admin/crm/HighlightFieldsModal.vue'
 import LogInquiryModal from '~/components/admin/crm/LogInquiryModal.vue'
 import CrmFilterDropdown from '~/components/admin/crm/CrmFilterDropdown.vue'
-import { Activity, ArrowUpDown, CircleDot, FolderKanban, Layers, MessageSquareQuote, RotateCcw, Target, Users } from 'lucide-vue-next'
+import { ArrowUpDown, CircleDot, FolderKanban, Layers, MessageSquareQuote, RotateCcw, Target, Users } from 'lucide-vue-next'
 import {
   LEAD_STAGES, dhakaIso, endOfDhakaDay, formatDay, formatHumanVisit, formatTime, formatWhen, inDays, parseApiDate, useLeadCrm,
   type LeadActivity, type LeadHighlights, type LeadVisit, type StaffMember, type HighlightForm
@@ -563,7 +584,7 @@ const projectFilter = ref('all')
 const statusFilter = ref('All')
 const staffFilter = ref<number | 'all' | 'unassigned'>('all')
 const focus = ref('All')
-const sortBy = ref<'newest' | 'hottest'>('newest')
+const sortBy = ref<'activity' | 'newest' | 'hottest'>('newest')
 const search = ref('')
 const showAddLeadModal = ref(false)
 const isLoading = ref(false)
@@ -741,9 +762,38 @@ const toggleVoice = () => {
 
 /* ---------- Highlighted answers ---------- */
 
+const HIGHLIGHTS_STORAGE_KEY = 'gbrel_lead_highlights_v1'
 const highlights = ref<LeadHighlights>({ forms: [], selected: {} })
+const savedHighlightKeys = ref<Set<string>>(new Set())
+const lastHighlightedForm = ref<string | null>(null)
 const highlightModal = reactive<{ open: boolean; form: string | null; saving: boolean }>({ open: false, form: null, saving: false })
-const showFilters = ref(false)
+
+const persistHighlightsLocal = () => {
+  try {
+    localStorage.setItem(HIGHLIGHTS_STORAGE_KEY, JSON.stringify({
+      selected: highlights.value.selected,
+      savedKeys: Array.from(savedHighlightKeys.value),
+      lastForm: lastHighlightedForm.value
+    }))
+  } catch { /* private mode */ }
+}
+
+const restoreHighlightsLocal = () => {
+  try {
+    const raw = localStorage.getItem(HIGHLIGHTS_STORAGE_KEY)
+    if (!raw) return
+    const parsed = JSON.parse(raw)
+    if (parsed && typeof parsed.selected === 'object' && parsed.selected) {
+      highlights.value.selected = { ...parsed.selected, ...highlights.value.selected }
+    }
+    if (Array.isArray(parsed?.savedKeys)) {
+      parsed.savedKeys.forEach((k: string) => savedHighlightKeys.value.add(String(k)))
+    }
+    if (parsed?.lastForm && !lastHighlightedForm.value) {
+      lastHighlightedForm.value = String(parsed.lastForm)
+    }
+  } catch { /* ignore */ }
+}
 
 const websiteFieldValue: Record<string, (l: any) => string> = {
   'Best time to call': l => l.callback_time || l.parsed?.time || '',
@@ -753,18 +803,7 @@ const websiteFieldValue: Record<string, (l: any) => string> = {
   Prefers: l => l.preferred_contact || '',
   Email: l => l.email || ''
 }
-/** Every question of a Meta lead form with the buyer's answer, in the order of the form. */
-const formAnswers = (l: any): { question: string; answer: string; highlighted: boolean }[] => {
-  if (!l || !Array.isArray(l.meta_answers)) return []
-  const chosen = highlights.value.selected[formKeyOf(l)] || []
-  return l.meta_answers
-    .filter((a: any) => a?.question && a?.answer)
-    .map((a: any) => ({
-      question: String(a.question),
-      answer: String(a.answer),
-      highlighted: chosen.some((c: string) => c.trim() === String(a.question).trim())
-    }))
-}
+
 // The answers are also saved as "Question: answer" lines in the message; they now have their own section, so keep them out of Notes.
 const withoutFormAnswers = (note: string, answers: unknown): string => {
   if (!note || !Array.isArray(answers)) return note
@@ -774,32 +813,90 @@ const withoutFormAnswers = (note: string, answers: unknown): string => {
 
 const formKeyOf = (l: any): string => {
   if (l?.meta_form_id) return String(l.meta_form_id)
-  if (l?.meta_form_name && highlights.value.selected[l.meta_form_name]) return l.meta_form_name
+  if (l?.meta_form_name && highlights.value.selected[l.meta_form_name]?.length) return l.meta_form_name
   const prop = l?.property_title || l?.property
-  if (prop && highlights.value.selected[`website:${prop}`]) {
-    return `website:${prop}`
+  if (prop) {
+    const propKey = `website:${prop}`
+    if (highlights.value.selected[propKey]?.length || savedHighlightKeys.value.has(propKey)) {
+      return propKey
+    }
   }
   return 'website'
 }
-const highlightsFor = (l: any): { label: string; value: string }[] => {
+
+const chosenFieldsFor = (l: any): string[] => {
   if (!l) return []
   const key = formKeyOf(l)
-  const chosen = highlights.value.selected[key] || (key.startsWith('website:') ? highlights.value.selected['website'] : []) || []
-  if (!chosen.length) return []
-  if (!l.meta_form_id && (!Array.isArray(l.meta_answers) || l.meta_answers.length === 0)) {
-    return chosen.map(label => ({ label, value: websiteFieldValue[label]?.(l) || '' })).filter(h => h.value)
+  const direct = highlights.value.selected[key]
+  if (Array.isArray(direct) && direct.length > 0) return direct
+  if (savedHighlightKeys.value.has(key) && Array.isArray(direct)) return direct
+  if (l.meta_form_name && highlights.value.selected[l.meta_form_name]?.length) {
+    return highlights.value.selected[l.meta_form_name]
   }
-  const answers: { question: string; answer: string }[] = Array.isArray(l.meta_answers) ? l.meta_answers : []
-  return chosen
-    .map(label => {
-      const match = answers.find(a => String(a?.question || '').trim() === label.trim())
-      return { label, value: match?.answer || '' }
-    })
-    .filter(h => h.value)
+  if (key.startsWith('website:')) {
+    return highlights.value.selected['website'] || []
+  }
+  return []
 }
 
+/** Every question of a Meta lead form with the buyer's answer, in the order of the form. */
+const formAnswers = (l: any): { question: string; answer: string; highlighted: boolean }[] => {
+  if (!l || !Array.isArray(l.meta_answers)) return []
+  const chosen = chosenFieldsFor(l)
+  return l.meta_answers
+    .filter((a: any) => a?.question && a?.answer)
+    .map((a: any) => ({
+      question: String(a.question),
+      answer: String(a.answer),
+      highlighted: chosen.some((c: string) => c.trim() === String(a.question).trim())
+    }))
+}
+
+const highlightsFor = (l: any, includeEmpty = false): { label: string; value: string }[] => {
+  if (!l) return []
+  const chosen = chosenFieldsFor(l)
+  if (!chosen.length) return []
+  if (!l.meta_form_id && (!Array.isArray(l.meta_answers) || l.meta_answers.length === 0)) {
+    const items = chosen.map(label => ({ label, value: websiteFieldValue[label]?.(l) || '' }))
+    return includeEmpty ? items : items.filter(h => h.value)
+  }
+  const answers: { question: string; answer: string }[] = Array.isArray(l.meta_answers) ? l.meta_answers : []
+  const items = chosen.map(label => {
+    const match = answers.find(a => String(a?.question || '').trim() === label.trim())
+    return { label, value: match?.answer || '' }
+  })
+  return includeEmpty ? items : items.filter(h => h.value)
+}
+
+const activeProjectHighlightKey = computed<string>(() => {
+  if (!projectFilter.value || projectFilter.value === 'all') return ''
+  if (projectFilter.value === 'website:all' || projectFilter.value === 'website') return 'website'
+  return projectFilter.value
+})
+
+const activeProjectLabel = computed<string>(() => {
+  const key = activeProjectHighlightKey.value
+  if (!key) return ''
+  const match = modalHighlightForms.value.find(f => f.key === key)
+  if (match) return match.name
+  if (key.startsWith('website:')) return key.slice(8)
+  return key
+})
+
+const activeProjectHighlights = computed<string[]>(() => {
+  const key = activeProjectHighlightKey.value
+  if (!key) return []
+  const direct = highlights.value.selected[key]
+  if (Array.isArray(direct) && direct.length > 0) return direct
+  if (savedHighlightKeys.value.has(key) && Array.isArray(direct)) return direct
+  if (key.startsWith('website:')) {
+    return highlights.value.selected['website'] || []
+  }
+  return []
+})
+
 const modalHighlightForms = computed<HighlightForm[]>(() => {
-  const metaMap = new Map<string, { key: string; name: string; fields: Set<string>; count: number }>()
+  const metaMap = new Map<string, { key: string; name: string; fields: Set<string>; count: number; serverCount: number }>()
 
   // Seed from backend highlights.forms
   for (const f of highlights.value.forms) {
@@ -808,7 +905,8 @@ const modalHighlightForms = computed<HighlightForm[]>(() => {
         key: f.key,
         name: f.name,
         fields: new Set(f.fields || []),
-        count: (f as any).count || 0
+        count: 0,
+        serverCount: (f as any).count || 0
       })
     }
   }
@@ -824,7 +922,8 @@ const modalHighlightForms = computed<HighlightForm[]>(() => {
           key,
           name,
           fields: new Set<string>(),
-          count: 1
+          count: 1,
+          serverCount: 0
         })
       } else {
         existing.count++
@@ -847,14 +946,14 @@ const modalHighlightForms = computed<HighlightForm[]>(() => {
 
   // Sort Meta forms by count descending (exact same order and counts as All Projects)
   const metaList: HighlightForm[] = [...metaMap.values()]
-    .sort((a, b) => b.count - a.count)
     .map(m => ({
       key: m.key,
       name: m.name,
       fields: Array.from(m.fields),
-      count: m.count,
+      count: m.count || m.serverCount,
       source: 'meta' as const
     }))
+    .sort((a, b) => (b.count || 0) - (a.count || 0))
 
   // Website forms below Meta
   const websiteForms: HighlightForm[] = []
@@ -906,23 +1005,97 @@ const modalHighlightForms = computed<HighlightForm[]>(() => {
 })
 
 async function loadHighlights() {
+  restoreHighlightsLocal()
   try {
-    highlights.value = await crm.highlights()
+    const data = await crm.highlights()
+    const mergedSelected: Record<string, string[]> = { ...highlights.value.selected }
+    for (const [k, v] of Object.entries(data.selected || {})) {
+      if (Array.isArray(v) && (v.length > 0 || !mergedSelected[k]?.length || data.saved_keys?.includes(k))) {
+        mergedSelected[k] = v
+      }
+    }
+    if (Array.isArray(data.saved_keys)) {
+      data.saved_keys.forEach(k => savedHighlightKeys.value.add(String(k)))
+    }
+    for (const [k, v] of Object.entries(mergedSelected)) {
+      if (Array.isArray(v) && v.length > 0 && k !== 'website' && !k.startsWith('website:')) {
+        savedHighlightKeys.value.add(k)
+      }
+    }
+    if (data.last_form) {
+      lastHighlightedForm.value = data.last_form
+    }
+    highlights.value = {
+      ...data,
+      selected: mergedSelected
+    }
+    persistHighlightsLocal()
   } catch {
-    // Leads still show without highlights.
+    // Leads still show with cached highlights.
   }
 }
 const openHighlights = async (form?: string) => {
   if (!highlights.value.forms.length) await loadHighlights()
-  highlightModal.form = form || (projectFilter.value !== 'all' ? projectFilter.value : null)
+  let targetForm = form || null
+  if (!targetForm && projectFilter.value !== 'all') {
+    targetForm = projectFilter.value === 'website:all' ? 'website' : projectFilter.value
+  }
+  if (!targetForm && lastHighlightedForm.value) {
+    targetForm = lastHighlightedForm.value
+  }
+  if (!targetForm && selected.value) {
+    targetForm = formKeyOf(selected.value)
+  }
+  highlightModal.form = targetForm
   highlightModal.open = true
 }
-const saveHighlights = async (form: string, fields: string[]) => {
+const saveHighlights = async (form: string, fields: string[], allModified?: Record<string, string[]>) => {
   highlightModal.saving = true
   try {
-    const saved = await crm.saveHighlights(form, fields)
-    highlights.value.selected = { ...highlights.value.selected, [saved.form]: saved.fields }
+    const entries = allModified && Object.keys(allModified).length
+      ? Object.entries(allModified)
+      : [[form, fields] as [string, string[]]]
+
+    const nextSelected: Record<string, string[]> = { ...highlights.value.selected }
+
+    for (const [key, picked] of entries) {
+      const saved = await crm.saveHighlights(key, picked)
+      nextSelected[saved.form] = saved.fields
+      savedHighlightKeys.value.add(saved.form)
+
+      // When 'website' (All Website Inquiries) is updated, propagate to non-customized website:* keys
+      if (saved.form === 'website') {
+        for (const k of Object.keys(nextSelected)) {
+          if (k.startsWith('website:') && !savedHighlightKeys.value.has(k)) {
+            nextSelected[k] = saved.fields
+          }
+        }
+      }
+    }
+
+    highlights.value.selected = nextSelected
+    lastHighlightedForm.value = form
+    persistHighlightsLocal()
     highlightModal.open = false
+
+    // Ensure a lead belonging to the saved project is selected so highlighted fields are immediately visible
+    const matchesSavedForm = (l: any) => {
+      if (form === 'website') return !l.meta_form_id
+      if (form.startsWith('website:')) {
+        const p = form.slice(8)
+        return !l.meta_form_id && ((l.property_title || '') === p || (l.property || '') === p)
+      }
+      return String(l.meta_form_id || '') === form || l.meta_form_name === form
+    }
+    if (projectFilter.value !== 'all' && !matchesSavedForm(selected.value || {})) {
+      projectFilter.value = form === 'website' ? 'website:all' : form
+    } else if (!selected.value || !matchesSavedForm(selected.value)) {
+      const candidate = filteredLeads.value.find(matchesSavedForm) || leadsList.value.find(matchesSavedForm)
+      if (candidate) {
+        selectedId.value = candidate.id
+      }
+    }
+
     toast.success('Highlights saved', fields.length ? `${fields.length} field${fields.length > 1 ? 's' : ''} will show first.` : 'Nothing is highlighted for this form now.')
   } catch (err: any) {
     toast.error('Could not save', err?.message || 'Only team members who can manage leads can change this.')
@@ -1030,8 +1203,12 @@ const projectDropdownOptions = computed(() => {
 
 watch(projectFilter, () => {
   answerFilter.value = ''
+  if (projectFilter.value && projectFilter.value !== 'all') {
+    lastHighlightedForm.value = projectFilter.value === 'website:all' ? 'website' : projectFilter.value
+  }
   if (selected.value && !matchesProject(selected.value)) {
-    selectedId.value = null
+    const nextList = filteredLeads.value
+    selectedId.value = nextList.length ? nextList[0].id : null
     detailOpen.value = false
   }
 })
@@ -1133,11 +1310,11 @@ const answerDropdownOptions = computed(() => {
   return list
 })
 
-const sortDropdownOptions = [
+const sortDropdownOptions = computed(() => [
+  { value: 'activity', label: 'Recent activity', count: currentActivityCount.value },
   { value: 'newest', label: 'Newest first' },
-  { value: 'activity', label: 'Current Activity' },
   { value: 'hottest', label: 'Hottest first' }
-]
+])
 
 const buyerFocusOptions = [
   { value: 'All', label: 'All buyers' },
@@ -1228,8 +1405,8 @@ const filteredLeads = computed(() => {
   return list
 })
 
-const hasFilters = computed(() => !!search.value || focus.value !== 'All' || !!answerFilter.value || projectFilter.value !== 'all' || (view.value === 'active' && (statusFilter.value !== 'All' || quick.value !== 'all' || staffFilter.value !== 'all')))
-const clearFilters = () => { search.value = ''; focus.value = 'All'; answerFilter.value = ''; projectFilter.value = 'all'; statusFilter.value = 'All'; quick.value = 'all'; staffFilter.value = 'all' }
+const hasFilters = computed(() => !!search.value || focus.value !== 'All' || !!answerFilter.value || projectFilter.value !== 'all' || (view.value === 'active' && (statusFilter.value !== 'All' || quick.value !== 'all' || staffFilter.value !== 'all' || sortBy.value !== 'newest')))
+const clearFilters = () => { search.value = ''; focus.value = 'All'; answerFilter.value = ''; projectFilter.value = 'all'; statusFilter.value = 'All'; quick.value = 'all'; staffFilter.value = 'all'; sortBy.value = 'newest' }
 
 /* ---------- CRM: owner, follow-up, site visits and activity ---------- */
 
@@ -1289,13 +1466,20 @@ const stageKey = (stage?: string) => String(stage || 'New').toLowerCase().replac
 
 // Only real contact with the buyer goes under the name. System entries (form arrived, stage or owner changed)
 // are skipped: when the lead arrived is already shown on the right.
-const CONTACT_LABELS: Record<string, string> = { call: 'Call', whatsapp: 'WhatsApp', email: 'Email', note: 'Note' }
+const CONTACT_LABELS: Record<string, string> = { call: 'Call', whatsapp: 'WhatsApp', email: 'Email', note: 'Note', manual: 'Inquiry logged' }
 const NOTE_TYPES = ['note', 'call', 'whatsapp', 'email', 'manual']
-/** Shown when there is no visit or follow-up flag: the last contact, e.g. "Call · No answer · 2h ago", else the stage. */
+/** Shown when there is no visit or follow-up flag: the last contact, e.g. "Call · No answer · by Admin · 2h ago", else the stage. */
 const lastContactText = (l: any): string => {
   const a = l.last_activity || l.recent_activity
-  if (a && CONTACT_LABELS[a.type]) return [CONTACT_LABELS[a.type], a.outcome, a.at ? ago(a.at) : ''].filter(Boolean).join(' · ')
-  if (a && a.type === 'stage') return 'Status: ' + (a.meta?.to || l.stage) + (a.at ? ' · ' + ago(a.at) : '')
+  const actor = a?.user?.name || a?.user_name || ''
+  if (a && CONTACT_LABELS[a.type]) {
+    return [CONTACT_LABELS[a.type], a.outcome, actor ? `by ${actor}` : '', a.at ? ago(a.at) : ''].filter(Boolean).join(' · ')
+  }
+  const stageAct = l.last_stage_activity || (a && a.type === 'stage' ? a : null)
+  if (stageAct) {
+    const sActor = stageAct.user?.name || stageAct.user_name || ''
+    return ['Status: ' + (stageAct.to || stageAct.meta?.to || l.stage), sActor ? `by ${sActor}` : '', stageAct.at ? ago(stageAct.at) : ''].filter(Boolean).join(' · ')
+  }
   return l.stage && l.stage !== 'New' ? 'Status: ' + l.stage : ''
 }
 /** One short line of the latest note (or call note) so the team sees the context without opening the lead. */
@@ -1304,6 +1488,72 @@ const shortNote = (l: any): string => {
   const body = (a && NOTE_TYPES.includes(a.type) ? a.body : '') || String(l.note || '').split('\n').find((line: string) => line.trim()) || ''
   const text = body.replace(/\s+/g, ' ').trim()
   return text.length > 90 ? text.slice(0, 89) + '…' : text
+}
+
+/** Latest status update attribution for the Lead Detail audit row. */
+const statusActorInfo = (l: any): { to: string; actor: string; when: string } | null => {
+  if (!l) return null
+  const fromTimeline = crmDetail.value.activities.find(a => a.type === 'stage')
+  if (fromTimeline) {
+    const actor = fromTimeline.user?.name || (fromTimeline.meta as any)?.by_user_name || ''
+    if (actor) {
+      return {
+        to: String((fromTimeline.meta as any)?.to || l.stage || 'New'),
+        actor,
+        when: fromTimeline.created_at ? ago(fromTimeline.created_at) : ''
+      }
+    }
+  }
+  const sa = l.last_stage_activity
+  if (sa) {
+    const actor = sa.user?.name || sa.user_name || ''
+    if (actor) {
+      return {
+        to: String(sa.to || l.stage || 'New'),
+        actor,
+        when: sa.at ? ago(sa.at) : ''
+      }
+    }
+  }
+  return null
+}
+
+/** Latest saved activity attribution (note, call, WhatsApp, email, visit, follow-up) for the Lead Detail audit row. */
+const activityActorInfo = (l: any): { label: string; actor: string; when: string } | null => {
+  if (!l) return null
+  const ACT_LABELS: Record<string, string> = {
+    note: 'Note',
+    call: 'Call',
+    whatsapp: 'WhatsApp',
+    email: 'Email',
+    visit: 'Site visit',
+    followup: 'Follow-up',
+    assigned: 'Assignment',
+    manual: 'Inquiry'
+  }
+  const fromTimeline = crmDetail.value.activities.find(a => a.type !== 'stage' && a.type !== 'created')
+  if (fromTimeline) {
+    const actor = fromTimeline.user?.name || (fromTimeline.meta as any)?.by_user_name || ''
+    if (actor) {
+      return {
+        label: ACT_LABELS[fromTimeline.type] || 'Activity',
+        actor,
+        when: fromTimeline.created_at ? ago(fromTimeline.created_at) : ''
+      }
+    }
+  }
+  const la = l.last_activity || l.recent_activity
+  if (la && la.type !== 'stage' && la.type !== 'created') {
+    const actor = la.user?.name || la.user_name || ''
+    if (actor) {
+      return {
+        label: ACT_LABELS[la.type] || 'Activity',
+        actor,
+        when: la.at ? ago(la.at) : ''
+      }
+    }
+  }
+  return null
 }
 
 function hasCurrentActivity(l: any): boolean {
@@ -1321,24 +1571,20 @@ function hasCurrentActivity(l: any): boolean {
 }
 
 function activityTimeMs(l: any): number {
-  if (!l) return 0
+  if (!l || !hasCurrentActivity(l)) return 0
   const iso = l.recent_activity?.at || l.last_activity?.at || l.last_contacted_at || l.updated_at || l.created_at
-  if (!iso) return 0
-  const t = new Date(iso).getTime()
-  return isNaN(t) ? 0 : t
+  if (!iso) return 1
+  const t = parseApiDate(String(iso)).getTime()
+  return isNaN(t) ? 1 : t
 }
 
 const currentActivityCount = computed(() => openLeads.value.filter(hasCurrentActivity).length)
-
-const toggleActivityFilter = () => {
-  quick.value = quick.value === 'activity' ? 'all' : 'activity'
-}
 
 const openLeads = computed(() => leadsList.value.filter(l => !isClosed(l)))
 const quickViews = computed(() => {
   const base = [
     { key: 'all' as const, label: isLeadAdmin.value ? 'All leads' : 'My leads', count: leadsList.value.length, alert: false },
-    { key: 'activity' as const, label: 'Current Activity', count: currentActivityCount.value, alert: false },
+    { key: 'activity' as const, label: 'Recent activity', count: currentActivityCount.value, alert: false },
     { key: 'followups' as const, label: 'Needs follow-up', count: openLeads.value.filter(l => ['overdue', 'today'].includes(followState(l))).length, alert: true },
     { key: 'visits' as const, label: 'Visits coming up', count: openLeads.value.filter(l => nextVisit.value.has(l.id)).length, alert: false },
   ]
@@ -1439,7 +1685,7 @@ watch(selectedId, () => {
 const syncLead = (lead: any, data: any) => {
   if (!lead || !data) return lead
   const preservedName = lead.name || data.name || 'Direct Buyer'
-  return Object.assign(lead, {
+  const patch: Record<string, any> = {
     name: preservedName,
     status: data.status,
     stage: normalizeStage(data.status),
@@ -1447,7 +1693,11 @@ const syncLead = (lead: any, data: any) => {
     assigned_to: data.assigned_to,
     next_follow_up_at: data.next_follow_up_at,
     last_contacted_at: data.last_contacted_at
-  })
+  }
+  if ('last_activity' in data) patch.last_activity = data.last_activity
+  if ('recent_activity' in data) patch.recent_activity = data.recent_activity
+  if ('last_stage_activity' in data) patch.last_stage_activity = data.last_stage_activity
+  return Object.assign(lead, patch)
 }
 
 const assignLead = async (lead: any, event: Event) => {
@@ -1498,7 +1748,7 @@ const activeVisit = computed<LeadVisit | null>(() => {
 // Keep a lead open on wide screens; on phones the list stays first until a lead is tapped.
 watch(filteredLeads, list => {
   if (!list.length) { selectedId.value = null; return }
-  if (!leadsList.value.some(l => l.id === selectedId.value)) {
+  if (!list.some(l => l.id === selectedId.value)) {
     selectedId.value = list[0].id
     detailOpen.value = false
   }
@@ -1848,15 +2098,30 @@ const restoreLead = async (lead: any) => {
 .ld-refresh-btn.is-refreshing { opacity: 0.8; pointer-events: none; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .spin-anim { animation: spin 0.75s linear infinite; }
-.ld-activity-filter-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background: var(--admin-bg-surface); color: var(--admin-text-secondary); font: inherit; font-size: 0.83rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); }
-.ld-activity-filter-btn:hover { background: var(--admin-chip-bg); color: var(--admin-text-primary); border-color: var(--admin-border-hover); }
-.ld-activity-filter-btn.is-active { background: rgba(14, 165, 233, 0.14); border-color: #0284C7; color: #0284C7; font-weight: 700; }
-.admin-theme-light .ld-activity-filter-btn.is-active { background: rgba(2, 132, 199, 0.1); border-color: #0284C7; color: #0369A1; }
-.ld-act-count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; background: rgba(14, 165, 233, 0.2); color: #0284C7; }
-.ld-activity-filter-btn.is-active .ld-act-count { background: #0284C7; color: #fff; }
-.ld-reset-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.45); background: rgba(239, 68, 68, 0.1); color: #EF4444; font: inherit; font-size: 0.83rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); }
-.ld-reset-btn:hover { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.7); color: #DC2626; }
+.ld-reset-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--admin-border-subtle); background: transparent; color: var(--admin-text-secondary); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); }
+.ld-reset-btn:hover { background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.5); color: #EF4444; }
+.ld-reset-btn.is-active, .ld-reset-mobile { border-color: rgba(239, 68, 68, 0.45); background: rgba(239, 68, 68, 0.1); color: #EF4444; font-weight: 700; }
+.ld-reset-btn.is-active:hover, .ld-reset-mobile:hover { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.7); color: #DC2626; }
+.ld-reset-mobile { display: none; }
 .admin-header-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Project highlighted fields banner */
+.ld-project-hl-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 12px; border-radius: 10px; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.35); font-size: 0.8rem; color: var(--admin-text-primary); }
+.ld-project-hl-left { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-width: 0; }
+.ld-project-hl-left > svg { color: #D9A21B; flex: none; }
+.ld-project-hl-title { font-weight: 700; color: var(--admin-text-secondary); white-space: nowrap; }
+.ld-project-hl-chips { display: flex; flex-wrap: wrap; gap: 5px; min-width: 0; }
+.ld-hl-edit-inline { flex: none; padding: 3px 9px; border-radius: 6px; border: 1px solid rgba(251, 191, 36, 0.45); background: rgba(251, 191, 36, 0.14); color: var(--admin-text-primary); font: inherit; font-size: 0.74rem; font-weight: 700; cursor: pointer; }
+.ld-hl-edit-inline:hover { background: rgba(251, 191, 36, 0.26); }
+
+/* Audit attribution badges under Status */
+.ld-audit-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.ld-audit-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; font-size: 0.78rem; line-height: 1.4; background: var(--admin-bg-surface-alt); border: 1px solid var(--admin-border-subtle); color: var(--admin-text-secondary); }
+.ld-audit-badge strong { color: var(--admin-text-primary); font-weight: 700; }
+.ld-audit-badge--stage { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.28); }
+.ld-audit-badge--stage svg { color: #10B981; flex: none; }
+.ld-audit-badge--act { background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.28); }
+.ld-audit-badge--act svg { color: #3B82F6; flex: none; }
 
 /* Search, voice and filters */
 .ld-searchrow { display: flex; gap: 8px; flex: 1 1 320px; max-width: 460px; }
@@ -1978,7 +2243,8 @@ const restoreLead = async (lead: any) => {
   .ld-searchrow { flex: none; width: 100%; max-width: none; }
   .ld-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; width: 100%; }
   .ld-filters :deep(.cf-dropdown) { width: 100%; max-width: none; min-width: 0; }
-  .ld-activity-filter-btn, .ld-reset-btn { min-height: 38px; padding: 4px 8px; font-size: 0.78rem; width: 100%; }
+  .ld-reset-desktop { display: none !important; }
+  .ld-reset-mobile { display: inline-flex; min-height: 38px; padding: 4px 8px; font-size: 0.78rem; width: 100%; }
   .ld-filter-btn { display: none !important; }
   .ld-hl-card.with-visit { grid-template-columns: 1fr; gap: 12px; }
   .ld-hl-card.with-visit .ld-hl-visit-side { border-top: 1px solid rgba(251, 191, 36, 0.35); }

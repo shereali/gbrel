@@ -72,15 +72,18 @@ class ManualLeadController extends Controller
             'next_follow_up_at' => ! empty($data['follow_up_at']) ? Carbon::parse($data['follow_up_at'])->utc() : null,
         ]);
 
-        $this->log($request->user()?->id, $lead, 'manual', $data['notes'] ?? null, ['channel' => $data['channel']]);
+        $this->log($user, $lead, 'manual', $data['notes'] ?? null, ['channel' => $data['channel']]);
         if ($owner) {
-            $this->log($request->user()?->id, $lead, 'assign', "Assigned to {$owner->name}", ['user_id' => $owner->id]);
+            $this->log($user, $lead, 'assign', "Assigned to {$owner->name}", ['user_id' => $owner->id]);
         }
         if ($lead->next_follow_up_at) {
-            $this->log($request->user()?->id, $lead, 'follow_up', null, ['at' => $lead->next_follow_up_at->toIso8601String()]);
+            $this->log($user, $lead, 'follow_up', null, ['at' => $lead->next_follow_up_at->toIso8601String()]);
         }
 
-        return response()->json(['success' => true, 'data' => $lead->fresh()], 201);
+        $fresh = $lead->fresh();
+        LeadCrmController::attachActivitySummary($fresh);
+
+        return response()->json(['success' => true, 'data' => $fresh], 201);
     }
 
     /**
@@ -101,10 +104,16 @@ class ManualLeadController extends Controller
     }
 
     /** @param  array<string, mixed>  $meta */
-    private function log(?int $userId, Lead $lead, string $type, ?string $body, array $meta = []): void
+    private function log(?User $user, Lead $lead, string $type, ?string $body, array $meta = []): void
     {
+        if ($user) {
+            $meta['by_user_id'] = $user->id;
+            $meta['by_user_name'] = $user->name;
+            $meta['by_user_role'] = $user->role;
+        }
+
         LeadActivity::create([
-            'lead_id' => $lead->id, 'user_id' => $userId, 'type' => $type, 'body' => $body,
+            'lead_id' => $lead->id, 'user_id' => $user?->id, 'type' => $type, 'body' => $body,
             'meta' => $meta ?: null, 'occurred_at' => now(),
         ]);
     }

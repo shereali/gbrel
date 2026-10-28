@@ -25,9 +25,20 @@
       <li v-for="item in items" :key="item.key" :data-kind="item.kind">
         <span class="ap-dot" aria-hidden="true"></span>
         <div class="ap-body">
-          <p class="ap-title">{{ item.title }}</p>
+          <div class="ap-head-row">
+            <p class="ap-title">{{ item.title }}</p>
+            <span v-if="item.actorBadge" class="ap-actor-badge" :data-kind="item.kind">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span>{{ item.actorBadge }}</span>
+            </span>
+          </div>
           <p v-if="item.text" class="ap-quote">{{ item.text }}</p>
-          <p class="ap-meta">{{ item.who }}<template v-if="item.who"> · </template><time :title="item.full">{{ item.when }}</time></p>
+          <p class="ap-meta">
+            <template v-if="item.who"><strong>{{ item.who }}</strong> · </template>
+            <time :title="item.full">{{ item.when }}</time>
+          </p>
         </div>
       </li>
     </ol>
@@ -91,28 +102,48 @@ const submit = async () => {
   }
 }
 
+const actorOf = (a: LeadActivity): string => {
+  return a.user?.name || a.meta?.by_user_name || ''
+}
+
+const roleOf = (a: LeadActivity): string => {
+  const r = a.user?.role || a.meta?.by_user_role || ''
+  return r ? r.charAt(0).toUpperCase() + r.slice(1) : ''
+}
+
 const describe = (a: LeadActivity) => {
   const m = a.meta || {}
+  const actor = actorOf(a)
   switch (a.type) {
-    case 'note': return { title: 'Note', text: a.body }
-    case 'call': return { title: `Call · ${m.outcome || 'logged'}`, text: a.body }
-    case 'whatsapp': return { title: 'WhatsApp', text: a.body }
-    case 'email': return { title: 'Email', text: a.body }
-    case 'stage': return { title: `Moved from ${m.from} to ${m.to}`, text: a.body }
-    case 'assign': return { title: a.body || 'Assignment changed', text: null }
-    case 'follow_up': return { title: m.at ? `Follow-up set for ${formatWhen(m.at)}` : 'Follow-up cleared', text: a.body }
-    case 'visit': return { title: a.body || 'Site visit updated', text: null }
-    case 'manual': return { title: `Logged by the team${m.channel ? ' · ' + m.channel : ''}`, text: a.body }
-    case 'meta_lead': return { title: m.platform === 'instagram' ? 'Came in from an Instagram lead form' : 'Came in from a Facebook lead form', text: a.body }
-    default: return { title: a.type, text: a.body }
+    case 'note': return { title: 'Note saved', text: a.body, actorBadge: actor ? `Activity saved by ${actor}` : '' }
+    case 'call': return { title: `Call · ${m.outcome || 'logged'}`, text: a.body, actorBadge: actor ? `Activity saved by ${actor}` : '' }
+    case 'whatsapp': return { title: 'WhatsApp', text: a.body, actorBadge: actor ? `Activity saved by ${actor}` : '' }
+    case 'email': return { title: 'Email', text: a.body, actorBadge: actor ? `Activity saved by ${actor}` : '' }
+    case 'stage': return { title: `Status updated: ${m.from} → ${m.to}`, text: a.body, actorBadge: actor ? `Status updated by ${actor}` : '' }
+    case 'assign': return { title: a.body || 'Assignment changed', text: null, actorBadge: actor ? `By ${actor}` : '' }
+    case 'follow_up': return { title: m.at ? `Follow-up set for ${formatWhen(m.at)}` : 'Follow-up cleared', text: a.body, actorBadge: actor ? `By ${actor}` : '' }
+    case 'visit': return { title: a.body || 'Site visit updated', text: null, actorBadge: actor ? `By ${actor}` : '' }
+    case 'manual': return { title: `Logged by the team${m.channel ? ' · ' + m.channel : ''}`, text: a.body, actorBadge: actor ? `Logged by ${actor}` : '' }
+    case 'meta_lead': return { title: m.platform === 'instagram' ? 'Came in from an Instagram lead form' : 'Came in from a Facebook lead form', text: a.body, actorBadge: '' }
+    default: return { title: a.type, text: a.body, actorBadge: actor ? `By ${actor}` : '' }
   }
 }
 
 const items = computed(() => [
-  ...props.activities.map(a => ({
-    key: `a${a.id}`, kind: a.type, ...describe(a), who: a.user?.name || 'System', when: formatWhen(a.occurred_at), full: a.occurred_at
-  })),
-  { key: 'received', kind: 'received', title: 'Inquiry received', text: null, who: '', when: formatWhen(props.receivedAt), full: props.receivedAt }
+  ...props.activities.map(a => {
+    const actor = actorOf(a)
+    const role = roleOf(a)
+    const whoText = actor ? (role ? `${actor} (${role})` : actor) : 'System'
+    return {
+      key: `a${a.id}`,
+      kind: a.type,
+      ...describe(a),
+      who: whoText,
+      when: formatWhen(a.occurred_at),
+      full: a.occurred_at
+    }
+  }),
+  { key: 'received', kind: 'received', title: 'Inquiry received', text: null, actorBadge: '', who: '', when: formatWhen(props.receivedAt), full: props.receivedAt }
 ])
 </script>
 
@@ -140,8 +171,13 @@ li[data-kind='call'] .ap-dot, li[data-kind='whatsapp'] .ap-dot { background: #0B
 li[data-kind='note'] .ap-dot { background: #D97706; }
 li[data-kind='stage'] .ap-dot { background: #2563EB; }
 li[data-kind='visit'] .ap-dot { background: #C2530F; }
-.ap-body { min-width: 0; }
+.ap-body { min-width: 0; flex: 1; }
+.ap-head-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .ap-title { margin: 0; font-size: 0.92rem; font-weight: 700; }
+.ap-actor-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; background: var(--admin-chip-bg); color: var(--admin-text-secondary); border: 1px solid var(--admin-border-subtle); }
+.ap-actor-badge[data-kind='stage'] { background: rgba(37, 99, 235, 0.14); color: #2563EB; border-color: rgba(37, 99, 235, 0.3); }
+.ap-actor-badge[data-kind='note'], .ap-actor-badge[data-kind='call'], .ap-actor-badge[data-kind='whatsapp'] { background: rgba(16, 185, 129, 0.14); color: #059669; border-color: rgba(16, 185, 129, 0.3); }
 .ap-quote { margin: 4px 0 0; font-size: 0.9rem; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; color: var(--admin-text-secondary); }
 .ap-meta { margin: 4px 0 0; font-size: 0.78rem; color: var(--admin-text-muted); }
+.ap-meta strong { color: var(--admin-text-secondary); font-weight: 600; }
 </style>

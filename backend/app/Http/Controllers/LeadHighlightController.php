@@ -87,7 +87,6 @@ class LeadHighlightController extends Controller
             ->whereNull('meta_form_id')
             ->whereNotNull('property_title')
             ->where('property_title', '!=', '')
-            ->whereNotIn('property_title', ['General Inquiry', 'Direct Inquiry'])
             ->distinct()
             ->orderBy('property_title')
             ->pluck('property_title');
@@ -126,16 +125,33 @@ class LeadHighlightController extends Controller
 
         $selected = [];
         foreach ($forms as $form) {
-            if (array_key_exists($form['key'], $saved)) {
-                $selected[$form['key']] = array_values(array_intersect((array) $saved[$form['key']], $form['fields']));
-            } elseif (str_starts_with($form['key'], 'website:') && array_key_exists(self::WEBSITE_FORM, $saved)) {
-                $selected[$form['key']] = array_values(array_intersect((array) $saved[self::WEBSITE_FORM], $form['fields']));
+            $key = (string) $form['key'];
+            if (array_key_exists($key, $saved)) {
+                $selected[$key] = array_values((array) $saved[$key]);
+            } elseif (str_starts_with($key, 'website:') && array_key_exists(self::WEBSITE_FORM, $saved)) {
+                $selected[$key] = array_values((array) $saved[self::WEBSITE_FORM]);
             } else {
-                $selected[$form['key']] = array_values(array_filter($form['fields'], fn (string $field) => preg_match(self::DEFAULT_PATTERN, $field)));
+                $selected[$key] = array_values(array_filter($form['fields'], fn (string $field) => preg_match(self::DEFAULT_PATTERN, $field)));
             }
         }
 
-        return response()->json(['success' => true, 'data' => ['forms' => $forms, 'selected' => $selected]]);
+        // Preserve any saved form keys even if no leads for that form are currently in $forms
+        foreach ($saved as $k => $v) {
+            $strKey = (string) $k;
+            if (! array_key_exists($strKey, $selected) && is_array($v)) {
+                $selected[$strKey] = array_values($v);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'forms' => $forms,
+                'selected' => $selected,
+                'saved_keys' => array_map('strval', array_keys($saved)),
+                'last_form' => Setting::getVal('lead_highlight_last_form'),
+            ],
+        ]);
     }
 
     /** PUT /api/leads/highlights: the fields to highlight for one form. */
@@ -150,6 +166,7 @@ class LeadHighlightController extends Controller
         $saved = (array) Setting::getVal(self::SETTING_KEY, []);
         $saved[$data['form']] = array_values(array_unique($data['fields']));
         Setting::setVal(self::SETTING_KEY, $saved);
+        Setting::setVal('lead_highlight_last_form', $data['form']);
 
         return response()->json(['success' => true, 'data' => ['form' => $data['form'], 'fields' => $saved[$data['form']]]]);
     }

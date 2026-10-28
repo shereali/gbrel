@@ -9,7 +9,7 @@ export interface LeadActivity {
   type: 'note' | 'call' | 'whatsapp' | 'email' | 'stage' | 'assign' | 'follow_up' | 'visit' | 'meta_lead' | 'manual'
   body: string | null
   meta: Record<string, any>
-  user: { id: number; name: string } | null
+  user: { id: number; name: string; role?: string | null } | null
   occurred_at: string
 }
 export interface LeadVisit {
@@ -31,7 +31,7 @@ export interface LeadVisit {
 export interface StaffMember { id: number; name: string; role: string | null }
 /** A lead form and its fields; "website" is the site's own inquiry form, the rest are Meta lead form IDs. */
 export interface HighlightForm { key: string; name: string; fields: string[]; source?: 'website' | 'meta'; project?: string; count?: number }
-export interface LeadHighlights { forms: HighlightForm[]; selected: Record<string, string[]> }
+export interface LeadHighlights { forms: HighlightForm[]; selected: Record<string, string[]>; saved_keys?: string[]; last_form?: string | null }
 
 // Everyone on the team works in Bangladesh time (UTC+6, no daylight saving), wherever their browser thinks it is.
 const DHAKA = 'Asia/Dhaka'

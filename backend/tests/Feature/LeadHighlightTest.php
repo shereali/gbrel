@@ -94,4 +94,27 @@ class LeadHighlightTest extends TestCase
         // Base website remains unchanged
         $this->assertSame(['Best time to call'], $updated['website']);
     }
+
+    public function test_highlights_persist_across_projects_and_never_unset_until_changed(): void
+    {
+        $this->metaLead();
+        $this->signInAs('admin');
+
+        $this->putJson('/api/leads/highlights', [
+            'form' => '1618000993676451',
+            'fields' => [self::PAYMENT],
+        ])->assertOk();
+
+        $this->putJson('/api/leads/highlights', [
+            'form' => 'website:General Inquiry',
+            'fields' => ['Budget', 'Prefers'],
+        ])->assertOk();
+
+        $data = $this->getJson('/api/leads/highlights')->assertOk()->json('data');
+        $this->assertSame([self::PAYMENT], $data['selected']['1618000993676451']);
+        $this->assertSame(['Budget', 'Prefers'], $data['selected']['website:General Inquiry']);
+        $this->assertContains('1618000993676451', $data['saved_keys']);
+        $this->assertContains('website:General Inquiry', $data['saved_keys']);
+        $this->assertSame('website:General Inquiry', $data['last_form']);
+    }
 }

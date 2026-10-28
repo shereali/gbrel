@@ -102,6 +102,7 @@ const props = withDefaults(
     options: (DropdownOption | DropdownGroup)[]
     placeholder?: string
     defaultValue?: string | number | null
+    defaultTriggerLabel?: string
     align?: 'left' | 'right' | 'center'
     ariaLabel?: string
     icon?: any
@@ -144,6 +145,13 @@ const selectedOption = computed(() => {
 })
 
 const displayLabel = computed(() => {
+  if (
+    props.defaultTriggerLabel &&
+    props.defaultValue !== undefined &&
+    String(props.modelValue) === String(props.defaultValue)
+  ) {
+    return props.defaultTriggerLabel
+  }
   if (selectedOption.value) {
     return selectedOption.value.label || selectedOption.value.text || String(selectedOption.value.value)
   }

@@ -63,7 +63,7 @@ class LeadCrmController extends Controller
         }
 
         return response()->json(['success' => true, 'data' => [
-            'activities' => $lead->activities()->with('user:id,name')->orderByDesc('occurred_at')->orderByDesc('id')->limit(300)->get()
+            'activities' => $lead->activities()->with('user:id,name,role')->orderByDesc('occurred_at')->orderByDesc('id')->limit(300)->get()
                 ->map(fn (LeadActivity $a) => $this->activity($a))->values(),
             'visits' => Viewing::where('lead_id', $lead->id)->orderByDesc('scheduled_date')->orderByDesc('scheduled_at')->get()
                 ->map(fn (Viewing $v) => $this->visit($v))->values(),
@@ -102,7 +102,10 @@ class LeadCrmController extends Controller
         }
         $lead->save();
 
-        return response()->json(['success' => true, 'data' => $lead->fresh()]);
+        $fresh = $lead->fresh();
+        self::attachActivitySummary($fresh);
+
+        return response()->json(['success' => true, 'data' => $fresh]);
     }
 
     /** PATCH /api/leads/{id}/stage */
@@ -123,7 +126,10 @@ class LeadCrmController extends Controller
         $this->moveStage($request, $lead, $stage, $data['lost_reason'] ?? null);
         $lead->save();
 
-        return response()->json(['success' => true, 'message' => 'Lead stage updated', 'data' => $lead->fresh()]);
+        $fresh = $lead->fresh();
+        self::attachActivitySummary($fresh);
+
+        return response()->json(['success' => true, 'message' => 'Lead stage updated', 'data' => $fresh]);
     }
 
     /** PATCH /api/leads/{id}/assign */
@@ -145,7 +151,10 @@ class LeadCrmController extends Controller
         $lead->save();
         $this->log($request, $lead, 'assign', $owner ? "Assigned to {$owner->name}" : 'Unassigned', ['user_id' => $owner?->id]);
 
-        return response()->json(['success' => true, 'data' => $lead->fresh()]);
+        $fresh = $lead->fresh();
+        self::attachActivitySummary($fresh);
+
+        return response()->json(['success' => true, 'data' => $fresh]);
     }
 
     /** POST /api/leads/bulk-assign: assign multiple leads to a team member in one batch */
@@ -196,7 +205,10 @@ class LeadCrmController extends Controller
         $lead->save();
         $this->log($request, $lead, 'follow_up', $data['note'] ?? null, ['at' => $lead->next_follow_up_at?->toIso8601String()]);
 
-        return response()->json(['success' => true, 'data' => $lead->fresh()]);
+        $fresh = $lead->fresh();
+        self::attachActivitySummary($fresh);
+
+        return response()->json(['success' => true, 'data' => $fresh]);
     }
 
     /** POST /api/leads/{id}/visits: schedule a site visit (or video call for buyers abroad) for this lead. */
@@ -317,9 +329,16 @@ class LeadCrmController extends Controller
     /** @param  array<string, mixed>  $meta */
     private function log(Request $request, Lead $lead, string $type, ?string $body, array $meta = []): void
     {
+        $user = $request->user();
+        if ($user) {
+            $meta['by_user_id'] = $user->id;
+            $meta['by_user_name'] = $user->name;
+            $meta['by_user_role'] = $user->role;
+        }
+
         LeadActivity::create([
             'lead_id' => $lead->id,
-            'user_id' => $request->user()?->id,
+            'user_id' => $user?->id,
             'type' => $type,
             'body' => $body,
             'meta' => $meta ?: null,
@@ -330,11 +349,111 @@ class LeadCrmController extends Controller
     /** @return array<string, mixed> */
     private function activity(LeadActivity $a): array
     {
+        $meta = $a->meta ?? [];
+        $user = $a->user
+            ? ['id' => $a->user->id, 'name' => $a->user->name, 'role' => $a->user->role]
+            : (! empty($meta['by_user_name'])
+                ? ['id' => $a->user_id ?? ($meta['by_user_id'] ?? null), 'name' => $meta['by_user_name'], 'role' => $meta['by_user_role'] ?? null]
+                : null);
+
         return [
-            'id' => $a->id, 'type' => $a->type, 'body' => $a->body, 'meta' => $a->meta ?? [],
-            'user' => $a->user ? ['id' => $a->user->id, 'name' => $a->user->name] : null,
+            'id' => $a->id, 'type' => $a->type, 'body' => $a->body, 'meta' => $meta,
+            'user' => $user,
             'occurred_at' => $a->occurred_at,
         ];
+    }
+
+    public static function attachActivitySummary($leads): void
+    {
+        $collection = $leads instanceof Lead ? collect([$leads]) : collect($leads);
+        if ($collection->isEmpty()) {
+            return;
+        }
+
+        $leadIds = $collection->pluck('id');
+        $allActivities = LeadActivity::with('user:id,name,role')
+            ->whereIn('lead_id', $leadIds)
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('id')
+            ->get(['id', 'lead_id', 'user_id', 'type', 'body', 'meta', 'occurred_at'])
+            ->groupBy('lead_id');
+
+        $formatUser = function (LeadActivity $a): ?array {
+            $meta = $a->meta ?? [];
+            if ($a->user) {
+                return ['id' => $a->user->id, 'name' => $a->user->name, 'role' => $a->user->role];
+            }
+            if (! empty($meta['by_user_name'])) {
+                return [
+                    'id' => $a->user_id ?? ($meta['by_user_id'] ?? null),
+                    'name' => $meta['by_user_name'],
+                    'role' => $meta['by_user_role'] ?? null,
+                ];
+            }
+
+            return null;
+        };
+
+        $latestActivities = $allActivities->map(function ($items) use ($formatUser) {
+            $a = $items->firstWhere(fn ($act) => in_array($act->type, ['note', 'call', 'whatsapp', 'email', 'manual'], true));
+            if (! $a) {
+                return null;
+            }
+            $u = $formatUser($a);
+
+            return [
+                'id' => $a->id,
+                'type' => $a->type,
+                'outcome' => $a->meta['outcome'] ?? null,
+                'body' => $a->body ? \Illuminate\Support\Str::limit($a->body, 140) : null,
+                'at' => $a->occurred_at?->toISOString() ?? (string) $a->occurred_at,
+                'user' => $u,
+                'user_name' => $u['name'] ?? null,
+            ];
+        });
+
+        $latestAnyActivity = $allActivities->map(function ($items) use ($formatUser) {
+            $a = $items->first();
+            if (! $a) {
+                return null;
+            }
+            $u = $formatUser($a);
+
+            return [
+                'id' => $a->id,
+                'type' => $a->type,
+                'outcome' => $a->meta['outcome'] ?? null,
+                'body' => $a->body ? \Illuminate\Support\Str::limit($a->body, 140) : null,
+                'meta' => $a->meta ?? [],
+                'at' => $a->occurred_at?->toISOString() ?? (string) $a->occurred_at,
+                'user' => $u,
+                'user_name' => $u['name'] ?? null,
+            ];
+        });
+
+        $latestStageActivity = $allActivities->map(function ($items) use ($formatUser) {
+            $a = $items->firstWhere('type', 'stage');
+            if (! $a) {
+                return null;
+            }
+            $u = $formatUser($a);
+
+            return [
+                'id' => $a->id,
+                'from' => $a->meta['from'] ?? null,
+                'to' => $a->meta['to'] ?? null,
+                'body' => $a->body,
+                'at' => $a->occurred_at?->toISOString() ?? (string) $a->occurred_at,
+                'user' => $u,
+                'user_name' => $u['name'] ?? null,
+            ];
+        });
+
+        $collection->each(function (Lead $lead) use ($latestActivities, $latestAnyActivity, $latestStageActivity) {
+            $lead->setAttribute('last_activity', $latestActivities->get($lead->id));
+            $lead->setAttribute('recent_activity', $latestAnyActivity->get($lead->id));
+            $lead->setAttribute('last_stage_activity', $latestStageActivity->get($lead->id));
+        });
     }
 
     /** @return array<string, mixed> */
