@@ -32,6 +32,10 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           <span>Highlights</span>
         </button>
+        <button type="button" class="ld-hl-btn" title="Import leads from CSV or Excel (.xlsx)" @click="showImportModal = true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Import CSV / Excel</span>
+        </button>
         <button class="btn btn-emerald ld-add" @click="showAddLeadModal = true">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
             <line x1="12" y1="5" x2="12" y2="19"/>
@@ -510,6 +514,15 @@
       @saved="onInquirySaved"
     />
 
+    <!-- Bulk import leads from CSV or Excel (.csv, .xlsx, .xls, .tsv) -->
+    <ImportLeadsModal
+      v-if="showImportModal"
+      :staff="staff"
+      :is-lead-admin="isLeadAdmin"
+      @close="showImportModal = false"
+      @imported="onLeadsImported"
+    />
+
     <!-- ======================================================================
          MODAL: CONFIRM SOFT DELETE LEAD
          ====================================================================== -->
@@ -563,6 +576,7 @@ import LeadActivityPanel from '~/components/admin/crm/LeadActivityPanel.vue'
 import LeadVisitsPanel from '~/components/admin/crm/LeadVisitsPanel.vue'
 import HighlightFieldsModal from '~/components/admin/crm/HighlightFieldsModal.vue'
 import LogInquiryModal from '~/components/admin/crm/LogInquiryModal.vue'
+import ImportLeadsModal from '~/components/admin/crm/ImportLeadsModal.vue'
 import CrmFilterDropdown from '~/components/admin/crm/CrmFilterDropdown.vue'
 import { ArrowUpDown, CircleDot, FolderKanban, Layers, MessageSquareQuote, RotateCcw, Target, Users } from 'lucide-vue-next'
 import {
@@ -587,6 +601,7 @@ const focus = ref('All')
 const sortBy = ref<'activity' | 'newest' | 'hottest'>('newest')
 const search = ref('')
 const showAddLeadModal = ref(false)
+const showImportModal = ref(false)
 const isLoading = ref(false)
 const detailOpen = ref(false)
 const selectedId = ref<number | null>(null)
@@ -863,7 +878,7 @@ const highlightsFor = (l: any, includeEmpty = false): { label: string; value: st
   const answers: { question: string; answer: string }[] = Array.isArray(l.meta_answers) ? l.meta_answers : []
   const items = chosen.map(label => {
     const match = answers.find(a => String(a?.question || '').trim() === label.trim())
-    return { label, value: match?.answer || '' }
+    return { label, value: match?.answer || websiteFieldValue[label]?.(l) || '' }
   })
   return includeEmpty ? items : items.filter(h => h.value)
 }
@@ -1882,6 +1897,12 @@ const onInquirySaved = async (lead: any) => {
   clearFilters()
   const fresh = leadsList.value.find(l => l.id === lead.id)
   if (fresh) openLead(fresh)
+}
+
+const onLeadsImported = async (payload: { created: number; updated: number; skipped: number; leads: any[] }) => {
+  toast.success('Leads imported', `${payload.created} created, ${payload.updated} updated, ${payload.skipped} skipped.`)
+  view.value = 'active'
+  await Promise.all([fetchLeads(false), loadHighlights()])
 }
 
 const setStage = async (lead: any, newStage: string) => {

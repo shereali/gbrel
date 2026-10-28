@@ -12,7 +12,7 @@
         <div class="hero-inner">
           <h1 class="hero-heading">Board of Directors</h1>
           <p class="hero-lead">
-            The leadership team guiding project planning, land verification, finance, and operations at Gram Bangla Real Estate Limited.
+            The leadership team guiding project planning, land verification, finance, and operations at Grambangla Real Estate Limited.
           </p>
         </div>
       </div>
@@ -41,13 +41,13 @@
             <!-- MD Message -->
             <div class="md-content-pane">
               <div class="md-brand-lockup">
-                <img src="/img/logo-full.png" alt="Gram Bangla Real Estate Limited" class="corporate-brand-logo" />
+                <img src="/img/logo-full.png" alt="Grambangla Real Estate Limited" class="corporate-brand-logo" />
               </div>
               <h2 class="md-headline">A Message from the Managing Director</h2>
 
               <div class="md-statement">
                 <p>
-                  At Gram Bangla Real Estate Limited, our primary aim is to assist buyers in securing genuine property with complete legal security. Investing in land or housing in Bangladesh represents years of patient saving, and our buyers deserve absolute clarity at every step of the process.
+                  At Grambangla Real Estate Limited, our primary aim is to assist buyers in securing genuine property with complete legal security. Investing in land or housing in Bangladesh represents years of patient saving, and our buyers deserve absolute clarity at every step of the process.
                 </p>
                 <p>
                   Before we take up any development, our legal associates review CS, SA, RS, and City Survey records directly through land offices to ensure every title is authentic and dispute free. We take full ownership of document verification and physical boundary protection.
@@ -60,7 +60,7 @@
               <div class="md-footer-row">
                 <div class="md-signoff">
                   <div class="md-sign-name">MD Abdul Quder Talukder</div>
-                  <div class="md-sign-title">Founder and Managing Director, Gram Bangla Real Estate Limited</div>
+                  <div class="md-sign-title">Founder and Managing Director, Grambangla Real Estate Limited</div>
                 </div>
                 <div class="md-contact-touch">
                   <a href="mailto:md@gbrel.com" class="btn-clean-contact">
@@ -141,10 +141,10 @@
       <div class="container">
         <div class="standards-card">
           <div class="standards-logo-frame">
-            <img src="/img/logo-mark.png" alt="Gram Bangla Real Estate Limited" class="standards-logo-mark" />
+            <img src="/img/logo-mark.png" alt="Grambangla Real Estate Limited" class="standards-logo-mark" />
           </div>
           <div class="standards-content">
-            <h3 class="standards-title">Gram Bangla Real Estate Limited</h3>
+            <h3 class="standards-title">Grambangla Real Estate Limited</h3>
             <p class="standards-desc">
               For plot inquiries, project visits, or document verification, visit our corporate office or contact our team directly.
             </p>
@@ -164,15 +164,15 @@
 import { useHead } from '#app'
 
 useHead({
-  title: 'Board of Directors | Gram Bangla Real Estate Limited',
+  title: 'Board of Directors | Grambangla Real Estate Limited (GBREL)',
   meta: [
     {
       name: 'description',
-      content: 'Board of Directors at Gram Bangla Real Estate Limited. Leadership guiding land verification, planning, finance, and civil construction in Bangladesh.'
+      content: 'Board of Directors at Grambangla Real Estate Limited (GBREL). Leadership guiding land verification, planning, finance, and civil construction in Bangladesh.'
     },
     {
       name: 'keywords',
-      content: 'Board of Directors, Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, Leadership, Dhaka Real Estate'
+      content: 'Board of Directors, Grambangla Real Estate, Grambangla Real Estate Limited, Gram Bangla Real Estate, GBREL, Leadership, Dhaka Real Estate'
     }
   ],
   link: [{ rel: 'canonical', href: 'https://www.gbrel.com/directors' }]
@@ -185,7 +185,7 @@ const directors = [
     designation: 'Director, Administration and Accounts',
     image: encodeURI('/img/abu-hanif-circle.png'),
     email: 'accounts@gbrel.com',
-    bio: 'Md. Abu Hanif oversees corporate administration, internal accounting, and financial management at Gram Bangla Real Estate Limited. He supervises day to day banking transactions, client payment schedules, vendor billing, and project expenditures.',
+    bio: 'Md. Abu Hanif oversees corporate administration, internal accounting, and financial management at Grambangla Real Estate Limited. He supervises day to day banking transactions, client payment schedules, vendor billing, and project expenditures.',
     bioExtra: 'Working closely with audit professionals and legal advisors, he ensures tax compliance and sound financial governance across all ongoing land development projects.'
   },
   {
@@ -194,7 +194,7 @@ const directors = [
     designation: 'Deputy Managing Director',
     image: encodeURI('/img/siam-talukder-linkedin-circle.png'),
     email: 'siam.talukder@gbrel.com',
-    bio: 'Engr. Siam Talukder leads business planning, project presentations, and corporate client relations at Gram Bangla Real Estate Limited. He meets directly with property buyers, institutional clients, and non resident Bangladeshis to explain master layouts, road connectivity, and legal clearances.',
+    bio: 'Engr. Siam Talukder leads business planning, project presentations, and corporate client relations at Grambangla Real Estate Limited. He meets directly with property buyers, institutional clients, and non resident Bangladeshis to explain master layouts, road connectivity, and legal clearances.',
     bioExtra: 'He directs joint venture discussions with landowners, monitors project feasibility, and coordinates sales and marketing initiatives across current and upcoming project areas.'
   },
   {
@@ -203,7 +203,7 @@ const directors = [
     designation: 'Co Founder and Chief Technology Officer',
     image: encodeURI('/img/Eng Sher Ali khan Director Marketing & IT .png'),
     email: 'sherali@gbrel.com',
-    bio: 'Engr. Sher Ali Khan is a Co Founder and the Chief Technology Officer in charge of digital systems and operational technology at Gram Bangla Real Estate Limited. He developed the company web platform, digital plot booking workflows, and internal management tools.',
+    bio: 'Engr. Sher Ali Khan is a Co Founder and the Chief Technology Officer in charge of digital systems and operational technology at Grambangla Real Estate Limited. He developed the company web platform, digital plot booking workflows, and internal management tools.',
     bioExtra: 'With a background in software engineering, he focuses on reliable digital services that allow clients in Bangladesh and abroad to view property documents, track project milestones, and communicate with company representatives.'
   },
   {

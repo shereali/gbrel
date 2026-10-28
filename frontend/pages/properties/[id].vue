@@ -534,7 +534,7 @@ const loadProperty = async () => {
   if (!agent.value) { await fetchAgents() }
 }
 watch(() => route.params.id, loadProperty, { immediate: true })
-useSeoMeta({ title: () => property.value ? `${property.value.title} | GBREL` : 'Property | GBREL', description: () => metaDescription.value, ogDescription: () => metaDescription.value, ogTitle: () => property.value?.title || 'GBREL', ogImage: () => absoluteImage(images.value[0] || videoPoster.value) })
+useSeoMeta({ title: () => property.value ? `${property.value.title} | Grambangla Real Estate (GBREL)` : 'Property | Grambangla Real Estate (GBREL)', description: () => metaDescription.value, ogSiteName: 'Grambangla Real Estate', ogDescription: () => metaDescription.value, ogTitle: () => property.value?.title ? `${property.value.title} | Grambangla Real Estate` : 'Grambangla Real Estate', ogImage: () => absoluteImage(images.value[0] || videoPoster.value) })
 const shareProperty = async () => {
   const url = `${window.location.origin}${route.path}`
   try { if (navigator.share) { await navigator.share({ title: property.value?.title, url }); return }; await navigator.clipboard.writeText(url); toast.success('লিংক কপি হয়েছে', 'পছন্দের মাধ্যমে শেয়ার করুন।') }

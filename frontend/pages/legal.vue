@@ -2,7 +2,7 @@
   <div class="lg">
     <header class="gb-wrap lg-head">
       <h1>আমরা সরকারি নিবন্ধিত কোম্পানি</h1>
-      <p class="gb-lead">গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড যৌথ মূলধন কোম্পানি ও ফার্মসমূহের পরিদপ্তরে (RJSC) নিবন্ধিত এবং ঢাকা দক্ষিণ সিটি কর্পোরেশনের ট্রেড লাইসেন্সধারী। নিচে দুটি কাগজই দেওয়া আছে। নম্বর মিলিয়ে বা QR কোড স্ক্যান করে নিজেই যাচাই করে নিন।</p>
+      <p class="gb-lead">গ্রামবাংলা রিয়েল এস্টেট লিমিটেড (Grambangla Real Estate Limited — GBREL) যৌথ মূলধন কোম্পানি ও ফার্মসমূহের পরিদপ্তরে (RJSC) নিবন্ধিত এবং ঢাকা দক্ষিণ সিটি কর্পোরেশনের ট্রেড লাইসেন্সধারী। নিচে দুটি কাগজই দেওয়া আছে। নম্বর মিলিয়ে বা QR কোড স্ক্যান করে নিজেই যাচাই করে নিন।</p>
     </header>
 
     <section class="lg-board" aria-label="নিবন্ধনের কাগজপত্র">
@@ -85,10 +85,10 @@ const documents = computed(() => [
 ])
 
 useHead({
-  title: 'নিবন্ধন ও ট্রেড লাইসেন্স | Gram Bangla Real Estate Limited',
+  title: 'নিবন্ধন ও ট্রেড লাইসেন্স | Grambangla Real Estate Limited (GBREL)',
   meta: [
-    { name: 'description', content: 'Gram Bangla Real Estate Limited (GBREL) RJSC কোম্পানি নিবন্ধন সনদ ও ঢাকা দক্ষিণ সিটি কর্পোরেশনের ট্রেড লাইসেন্স, অফিসের ঠিকানা ও ম্যাপ।' },
-    { name: 'keywords', content: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, RJSC, Trade License, নিবন্ধন' }
+    { name: 'description', content: 'Grambangla Real Estate Limited (GBREL) RJSC কোম্পানি নিবন্ধন সনদ (C-185751/2022) ও ঢাকা দক্ষিণ সিটি কর্পোরেশনের ট্রেড লাইসেন্স (TRAD/DSCC/026884/2022), অফিসের ঠিকানা ও ম্যাপ।' },
+    { name: 'keywords', content: 'Grambangla Real Estate, Grambangla Real Estate Limited, Gram Bangla Real Estate, GBREL, RJSC C-185751/2022, Trade License TRAD/DSCC/026884/2022, নিবন্ধন' }
   ],
   link: [{ rel: 'canonical', href: 'https://www.gbrel.com/legal' }]
 })

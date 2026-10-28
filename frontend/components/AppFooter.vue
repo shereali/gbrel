@@ -6,9 +6,9 @@
     <div class="ft-body">
       <div class="gb-wrap ft-grid">
         <div class="ft-brand">
-          <img src="/img/logo-mark.png" alt="" width="64" height="64" />
-          <p class="ft-name">গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড</p>
-          <p class="ft-about">জমি, প্লট, জমি শেয়ার ও ফ্ল্যাট কেনাবেচায় সহায়তা। প্রতিটি প্রপার্টির দাম, কাগজপত্র ও লোকেশন নিয়ে খোলামেলা আলোচনা করি।</p>
+          <img src="/img/logo-mark.png" alt="Grambangla Real Estate" width="64" height="64" />
+          <p class="ft-name">গ্রামবাংলা রিয়েল এস্টেট লিমিটেড</p>
+          <p class="ft-about">Grambangla Real Estate (GBREL) — জমি, প্লট, জমি শেয়ার ও ফ্ল্যাট কেনাবেচায় সহায়তা। প্রতিটি প্রপার্টির দাম, কাগজপত্র ও লোকেশন নিয়ে খোলামেলা আলোচনা করি।</p>
         </div>
 
         <nav aria-label="প্রপার্টির ধরন">
@@ -47,7 +47,7 @@
       </div>
 
       <div class="gb-wrap"><div class="ft-base">
-        <span>© {{ year }} গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL)</span>
+        <span>© {{ year }} Grambangla Real Estate Limited · গ্রামবাংলা রিয়েল এস্টেট লিমিটেড (GBREL)</span>
         <span class="ft-policies"><NuxtLink to="/privacy-policy">গোপনীয়তা নীতি</NuxtLink><NuxtLink to="/terms">শর্তাবলি</NuxtLink><NuxtLink to="/cookie-policy">কুকি নীতি</NuxtLink></span>
         <NuxtLink to="/legal" class="ft-reg">RJSC নিবন্ধন {{ settings.company_registration_no }} · ট্রেড লাইসেন্স {{ settings.trade_license_no }}</NuxtLink>
         <span>তালিকায় দেওয়া তথ্য কেনার আগে মূল কাগজপত্রের সঙ্গে মিলিয়ে নিন।</span>

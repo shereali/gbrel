@@ -5,6 +5,7 @@ use App\Http\Controllers\BookOrderController;
 use App\Http\Controllers\LeadAnswersController;
 use App\Http\Controllers\LeadCrmController;
 use App\Http\Controllers\LeadHighlightController;
+use App\Http\Controllers\LeadImportController;
 use App\Http\Controllers\ManualLeadController;
 use App\Http\Controllers\LeadJourneyController;
 use App\Http\Controllers\ListingReviewController;
@@ -1000,6 +1001,8 @@ Route::post('/t/draft', [TrackController::class, 'draft'])->middleware('throttle
 Route::get('/leads/overview', [LeadCrmController::class, 'overview']);
 // The CRM's "Log Buyer Inquiry" form (staff only; see ManualLeadController).
 Route::post('/leads/manual', [ManualLeadController::class, 'store']);
+// Bulk import buyer leads from CSV or Excel (.csv, .xlsx, .xls, .tsv) into the CRM.
+Route::post('/leads/import', [LeadImportController::class, 'import']);
 // Which form answers the CRM highlights on each lead (see LeadHighlightController).
 Route::get('/leads/highlights', [LeadHighlightController::class, 'index']);
 Route::put('/leads/highlights', [LeadHighlightController::class, 'update']);

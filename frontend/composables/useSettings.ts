@@ -41,8 +41,8 @@ export interface SiteSettings {
 }
 
 const defaultSettings: SiteSettings = {
-  site_name: 'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড',
-  site_title: 'Gram Bangla Real Estate Limited | গ্রাম বাংলা রিয়েল এস্টেট — GBREL',
+  site_name: 'গ্রামবাংলা রিয়েল এস্টেট লিমিটেড',
+  site_title: 'Grambangla Real Estate | Grambangla Real Estate Limited (GBREL)',
   contact_phone: '+8809658510748',
   whatsapp_number: '+8809658510748',
   contact_email: 'grambanglarealestateltd@gmail.com',
@@ -59,7 +59,7 @@ const defaultSettings: SiteSettings = {
   trade_license_valid_until: '2027-06-30',
   working_hours: 'শনি–বৃহস্পতি, সকাল ৯টা–সন্ধ্যা ৭টা',
   home_headline: 'জমি দেখে, কাগজ বুঝে, তারপর কিনুন।',
-  home_subtitle: 'Gram Bangla Real Estate Limited (গ্রাম বাংলা রিয়েল এস্টেট) — প্লট, জমি শেয়ার আর ফ্ল্যাটের তালিকা। প্রতিটির দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য এক জায়গায়।',
+  home_subtitle: 'Grambangla Real Estate (গ্রামবাংলা রিয়েল এস্টেট লিমিটেড — GBREL) — প্লট, জমি শেয়ার আর ফ্ল্যাটের তালিকা। প্রতিটির দাম, আয়তন, লোকেশন ও কাগজপত্রের তথ্য এক জায়গায়।',
   property_cta_label: 'ক্রয় তথ্য ও সাইট ভিজিট',
   property_cta_label_hidden_price: 'সর্বশেষ দাম ও সাইট ভিজিট',
   property_cta_note: 'কাগজপত্রের তথ্য, মোট খরচের হিসাব আর সাইট ভিজিটের সময়, সব জানাবে GBREL টিম। কোনো অগ্রিম ফি নেই।',
@@ -75,9 +75,17 @@ const isSaving = ref(false)
 const hasLoaded = ref(false)
 let pending: Promise<SiteSettings> | null = null
 
+const fixBrand = (val: unknown, fallback: string): string =>
+  String(val || fallback)
+    .replace(/Gram Bangla/g, 'Grambangla')
+    .replace(/গ্রাম বাংলা/g, 'গ্রামবাংলা')
+
 const normalize = (data: Record<string, any>): SiteSettings => ({
   ...defaultSettings,
   ...data,
+  site_name: fixBrand(data.site_name, defaultSettings.site_name),
+  site_title: fixBrand(data.site_title, defaultSettings.site_title),
+  home_subtitle: fixBrand(data.home_subtitle, defaultSettings.home_subtitle),
   owner_commission_percent: Number(data.owner_commission_percent ?? defaultSettings.owner_commission_percent),
   listing_document_types: Array.isArray(data.listing_document_types) ? data.listing_document_types : []
 })

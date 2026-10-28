@@ -187,7 +187,7 @@
         <img :src="BOOK.cover" alt="" width="180" height="255" loading="lazy" class="bp-final-cover" />
         <div>
           <h2 id="bp-final-title" class="gb-h2">টাকা নড়ানোর আগে বইটা পড়ে নিন</h2>
-          <p class="gb-lead">এক বেলা বাইরে খাওয়ার দামে সারা জীবনের সঞ্চয়ের পাহারাদার। লেখক {{ BOOK.author }}, গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড।</p>
+          <p class="gb-lead">এক বেলা বাইরে খাওয়ার দামে সারা জীবনের সঞ্চয়ের পাহারাদার। লেখক {{ BOOK.author }}, গ্রামবাংলা রিয়েল এস্টেট লিমিটেড (Grambangla Real Estate Limited)।</p>
           <div class="bp-price bp-price--light">
             <span class="bp-price-old">৳{{ bnMoney(BOOK.listPrice) }}</span>
             <span class="bp-price-now">৳{{ bnMoney(BOOK.price) }}</span>
@@ -225,10 +225,10 @@ import { trackPixel } from '~/utils/metaPixel'
 
 // Share previews for crawlers come from server/plugins/share-meta.ts; this sets the tab title in the browser.
 useHead({
-  title: 'The Hidden Business of Land: জমি-ফ্ল্যাট কেনা-বেচার বাংলা গাইড | Gram Bangla Real Estate Limited',
+  title: 'The Hidden Business of Land: জমি-ফ্ল্যাট কেনা-বেচার বাংলা গাইড | Grambangla Real Estate',
   meta: [
-    { name: 'description', content: 'জমি, ফ্ল্যাট ও ল্যান্ড শেয়ার নিরাপদে কেনা, ন্যায্য দামে বেচা, কোন মুখী ও কোন তলা নেবেন, আর এই ব্যবসায় আয়ের পথ। Gram Bangla Real Estate Limited (GBREL) প্রকাশিত বাংলা ই-বুক।' },
-    { name: 'keywords', content: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, জমি কেনা বেচার বই, The Hidden Business of Land, GBREL' }
+    { name: 'description', content: 'জমি, ফ্ল্যাট ও ল্যান্ড শেয়ার নিরাপদে কেনা, ন্যায্য দামে বেচা, কোন মুখী ও কোন তলা নেবেন, আর এই ব্যবসায় আয়ের পথ। Grambangla Real Estate Limited (GBREL) প্রকাশিত বাংলা ই-বুক।' },
+    { name: 'keywords', content: 'Grambangla Real Estate, Grambangla Real Estate Limited, Gram Bangla Real Estate, জমি কেনা বেচার বই, The Hidden Business of Land, GBREL' }
   ],
   link: [{ rel: 'canonical', href: 'https://www.gbrel.com/book' }]
 })

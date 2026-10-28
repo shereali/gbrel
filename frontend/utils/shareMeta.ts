@@ -5,11 +5,11 @@ export const DEFAULT_SHARE_IMAGE = `${SITE_URL}/og-default.jpg`
 
 // One sentence for link previews and search results: title, the price as the page leads with it, and why to click.
 export function propertyShareDescription(property: any): string {
-  if (!property) return 'প্রপার্টির তথ্য, মূল্য ও যোগাযোগ।'
+  if (!property) return 'প্রপার্টির তথ্য, মূল্য ও যোগাযোগ — Grambangla Real Estate (GBREL)।'
   const price = priceDisplay(property)
   const negotiable = property.buyerDetails?.negotiable === 'Yes' ? ' (আলোচনা সাপেক্ষ)' : ''
   const priceText = !price.hidden && price.amount ? `${price.per} ${price.amount}${negotiable}।` : ''
-  return [`${property.title}।`, priceText, 'কাগজপত্র দেখে, সাইট ভিজিট করে সিদ্ধান্ত নিন: GBREL।'].filter(Boolean).join(' ')
+  return [`${property.title}।`, priceText, 'কাগজপত্র দেখে, সাইট ভিজিট করে সিদ্ধান্ত নিন: Grambangla Real Estate (GBREL)।'].filter(Boolean).join(' ')
 }
 
 // Share images must be absolute URLs; listing photos are stored as site paths ("/storage/…", "/img/…").

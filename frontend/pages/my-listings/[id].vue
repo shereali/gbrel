@@ -428,7 +428,7 @@ onMounted(async () => {
   loading.value = false
 })
 
-useSeoMeta({ title: 'প্রপার্টির তথ্য | গ্রাম বাংলা রিয়েল এস্টেট' })
+useSeoMeta({ title: 'প্রপার্টির তথ্য | Grambangla Real Estate (গ্রামবাংলা রিয়েল এস্টেট)' })
 </script>
 
 <style scoped>

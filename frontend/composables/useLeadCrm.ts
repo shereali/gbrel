@@ -142,6 +142,27 @@ export const useLeadCrm = () => {
     scheduleVisit: (id: number, body: Record<string, unknown>) => call<LeadVisit>(`/leads/${id}/visits`, { method: 'POST', body }),
     updateVisit: (id: number, visitId: number, body: Record<string, unknown>) => call<LeadVisit>(`/leads/${id}/visits/${visitId}`, { method: 'PATCH', body }),
     highlights: () => call<LeadHighlights>('/leads/highlights'),
-    saveHighlights: (form: string, fields: string[]) => call<{ form: string; fields: string[] }>('/leads/highlights', { method: 'PUT', body: { form, fields } })
+    saveHighlights: (form: string, fields: string[]) => call<{ form: string; fields: string[] }>('/leads/highlights', { method: 'PUT', body: { form, fields } }),
+    importLeads: async (formData: FormData) => {
+      const res = await fetch(useApiUrl('/leads/import'), {
+        method: 'POST',
+        headers: { Accept: 'application/json', Authorization: `Bearer ${token.value}` },
+        body: formData
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        const firstError = json?.errors ? (Object.values(json.errors)[0] as string[])[0] : ''
+        throw new Error(firstError || json?.message || 'Failed to import leads.')
+      }
+      return json.data as {
+        total_rows: number
+        created: number
+        updated: number
+        skipped: number
+        failed: number
+        errors: { row: number; name: string; phone: string; reason: string }[]
+        leads: any[]
+      }
+    }
   }
 }

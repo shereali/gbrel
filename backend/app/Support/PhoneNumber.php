@@ -11,11 +11,19 @@ class PhoneNumber
      */
     public static function normalize(?string $raw): string
     {
-        $phone = strtr((string) $raw, array_combine(
+        $phone = trim((string) $raw);
+        // Meta CSV/Excel exports prefix phone numbers with "p:" (e.g. "p:+8801712345678").
+        $phone = preg_replace('/^p:\s*/i', '', $phone) ?? $phone;
+
+        $phone = strtr($phone, array_combine(
             preg_split('//u', '০১২৩৪৫৬৭৮৯', -1, PREG_SPLIT_NO_EMPTY), array_map('strval', range(0, 9))
         ));
         $phone = preg_replace('/[\s().-]/u', '', $phone) ?? '';
 
+        // Excel numeric cells often strip the leading 0 from Bangladesh mobile numbers (1712345678 -> 01712345678).
+        if (preg_match('/^1[3-9]\d{8}$/', $phone)) {
+            return '+880'.$phone;
+        }
         if (preg_match('/^01[3-9]\d{8}$/', $phone)) {
             return '+88'.$phone;
         }

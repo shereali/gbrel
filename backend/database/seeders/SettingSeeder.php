@@ -32,8 +32,8 @@ class SettingSeeder extends Seeder
         }
 
         $companySettings = [
-            'site_name' => 'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড',
-            'site_title' => 'Gram Bangla Real Estate Limited | গ্রাম বাংলা রিয়েল এস্টেট — GBREL',
+            'site_name' => 'গ্রামবাংলা রিয়েল এস্টেট লিমিটেড',
+            'site_title' => 'Grambangla Real Estate | Grambangla Real Estate Limited (GBREL)',
             'contact_email' => 'grambanglarealestateltd@gmail.com',
             'contact_phone' => '+8809658510748',
             'whatsapp_number' => '+8809658510748',

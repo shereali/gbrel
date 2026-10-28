@@ -9,28 +9,30 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'bn' },
-      title: 'Gram Bangla Real Estate Limited | Gram Bangla Real Estate — GBREL',
+      title: 'Grambangla Real Estate | Grambangla Real Estate Limited (GBREL)',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
-        { name: 'description', content: 'Gram Bangla Real Estate Limited (GBREL) is a premier registered real estate company in Bangladesh. Official site: www.gbrel.com. Discover verified land, plots, land shares, and apartments in Dhaka. Call: +8809658510748 | মিরপুর ডিওএইচএস, ঢাকা।' },
-        { name: 'keywords', content: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, GBREL, www.gbrel.com, gbrel, গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড, গ্রাম বাংলা রিয়েল এস্টেট, গ্রাম বাংলা, Real Estate Bangladesh, Mirpur DOHS Real Estate, Plots in Dhaka, Land Share Dhaka' },
-        { name: 'author', content: 'Gram Bangla Real Estate Limited' },
+        { name: 'application-name', content: 'Grambangla Real Estate' },
+        { name: 'apple-mobile-web-app-title', content: 'Grambangla Real Estate' },
+        { name: 'description', content: 'Grambangla Real Estate (Grambangla Real Estate Limited — GBREL) is an RJSC-registered real estate company in Dhaka, Bangladesh (Reg: C-185751/2022). Official website: www.gbrel.com. Verified plots, land shares, duplexes & apartments in Mirpur DOHS & Dhaka. Call: +8809658510748.' },
+        { name: 'keywords', content: 'Grambangla Real Estate, Grambangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla Real Estate Limited, GBREL, www.gbrel.com, gbrel.com, গ্রামবাংলা রিয়েল এস্টেট, গ্রামবাংলা রিয়েল এস্টেট লিমিটেড, গ্রাম বাংলা রিয়েল এস্টেট, Real Estate Dhaka Bangladesh, Mirpur DOHS Real Estate, Verified Plots Dhaka, Land Share Dhaka' },
+        { name: 'author', content: 'Grambangla Real Estate Limited' },
         { name: 'robots', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
         { name: 'theme-color', content: '#1D4A2A' },
-        // Site-wide share preview. Property pages get their own from server/plugins/share-meta.ts.
+        // Site-wide share preview. Route-specific pages get their own from server/plugins/share-meta.ts.
         { property: 'og:type', content: 'website' },
-        { property: 'og:site_name', content: 'Gram Bangla Real Estate Limited' },
+        { property: 'og:site_name', content: 'Grambangla Real Estate' },
         { property: 'og:locale', content: 'bn_BD' },
-        { property: 'og:title', content: 'Gram Bangla Real Estate Limited | জমি দেখে, কাগজ বুঝে, তারপর কিনুন — GBREL' },
-        { property: 'og:description', content: 'Gram Bangla Real Estate Limited (GBREL) — জমি, প্লট, জমি শেয়ার ও ফ্ল্যাট খুঁজুন। দাম, কাগজপত্র ও লোকেশন দেখে নিন। Official: www.gbrel.com | ফোন: +8809658510748' },
+        { property: 'og:title', content: 'Grambangla Real Estate | জমি দেখে, কাগজ বুঝে, তারপর কিনুন — GBREL' },
+        { property: 'og:description', content: 'Grambangla Real Estate (Grambangla Real Estate Limited, GBREL) — যাচাইকৃত জমি, প্লট, ল্যান্ড শেয়ার ও ফ্ল্যাট। Official: www.gbrel.com | ফোন: +8809658510748' },
         { property: 'og:url', content: 'https://www.gbrel.com/' },
         { property: 'og:image', content: 'https://www.gbrel.com/og-default.jpg' },
         { property: 'og:image:width', content: '1200' },
         { property: 'og:image:height', content: '630' },
         { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: 'Gram Bangla Real Estate Limited | Gram Bangla Real Estate — GBREL' },
-        { name: 'twitter:description', content: 'Gram Bangla Real Estate Limited (GBREL) — জমি, প্লট, জমি শেয়ার ও ফ্ল্যাট। www.gbrel.com | ফোন: +8809658510748' },
+        { name: 'twitter:title', content: 'Grambangla Real Estate | Grambangla Real Estate Limited (GBREL)' },
+        { name: 'twitter:description', content: 'Grambangla Real Estate (Grambangla Real Estate Limited, GBREL) — যাচাইকৃত জমি, প্লট, ল্যান্ড শেয়ার ও ফ্ল্যাট। www.gbrel.com | ফোন: +8809658510748' },
         { name: 'twitter:image', content: 'https://www.gbrel.com/og-default.jpg' }
       ],
       // Visitor journey tracker. Waits for cookie consent by itself; /gb-track.js?v= is bumped when the file changes.

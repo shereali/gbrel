@@ -93,7 +93,7 @@ const load = async () => {
 }
 
 onMounted(() => { load(); fetchSettings() })
-useSeoMeta({ title: 'আমার প্রপার্টি | গ্রাম বাংলা রিয়েল এস্টেট' })
+useSeoMeta({ title: 'আমার প্রপার্টি | Grambangla Real Estate (গ্রামবাংলা রিয়েল এস্টেট)' })
 </script>
 
 <style scoped>

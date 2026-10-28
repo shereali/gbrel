@@ -1,7 +1,7 @@
 <template>
   <div class="al">
     <main class="al-card">
-      <NuxtLink to="/" class="al-logo" aria-label="Back to the website"><img src="/img/logo-wordmark.png" alt="Gram Bangla Real Estate Limited" width="986" height="231" /></NuxtLink>
+      <NuxtLink to="/" class="al-logo" aria-label="Back to the website"><img src="/img/logo-wordmark.png" alt="Grambangla Real Estate Limited" width="986" height="231" /></NuxtLink>
       <h1>Staff sign in</h1>
       <p class="al-lead">For GBREL team members only. Property owners sign in on the <NuxtLink to="/login">main sign-in page</NuxtLink>.</p>
 

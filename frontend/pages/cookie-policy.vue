@@ -23,7 +23,7 @@ import { useSettings } from '~/composables/useSettings'
 const { settings, fetchSettings } = useSettings()
 onMounted(() => { fetchSettings() })
 
-const company = 'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (Grambangla Real Estate Limited)'
+const company = 'গ্রামবাংলা রিয়েল এস্টেট লিমিটেড (Grambangla Real Estate Limited)'
 
 const summary = [
   'কুকি হলো ছোট তথ্য ফাইল যা আপনার ব্রাউজারে থাকে, যাতে ওয়েবসাইট আপনার পছন্দ ও লগইন মনে রাখতে পারে।',
@@ -38,7 +38,7 @@ const sections = computed(() => [
     title: 'কুকি কী এবং কেন ব্যবহার করা হয়',
     body: [
       'কুকি (Cookie) হলো খুব ছোট আকারের টেক্সট ফাইল যা আপনি কোনো ওয়েবসাইট পরিদর্শন করলে আপনার কম্পিউটার, মোবাইল বা ডিভাইসের ব্রাউজারে সংরক্ষিত হয়। কুকি ছাড়াও লোকাল স্টোরেজ (Local Storage) এবং সেশন স্টোরেজের মতো প্রযুক্তি দিয়েও সাময়িক তথ্য রাখা হয়।',
-      'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL)-এর ওয়েবসাইটে কুকি ব্যবহার করা হয় যাতে আপনার অভিজ্ঞতা সহজ ও নিরাপদ হয়—যেমন বারবার পাসওয়ার্ড না চাওয়া, পছন্দের প্রপার্টি সেভ রাখা এবং আপনার জন্য উপযুক্ত প্রপার্টির তথ্য সরবরাহ করা।'
+      'গ্রামবাংলা রিয়েল এস্টেট লিমিটেড (Grambangla Real Estate Limited — GBREL)-এর ওয়েবসাইটে কুকি ব্যবহার করা হয় যাতে আপনার অভিজ্ঞতা সহজ ও নিরাপদ হয়—যেমন বারবার পাসওয়ার্ড না চাওয়া, পছন্দের প্রপার্টি সেভ রাখা এবং আপনার জন্য উপযুক্ত প্রপার্টির তথ্য সরবরাহ করা।'
     ]
   },
   {
@@ -130,10 +130,10 @@ const sections = computed(() => [
 ])
 
 useHead({
-  title: 'কুকি নীতি | Gram Bangla Real Estate Limited',
+  title: 'কুকি নীতি | Grambangla Real Estate Limited (GBREL)',
   meta: [
-    { name: 'description', content: 'Gram Bangla Real Estate Limited (GBREL) ওয়েবসাইটে কুকির ব্যবহার, প্রকারভেদ এবং আপনার নিয়ন্ত্রণ সংক্রান্ত পূর্ণাঙ্গ কুকি নীতি।' },
-    { name: 'keywords', content: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, Cookie Policy, কুকি নীতি' }
+    { name: 'description', content: 'Grambangla Real Estate Limited (GBREL) ওয়েবসাইটে কুকির ব্যবহার, প্রকারভেদ এবং আপনার নিয়ন্ত্রণ সংক্রান্ত পূর্ণাঙ্গ কুকি নীতি।' },
+    { name: 'keywords', content: 'Grambangla Real Estate, Grambangla Real Estate Limited, Gram Bangla Real Estate, GBREL, Cookie Policy, কুকি নীতি' }
   ],
   link: [{ rel: 'canonical', href: 'https://www.gbrel.com/cookie-policy' }]
 })

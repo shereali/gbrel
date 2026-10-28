@@ -16,7 +16,7 @@
 
     <!-- Luxury Footer -->
     <footer v-if="isPropertyDetail" class="property-footer">
-      <strong>গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড</strong>
+      <strong>Grambangla Real Estate Limited (গ্রামবাংলা রিয়েল এস্টেট লিমিটেড)</strong>
       <span>প্রপার্টি সম্পর্কে জানুন। বুঝে সিদ্ধান্ত নিন।</span>
       <div class="property-footer-links">
         <NuxtLink to="/properties">সব প্রপার্টি দেখুন</NuxtLink>

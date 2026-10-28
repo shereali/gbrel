@@ -24,7 +24,7 @@ import { toBn } from '~/utils/propertyLabels'
 const { settings, fetchSettings } = useSettings()
 onMounted(() => { fetchSettings() })
 
-const company = 'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (Grambangla Real Estate Limited)'
+const company = 'গ্রামবাংলা রিয়েল এস্টেট লিমিটেড (Grambangla Real Estate Limited)'
 const commission = computed(() => toBn(settings.value.owner_commission_percent ?? 2))
 
 const summary = [
@@ -133,10 +133,10 @@ const sections = computed(() => [
 ])
 
 useHead({
-  title: 'শর্তাবলি | Gram Bangla Real Estate Limited',
+  title: 'শর্তাবলি | Grambangla Real Estate Limited (GBREL)',
   meta: [
     { name: 'description', content: 'www.gbrel.com ব্যবহার, প্রপার্টির তথ্য, ক্রেতা ও মালিকের দায়িত্ব, পেমেন্ট ও সার্ভিস চার্জ সংক্রান্ত শর্তাবলি।' },
-    { name: 'keywords', content: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, Terms and Conditions, শর্তাবলি' }
+    { name: 'keywords', content: 'Grambangla Real Estate, Grambangla Real Estate Limited, Gram Bangla Real Estate, GBREL, Terms and Conditions, শর্তাবলি' }
   ],
   link: [{ rel: 'canonical', href: 'https://www.gbrel.com/terms' }]
 })

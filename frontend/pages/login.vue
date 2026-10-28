@@ -68,7 +68,7 @@ const handleLogin = async () => {
   }
 }
 
-useSeoMeta({ title: 'সাইন ইন | গ্রাম বাংলা রিয়েল এস্টেট' })
+useSeoMeta({ title: 'সাইন ইন | Grambangla Real Estate (গ্রামবাংলা রিয়েল এস্টেট)' })
 </script>
 
 <style scoped>

@@ -7,21 +7,16 @@ export default defineEventHandler(async (event) => {
   const baseUrl = 'https://www.gbrel.com'
   const today = new Date().toISOString().split('T')[0]
 
-  // Primary static routes with their priorities and change frequencies
+  // Canonical static routes (excluding non-canonical query parameter filter URLs)
   const staticRoutes = [
     { loc: `${baseUrl}/`, changefreq: 'daily', priority: '1.0', lastmod: today },
     { loc: `${baseUrl}/properties`, changefreq: 'daily', priority: '0.9', lastmod: today },
-    { loc: `${baseUrl}/properties?type=Plot`, changefreq: 'weekly', priority: '0.8', lastmod: today },
-    { loc: `${baseUrl}/properties?type=Land+Share`, changefreq: 'weekly', priority: '0.8', lastmod: today },
-    { loc: `${baseUrl}/properties?type=Flat`, changefreq: 'weekly', priority: '0.8', lastmod: today },
-    { loc: `${baseUrl}/properties?type=Duplex`, changefreq: 'weekly', priority: '0.8', lastmod: today },
-    { loc: `${baseUrl}/properties?type=Commercial`, changefreq: 'weekly', priority: '0.8', lastmod: today },
-    { loc: `${baseUrl}/book`, changefreq: 'weekly', priority: '0.8', lastmod: today },
-    { loc: `${baseUrl}/list-property`, changefreq: 'monthly', priority: '0.8', lastmod: today },
+    { loc: `${baseUrl}/directors`, changefreq: 'monthly', priority: '0.8', lastmod: today },
+    { loc: `${baseUrl}/legal`, changefreq: 'monthly', priority: '0.8', lastmod: today },
     { loc: `${baseUrl}/contact`, changefreq: 'monthly', priority: '0.8', lastmod: today },
-    { loc: `${baseUrl}/directors`, changefreq: 'monthly', priority: '0.7', lastmod: today },
-    { loc: `${baseUrl}/legal`, changefreq: 'monthly', priority: '0.7', lastmod: today },
-    { loc: `${baseUrl}/advisors`, changefreq: 'weekly', priority: '0.7', lastmod: today },
+    { loc: `${baseUrl}/advisors`, changefreq: 'weekly', priority: '0.8', lastmod: today },
+    { loc: `${baseUrl}/list-property`, changefreq: 'monthly', priority: '0.8', lastmod: today },
+    { loc: `${baseUrl}/book`, changefreq: 'weekly', priority: '0.8', lastmod: today },
     { loc: `${baseUrl}/compare`, changefreq: 'monthly', priority: '0.6', lastmod: today },
     { loc: `${baseUrl}/privacy-policy`, changefreq: 'yearly', priority: '0.3', lastmod: today },
     { loc: `${baseUrl}/terms`, changefreq: 'yearly', priority: '0.3', lastmod: today },

@@ -82,7 +82,29 @@ class LeadHighlightController extends Controller
             ];
         }
 
-        // Distinct website projects/properties from leads and published properties
+        // Distinct website/imported projects/properties from leads and published properties
+        $websiteQuestionsByProject = [];
+        Lead::query()
+            ->whereNull('meta_form_id')
+            ->whereNotNull('meta_answers')
+            ->orderByDesc('id')
+            ->limit(1000)
+            ->get(['property_title', 'meta_answers'])
+            ->each(function (Lead $lead) use (&$websiteQuestionsByProject) {
+                $proj = trim((string) $lead->property_title);
+                if ($proj === '') {
+                    return;
+                }
+                foreach ((array) $lead->meta_answers as $answer) {
+                    if (! empty($answer['question'])) {
+                        $q = trim((string) $answer['question']);
+                        if ($q !== '') {
+                            $websiteQuestionsByProject[$proj][$q] = true;
+                        }
+                    }
+                }
+            });
+
         $websiteProjects = Lead::query()
             ->whereNull('meta_form_id')
             ->whereNotNull('property_title')
@@ -111,10 +133,12 @@ class LeadHighlightController extends Controller
         ]];
 
         foreach ($websiteProjects as $projectTitle) {
+            $extraFields = array_keys($websiteQuestionsByProject[$projectTitle] ?? []);
+            $mergedFields = array_values(array_unique(array_merge(array_values(self::WEBSITE_FIELDS), $extraFields)));
             $webForms[] = [
                 'key' => 'website:'.$projectTitle,
                 'name' => 'Website - '.$projectTitle,
-                'fields' => array_values(self::WEBSITE_FIELDS),
+                'fields' => $mergedFields,
                 'source' => 'website',
                 'project' => $projectTitle,
             ];

@@ -112,9 +112,9 @@ const handleSubmit = async () => {
 }
 
 useSeoMeta({
-  title: 'যোগাযোগ | Gram Bangla Real Estate Limited',
-  description: 'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL) — প্রপার্টির দাম, কাগজপত্র বা সাইট ভিজিট নিয়ে আমাদের সঙ্গে কথা বলুন। অফিস: হাউস ৪৬১, রোড ৭, এভিনিউ ৬, মিরপুর ডিওএইচএস, ঢাকা। ফোন: +8809658510748, ইমেইল: grambanglarealestateltd@gmail.com',
-  keywords: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, যোগাযোগ, Mirpur DOHS Real Estate, www.gbrel.com'
+  title: 'যোগাযোগ | Grambangla Real Estate (Grambangla Real Estate Limited)',
+  description: 'গ্রামবাংলা রিয়েল এস্টেট লিমিটেড (Grambangla Real Estate Limited — GBREL) — প্রপার্টির দাম, কাগজপত্র বা সাইট ভিজিট নিয়ে আমাদের সঙ্গে কথা বলুন। অফিস: হাউস ৪৬১, রোড ৭, এভিনিউ ৬, মিরপুর ডিওএইচএস, ঢাকা। ফোন: +8809658510748, ইমেইল: grambanglarealestateltd@gmail.com',
+  keywords: 'Grambangla Real Estate, Grambangla Real Estate Limited, Gram Bangla Real Estate, GBREL, যোগাযোগ, Mirpur DOHS Real Estate, www.gbrel.com'
 })
 useHead({
   link: [{ rel: 'canonical', href: 'https://www.gbrel.com/contact' }]

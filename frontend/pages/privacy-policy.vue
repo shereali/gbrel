@@ -23,7 +23,7 @@ import { useSettings } from '~/composables/useSettings'
 const { settings, fetchSettings } = useSettings()
 onMounted(() => { fetchSettings() })
 
-const company = 'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (Grambangla Real Estate Limited)'
+const company = 'গ্রামবাংলা রিয়েল এস্টেট লিমিটেড (Grambangla Real Estate Limited)'
 
 const summary = [
   'নাম, মোবাইল নম্বর আর আপনার প্রয়োজনের কথা নিই শুধু আপনার সঙ্গে যোগাযোগ করতে আর মানানসই প্রপার্টি দেখাতে।',
@@ -38,7 +38,7 @@ const sections = computed(() => [
     title: 'আমরা কারা',
     body: [
       `এই ওয়েবসাইট (gbrel.com) পরিচালনা করে ${company}, যৌথ মূলধন কোম্পানি ও ফার্মসমূহের পরিদপ্তরে (RJSC) নিবন্ধিত একটি কোম্পানি (নিবন্ধন নম্বর ${settings.value.company_registration_no})। আমাদের নিবন্ধিত অফিস: ${settings.value.office_address}।`,
-      'এই নীতিতে "আমরা" বলতে গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড (GBREL) এবং "আপনি" বলতে ওয়েবসাইটের দর্শক, ক্রেতা বা প্রপার্টির মালিককে বোঝানো হয়েছে।'
+      'এই নীতিতে "আমরা" বলতে গ্রামবাংলা রিয়েল এস্টেট লিমিটেড (Grambangla Real Estate Limited — GBREL) এবং "আপনি" বলতে ওয়েবসাইটের দর্শক, ক্রেতা বা প্রপার্টির মালিককে বোঝানো হয়েছে।'
     ]
   },
   {
@@ -149,10 +149,10 @@ const sections = computed(() => [
 ])
 
 useHead({
-  title: 'গোপনীয়তা নীতি | Gram Bangla Real Estate Limited',
+  title: 'গোপনীয়তা নীতি | Grambangla Real Estate Limited (GBREL)',
   meta: [
-    { name: 'description', content: 'Gram Bangla Real Estate Limited (GBREL) কোন তথ্য সংগ্রহ করে, কীভাবে ব্যবহার ও সুরক্ষিত রাখে, এবং আপনার অধিকার।' },
-    { name: 'keywords', content: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, Privacy Policy, গোপনীয়তা নীতি' }
+    { name: 'description', content: 'Grambangla Real Estate Limited (GBREL) কোন তথ্য সংগ্রহ করে, কীভাবে ব্যবহার ও সুরক্ষিত রাখে, এবং আপনার অধিকার।' },
+    { name: 'keywords', content: 'Grambangla Real Estate, Grambangla Real Estate Limited, Gram Bangla Real Estate, GBREL, Privacy Policy, গোপনীয়তা নীতি' }
   ],
   link: [{ rel: 'canonical', href: 'https://www.gbrel.com/privacy-policy' }]
 })

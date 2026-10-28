@@ -86,7 +86,7 @@ const handleSignup = async () => {
   }
 }
 
-useSeoMeta({ title: 'অ্যাকাউন্ট খুলুন | গ্রাম বাংলা রিয়েল এস্টেট' })
+useSeoMeta({ title: 'অ্যাকাউন্ট খুলুন | Grambangla Real Estate (গ্রামবাংলা রিয়েল এস্টেট)' })
 </script>
 
 <style scoped>

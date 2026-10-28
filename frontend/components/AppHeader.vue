@@ -2,8 +2,8 @@
   <header class="hd" :class="{ 'is-scrolled': isScrolled }">
     <a href="#main" class="hd-skip">মূল অংশে যান</a>
     <div class="gb-wrap hd-row">
-      <NuxtLink to="/" class="hd-brand" aria-label="গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড — হোম">
-        <img src="/img/logo-wordmark.png" alt="" class="hd-logo" width="986" height="231" />
+      <NuxtLink to="/" class="hd-brand" aria-label="Grambangla Real Estate (গ্রামবাংলা রিয়েল এস্টেট লিমিটেড) — হোম">
+        <img src="/img/logo-wordmark.png" alt="Grambangla Real Estate" class="hd-logo" width="986" height="231" />
       </NuxtLink>
 
       <nav class="hd-nav" aria-label="প্রধান মেনু">

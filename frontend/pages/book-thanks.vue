@@ -66,7 +66,7 @@ import { BOOK, bnMoney, isInAppBrowser, rememberBookOrder } from '~/utils/book'
 import { trackPixel } from '~/utils/metaPixel'
 import { useApiUrl } from '~/composables/useApi'
 
-useHead({ title: 'আপনার বই | গ্রাম বাংলা রিয়েল এস্টেট', meta: [{ name: 'robots', content: 'noindex' }] })
+useHead({ title: 'আপনার বই | Grambangla Real Estate (গ্রামবাংলা রিয়েল এস্টেট)', meta: [{ name: 'robots', content: 'noindex' }] })
 
 type State = 'loading' | 'pending' | 'paid' | 'underpaid' | 'missing'
 const route = useRoute()

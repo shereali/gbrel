@@ -21,8 +21,8 @@ class SiteSettings
     public static function definitions(): array
     {
         return [
-            'site_name' => ['default' => 'গ্রাম বাংলা রিয়েল এস্টেট লিমিটেড', 'rules' => ['nullable', 'string', 'max:150']],
-            'site_title' => ['default' => 'Gram Bangla Real Estate Limited | গ্রাম বাংলা রিয়েল এস্টেট — GBREL', 'rules' => ['nullable', 'string', 'max:200']],
+            'site_name' => ['default' => 'গ্রামবাংলা রিয়েল এস্টেট লিমিটেড', 'rules' => ['nullable', 'string', 'max:150']],
+            'site_title' => ['default' => 'Grambangla Real Estate | Grambangla Real Estate Limited (GBREL)', 'rules' => ['nullable', 'string', 'max:200']],
             'contact_phone' => ['default' => '+8809658510748', 'rules' => ['nullable', 'string', 'max:40']],
             'whatsapp_number' => ['default' => '+8809658510748', 'rules' => ['nullable', 'string', 'max:40']],
             'contact_email' => ['default' => 'grambanglarealestateltd@gmail.com', 'rules' => ['nullable', 'email', 'max:150']],
@@ -83,6 +83,15 @@ class SiteSettings
                 $value = json_last_error() === JSON_ERROR_NONE ? $decoded : $raw;
             }
             $values[$key] = ($value === null || $value === '') && $definition['default'] !== '' ? $definition['default'] : $value;
+        }
+        foreach (['site_name', 'site_title', 'home_subtitle'] as $brandKey) {
+            if (isset($values[$brandKey]) && is_string($values[$brandKey])) {
+                $values[$brandKey] = str_replace(
+                    ['Gram Bangla', 'গ্রাম বাংলা'],
+                    ['Grambangla', 'গ্রামবাংলা'],
+                    $values[$brandKey]
+                );
+            }
         }
         $values['owner_terms_version'] = substr(sha1($values['owner_terms'].'|'.$values['owner_commission_percent']), 0, 12);
 

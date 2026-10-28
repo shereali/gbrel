@@ -228,9 +228,9 @@ const filteredProperties = computed(() => {
 })
 
 useSeoMeta({
-  title: () => `${heading.value} | Gram Bangla Real Estate Limited`,
-  description: 'জমি, প্লট, জমি শেয়ার ও ফ্ল্যাটের যাচাইকৃত তালিকা — Gram Bangla Real Estate Limited (GBREL)। দাম, আয়তন ও লোকেশন দেখে বেছে নিন।',
-  keywords: 'Gram Bangla Real Estate Limited, Gram Bangla Real Estate, Gram Bangla, Plots Dhaka, Land Share, Flat in Dhaka, GBREL'
+  title: () => `${heading.value} | Grambangla Real Estate (GBREL)`,
+  description: 'জমি, প্লট, জমি শেয়ার ও ফ্ল্যাটের যাচাইকৃত তালিকা — Grambangla Real Estate Limited (GBREL)। দাম, আয়তন ও লোকেশন দেখে বেছে নিন।',
+  keywords: 'Grambangla Real Estate, Grambangla Real Estate Limited, Gram Bangla Real Estate, Plots Dhaka, Land Share, Flat in Dhaka, GBREL'
 })
 useHead({
   link: [{ rel: 'canonical', href: 'https://www.gbrel.com/properties' }]
