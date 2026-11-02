@@ -9,7 +9,33 @@
         <button v-for="o in CALL_OUTCOMES" :key="o" type="button" :class="{ on: outcome === o }" :aria-pressed="outcome === o" @click="outcome = o">{{ o }}</button>
       </div>
 
-      <textarea v-model="text" rows="3" class="ap-text" :placeholder="placeholder" :aria-label="placeholder" maxlength="2000"></textarea>
+      <div class="ap-text-wrap">
+        <textarea v-model="text" rows="3" class="ap-text" :placeholder="placeholder" :aria-label="placeholder" maxlength="2000"></textarea>
+        <div v-if="voice.supported.value" class="ap-voice-tools">
+          <button
+            type="button"
+            class="ap-lang"
+            :title="voiceLang === 'bn-BD' ? 'Listening in Bangla. Tap for English.' : 'Listening in English. Tap for Bangla.'"
+            @click="toggleVoiceLang"
+          >{{ voiceLang === 'bn-BD' ? 'বাং' : 'EN' }}</button>
+          <button
+            type="button"
+            class="ap-mic"
+            :class="{ on: voice.listening.value }"
+            :aria-pressed="voice.listening.value"
+            :aria-label="voice.listening.value ? 'Stop voice input' : 'Write by voice'"
+            :title="voice.listening.value ? 'Stop voice input' : 'Voice to text'"
+            @click="toggleVoice"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <p v-if="voice.listening.value || voice.error.value" class="ap-voice-status" role="status">
+        <template v-if="voice.listening.value">Listening… {{ voice.interim.value || (voiceLang === 'bn-BD' ? 'কথা বলুন, লেখায় রূপান্তর হবে…' : 'Speak now to write…') }}</template>
+        <template v-else>{{ voice.error.value }}</template>
+      </p>
 
       <div class="ap-follow">
         <span class="ap-label">Follow up</span>
@@ -46,15 +72,57 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { CALL_OUTCOMES, formatWhen, inDays, useLeadCrm, type LeadActivity } from '~/composables/useLeadCrm'
 import { useToast } from '~/composables/useToast'
+import { useVoiceSearch, type VoiceLang } from '~/composables/useVoiceSearch'
 
 const props = defineProps<{ leadId: number; receivedAt: string; activities: LeadActivity[]; loading: boolean }>()
 const emit = defineEmits<{ changed: [] }>()
 
 const crm = useLeadCrm()
 const toast = useToast()
+const voice = useVoiceSearch()
+
+const readVoiceLang = (): VoiceLang => {
+  try { return localStorage.getItem('gbrel_voice_lang') === 'bn-BD' ? 'bn-BD' : 'en-US' } catch { return 'en-US' }
+}
+const voiceLang = ref<VoiceLang>('en-US')
+
+onMounted(() => {
+  voiceLang.value = readVoiceLang()
+})
+
+const appendVoiceText = (spoken: string) => {
+  const chunk = spoken.trim()
+  if (!chunk) return
+  const current = text.value
+  const sep = current && !/\s$/.test(current) ? ' ' : ''
+  text.value = (current + sep + chunk).slice(0, 2000)
+}
+
+const startVoice = () => {
+  voice.start(voiceLang.value, (_query, heard) => {
+    appendVoiceText(heard)
+  })
+}
+
+const toggleVoiceLang = () => {
+  voiceLang.value = voiceLang.value === 'bn-BD' ? 'en-US' : 'bn-BD'
+  try { localStorage.setItem('gbrel_voice_lang', voiceLang.value) } catch { /* private mode */ }
+  if (voice.listening.value) {
+    voice.stop()
+    startVoice()
+  }
+}
+
+const toggleVoice = () => {
+  if (voice.listening.value) {
+    voice.stop()
+    return
+  }
+  startVoice()
+}
 
 const kinds = [
   { value: 'note', label: 'Add note' },
@@ -83,9 +151,10 @@ const placeholder = computed(() => ({
 const saveLabel = computed(() => ({ note: 'Save note', call: 'Save call', whatsapp: 'Save WhatsApp' }[kind.value]))
 
 // A new lead starts with a clean form.
-watch(() => props.leadId, () => { text.value = ''; outcome.value = ''; followUp.value = null; error.value = ''; kind.value = 'note' })
+watch(() => props.leadId, () => { voice.stop(); text.value = ''; outcome.value = ''; followUp.value = null; error.value = ''; kind.value = 'note' })
 
 const submit = async () => {
+  if (voice.listening.value) voice.stop()
   error.value = ''
   if (kind.value === 'note' && !text.value.trim()) { error.value = 'Write the note first.'; return }
   if (kind.value === 'call' && !outcome.value) { error.value = 'Choose how the call went.'; return }
@@ -154,7 +223,19 @@ const items = computed(() => [
 .ap button:hover { background: var(--admin-chip-bg); }
 .ap button.on { background: var(--admin-text-primary); color: var(--admin-bg-surface); border-color: transparent; }
 .ap button:focus-visible, .ap-text:focus-visible { outline: 2px solid var(--admin-text-gold); outline-offset: 2px; }
+.ap-text-wrap { position: relative; display: flex; width: 100%; }
 .ap-text { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--admin-border-hover); background: var(--admin-bg-surface); color: inherit; font: inherit; font-size: 0.92rem; line-height: 1.5; resize: vertical; }
+.ap-text-wrap:has(.ap-voice-tools) .ap-text { padding-right: 96px; }
+.ap-voice-tools { position: absolute; top: 8px; right: 8px; display: flex; align-items: center; gap: 4px; }
+.ap button.ap-lang, .ap button.ap-mic { display: flex; align-items: center; justify-content: center; border: 0; font: inherit; cursor: pointer; }
+.ap button.ap-lang { min-width: 38px; min-height: 30px; height: 30px; padding: 0 6px; border-radius: 8px; background: var(--admin-chip-bg); color: var(--admin-text-secondary); font-size: 0.74rem; font-weight: 700; }
+.ap button.ap-lang:hover { color: var(--admin-text-primary); }
+.ap button.ap-mic { width: 36px; min-height: 34px; height: 34px; padding: 0; border-radius: 8px; background: transparent; color: var(--admin-text-secondary); }
+.ap button.ap-mic:hover { background: var(--admin-chip-bg); color: var(--admin-text-primary); }
+.ap button.ap-mic.on { background: #DC2626; color: #fff; animation: ap-pulse 1.2s ease-in-out infinite; }
+@keyframes ap-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); } 50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); } }
+@media (prefers-reduced-motion: reduce) { .ap button.ap-mic.on { animation: none; } }
+.ap-voice-status { margin: -4px 0 0; font-size: 0.84rem; color: var(--admin-text-secondary); }
 .ap-label { font-size: 0.8rem; font-weight: 600; color: var(--admin-text-muted); margin-right: 2px; }
 .ap-error { margin: 0; color: #DC2626; font-size: 0.86rem; font-weight: 600; }
 .ap button.ap-save { align-self: flex-start; min-height: 40px; padding: 6px 22px; border-radius: 10px; border: 0; background: #0B7A58; color: #fff; font-size: 0.9rem; font-weight: 700; }
