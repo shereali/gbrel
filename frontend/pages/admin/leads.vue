@@ -223,22 +223,14 @@
           </label>
 
           <div v-if="selectedLeadIds.size" class="ld-bulk-bar">
-            <button
-              type="button"
-              class="btn btn-sm ld-export-btn"
-              title="Export selected leads to Excel (.xlsx)"
-              @click="exportSelectedLeads"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span>Export Excel</span>
-            </button>
-            <template v-if="isLeadAdmin">
-              <select v-model="bulkAssignTarget" class="ld-select ld-bulk-select" aria-label="Transfer selected leads to">
-                <option value="" disabled>Transfer to staff...</option>
-                <option value="unassigned">Unassigned</option>
-                <option v-for="s in staff" :key="s.id" :value="s.id">{{ s.name }} ({{ s.role || 'Staff' }})</option>
-              </select>
+            <select v-if="isLeadAdmin" v-model="bulkAssignTarget" class="ld-select ld-bulk-select" aria-label="Transfer selected leads to">
+              <option value="" disabled>Transfer to staff...</option>
+              <option value="unassigned">Unassigned</option>
+              <option v-for="s in staff" :key="s.id" :value="s.id">{{ s.name }} ({{ s.role || 'Staff' }})</option>
+            </select>
+            <div class="ld-bulk-actions">
               <button
+                v-if="isLeadAdmin"
                 type="button"
                 class="btn btn-sm btn-emerald ld-bulk-btn"
                 :disabled="!bulkAssignTarget || isBulkAssigning"
@@ -246,8 +238,17 @@
               >
                 {{ isBulkAssigning ? 'Transferring…' : 'Transfer' }}
               </button>
-            </template>
-            <button type="button" class="ld-bulk-cancel" title="Clear selection" @click="clearSelection">&times;</button>
+              <button
+                type="button"
+                class="btn btn-sm ld-export-btn"
+                title="Export selected leads to Excel (.xlsx)"
+                @click="exportSelectedLeads"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Export Excel</span>
+              </button>
+              <button type="button" class="ld-bulk-cancel" title="Clear selection" @click="clearSelection">&times;</button>
+            </div>
           </div>
         </div>
 
@@ -2244,17 +2245,19 @@ const restoreLead = async (lead: any) => {
 
 /* List wrapper, selection & bulk actions */
 .ld-list-wrap { display: flex; flex-direction: column; min-width: 0; }
-.ld-list-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; background: var(--admin-bg-surface-alt); border-bottom: 1px solid var(--admin-border-subtle); min-height: 44px; }
-.ld-select-all { display: inline-flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 600; color: var(--admin-text-secondary); cursor: pointer; user-select: none; }
-.ld-bulk-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.ld-export-btn { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 4px 10px; font-size: 0.8rem; font-weight: 700; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.45); background: rgba(16, 185, 129, 0.14); color: var(--admin-text-emerald, #10B981); cursor: pointer; transition: all 0.15s ease; }
+.ld-list-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--admin-bg-surface-alt); border-bottom: 1px solid var(--admin-border-subtle); min-height: 44px; }
+.ld-select-all { display: inline-flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 600; color: var(--admin-text-secondary); cursor: pointer; user-select: none; flex: none; white-space: nowrap; }
+.ld-select-all-text { white-space: nowrap; }
+.ld-bulk-bar { display: flex; flex-direction: column; align-items: stretch; gap: 6px; flex: 1 1 auto; min-width: 0; }
+.ld-bulk-actions { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+.ld-export-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex: 1 1 auto; min-height: 32px; padding: 4px 10px; font-size: 0.78rem; font-weight: 700; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.45); background: rgba(16, 185, 129, 0.14); color: var(--admin-text-emerald, #10B981); cursor: pointer; white-space: nowrap; transition: all 0.15s ease; }
 .ld-export-btn:hover { background: #0B7A58; border-color: #0B7A58; color: #fff; }
 .ld-export-header-btn { border-color: rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.1); }
 .ld-export-header-btn svg { color: #10B981; }
 .ld-export-header-btn:hover { background: rgba(16, 185, 129, 0.2); }
-.ld-bulk-select { font-size: 0.82rem; padding: 4px 8px; min-height: 32px; border-radius: 8px; }
-.ld-bulk-btn { min-height: 32px; padding: 4px 12px; font-size: 0.82rem; font-weight: 700; border-radius: 8px; }
-.ld-bulk-cancel { border: 0; background: transparent; color: var(--admin-text-muted); font-size: 1rem; cursor: pointer; padding: 2px 6px; }
+.ld-bulk-select { width: 100%; font-size: 0.82rem; padding: 4px 8px; min-height: 32px; border-radius: 8px; }
+.ld-bulk-btn { flex: 1 1 auto; min-height: 32px; padding: 4px 10px; font-size: 0.8rem; font-weight: 700; border-radius: 8px; white-space: nowrap; }
+.ld-bulk-cancel { flex: none; border: 0; background: transparent; color: var(--admin-text-muted); font-size: 1.05rem; line-height: 1; cursor: pointer; padding: 4px 6px; }
 .ld-bulk-cancel:hover { color: var(--admin-text-primary); }
 .ld-check-col { display: flex; align-items: center; justify-content: center; width: 44px; padding-left: 12px; cursor: pointer; flex: none; }
 .ld-checkbox { width: 17px; height: 17px; accent-color: #0B7A58; cursor: pointer; border-radius: 4px; }
