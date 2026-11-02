@@ -32,6 +32,16 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           <span>Highlights</span>
         </button>
+        <button
+          v-if="selectedLeadIds.size"
+          type="button"
+          class="ld-hl-btn ld-export-header-btn"
+          :title="`Export ${selectedLeadIds.size} selected lead(s) to Excel (.xlsx)`"
+          @click="exportSelectedLeads"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Export Excel ({{ selectedLeadIds.size }})</span>
+        </button>
         <button type="button" class="ld-hl-btn" title="Import leads from CSV or Excel (.xlsx)" @click="showImportModal = true">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           <span>Import CSV / Excel</span>
@@ -196,9 +206,9 @@
     </div>
 
     <div v-else class="ld-split" :class="{ 'is-detail': detailOpen }">
-      <!-- Lead list with multi-select and bulk staff assignment -->
+      <!-- Lead list with multi-select, Excel export and bulk staff assignment -->
       <div class="ld-list-wrap">
-        <div v-if="view === 'active' && isLeadAdmin" class="ld-list-header">
+        <div v-if="view === 'active'" class="ld-list-header">
           <label class="ld-select-all" title="Select all visible leads">
             <input
               type="checkbox"
@@ -213,26 +223,37 @@
           </label>
 
           <div v-if="selectedLeadIds.size" class="ld-bulk-bar">
-            <select v-model="bulkAssignTarget" class="ld-select ld-bulk-select" aria-label="Transfer selected leads to">
-              <option value="" disabled>Transfer to staff...</option>
-              <option value="unassigned">Unassigned</option>
-              <option v-for="s in staff" :key="s.id" :value="s.id">{{ s.name }} ({{ s.role || 'Staff' }})</option>
-            </select>
             <button
               type="button"
-              class="btn btn-sm btn-emerald ld-bulk-btn"
-              :disabled="!bulkAssignTarget || isBulkAssigning"
-              @click="executeBulkAssign"
+              class="btn btn-sm ld-export-btn"
+              title="Export selected leads to Excel (.xlsx)"
+              @click="exportSelectedLeads"
             >
-              {{ isBulkAssigning ? 'Transferring…' : 'Transfer' }}
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Export Excel</span>
             </button>
+            <template v-if="isLeadAdmin">
+              <select v-model="bulkAssignTarget" class="ld-select ld-bulk-select" aria-label="Transfer selected leads to">
+                <option value="" disabled>Transfer to staff...</option>
+                <option value="unassigned">Unassigned</option>
+                <option v-for="s in staff" :key="s.id" :value="s.id">{{ s.name }} ({{ s.role || 'Staff' }})</option>
+              </select>
+              <button
+                type="button"
+                class="btn btn-sm btn-emerald ld-bulk-btn"
+                :disabled="!bulkAssignTarget || isBulkAssigning"
+                @click="executeBulkAssign"
+              >
+                {{ isBulkAssigning ? 'Transferring…' : 'Transfer' }}
+              </button>
+            </template>
             <button type="button" class="ld-bulk-cancel" title="Clear selection" @click="clearSelection">&times;</button>
           </div>
         </div>
 
         <ul class="ld-list" aria-label="Leads">
           <li v-for="lead in filteredLeads" :key="lead.id" class="ld-item" :class="{ active: selected?.id === lead.id, checked: selectedLeadIds.has(lead.id) }" :data-tier="lead.tier || 'none'">
-            <label v-if="view === 'active' && isLeadAdmin" class="ld-check-col" :title="`Select ${lead.name}`" @click.stop>
+            <label v-if="view === 'active'" class="ld-check-col" :title="`Select ${lead.name}`" @click.stop>
               <input
                 type="checkbox"
                 class="ld-checkbox"
@@ -584,6 +605,7 @@ import {
   type LeadActivity, type LeadHighlights, type LeadVisit, type StaffMember, type HighlightForm
 } from '~/composables/useLeadCrm'
 import { toLatinDigits, useVoiceSearch, type VoiceLang } from '~/composables/useVoiceSearch'
+import { downloadXlsx } from '~/utils/xlsxExport'
 
 definePageMeta({
   layout: 'admin'
@@ -1375,6 +1397,43 @@ const toggleSelectAll = () => {
 const clearSelection = () => {
   selectedLeadIds.clear()
   bulkAssignTarget.value = ''
+}
+
+const projectNameOf = (l: any): string => {
+  if (l?.meta_form_id) {
+    const f = highlights.value.forms.find(form => String(form.key) === String(l.meta_form_id))
+    return l.meta_form_name || f?.name || l.property_title || l.property || 'Direct Inquiry'
+  }
+  return l?.property_title || l?.property || 'General Inquiry'
+}
+
+const exportSelectedLeads = () => {
+  if (!selectedLeadIds.size) {
+    toast.info('No leads selected', 'Select at least one lead to export.')
+    return
+  }
+
+  const visibleSelected = filteredLeads.value.filter(l => selectedLeadIds.has(l.id))
+  const visibleIds = new Set(visibleSelected.map(l => l.id))
+  const extraSelected = leadsList.value.filter(l => selectedLeadIds.has(l.id) && !visibleIds.has(l.id))
+  const leadsToExport = [...visibleSelected, ...extraSelected]
+
+  if (!leadsToExport.length) {
+    toast.info('No leads selected', 'Select at least one lead to export.')
+    return
+  }
+
+  const headers = ['Project', 'Name', 'Phone', 'Status']
+  const rows = leadsToExport.map(l => [
+    projectNameOf(l),
+    String(l.name || 'Direct Buyer'),
+    String(l.phone || ''),
+    String(l.stage || normalizeStage(l.status))
+  ])
+
+  const stamp = new Date().toISOString().slice(0, 10)
+  downloadXlsx(`gbrel-leads-${stamp}.xlsx`, headers, rows, 'Leads')
+  toast.success('Excel exported', `Exported ${leadsToExport.length} lead${leadsToExport.length > 1 ? 's' : ''} to Excel (.xlsx).`)
 }
 
 const executeBulkAssign = async () => {
@@ -2188,6 +2247,11 @@ const restoreLead = async (lead: any) => {
 .ld-list-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; background: var(--admin-bg-surface-alt); border-bottom: 1px solid var(--admin-border-subtle); min-height: 44px; }
 .ld-select-all { display: inline-flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 600; color: var(--admin-text-secondary); cursor: pointer; user-select: none; }
 .ld-bulk-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ld-export-btn { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 4px 10px; font-size: 0.8rem; font-weight: 700; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.45); background: rgba(16, 185, 129, 0.14); color: var(--admin-text-emerald, #10B981); cursor: pointer; transition: all 0.15s ease; }
+.ld-export-btn:hover { background: #0B7A58; border-color: #0B7A58; color: #fff; }
+.ld-export-header-btn { border-color: rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.1); }
+.ld-export-header-btn svg { color: #10B981; }
+.ld-export-header-btn:hover { background: rgba(16, 185, 129, 0.2); }
 .ld-bulk-select { font-size: 0.82rem; padding: 4px 8px; min-height: 32px; border-radius: 8px; }
 .ld-bulk-btn { min-height: 32px; padding: 4px 12px; font-size: 0.82rem; font-weight: 700; border-radius: 8px; }
 .ld-bulk-cancel { border: 0; background: transparent; color: var(--admin-text-muted); font-size: 1rem; cursor: pointer; padding: 2px 6px; }
@@ -2269,8 +2333,8 @@ const restoreLead = async (lead: any) => {
   .ld-filter-btn { display: none !important; }
   .ld-hl-card.with-visit { grid-template-columns: 1fr; gap: 12px; }
   .ld-hl-card.with-visit .ld-hl-visit-side { border-top: 1px solid rgba(251, 191, 36, 0.35); }
-  .ld-list-header { display: none !important; }
-  .ld-check-col { display: none !important; }
+  .ld-split.is-detail .ld-list-header { display: none !important; }
+  .ld-check-col { width: 38px; padding-left: 10px; }
   .ld-row { padding: 12px 6px 12px 6px; }
   .ld-name { font-size: 1rem; }
   .ld-row-call { width: 56px; }
