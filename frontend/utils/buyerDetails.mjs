@@ -86,7 +86,7 @@ export function unitAskingPrice(property) {
 export function askingPriceSummary(property) {
   const total = totalAskingPrice(property)
   const basis = property.buyerDetails?.priceBasis
-  const labels = { Total: 'সম্পূর্ণ প্রপার্টির চাওয়া মূল্য', 'Per land unit': `প্রতি ${property.landUnit || 'জমির একক'}`, 'Per sqft': 'প্রতি বর্গফুট', 'Per share': 'প্রতি শেয়ার' }
+  const labels = { Total: 'সম্পূর্ণ প্রপার্টির চাওয়া মূল্য', 'Per land unit': `প্রতি ${property.landUnit || 'জমির একক'}`, 'Per sqft': 'প্রতি বর্গফুট', 'Per share': 'প্রতি শেয়ারের মূল্য' }
   const label = property.priceUnit || (total !== null ? labels.Total : labels[basis] || 'মূল্য ও অন্তর্ভুক্ত খরচ নিশ্চিত করুন')
   return { amount: total ?? property.price, label }
 }

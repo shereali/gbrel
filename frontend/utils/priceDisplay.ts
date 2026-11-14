@@ -59,13 +59,13 @@ function visiblePrice(property: any): Omit<PriceDisplay, 'fee'> {
   })
   const whole = (per: string, extra?: string): PriceDisplay => ({ amount: priceBn(total ?? price), per, note: join(extra, negotiable), total: total ?? price, hidden: false })
 
-  // Land share: sold per share.
-  if (type === 'Land Share' && basis === 'Per share') {
+  // Per share or Land Share: sold per share.
+  if (basis === 'Per share' || (type === 'Land Share' && !details.priceBasis)) {
     const shareLand = num(details.shareLandSize)
     return {
       amount: priceBn(price),
-      per: 'প্রতি শেয়ার',
-      note: join(shareLand && `প্রতি শেয়ারে ${toBn(shareLand)} ${unit}`, shareLand && `${unit}প্রতি ${priceBn(price / shareLand)}`, negotiable),
+      per: 'প্রতি শেয়ারের মূল্য',
+      note: join(shareLand && `প্রতি শেয়ারে ${toBn(shareLand)} ${unit}`, shareLand && `${unit}প্রতি ${priceBn(price / shareLand)}`, sqft && sqftText(sqft), negotiable),
       total: null,
       hidden: false
     }
